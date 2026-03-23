@@ -179,8 +179,8 @@ body,html,#root{font-family:var(--f);color:var(--tx);background:var(--bg);-webki
 @media(max-width:768px){.pv2-av{width:80px;height:80px;font-size:42px}.pv2-name{font-size:19px}.pv2-stat{padding:0 10px;font-size:12px}.pv2-tab{padding:12px 13px;font-size:11px}.pv2-hero-bg{padding-top:44px}}
 /* ── Profile v3 (pv-) ── */
 .pv-page{background:var(--bg);min-height:100vh}
-.pv-header{background:linear-gradient(170deg,rgba(255,90,95,.08) 0%,rgba(255,176,103,.04) 100%);border-bottom:1px solid var(--bd);padding:56px 20px 0;text-align:center;position:relative}
-.dark .pv-header{background:linear-gradient(170deg,rgba(255,107,107,.13) 0%,rgba(79,209,197,.05) 100%)}
+.pv-header{background:linear-gradient(135deg,#6C63FF,#4ECDC4);border-bottom:none;padding:56px 20px 0;text-align:center;position:relative}
+.dark .pv-header{background:linear-gradient(135deg,#5850e8,#3db8b0)}
 .pv-back{position:absolute;top:14px;left:14px;background:rgba(255,255,255,.85);backdrop-filter:blur(8px);border:1px solid rgba(0,0,0,.08);border-radius:10px;padding:7px 13px;font-size:12px;font-weight:600;color:var(--dk);display:flex;align-items:center;gap:5px;cursor:pointer;transition:all .18s}
 .dark .pv-back{background:rgba(255,255,255,.12);color:#f5f5f5;border-color:rgba(255,255,255,.18)}
 .pv-share-top{position:absolute;top:14px;right:14px;background:rgba(255,255,255,.85);backdrop-filter:blur(8px);border:1px solid rgba(0,0,0,.08);border-radius:10px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;transition:all .18s}
@@ -190,20 +190,20 @@ body,html,#root{font-family:var(--f);color:var(--tx);background:var(--bg);-webki
 .pv-av img{width:100%;height:100%;object-fit:cover}
 .pv-av-badge{position:absolute;bottom:2px;right:2px;width:22px;height:22px;border-radius:50%;background:#059669;border:2.5px solid var(--w);display:flex;align-items:center;justify-content:center;font-size:9px;color:#fff;font-weight:800}
 .pv-name-row{display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:5px}
-.pv-name{font-family:var(--fd);font-size:22px;font-weight:700;color:var(--dk);letter-spacing:-.02em}
-.pv-verified{background:#ECFDF5;color:#059669;font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;border:1px solid #A7F3D0}
-.pv-bio{font-size:13px;color:var(--g);line-height:1.5;max-width:320px;margin:0 auto 4px}
-.pv-since{font-size:12px;color:var(--gl);margin-top:4px;margin-bottom:0}
-.pv-stats{display:flex;align-items:center;justify-content:center;padding:16px 0;margin-top:14px;border-top:1px solid var(--bd)}
+.pv-name{font-family:var(--fd);font-size:22px;font-weight:700;color:#fff;letter-spacing:-.02em}
+.pv-verified{background:rgba(255,255,255,.25);color:#fff;font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;border:1px solid rgba(255,255,255,.5)}
+.pv-bio{font-size:13px;color:rgba(255,255,255,.85);line-height:1.5;max-width:320px;margin:0 auto 4px}
+.pv-since{font-size:12px;color:rgba(255,255,255,.75);margin-top:4px;margin-bottom:0}
+.pv-stats{display:flex;align-items:center;justify-content:center;padding:16px 0;margin-top:14px;border-top:1px solid rgba(255,255,255,.25)}
 .pv-stat{display:flex;flex-direction:column;align-items:center;padding:0 20px}
-.pv-stat strong{font-family:var(--fd);font-size:16px;font-weight:700;color:var(--dk)}
-.pv-stat span{font-size:10px;color:var(--g);margin-top:2px;text-transform:uppercase;letter-spacing:.03em}
-.pv-stat-sep{width:1px;height:32px;background:var(--bd)}
+.pv-stat strong{font-family:var(--fd);font-size:16px;font-weight:700;color:#fff}
+.pv-stat span{font-size:10px;color:rgba(255,255,255,.75);margin-top:2px;text-transform:uppercase;letter-spacing:.03em}
+.pv-stat-sep{width:1px;height:32px;background:rgba(255,255,255,.3)}
 .pv-actions{display:flex;gap:10px;justify-content:center;padding:14px 20px 20px}
-.pv-btn-edit{padding:10px 22px;background:transparent;border:1.5px solid var(--dk);border-radius:12px;font-size:13px;font-weight:600;color:var(--dk);cursor:pointer;transition:all .18s;font-family:var(--f)}
-.pv-btn-edit:hover{background:var(--bg)}
-.pv-btn-share{width:40px;height:40px;border-radius:12px;border:1.5px solid var(--dk);background:transparent;display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;transition:all .18s}
-.pv-btn-share:hover{background:var(--bg)}
+.pv-btn-edit{padding:10px 22px;background:transparent;border:1.5px solid rgba(255,255,255,.7);border-radius:12px;font-size:13px;font-weight:600;color:#fff;cursor:pointer;transition:all .18s;font-family:var(--f)}
+.pv-btn-edit:hover{background:rgba(255,255,255,.15)}
+.pv-btn-share{padding:10px 22px;background:#fff;color:#6C63FF;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;transition:all .18s;font-family:var(--f)}
+.pv-btn-share:hover{opacity:.9;box-shadow:0 4px 12px rgba(108,99,255,.3)}
 .pv-tabs{position:sticky;top:72px;z-index:80;background:var(--w);border-bottom:1px solid var(--bd);display:flex;overflow-x:auto;scrollbar-width:none}
 .pv-tabs::-webkit-scrollbar{display:none}
 .pv-tab{display:flex;align-items:center;gap:5px;padding:14px 18px;font-size:12px;font-weight:600;border:none;border-bottom:2px solid transparent;color:var(--g);background:none;white-space:nowrap;cursor:pointer;font-family:var(--f);transition:color .18s,border-color .18s}
@@ -888,34 +888,31 @@ function Profile({state,dispatch,setPage,setSelected,initTab}){
   const[notifs,setNotifs]=useState({messages:true,bookings:true,reviews:true,promotions:false});
   const[bookView,setBookView]=useState("renter");
   useEffect(()=>{if(initTab)setTab(initTab)},[initTab]);
-  const[f,setF]=useState({name:u.name,email:u.email,bio:u.bio||"",location:u.location||""});
+  const[f,setF]=useState({name:u.name,email:u.email,bio:u.bio||"",phone:u.phone||""});
   const myItems=[...state.items.filter(i=>i.owner.id===u.id),...state.userItems];
   const myBook=state.bookings.filter(b=>b.userId===u.id);
   const myBookAsOwner=state.bookings.filter(b=>myItems.some(i=>i.id===b.itemId));
   const activeBook=myBook.filter(b=>b.status==="confirmed");
   const myFavs=[...state.items,...state.userItems].filter(i=>state.favorites.has(i.id));
-  const totalRentals=u.rentals+myBook.length;
-  const grade=getGrade(totalRentals);
   const save=()=>{dispatch({type:"UPD_PROF",payload:f});};
   const myDepositsAsOwner=state.payments.filter(p=>p.type==="deposit"&&p.ownerId===u.id);
   const myItemIds=new Set(myItems.map(i=>i.id));
   const myReviews=state.reviews.filter(r=>myItemIds.has(r.itemId));
   const avgRating=myReviews.length?+(myReviews.reduce((s,r)=>s+r.rating,0)/myReviews.length).toFixed(1):0;
-  const gradeColor={bronze:"#CD7F32",silver:"#A0A0A0",gold:"#D4A017",platinum:"#7C3AED",diamond:"#06B6D4"};
-  const gc=gradeColor[grade?.id]||"var(--p)";
   const stS={confirmed:{bg:"#DBEAFE",c:"#1D4ED8"},completed:{bg:"#ECFDF5",c:"#059669"},cancelled:{bg:"#FEF2F2",c:"#DC2626"},pending:{bg:"#FEF3C7",c:"#D97706"}};
   const stL={confirmed:"En cours",completed:"Terminée",cancelled:"Annulée",pending:"En attente"};
   const TABS=[["listings","📦","Annonces"],["bookings","📅","Réservations"],["reviews","⭐","Avis"],["favorites","❤️","Favoris"],["settings","⚙️","Paramètres"]];
   const AV=["😊","😎","🤓","😄","🥳","🤩","👩‍🦰","👨‍🦱","👩","👨","👩‍🦱","👨‍🦳","👧","👦","🧑‍💻","👩‍🎨","👨‍🍳","👩‍🔧","🧑‍🚀","🦊","🐱","🐶","🐼","🦁","🐸","🌸","⭐","🔥","💜","🌊"];
   const MOCK_REVIEWS=[
-    {id:"mr1",fromUserAvatar:"👩‍🦰",fromUserName:"Sophie M.",rating:5,text:"Objet en parfait état, échange rapide et très sympa. Je recommande vivement !",createdAt:"2024-03-10"},
-    {id:"mr2",fromUserAvatar:"😎",fromUserName:"Marc D.",rating:5,text:"Super expérience, le propriétaire est très réactif. Rien à redire, parfait.",createdAt:"2024-02-28"},
-    {id:"mr3",fromUserAvatar:"🤓",fromUserName:"Lucas B.",rating:4,text:"Très bien dans l'ensemble, petit retard au rendez-vous mais rien de grave.",createdAt:"2024-02-15"},
-    {id:"mr4",fromUserAvatar:"👩",fromUserName:"Emma R.",rating:5,text:"Exactement comme décrit, matériel nickel. Merci beaucoup !",createdAt:"2024-01-22"},
+    {id:"mr1",fromUserAvatar:"S",fromUserName:"Sophie M.",rating:5,text:"Objet en parfait état, échange rapide et très sympa. Je recommande vivement !",createdAt:"2024-03-10"},
+    {id:"mr2",fromUserAvatar:"M",fromUserName:"Marc D.",rating:5,text:"Super expérience, le propriétaire est très réactif. Rien à redire, parfait.",createdAt:"2024-02-28"},
+    {id:"mr3",fromUserAvatar:"L",fromUserName:"Lucas B.",rating:4,text:"Très bien dans l'ensemble, petit retard au rendez-vous mais rien de grave.",createdAt:"2024-02-15"},
+    {id:"mr4",fromUserAvatar:"E",fromUserName:"Emma R.",rating:5,text:"Exactement comme décrit, matériel nickel. Merci beaucoup !",createdAt:"2024-01-22"},
   ];
   const displayReviews=myReviews.length>0?[...myReviews].sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt)):MOCK_REVIEWS;
-  const displayAvg=myReviews.length>0?avgRating:4.9;
+  const displayAvg=myReviews.length>0?avgRating:4.8;
   const displayCount=myReviews.length>0?myReviews.length:MOCK_REVIEWS.length;
+
   const BookRow=({b})=>{const sc=stS[b.status]||stS.confirmed;return(
     <div className="pv-book-row">
       <img className="pv-book-img" src={b.itemImg} alt="" onError={e=>{e.target.style.display="none"}}/>
@@ -930,6 +927,19 @@ function Profile({state,dispatch,setPage,setSelected,initTab}){
       </div>
     </div>)};
 
+  const MiniCard=({item})=><div style={{background:"var(--w)",border:"1px solid var(--bd)",borderRadius:14,overflow:"hidden",boxShadow:"var(--sh)",cursor:"pointer"}} onClick={()=>setSelected&&setSelected(item)}>
+    <div style={{width:"100%",aspectRatio:"4/3",background:"var(--bgw)",overflow:"hidden",display:"flex",alignItems:"center",justifyContent:"center"}}>
+      <img src={item.images?.[0]} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}} onError={e=>{e.target.style.display="none"}}/>
+    </div>
+    <div style={{padding:"10px 12px"}}>
+      <div style={{fontWeight:700,fontSize:13,color:"var(--dk)",marginBottom:4,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{item.title}</div>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+        <span style={{fontFamily:"var(--fd)",fontWeight:700,fontSize:14,color:"var(--p)"}}>{item.price} €<span style={{fontWeight:400,fontSize:10,color:"var(--g)"}}>/jour</span></span>
+        <span style={{fontSize:11,color:"#F59E0B"}}>★ {item.rating||"—"}</span>
+      </div>
+    </div>
+  </div>;
+
   return <div className="pv-page">
     {/* Avatar picker modal */}
     {showAvatarPicker&&<div className="bk" onClick={()=>setShowAvatarPicker(false)}><div className="md" onClick={e=>e.stopPropagation()} style={{maxWidth:380}}>
@@ -937,7 +947,7 @@ function Profile({state,dispatch,setPage,setSelected,initTab}){
       <div className="mb">
         <p style={{fontSize:12,color:"var(--g)",marginBottom:12}}>Choisissez votre avatar</p>
         <div style={{display:"grid",gridTemplateColumns:"repeat(6,1fr)",gap:6}}>
-          {AV.map((av,i)=><button key={i} style={{fontSize:28,padding:8,border:u.avatar===av?"2.5px solid var(--p)":"2px solid var(--bd)",borderRadius:12,background:u.avatar===av?"#FEF2F2":"var(--w)",cursor:"pointer"}} onClick={()=>{dispatch({type:"SET_AVATAR",avatar:av});setShowAvatarPicker(false)}}>{av}</button>)}
+          {AV.map((av,i)=><button key={i} style={{fontSize:28,padding:8,border:u.avatar===av?"2.5px solid var(--p)":"2px solid var(--bd)",borderRadius:12,background:u.avatar===av?"#EEF2FF":"var(--w)",cursor:"pointer"}} onClick={()=>{dispatch({type:"SET_AVATAR",avatar:av});setShowAvatarPicker(false)}}>{av}</button>)}
         </div>
         <div style={{borderTop:"1px solid var(--bd)",marginTop:14,paddingTop:14}}>
           <p style={{fontSize:11,color:"var(--g)",marginBottom:8}}>Ou URL d'image :</p>
@@ -949,12 +959,12 @@ function Profile({state,dispatch,setPage,setSelected,initTab}){
       </div>
     </div></div>}
 
-    {/* ── HEADER ── */}
+    {/* ── HEADER gradient #6C63FF → #4ECDC4 ── */}
     <div className="pv-header">
       <button className="pv-back" onClick={()=>setPage("home")}><I.Back/> Retour</button>
       <button className="pv-share-top" title="Partager" onClick={()=>navigator.share?navigator.share({title:`Profil de ${u.name}`,url:window.location.href}):navigator.clipboard?.writeText(window.location.href)}>🔗</button>
 
-      {/* Avatar */}
+      {/* Avatar 90px circulaire */}
       <div className="pv-av-wrap" onClick={()=>setShowAvatarPicker(true)}>
         <div className="pv-av">{u.avatarUrl?<img src={u.avatarUrl} alt=""/>:u.avatar}</div>
         {u.verified&&<div className="pv-av-badge">✓</div>}
@@ -970,23 +980,23 @@ function Profile({state,dispatch,setPage,setSelected,initTab}){
       {u.bio&&<p className="pv-bio">{u.bio}</p>}
       <p className="pv-since">📍 {u.location} · Membre depuis {u.since}</p>
 
-      {/* Stats */}
+      {/* Stats : annonces | note | Super hôte */}
       <div className="pv-stats">
-        <div className="pv-stat"><strong>{myItems.length}</strong><span>annonce{myItems.length!==1?"s":""}</span></div>
+        <div className="pv-stat"><strong>{myItems.length}</strong><span>annonces</span></div>
         <div className="pv-stat-sep"/>
-        <div className="pv-stat"><strong>{displayAvg} ⭐</strong><span>note moy.</span></div>
+        <div className="pv-stat"><strong>{displayAvg} ★</strong><span>note</span></div>
         <div className="pv-stat-sep"/>
-        <div className="pv-stat"><strong style={{color:gc}}>{grade?.icon} {grade?.name}</strong><span>grade</span></div>
+        <div className="pv-stat"><strong>Super hôte</strong><span>badge</span></div>
       </div>
 
-      {/* Actions */}
+      {/* Boutons : outline + filled purple */}
       <div className="pv-actions">
-        <button className="pv-btn-edit" onClick={()=>setTab("settings")}>✏️ Modifier</button>
-        <button className="pv-btn-share" title="Partager" onClick={()=>navigator.share?navigator.share({title:`Profil de ${u.name}`,url:window.location.href}):navigator.clipboard?.writeText(window.location.href)}>🔗</button>
+        <button className="pv-btn-edit" onClick={()=>setTab("settings")}>Modifier le profil</button>
+        <button className="pv-btn-share" onClick={()=>navigator.share?navigator.share({title:`Profil de ${u.name}`,url:window.location.href}):navigator.clipboard?.writeText(window.location.href)}>Partager</button>
       </div>
     </div>
 
-    {/* ── TABS ── */}
+    {/* ── TABS sticky ── */}
     <div className="pv-tabs">
       {TABS.map(([k,icon,label])=><button key={k} className={"pv-tab"+(tab===k?" on":"")} onClick={()=>setTab(k)}>{icon} {label}</button>)}
     </div>
@@ -994,18 +1004,18 @@ function Profile({state,dispatch,setPage,setSelected,initTab}){
     {/* ── BODY ── */}
     <div className="pv-body">
 
-      {/* ANNONCES */}
+      {/* ANNONCES — grille 2 colonnes */}
       {tab==="listings"&&<>
         <div className="pv-section-header">
           <div><h2 className="pv-sh-title">Mes annonces</h2><p className="pv-sh-sub">{myItems.length} publiée{myItems.length!==1?"s":""}</p></div>
         </div>
         {myItems.length===0
           ?<div className="pv-empty"><span>📦</span><h3>Aucune annonce</h3><p>Commencez à louer vos objets !</p><button className="bp pv-empty-cta" onClick={()=>setPage("create")}>＋ Créer une annonce</button></div>
-          :<div className="grid" style={{padding:0}}>{myItems.map(i=><Card key={i.id} item={i} onOpen={setSelected||(()=>{})} favs={state.favorites} dispatch={dispatch}/>)}</div>}
+          :<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>{myItems.map(i=><MiniCard key={i.id} item={i}/>)}</div>}
         <button className="pv-fab" onClick={()=>setPage("create")}>＋</button>
       </>}
 
-      {/* RÉSERVATIONS */}
+      {/* RÉSERVATIONS — sous-onglets Locataire / Propriétaire */}
       {tab==="bookings"&&<>
         <div className="pv-section-header">
           <div><h2 className="pv-sh-title">Réservations</h2><p className="pv-sh-sub">{myBook.length+myBookAsOwner.length} au total · <span style={{color:"#1D4ED8"}}>{activeBook.length} en cours</span></p></div>
@@ -1034,7 +1044,7 @@ function Profile({state,dispatch,setPage,setSelected,initTab}){
             </div>)}))}
       </>}
 
-      {/* AVIS */}
+      {/* AVIS — note 4.8★, barres 5 étoiles, cartes avis */}
       {tab==="reviews"&&<>
         <div className="pv-section-header">
           <div><h2 className="pv-sh-title">Avis reçus</h2><p className="pv-sh-sub">{displayCount} avis</p></div>
@@ -1061,7 +1071,7 @@ function Profile({state,dispatch,setPage,setSelected,initTab}){
         {displayReviews.map(r=>(
           <div key={r.id} className="pv-review-card">
             <div className="pv-review-header">
-              <div className="pv-review-av">{r.fromUserAvatar||"😊"}</div>
+              <div className="pv-review-av" style={{background:"linear-gradient(135deg,#6C63FF,#4ECDC4)",color:"#fff",fontWeight:700,fontSize:14}}>{(r.fromUserAvatar?.length===1?r.fromUserAvatar:(r.fromUserName?.[0]||"?"))}</div>
               <div style={{flex:1}}><div className="pv-review-name">{r.fromUserName}</div><div className="pv-review-date">{ds(r.createdAt)}</div></div>
               <div className="pv-review-stars">{"★".repeat(r.rating)}</div>
             </div>
@@ -1069,35 +1079,31 @@ function Profile({state,dispatch,setPage,setSelected,initTab}){
           </div>))}
       </>}
 
-      {/* FAVORIS */}
+      {/* FAVORIS — grille 2 colonnes */}
       {tab==="favorites"&&<>
         <div className="pv-section-header">
           <div><h2 className="pv-sh-title">Mes favoris</h2><p className="pv-sh-sub">{myFavs.length} article{myFavs.length!==1?"s":""} sauvegardé{myFavs.length!==1?"s":""}</p></div>
         </div>
         {myFavs.length===0
           ?<div className="pv-empty"><span>❤️</span><h3>Aucun favori</h3><p>Sauvegardez des annonces en cliquant sur ❤️</p></div>
-          :<div className="grid" style={{padding:0}}>{myFavs.map(i=><Card key={i.id} item={i} onOpen={setSelected||(()=>{})} favs={state.favorites} dispatch={dispatch}/>)}</div>}
+          :<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>{myFavs.map(i=><MiniCard key={i.id} item={i}/>)}</div>}
       </>}
 
-      {/* PARAMÈTRES */}
+      {/* PARAMÈTRES — champs éditables, toggles, déconnexion rouge */}
       {tab==="settings"&&<>
         <div className="pv-section-header"><div><h2 className="pv-sh-title">Paramètres</h2></div></div>
 
-        {/* Compte */}
         <div className="pv-settings-card">
           <div className="pv-settings-title">Compte</div>
           <div style={{padding:"14px 16px"}}>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:0}}>
-              <div className="fg"><label>Nom</label><input value={f.name} onChange={e=>setF(p=>({...p,name:e.target.value}))}/></div>
-              <div className="fg"><label>Ville</label><input value={f.location} onChange={e=>setF(p=>({...p,location:e.target.value}))}/></div>
-            </div>
-            <div className="fg"><label>Email</label><input value={f.email} onChange={e=>setF(p=>({...p,email:e.target.value}))}/></div>
-            <div className="fg"><label>Bio</label><textarea value={f.bio} onChange={e=>setF(p=>({...p,bio:e.target.value}))} rows={2}/></div>
+            <div className="fg"><label>Nom complet</label><input value={f.name} onChange={e=>setF(p=>({...p,name:e.target.value}))}/></div>
+            <div className="fg"><label>Email</label><input type="email" value={f.email} onChange={e=>setF(p=>({...p,email:e.target.value}))}/></div>
+            <div className="fg"><label>Téléphone</label><input type="tel" value={f.phone} placeholder="+33 6 00 00 00 00" onChange={e=>setF(p=>({...p,phone:e.target.value}))}/></div>
+            <div className="fg"><label>Bio</label><textarea value={f.bio} onChange={e=>setF(p=>({...p,bio:e.target.value}))} rows={3} placeholder="Parlez-vous en quelques mots..."/></div>
             <button className="bp" style={{fontSize:12,padding:"9px 20px"}} onClick={save}>Enregistrer les modifications</button>
           </div>
         </div>
 
-        {/* Notifications */}
         <div className="pv-settings-card">
           <div className="pv-settings-title">Notifications</div>
           {[["messages","Nouveaux messages","Soyez notifié à chaque message"],["bookings","Réservations","Alertes de réservation"],["reviews","Nouveaux avis","Recevez vos avis"],["promotions","Offres et promotions","Actualités et bons plans"]].map(([k,label,sub])=>(
@@ -1110,7 +1116,6 @@ function Profile({state,dispatch,setPage,setSelected,initTab}){
             </div>))}
         </div>
 
-        {/* Sécurité */}
         <div className="pv-settings-card">
           <div className="pv-settings-title">Sécurité</div>
           {!u.verified&&<div className="pv-verify-banner">
@@ -1123,14 +1128,9 @@ function Profile({state,dispatch,setPage,setSelected,initTab}){
           <div className="pv-settings-row" style={{borderBottom:"none"}}><span className="pv-row-label">📱 Double authentification</span><span style={{color:"var(--g)",fontSize:18}}>›</span></div>
         </div>
 
-        {/* Zone danger */}
-        <div className="pv-settings-card pv-danger-card">
-          <div className="pv-settings-title pv-danger-title">Zone dangereuse</div>
-          <div className="pv-settings-row">
-            <button className="pv-danger-btn-outline" onClick={()=>{dispatch({type:"LOGOUT"});setPage("home")}}>🚪 Se déconnecter</button>
-          </div>
-          <div className="pv-settings-row" style={{borderBottom:"none"}}>
-            <button className="pv-danger-btn">🗑 Supprimer le compte</button>
+        <div className="pv-settings-card">
+          <div style={{padding:"12px 16px"}}>
+            <button style={{width:"100%",padding:"13px",background:"#FEF2F2",color:"#DC2626",border:"1.5px solid #FECACA",borderRadius:12,fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:"var(--f)",transition:"all .18s"}} onClick={()=>{dispatch({type:"LOGOUT"});setPage("home")}}>🚪 Se déconnecter</button>
           </div>
         </div>
       </>}
