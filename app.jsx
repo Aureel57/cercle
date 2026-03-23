@@ -882,145 +882,451 @@ function calcSavings(rentals, avgPrice) {
 }
 
 function Profile({state, dispatch, setPage, setSelected, initTab}) {
-  const [tab, setTab] = React.useState(initTab||'annonces');
+  const user = (state && state.user) || {};
+  const userName = user.name || 'Noah M.';
+  const userAvatar = user.avatar || null;
+
+  const [tab, setTab] = React.useState(initTab || 'annonces');
+  const [editMode, setEditMode] = React.useState(false);
   const [profileData, setProfileData] = React.useState({
-    name: (state&&state.user&&state.user.name)||'Noah M.',
-    email: 'noah@cercle.fr',
-    phone: '+33 6 12 34 56 78',
-    bio: "Passionné par le partage et l'économie collaborative.",
+    name: userName,
+    email: user.email || 'noah@cercle.fr',
+    phone: user.phone || '+33 6 12 34 56 78',
+    bio: user.bio || "Passionné par le partage et l'économie collaborative. Super hôte depuis 2024.",
     notifEmail: true,
-    notifPush: false,
+    notifPush: true,
   });
 
+  const listings = (state && state.items && state.items.filter(i => i.owner === user.id)) || [];
+  const favs = (state && state.favs) || [];
+
   const tabs = [
-    {id:'annonces', label:'📦 Annonces'},
-    {id:'reservations', label:'📅 Réservations'},
-    {id:'avis', label:'⭐ Avis'},
-    {id:'favoris', label:'❤️ Favoris'},
-    {id:'parametres', label:'⚙️ Paramètres'},
+    { id: 'annonces', label: 'Annonces', icon: '🏷️', count: listings.length || 0 },
+    { id: 'reservations', label: 'Réservations', icon: '📅', count: 3 },
+    { id: 'avis', label: 'Avis', icon: '⭐', count: 12 },
+    { id: 'favoris', label: 'Favoris', icon: '❤️', count: favs.length || 2 },
+    { id: 'parametres', label: 'Paramètres', icon: '⚙️', count: null },
   ];
 
-  const listings = [
-    {id:1, title:'Vélo électrique', price:25, rating:4.8, img:'🚲'},
-    {id:2, title:'Appareil photo', price:40, rating:4.9, img:'📷'},
-    {id:3, title:'Trottinette', price:15, rating:4.7, img:'🛴'},
+  const mockReservations = [
+    { id: 1, item: 'Perceuse Bosch Pro', img: '🔧', dates: '15 – 17 Mars', status: 'En cours', color: '#10b981', bg: '#d1fae5', price: '30 €', renter: 'Marie L.' },
+    { id: 2, item: 'Vélo électrique', img: '🚲', dates: '5 – 7 Mars', status: 'Terminée', color: '#6b7280', bg: '#f3f4f6', price: '45 €', renter: 'Thomas B.' },
+    { id: 3, item: 'Kayak double', img: '🛶', dates: '25 – 27 Avr.', status: 'À venir', color: '#3b82f6', bg: '#dbeafe', price: '80 €', renter: 'Julie K.' },
   ];
 
-  const reservations = [
-    {id:1, item:'Perceuse Bosch', dates:'15-17 Mars', status:'En cours', statusColor:'#22c55e', price:'30€'},
-    {id:2, item:'Vélo de route', dates:'5-7 Mars', status:'Terminée', statusColor:'#9ca3af', price:'45€'},
-    {id:3, item:'Kayak double', dates:'25-27 Mars', status:'À venir', statusColor:'#3b82f6', price:'80€'},
+  const mockReviews = [
+    { id: 1, author: 'Marie L.', initials: 'ML', date: 'Mars 2024', rating: 5, text: 'Très sérieux, matériel en parfait état. Je recommande vivement !', color: '#8b5cf6' },
+    { id: 2, author: 'Thomas B.', initials: 'TB', date: 'Fév. 2024', rating: 5, text: 'Transaction rapide, objet conforme. Super expérience, merci !', color: '#3b82f6' },
+    { id: 3, author: 'Julie K.', initials: 'JK', date: 'Jan. 2024', rating: 4, text: 'Bon état général, échange ponctuel. À recommander.', color: '#10b981' },
   ];
 
-  const reviews = [
-    {id:1, author:'Marie L.', date:'Mars 2024', rating:5, text:'Très bon contact, matériel en parfait état. Je recommande !'},
-    {id:2, author:'Thomas B.', date:'Fév 2024', rating:5, text:'Transaction rapide et sans problème. Super expérience.'},
-    {id:3, author:'Julie K.', date:'Jan 2024', rating:4, text:'Bon état général, livraison ponctuelle.'},
+  const mockFavs = [
+    { id: 1, title: 'Tente 4 places', price: 18, rating: 4.9, reviews: 24, img: '⛺', owner: 'Lucas M.', badge: '🏅' },
+    { id: 2, title: 'Appareil photo Sony', price: 45, rating: 4.8, reviews: 31, img: '📷', owner: 'Emma R.', badge: '' },
+    { id: 3, title: 'Paddle gonflable', price: 22, rating: 4.7, reviews: 18, img: '🏄', owner: 'Alex V.', badge: '⚡' },
+    { id: 4, title: 'Perceuse Makita', price: 12, rating: 5.0, reviews: 47, img: '🔩', owner: 'Paul D.', badge: '🏅' },
   ];
+
+  const S = {
+    page: { maxWidth: 680, margin: '0 auto', paddingBottom: 100, fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif' },
+
+    // Hero card
+    hero: {
+      background: 'linear-gradient(145deg,#6C63FF 0%,#8b5cf6 40%,#4ECDC4 100%)',
+      padding: '36px 24px 0',
+      position: 'relative',
+    },
+    heroInner: {
+      background: 'white',
+      borderRadius: '24px 24px 0 0',
+      padding: '0 24px 24px',
+      marginTop: 60,
+      boxShadow: '0 -4px 32px rgba(108,99,255,0.15)',
+    },
+    avatarWrap: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'flex-end',
+      marginTop: -48,
+      marginBottom: 16,
+    },
+    avatar: {
+      width: 88, height: 88, borderRadius: '50%',
+      background: 'linear-gradient(135deg,#6C63FF,#4ECDC4)',
+      border: '4px solid white',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      fontSize: 32,
+      boxShadow: '0 4px 16px rgba(108,99,255,0.35)',
+      position: 'relative',
+      flexShrink: 0,
+    },
+    verifiedBadge: {
+      position: 'absolute', bottom: 2, right: 2,
+      width: 24, height: 24, borderRadius: '50%',
+      background: '#10b981', border: '2px solid white',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      fontSize: 11, color: 'white', fontWeight: 700,
+    },
+    heroActions: { display: 'flex', gap: 8 },
+    btnEdit: {
+      padding: '8px 16px', borderRadius: 20, fontSize: 13, fontWeight: 600,
+      background: '#f3f4f6', border: 'none', color: '#374151',
+      cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4,
+    },
+    btnShare: {
+      padding: '8px 12px', borderRadius: 20, fontSize: 13,
+      background: '#f3f4f6', border: 'none', color: '#374151',
+      cursor: 'pointer', display: 'flex', alignItems: 'center',
+    },
+    name: { fontSize: 22, fontWeight: 800, color: '#111827', margin: '0 0 4px', letterSpacing: -0.3 },
+    subInfo: { fontSize: 13, color: '#6b7280', margin: '0 0 10px', display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' },
+    pill: {
+      display: 'inline-flex', alignItems: 'center', gap: 4,
+      background: '#f3f4f6', borderRadius: 20, padding: '3px 10px',
+      fontSize: 12, color: '#374151', fontWeight: 500,
+    },
+    pillGreen: {
+      display: 'inline-flex', alignItems: 'center', gap: 4,
+      background: '#d1fae5', borderRadius: 20, padding: '3px 10px',
+      fontSize: 12, color: '#065f46', fontWeight: 600,
+    },
+    pillPurple: {
+      display: 'inline-flex', alignItems: 'center', gap: 4,
+      background: '#ede9fe', borderRadius: 20, padding: '3px 10px',
+      fontSize: 12, color: '#6C63FF', fontWeight: 600,
+    },
+    stars: { display: 'flex', gap: 2, alignItems: 'center' },
+    bio: { fontSize: 14, color: '#6b7280', lineHeight: 1.6, margin: '0 0 20px' },
+    statsRow: {
+      display: 'grid', gridTemplateColumns: 'repeat(3,1fr)',
+      gap: 1, background: '#f3f4f6', borderRadius: 16, overflow: 'hidden',
+      margin: '0 0 20px',
+    },
+    statCell: {
+      background: 'white', padding: '14px 8px', textAlign: 'center',
+    },
+    statNum: { fontSize: 20, fontWeight: 800, color: '#111827', display: 'block', lineHeight: 1 },
+    statLbl: { fontSize: 11, color: '#9ca3af', marginTop: 3, display: 'block', textTransform: 'uppercase', letterSpacing: 0.5 },
+    trustRow: { display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 4 },
+
+    // Tabs
+    tabsWrap: {
+      background: 'white', borderBottom: '1px solid #f3f4f6',
+      position: 'sticky', top: 56, zIndex: 20,
+      overflowX: 'auto', display: 'flex',
+    },
+    tab: (active) => ({
+      flex: 'none', padding: '14px 16px', fontSize: 13, fontWeight: active ? 700 : 500,
+      color: active ? '#6C63FF' : '#6b7280',
+      borderBottom: active ? '2px solid #6C63FF' : '2px solid transparent',
+      cursor: 'pointer', whiteSpace: 'nowrap',
+      display: 'flex', alignItems: 'center', gap: 6, transition: 'all 0.15s',
+      background: 'none', border: 'none', borderBottom: active ? '2px solid #6C63FF' : '2px solid transparent',
+    }),
+    tabCount: (active) => ({
+      fontSize: 11, fontWeight: 700,
+      background: active ? '#ede9fe' : '#f3f4f6',
+      color: active ? '#6C63FF' : '#9ca3af',
+      borderRadius: 10, padding: '1px 6px', minWidth: 18, textAlign: 'center',
+    }),
+
+    // Content
+    content: { padding: '20px 16px' },
+
+    // Cards
+    card: {
+      background: 'white', borderRadius: 16,
+      border: '1px solid #f3f4f6',
+      boxShadow: '0 1px 8px rgba(0,0,0,0.06)',
+      overflow: 'hidden', marginBottom: 12,
+      transition: 'box-shadow 0.2s, transform 0.2s',
+      cursor: 'pointer',
+    },
+    listingGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 },
+    listingImg: {
+      height: 110, display: 'flex', alignItems: 'center', justifyContent: 'center',
+      fontSize: 40, background: 'linear-gradient(135deg,#f5f3ff,#ecfdf5)',
+    },
+    listingBody: { padding: '10px 12px 12px' },
+    listingTitle: { fontSize: 13, fontWeight: 700, color: '#111827', margin: '0 0 4px' },
+    listingPrice: { fontSize: 14, fontWeight: 800, color: '#6C63FF', margin: 0 },
+    listingRating: { fontSize: 11, color: '#6b7280', marginTop: 4, display: 'flex', alignItems: 'center', gap: 3 },
+
+    // Empty state
+    empty: {
+      textAlign: 'center', padding: '48px 24px',
+      background: 'white', borderRadius: 20,
+      border: '2px dashed #e5e7eb',
+    },
+    emptyIllus: { fontSize: 56, marginBottom: 16 },
+    emptyTitle: { fontSize: 18, fontWeight: 700, color: '#111827', margin: '0 0 8px' },
+    emptyText: { fontSize: 14, color: '#9ca3af', margin: '0 0 24px', lineHeight: 1.6 },
+    btnPrimary: {
+      display: 'inline-flex', alignItems: 'center', gap: 8,
+      padding: '13px 24px', borderRadius: 14, fontSize: 14, fontWeight: 700,
+      background: 'linear-gradient(135deg,#6C63FF,#8b5cf6)', color: 'white',
+      border: 'none', cursor: 'pointer', boxShadow: '0 4px 14px rgba(108,99,255,0.35)',
+      transition: 'transform 0.15s, box-shadow 0.15s',
+    },
+    suggestions: {
+      display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center', marginTop: 20,
+    },
+    suggestionChip: {
+      padding: '6px 14px', borderRadius: 20, fontSize: 12, fontWeight: 500,
+      background: '#f5f3ff', color: '#6C63FF', border: '1px solid #ddd6fe',
+      cursor: 'pointer',
+    },
+
+    // Reservation card
+    resCard: {
+      background: 'white', borderRadius: 16, border: '1px solid #f3f4f6',
+      boxShadow: '0 1px 8px rgba(0,0,0,0.06)', padding: '16px',
+      marginBottom: 10, display: 'flex', gap: 14, alignItems: 'flex-start',
+    },
+    resImgBox: {
+      width: 52, height: 52, borderRadius: 12,
+      background: 'linear-gradient(135deg,#f5f3ff,#ecfdf5)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      fontSize: 24, flexShrink: 0,
+    },
+    resInfo: { flex: 1 },
+    resTitle: { fontSize: 14, fontWeight: 700, color: '#111827', margin: '0 0 3px' },
+    resMeta: { fontSize: 12, color: '#9ca3af', margin: '0 0 8px' },
+    resFooter: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
+    resBadge: (color, bg) => ({
+      fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 20,
+      background: bg, color: color,
+    }),
+    resPrice: { fontSize: 15, fontWeight: 800, color: '#111827' },
+
+    // Reviews
+    ratingHero: {
+      background: 'white', borderRadius: 20, padding: '24px',
+      border: '1px solid #f3f4f6', boxShadow: '0 1px 8px rgba(0,0,0,0.06)',
+      marginBottom: 16, display: 'flex', gap: 24, alignItems: 'center',
+    },
+    ratingBig: { fontSize: 52, fontWeight: 900, color: '#111827', lineHeight: 1 },
+    ratingStars: { fontSize: 18, color: '#f59e0b', letterSpacing: 2 },
+    ratingTotal: { fontSize: 13, color: '#9ca3af', marginTop: 4 },
+    barRow: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 },
+    barLabel: { fontSize: 12, color: '#6b7280', width: 12, textAlign: 'right' },
+    barTrack: { flex: 1, height: 6, background: '#f3f4f6', borderRadius: 3, overflow: 'hidden' },
+    barFill: (w) => ({ width: w, height: '100%', background: '#f59e0b', borderRadius: 3 }),
+    reviewCard: {
+      background: 'white', borderRadius: 16, padding: '16px',
+      border: '1px solid #f3f4f6', boxShadow: '0 1px 8px rgba(0,0,0,0.06)', marginBottom: 10,
+    },
+    reviewTop: { display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 },
+    reviewAvatar: (color) => ({
+      width: 40, height: 40, borderRadius: '50%',
+      background: color, display: 'flex', alignItems: 'center',
+      justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: 14, flexShrink: 0,
+    }),
+    reviewName: { fontSize: 14, fontWeight: 700, color: '#111827' },
+    reviewDate: { fontSize: 12, color: '#9ca3af' },
+    reviewText: { fontSize: 13, color: '#6b7280', lineHeight: 1.65, margin: 0 },
+
+    // Favs
+    favCard: {
+      background: 'white', borderRadius: 16, border: '1px solid #f3f4f6',
+      boxShadow: '0 1px 8px rgba(0,0,0,0.06)', overflow: 'hidden',
+    },
+    favImg: {
+      height: 100, display: 'flex', alignItems: 'center', justifyContent: 'center',
+      fontSize: 38, background: 'linear-gradient(135deg,#fdf4ff,#f0fdf4)', position: 'relative',
+    },
+    favHeart: {
+      position: 'absolute', top: 8, right: 8,
+      width: 28, height: 28, borderRadius: '50%',
+      background: 'rgba(255,255,255,0.9)', display: 'flex',
+      alignItems: 'center', justifyContent: 'center', fontSize: 13,
+      boxShadow: '0 1px 4px rgba(0,0,0,0.1)',
+    },
+    favBody: { padding: '10px 12px 12px' },
+    favTitle: { fontSize: 13, fontWeight: 700, color: '#111827', margin: '0 0 2px' },
+    favOwner: { fontSize: 11, color: '#9ca3af', margin: '0 0 6px' },
+    favBottom: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
+    favPrice: { fontSize: 14, fontWeight: 800, color: '#6C63FF' },
+    favRating: { fontSize: 11, color: '#6b7280', display: 'flex', alignItems: 'center', gap: 2 },
+
+    // Settings
+    settingsSection: { marginBottom: 24 },
+    sectionTitle: { fontSize: 11, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 0.8, margin: '0 0 10px' },
+    fieldCard: {
+      background: 'white', borderRadius: 14, border: '1px solid #f3f4f6',
+      boxShadow: '0 1px 4px rgba(0,0,0,0.04)', overflow: 'hidden',
+    },
+    fieldRow: {
+      padding: '14px 16px', borderBottom: '1px solid #f9fafb',
+      display: 'flex', flexDirection: 'column', gap: 2,
+    },
+    fieldLabel: { fontSize: 11, color: '#9ca3af', fontWeight: 600 },
+    fieldInput: {
+      border: 'none', outline: 'none', fontSize: 14, color: '#111827',
+      background: 'transparent', padding: 0, width: '100%', fontFamily: 'inherit',
+    },
+    toggleCard: {
+      background: 'white', borderRadius: 14, border: '1px solid #f3f4f6',
+      boxShadow: '0 1px 4px rgba(0,0,0,0.04)', overflow: 'hidden', marginBottom: 8,
+    },
+    toggleRow: {
+      padding: '14px 16px', display: 'flex',
+      justifyContent: 'space-between', alignItems: 'center',
+      borderBottom: '1px solid #f9fafb',
+    },
+    toggleInfo: { display: 'flex', flexDirection: 'column', gap: 2 },
+    toggleTitle: { fontSize: 14, fontWeight: 600, color: '#111827' },
+    toggleSub: { fontSize: 12, color: '#9ca3af' },
+    toggle: (on) => ({
+      width: 46, height: 26, borderRadius: 13, position: 'relative',
+      background: on ? '#6C63FF' : '#d1d5db', cursor: 'pointer', transition: 'background 0.2s',
+      flexShrink: 0,
+    }),
+    toggleKnob: (on) => ({
+      position: 'absolute', top: 3, left: on ? 23 : 3,
+      width: 20, height: 20, borderRadius: '50%',
+      background: 'white', boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
+      transition: 'left 0.2s',
+    }),
+    savBtn: {
+      width: '100%', padding: '15px', borderRadius: 14,
+      background: 'linear-gradient(135deg,#6C63FF,#8b5cf6)',
+      border: 'none', color: 'white', fontSize: 15, fontWeight: 700,
+      cursor: 'pointer', boxShadow: '0 4px 14px rgba(108,99,255,0.3)', marginBottom: 10,
+    },
+    logoutBtn: {
+      width: '100%', padding: '15px', borderRadius: 14,
+      background: 'white', border: '2px solid #fecaca',
+      color: '#ef4444', fontSize: 15, fontWeight: 700, cursor: 'pointer',
+    },
+  };
+
+  const StarRow = ({n=5}) => (
+    <span style={{color:'#f59e0b',fontSize:14,letterSpacing:1}}>
+      {'★'.repeat(n)}{'☆'.repeat(5-n)}
+    </span>
+  );
 
   return (
-    <div style={{maxWidth:'600px',margin:'0 auto',paddingBottom:'80px'}}>
+    <div style={S.page}>
 
-      <div style={{
-        background:'linear-gradient(135deg,#6C63FF 0%,#4ECDC4 100%)',
-        padding:'40px 20px 24px',
-        display:'flex',
-        flexDirection:'column',
-        alignItems:'center',
-        textAlign:'center',
-      }}>
-        <div style={{
-          width:'90px',height:'90px',borderRadius:'50%',
-          background:'rgba(255,255,255,0.25)',
-          display:'flex',alignItems:'center',justifyContent:'center',
-          fontSize:'36px',border:'3px solid white',
-          marginBottom:'12px',position:'relative',
-        }}>
-          👤
-          <div style={{
-            position:'absolute',bottom:'2px',right:'2px',
-            background:'#22c55e',color:'white',
-            borderRadius:'50%',width:'22px',height:'22px',
-            display:'flex',alignItems:'center',justifyContent:'center',
-            fontSize:'12px',border:'2px solid white',
-          }}>✓</div>
-        </div>
-        <h2 style={{fontSize:'22px',fontWeight:'700',margin:'0 0 4px',color:'white'}}>{profileData.name}</h2>
-        <p style={{fontSize:'13px',margin:'0 0 2px',color:'rgba(255,255,255,0.85)'}}>📍 Paris, France</p>
-        <p style={{fontSize:'12px',margin:'0 0 16px',color:'rgba(255,255,255,0.7)'}}>Membre depuis 2024</p>
-        <div style={{display:'flex',gap:'24px',marginBottom:'16px'}}>
-          {[
-            {val:'3', lbl:'Annonces'},
-            {val:'4.8★', lbl:'Note moy.'},
-            {val:'🏅', lbl:'Super hôte'},
-          ].map(s => (
-            <div key={s.lbl} style={{textAlign:'center'}}>
-              <strong style={{display:'block',fontSize:'18px',fontWeight:'700',color:'white'}}>{s.val}</strong>
-              <span style={{fontSize:'11px',color:'rgba(255,255,255,0.8)'}}>{s.lbl}</span>
+      {/* ─── HERO ─── */}
+      <div style={S.hero}>
+        {/* Background pattern dots */}
+        <div style={{position:'absolute',top:0,left:0,right:0,bottom:0,backgroundImage:'radial-gradient(circle,rgba(255,255,255,0.15) 1px,transparent 1px)',backgroundSize:'20px 20px'}} />
+        <div style={{position:'relative'}}>
+          <div style={S.heroInner}>
+            <div style={S.avatarWrap}>
+              <div style={S.avatar}>
+                {userAvatar ? <img src={userAvatar} style={{width:'100%',height:'100%',borderRadius:'50%',objectFit:'cover'}} /> : '👤'}
+                <div style={S.verifiedBadge}>✓</div>
+              </div>
+              <div style={S.heroActions}>
+                <button onClick={() => setTab('parametres')} style={S.btnEdit}>✏️ Modifier</button>
+                <button style={S.btnShare}>↗</button>
+              </div>
             </div>
-          ))}
-        </div>
-        <div style={{display:'flex',gap:'10px'}}>
-          <button onClick={() => setTab('parametres')} style={{
-            padding:'8px 20px',borderRadius:'20px',fontSize:'13px',fontWeight:'600',
-            cursor:'pointer',background:'transparent',border:'2px solid white',color:'white',
-          }}>Modifier le profil</button>
-          <button style={{
-            padding:'8px 20px',borderRadius:'20px',fontSize:'13px',fontWeight:'600',
-            cursor:'pointer',background:'white',border:'2px solid white',color:'#6C63FF',
-          }}>Partager</button>
+
+            <h2 style={S.name}>{profileData.name}</h2>
+
+            <div style={S.subInfo}>
+              <span style={S.pillGreen}>✓ Identité vérifiée</span>
+              <span style={S.pillPurple}>🏅 Super hôte</span>
+              <span style={S.pill}>📍 Paris</span>
+              <span style={S.pill}>🗓️ Membre depuis 2024</span>
+            </div>
+
+            <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:12}}>
+              <StarRow n={5} />
+              <span style={{fontSize:15,fontWeight:800,color:'#111827'}}>4.9</span>
+              <span style={{fontSize:13,color:'#9ca3af'}}>· 12 avis</span>
+            </div>
+
+            {profileData.bio && <p style={S.bio}>{profileData.bio}</p>}
+
+            <div style={S.statsRow}>
+              {[
+                {num: listings.length || 3, lbl: 'Annonces'},
+                {num: 12, lbl: 'Avis'},
+                {num: '97%', lbl: 'Réponses'},
+              ].map(s => (
+                <div key={s.lbl} style={S.statCell}>
+                  <strong style={S.statNum}>{s.num}</strong>
+                  <span style={S.statLbl}>{s.lbl}</span>
+                </div>
+              ))}
+            </div>
+
+            <div style={S.trustRow}>
+              <span style={S.pill}>⚡ Répond en &lt;1h</span>
+              <span style={S.pill}>🔒 Paiement sécurisé</span>
+              <span style={S.pill}>🛡️ Caution assurée</span>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div style={{
-        display:'flex',overflowX:'auto',background:'var(--w)',
-        borderBottom:'1px solid var(--bd)',position:'sticky',top:'56px',zIndex:10,
-      }}>
+      {/* ─── TABS ─── */}
+      <div style={S.tabsWrap}>
         {tabs.map(t => (
-          <div key={t.id}
-            onClick={() => setTab(t.id)}
-            style={{
-              flex:'none',padding:'12px 14px',fontSize:'12px',fontWeight:'600',
-              color: tab===t.id ? '#6C63FF' : 'var(--g)',
-              cursor:'pointer',
-              borderBottom: tab===t.id ? '2px solid #6C63FF' : '2px solid transparent',
-              whiteSpace:'nowrap',
-            }}
-          >{t.label}</div>
+          <button key={t.id} onClick={() => setTab(t.id)}
+            style={{...S.tab(tab===t.id), background:'none', outline:'none',
+              borderTop:'none', borderLeft:'none', borderRight:'none'}}>
+            <span>{t.icon}</span>
+            <span>{t.label}</span>
+            {t.count !== null && <span style={S.tabCount(tab===t.id)}>{t.count}</span>}
+          </button>
         ))}
       </div>
 
-      <div style={{padding:'16px'}}>
+      {/* ─── CONTENT ─── */}
+      <div style={S.content}>
 
-        {tab==='annonces' && (
-          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'12px'}}>
-            {listings.map(l => (
-              <div key={l.id} style={{background:'var(--w)',border:'1px solid var(--bd)',borderRadius:'12px',overflow:'hidden',cursor:'pointer'}}>
-                <div style={{height:'90px',background:'linear-gradient(135deg,#f0f0ff,#e8f8f8)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'32px'}}>{l.img}</div>
-                <div style={{padding:'10px'}}>
-                  <p style={{fontSize:'13px',fontWeight:'600',color:'var(--tx)',margin:'0 0 4px'}}>{l.title}</p>
-                  <p style={{fontSize:'12px',color:'#6C63FF',fontWeight:'700',margin:'0'}}>{l.price}€/jour</p>
-                  <p style={{fontSize:'11px',color:'var(--g)',margin:'2px 0 0'}}>⭐ {l.rating}</p>
-                </div>
+        {/* ── Annonces ── */}
+        {tab === 'annonces' && (
+          listings.length === 0 ? (
+            <div style={S.empty}>
+              <div style={S.emptyIllus}>📦</div>
+              <h3 style={S.emptyTitle}>Pas encore d'annonces</h3>
+              <p style={S.emptyText}>Commencez à louer vos objets et gagnez de l'argent facilement. Vos voisins cherchent peut-être ce que vous avez !</p>
+              <button style={S.btnPrimary} onClick={() => setPage && setPage('create')}>
+                ＋ Créer ma première annonce
+              </button>
+              <div style={S.suggestions}>
+                {['🔧 Outils', '🚲 Vélo', '📷 Caméra', '⛺ Camping', '🎮 Jeux', '🛺 Véhicule'].map(s => (
+                  <span key={s} style={S.suggestionChip}>{s}</span>
+                ))}
               </div>
-            ))}
-          </div>
+            </div>
+          ) : (
+            <div style={S.listingGrid}>
+              {listings.map(l => (
+                <div key={l.id} style={S.card} onClick={() => { setSelected && setSelected(l); setPage && setPage('detail'); }}>
+                  <div style={S.listingImg}>{l.img || '📦'}</div>
+                  <div style={S.listingBody}>
+                    <p style={S.listingTitle}>{l.title}</p>
+                    <p style={S.listingPrice}>{l.price}€<span style={{fontWeight:400,fontSize:11,color:'#9ca3af'}}>/jour</span></p>
+                    <div style={S.listingRating}>⭐ {l.rating || '4.8'} <span>· {l.reviews || 0} avis</span></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )
         )}
 
-        {tab==='reservations' && (
+        {/* ── Réservations ── */}
+        {tab === 'reservations' && (
           <div>
-            {reservations.map(r => (
-              <div key={r.id} style={{
-                background:'var(--w)',border:'1px solid var(--bd)',borderRadius:'12px',
-                padding:'14px',marginBottom:'10px',display:'flex',gap:'12px',alignItems:'center',
-              }}>
-                <div style={{fontSize:'28px'}}>📦</div>
-                <div style={{flex:1}}>
-                  <p style={{fontSize:'14px',fontWeight:'600',color:'var(--tx)',margin:'0 0 2px'}}>{r.item}</p>
-                  <p style={{fontSize:'12px',color:'var(--g)',margin:'0 0 6px'}}>📅 {r.dates}</p>
-                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-                    <span style={{fontSize:'11px',fontWeight:'600',padding:'2px 8px',borderRadius:'10px',background:r.statusColor+'22',color:r.statusColor}}>{r.status}</span>
-                    <span style={{fontSize:'13px',fontWeight:'700',color:'var(--tx)'}}>{r.price}</span>
+            <p style={{fontSize:13,color:'#9ca3af',margin:'0 0 16px',fontWeight:500}}>3 réservations au total</p>
+            {mockReservations.map(r => (
+              <div key={r.id} style={S.resCard}>
+                <div style={S.resImgBox}>{r.img}</div>
+                <div style={S.resInfo}>
+                  <p style={S.resTitle}>{r.item}</p>
+                  <p style={S.resMeta}>📅 {r.dates} · avec {r.renter}</p>
+                  <div style={S.resFooter}>
+                    <span style={S.resBadge(r.color, r.bg)}>{r.status}</span>
+                    <span style={S.resPrice}>{r.price}</span>
                   </div>
                 </div>
               </div>
@@ -1028,94 +1334,140 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
           </div>
         )}
 
-        {tab==='avis' && (
+        {/* ── Avis ── */}
+        {tab === 'avis' && (
           <div>
-            <div style={{background:'var(--w)',border:'1px solid var(--bd)',borderRadius:'12px',padding:'16px',marginBottom:'16px',textAlign:'center'}}>
-              <div style={{fontSize:'48px',fontWeight:'800',color:'var(--tx)'}}>4.8</div>
-              <div style={{fontSize:'20px',color:'#f59e0b',margin:'4px 0'}}>★★★★★</div>
-              <div style={{fontSize:'13px',color:'var(--g)'}}>Basé sur {reviews.length} avis</div>
-              <div style={{marginTop:'12px'}}>
+            <div style={S.ratingHero}>
+              <div style={{textAlign:'center'}}>
+                <div style={S.ratingBig}>4.9</div>
+                <div style={S.ratingStars}>★★★★★</div>
+                <div style={S.ratingTotal}>12 avis</div>
+              </div>
+              <div style={{flex:1}}>
                 {[5,4,3,2,1].map(n => (
-                  <div key={n} style={{display:'flex',alignItems:'center',gap:'8px',marginBottom:'4px'}}>
-                    <span style={{fontSize:'11px',color:'var(--g)',width:'16px',textAlign:'right'}}>{n}</span>
-                    <div style={{flex:1,height:'6px',background:'var(--bd)',borderRadius:'3px',overflow:'hidden'}}>
-                      <div style={{height:'100%',background:'#f59e0b',borderRadius:'3px',width:n===5?'80%':n===4?'15%':'5%'}} />
+                  <div key={n} style={S.barRow}>
+                    <span style={S.barLabel}>{n}</span>
+                    <div style={S.barTrack}>
+                      <div style={S.barFill(n===5?'83%':n===4?'12%':'5%')} />
+                    </div>
+                    <span style={{fontSize:11,color:'#9ca3af',width:24}}>
+                      {n===5?10:n===4?2:0}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            {mockReviews.map(r => (
+              <div key={r.id} style={S.reviewCard}>
+                <div style={S.reviewTop}>
+                  <div style={S.reviewAvatar(r.color)}>{r.initials}</div>
+                  <div style={{flex:1}}>
+                    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                      <span style={S.reviewName}>{r.author}</span>
+                      <span style={{fontSize:12,color:'#f59e0b',letterSpacing:1}}>{'★'.repeat(r.rating)}</span>
+                    </div>
+                    <div style={S.reviewDate}>{r.date}</div>
+                  </div>
+                </div>
+                <p style={S.reviewText}>"{r.text}"</p>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* ── Favoris ── */}
+        {tab === 'favoris' && (
+          <div style={S.listingGrid}>
+            {mockFavs.map(f => (
+              <div key={f.id} style={S.favCard}>
+                <div style={S.favImg}>
+                  {f.img}
+                  <div style={S.favHeart}>❤️</div>
+                  {f.badge && <div style={{position:'absolute',top:8,left:8,fontSize:14}}>{f.badge}</div>}
+                </div>
+                <div style={S.favBody}>
+                  <p style={S.favTitle}>{f.title}</p>
+                  <p style={S.favOwner}>par {f.owner}</p>
+                  <div style={S.favBottom}>
+                    <span style={S.favPrice}>{f.price}€<span style={{fontWeight:400,fontSize:11,color:'#9ca3af'}}>/j</span></span>
+                    <span style={S.favRating}>⭐ {f.rating} <span style={{color:'#d1d5db'}}>·</span> {f.reviews}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* ── Paramètres ── */}
+        {tab === 'parametres' && (
+          <div>
+            <div style={S.settingsSection}>
+              <p style={S.sectionTitle}>Mon profil</p>
+              <div style={S.fieldCard}>
+                {[
+                  {label:'Nom complet', key:'name'},
+                  {label:'Email', key:'email'},
+                  {label:'Téléphone', key:'phone'},
+                ].map((f,i,arr) => (
+                  <div key={f.key} style={{...S.fieldRow, borderBottom: i<arr.length-1 ? '1px solid #f9fafb' : 'none'}}>
+                    <span style={S.fieldLabel}>{f.label}</span>
+                    <input value={profileData[f.key]}
+                      onChange={e => setProfileData({...profileData,[f.key]:e.target.value})}
+                      style={S.fieldInput} />
+                  </div>
+                ))}
+                <div style={{...S.fieldRow,borderBottom:'none'}}>
+                  <span style={S.fieldLabel}>Bio</span>
+                  <textarea rows={3} value={profileData.bio}
+                    onChange={e => setProfileData({...profileData,bio:e.target.value})}
+                    style={{...S.fieldInput,resize:'none'}} />
+                </div>
+              </div>
+            </div>
+
+            <div style={S.settingsSection}>
+              <p style={S.sectionTitle}>Notifications</p>
+              <div style={S.toggleCard}>
+                {[
+                  {key:'notifEmail',title:'Emails',sub:'Nouvelles réservations et messages'},
+                  {key:'notifPush',title:'Notifications push',sub:'Alertes en temps réel'},
+                ].map((f,i,arr) => (
+                  <div key={f.key} style={{...S.toggleRow,borderBottom:i<arr.length-1?'1px solid #f9fafb':'none'}}>
+                    <div style={S.toggleInfo}>
+                      <span style={S.toggleTitle}>{f.title}</span>
+                      <span style={S.toggleSub}>{f.sub}</span>
+                    </div>
+                    <div style={S.toggle(profileData[f.key])}
+                      onClick={()=>setProfileData({...profileData,[f.key]:!profileData[f.key]})}>
+                      <div style={S.toggleKnob(profileData[f.key])} />
                     </div>
                   </div>
                 ))}
               </div>
             </div>
-            {reviews.map(r => (
-              <div key={r.id} style={{background:'var(--w)',border:'1px solid var(--bd)',borderRadius:'12px',padding:'14px',marginBottom:'10px'}}>
-                <div style={{display:'flex',alignItems:'center',gap:'10px',marginBottom:'8px'}}>
-                  <div style={{
-                    width:'36px',height:'36px',borderRadius:'50%',
-                    background:'linear-gradient(135deg,#6C63FF,#4ECDC4)',
-                    display:'flex',alignItems:'center',justifyContent:'center',
-                    color:'white',fontWeight:'700',fontSize:'14px',
-                  }}>{r.author[0]}</div>
-                  <div>
-                    <div style={{fontSize:'13px',fontWeight:'600',color:'var(--tx)'}}>{r.author}</div>
-                    <div style={{fontSize:'11px',color:'var(--g)'}}>{r.date} · {'★'.repeat(r.rating)}</div>
+
+            <div style={S.settingsSection}>
+              <p style={S.sectionTitle}>Confiance &amp; Sécurité</p>
+              <div style={S.fieldCard}>
+                {[
+                  {icon:'✅',label:'Identité vérifiée',value:'Confirmée'},
+                  {icon:'📱',label:'Numéro vérifié',value:profileData.phone},
+                  {icon:'📧',label:'Email vérifié',value:profileData.email},
+                ].map((item,i,arr) => (
+                  <div key={item.label} style={{
+                    ...S.fieldRow, flexDirection:'row',
+                    alignItems:'center', justifyContent:'space-between',
+                    borderBottom: i<arr.length-1 ? '1px solid #f9fafb' : 'none'
+                  }}>
+                    <span style={{fontSize:14,color:'#111827'}}>{item.icon} {item.label}</span>
+                    <span style={{fontSize:13,color:'#10b981',fontWeight:600}}>{item.value}</span>
                   </div>
-                </div>
-                <p style={{fontSize:'13px',color:'var(--g)',lineHeight:'1.5',margin:0}}>{r.text}</p>
+                ))}
               </div>
-            ))}
-          </div>
-        )}
-
-        {tab==='favoris' && (
-          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'12px'}}>
-            {listings.slice(0,2).map(l => (
-              <div key={l.id} style={{background:'var(--w)',border:'1px solid var(--bd)',borderRadius:'12px',overflow:'hidden',cursor:'pointer'}}>
-                <div style={{height:'90px',background:'linear-gradient(135deg,#f0f0ff,#e8f8f8)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'32px'}}>{l.img}</div>
-                <div style={{padding:'10px'}}>
-                  <p style={{fontSize:'13px',fontWeight:'600',color:'var(--tx)',margin:'0 0 4px'}}>{l.title}</p>
-                  <p style={{fontSize:'12px',color:'#6C63FF',fontWeight:'700',margin:'0'}}>{l.price}€/jour</p>
-                  <p style={{fontSize:'11px',color:'var(--g)',margin:'2px 0 0'}}>⭐ {l.rating}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {tab==='parametres' && (
-          <div>
-            <p style={{fontSize:'12px',fontWeight:'700',color:'var(--g)',textTransform:'uppercase',margin:'0 0 8px',letterSpacing:'0.5px'}}>Informations personnelles</p>
-            {[
-              {label:'Nom complet', key:'name'},
-              {label:'Email', key:'email'},
-              {label:'Téléphone', key:'phone'},
-            ].map(f => (
-              <div key={f.key} style={{background:'var(--w)',border:'1px solid var(--bd)',borderRadius:'10px',padding:'12px 14px',marginBottom:'8px'}}>
-                <label style={{fontSize:'11px',color:'var(--g)',display:'block',marginBottom:'4px'}}>{f.label}</label>
-                <input
-                  value={profileData[f.key]}
-                  onChange={e => setProfileData({...profileData, [f.key]: e.target.value})}
-                  style={{width:'100%',border:'none',background:'transparent',fontSize:'14px',color:'var(--tx)',outline:'none',boxSizing:'border-box'}}
-                />
-              </div>
-            ))}
-            <div style={{background:'var(--w)',border:'1px solid var(--bd)',borderRadius:'10px',padding:'12px 14px',marginBottom:'8px'}}>
-              <label style={{fontSize:'11px',color:'var(--g)',display:'block',marginBottom:'4px'}}>Bio</label>
-              <textarea rows={3} value={profileData.bio}
-                onChange={e => setProfileData({...profileData, bio: e.target.value})}
-                style={{width:'100%',border:'none',background:'transparent',fontSize:'14px',color:'var(--tx)',outline:'none',resize:'none',boxSizing:'border-box'}}
-              />
             </div>
-            <p style={{fontSize:'12px',fontWeight:'700',color:'var(--g)',textTransform:'uppercase',margin:'16px 0 8px',letterSpacing:'0.5px'}}>Notifications</p>
-            {[{label:'📧 Email', key:'notifEmail'},{label:'🔔 Push', key:'notifPush'}].map(f => (
-              <div key={f.key} style={{background:'var(--w)',border:'1px solid var(--bd)',borderRadius:'10px',padding:'12px 14px',marginBottom:'8px',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-                <span style={{fontSize:'13px',color:'var(--tx)'}}>{f.label}</span>
-                <div onClick={() => setProfileData({...profileData, [f.key]: !profileData[f.key]})}
-                  style={{width:'44px',height:'24px',borderRadius:'12px',position:'relative',cursor:'pointer',background: profileData[f.key] ? '#6C63FF' : '#d1d5db',transition:'background 0.2s'}}>
-                  <div style={{position:'absolute',top:'3px',left: profileData[f.key] ? '23px' : '3px',width:'18px',height:'18px',borderRadius:'50%',background:'white',transition:'left 0.2s',boxShadow:'0 1px 3px rgba(0,0,0,0.2)'}} />
-                </div>
-              </div>
-            ))}
-            <button style={{width:'100%',padding:'14px',borderRadius:'12px',background:'#6C63FF',border:'none',color:'white',fontSize:'15px',fontWeight:'700',cursor:'pointer',marginTop:'8px',marginBottom:'8px'}}>Sauvegarder</button>
-            <button style={{width:'100%',padding:'14px',borderRadius:'12px',background:'transparent',border:'2px solid #ef4444',color:'#ef4444',fontSize:'15px',fontWeight:'700',cursor:'pointer'}}>Se déconnecter</button>
+
+            <button style={S.savBtn}>Sauvegarder les modifications</button>
+            <button style={S.logoutBtn}>🚪 Se déconnecter</button>
           </div>
         )}
 
