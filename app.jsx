@@ -881,367 +881,217 @@ function calcSavings(rentals, avgPrice) {
   return Math.floor(rentals * avgPrice * 3 * (base - current));
 }
 
-function Profile({dark, setPage}) {
-  const [tab, setTab] = useState('annonces');
-  const [profileData, setProfileData] = useState({
-    name: 'Noah M.',
-    email: 'noah@cercle.fr',
-    phone: '+33 6 12 34 56 78',
-    bio: 'Passionné par le partage et l\'économie collaborative.',
-    notifEmail: true,
-    notifPush: false,
-  });
-
+function Profile({state, dispatch, setPage, setSelected, initTab}) {
+  const [tab, setTab] = useState(initTab || 'listings');
+  const [notifEmail, setNotifEmail] = useState(true);
+  const [notifPush, setNotifPush] = useState(false);
+  const user = state.user;
+  const myListings = [...state.items, ...state.userItems].filter(i => i.owner?.id === user?.id);
+  const myBookings = state.bookings.filter(b => b.userId === user?.id);
+  const myFavs = [...state.items, ...state.userItems, ...state.proItems].filter(i => state.favorites.has(i.id));
+  const myReviews = state.reviews.filter(r => myListings.some(l => l.id === r.itemId));
+  const avgRating = myReviews.length > 0
+    ? (myReviews.reduce((s, r) => s + r.rating, 0) / myReviews.length).toFixed(1)
+    : (user?.rating || 4.8).toFixed(1);
   const tabs = [
-    {id:'annonces', label:'📦 Annonces'},
-    {id:'reservations', label:'📅 Réservations'},
-    {id:'avis', label:'⭐ Avis'},
-    {id:'favoris', label:'❤️ Favoris'},
-    {id:'parametres', label:'⚙️ Paramètres'},
+    {id:'listings', icon:'📦', label:'Annonces'},
+    {id:'bookings', icon:'📅', label:'Réservations'},
+    {id:'reviews', icon:'⭐', label:'Avis'},
+    {id:'favorites', icon:'❤️', label:'Favoris'},
+    {id:'settings', icon:'⚙️', label:'Paramètres'},
   ];
 
-  const listings = [
-    {id:1, title:'Vélo électrique', price:25, rating:4.8, img:'🚲'},
-    {id:2, title:'Appareil photo', price:40, rating:4.9, img:'📷'},
-    {id:3, title:'Trottinette', price:15, rating:4.7, img:'🛴'},
-  ];
-
-  const reservations = [
-    {id:1, item:'Perceuse Bosch', dates:'15-17 Mars', status:'En cours', statusColor:'#22c55e', price:'30€'},
-    {id:2, item:'Vélo de route', dates:'5-7 Mars', status:'Terminée', statusColor:'#9ca3af', price:'45€'},
-    {id:3, item:'Kayak double', dates:'25-27 Mars', status:'À venir', statusColor:'#3b82f6', price:'80€'},
-  ];
-
-  const reviews = [
-    {id:1, author:'Marie L.', date:'Mars 2024', rating:5, text:'Très bon contact, matériel en parfait état. Je recommande !'},
-    {id:2, author:'Thomas B.', date:'Fév 2024', rating:5, text:'Transaction rapide et sans problème. Super expérience.'},
-    {id:3, author:'Julie K.', date:'Jan 2024', rating:4, text:'Bon état général, livraison ponctuelle.'},
-  ];
-
-  const css = `
-    .prof-page { max-width:600px; margin:0 auto; padding-bottom:80px; }
-    .prof-header {
-      background: linear-gradient(135deg, #6C63FF 0%, #4ECDC4 100%);
-      padding: 40px 20px 24px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-      color: white;
-    }
-    .prof-avatar {
-      width:90px; height:90px; border-radius:50%;
-      background: rgba(255,255,255,0.25);
-      display:flex; align-items:center; justify-content:center;
-      font-size:36px; border:3px solid white;
-      margin-bottom:12px; position:relative;
-    }
-    .prof-badge {
-      position:absolute; bottom:2px; right:2px;
-      background:#22c55e; color:white;
-      border-radius:50%; width:22px; height:22px;
-      display:flex; align-items:center; justify-content:center;
-      font-size:12px; border:2px solid white;
-    }
-    .prof-name { font-size:22px; font-weight:700; margin:0 0 4px; }
-    .prof-location { font-size:13px; opacity:0.85; margin:0 0 2px; }
-    .prof-since { font-size:12px; opacity:0.7; margin:0 0 16px; }
-    .prof-stats {
-      display:flex; gap:24px; margin-bottom:16px;
-    }
-    .prof-stat { text-align:center; }
-    .prof-stat strong { display:block; font-size:18px; font-weight:700; }
-    .prof-stat span { font-size:11px; opacity:0.8; }
-    .prof-actions { display:flex; gap:10px; }
-    .prof-btn {
-      padding:8px 20px; border-radius:20px; font-size:13px;
-      font-weight:600; cursor:pointer; transition:all 0.2s;
-    }
-    .prof-btn-outline {
-      background:transparent; border:2px solid white; color:white;
-    }
-    .prof-btn-fill {
-      background:white; border:2px solid white; color:#6C63FF;
-    }
-    .prof-tabs {
-      display:flex; overflow-x:auto; background:var(--w);
-      border-bottom:1px solid var(--bd); position:sticky; top:56px; z-index:10;
-      scrollbar-width:none;
-    }
-    .prof-tabs::-webkit-scrollbar { display:none; }
-    .prof-tab {
-      flex:none; padding:12px 14px; font-size:12px; font-weight:600;
-      color:var(--g); cursor:pointer; border-bottom:2px solid transparent;
-      white-space:nowrap; transition:all 0.2s;
-    }
-    .prof-tab.active { color:var(--p); border-bottom-color:var(--p); }
-    .prof-content { padding:16px; }
-    .prof-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-    .prof-card {
-      background:var(--w); border:1px solid var(--bd); border-radius:12px;
-      overflow:hidden; cursor:pointer;
-    }
-    .prof-card-img {
-      height:90px; background:linear-gradient(135deg,#f0f0ff,#e8f8f8);
-      display:flex; align-items:center; justify-content:center; font-size:32px;
-    }
-    .prof-card-body { padding:10px; }
-    .prof-card-title { font-size:13px; font-weight:600; color:var(--tx); margin:0 0 4px; }
-    .prof-card-price { font-size:12px; color:var(--p); font-weight:700; }
-    .prof-card-rating { font-size:11px; color:var(--g); margin-top:2px; }
-    .res-card {
-      background:var(--w); border:1px solid var(--bd); border-radius:12px;
-      padding:14px; margin-bottom:10px; display:flex; gap:12px; align-items:center;
-    }
-    .res-icon { font-size:28px; }
-    .res-info { flex:1; }
-    .res-item { font-size:14px; font-weight:600; color:var(--tx); margin:0 0 2px; }
-    .res-dates { font-size:12px; color:var(--g); margin:0 0 4px; }
-    .res-footer { display:flex; justify-content:space-between; align-items:center; }
-    .res-status { font-size:11px; font-weight:600; padding:2px 8px; border-radius:10px; }
-    .res-price { font-size:13px; font-weight:700; color:var(--tx); }
-    .avis-header {
-      background:var(--w); border:1px solid var(--bd); border-radius:12px;
-      padding:16px; margin-bottom:16px; text-align:center;
-    }
-    .avis-big { font-size:48px; font-weight:800; color:var(--tx); }
-    .avis-stars { font-size:20px; color:#f59e0b; margin:4px 0; }
-    .avis-count { font-size:13px; color:var(--g); }
-    .avis-bars { margin-top:12px; }
-    .avis-bar-row { display:flex; align-items:center; gap:8px; margin-bottom:4px; }
-    .avis-bar-label { font-size:11px; color:var(--g); width:16px; text-align:right; }
-    .avis-bar-track { flex:1; height:6px; background:var(--bd); border-radius:3px; overflow:hidden; }
-    .avis-bar-fill { height:100%; background:#f59e0b; border-radius:3px; }
-    .avis-card {
-      background:var(--w); border:1px solid var(--bd); border-radius:12px;
-      padding:14px; margin-bottom:10px;
-    }
-    .avis-card-top { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
-    .avis-avatar {
-      width:36px; height:36px; border-radius:50%;
-      background:linear-gradient(135deg,#6C63FF,#4ECDC4);
-      display:flex; align-items:center; justify-content:center;
-      color:white; font-weight:700; font-size:14px;
-    }
-    .avis-author { font-size:13px; font-weight:600; color:var(--tx); }
-    .avis-date { font-size:11px; color:var(--g); }
-    .avis-text { font-size:13px; color:var(--g); line-height:1.5; }
-    .settings-section { margin-bottom:20px; }
-    .settings-label { font-size:12px; font-weight:700; color:var(--g); text-transform:uppercase; margin:0 0 8px; letter-spacing:0.5px; }
-    .settings-field {
-      background:var(--w); border:1px solid var(--bd); border-radius:10px;
-      padding:12px 14px; margin-bottom:8px;
-    }
-    .settings-field label { font-size:11px; color:var(--g); display:block; margin-bottom:4px; }
-    .settings-field input, .settings-field textarea {
-      width:100%; border:none; background:transparent; font-size:14px;
-      color:var(--tx); outline:none; resize:none; font-family:inherit;
-    }
-    .settings-toggle-row {
-      background:var(--w); border:1px solid var(--bd); border-radius:10px;
-      padding:12px 14px; margin-bottom:8px;
-      display:flex; justify-content:space-between; align-items:center;
-    }
-    .settings-toggle-info { font-size:13px; color:var(--tx); }
-    .toggle-switch {
-      width:44px; height:24px; border-radius:12px;
-      position:relative; cursor:pointer; transition:background 0.2s;
-    }
-    .toggle-knob {
-      position:absolute; top:3px; width:18px; height:18px;
-      border-radius:50%; background:white; transition:left 0.2s; box-shadow:0 1px 3px rgba(0,0,0,0.2);
-    }
-    .btn-logout {
-      width:100%; padding:14px; border-radius:12px;
-      background:transparent; border:2px solid #ef4444; color:#ef4444;
-      font-size:15px; font-weight:700; cursor:pointer; margin-top:8px;
-      transition:all 0.2s;
-    }
-    .btn-logout:hover { background:#ef4444; color:white; }
-    .btn-save {
-      width:100%; padding:14px; border-radius:12px;
-      background:#6C63FF; border:none; color:white;
-      font-size:15px; font-weight:700; cursor:pointer; margin-bottom:8px;
-    }
-  `;
 
   return (
-    <div className="prof-page">
-      <style>{css}</style>
-
-      {/* Header gradient */}
-      <div className="prof-header">
-        <div className="prof-avatar">
-          👤
-          <div className="prof-badge">✓</div>
+    <div className="pv-page">
+      <div className="pv-header">
+        <button className="pv-back" onClick={() => setPage('home')}>← Retour</button>
+        <button className="pv-share-top">🔗</button>
+        <div className="pv-av-wrap">
+          <div className="pv-av">{user?.avatar || '👤'}</div>
+          {user?.verified && <div className="pv-av-badge">✓</div>}
         </div>
-        <h2 className="prof-name">{profileData.name}</h2>
-        <p className="prof-location">📍 Paris, France</p>
-        <p className="prof-since">Membre depuis 2024</p>
-        <div className="prof-stats">
-          <div className="prof-stat">
-            <strong>3</strong>
-            <span>Annonces</span>
-          </div>
-          <div className="prof-stat">
-            <strong>4.8★</strong>
-            <span>Note moy.</span>
-          </div>
-          <div className="prof-stat">
-            <strong>🏅</strong>
-            <span>Super hôte</span>
-          </div>
+        <div className="pv-name-row">
+          <span className="pv-name">{user?.name || 'Mon profil'}</span>
+          {user?.verified && <span className="pv-verified">✓ Vérifié</span>}
         </div>
-        <div className="prof-actions">
-          <button className="prof-btn prof-btn-outline" onClick={() => setTab('parametres')}>Modifier le profil</button>
-          <button className="prof-btn prof-btn-fill">Partager</button>
+        <p className="pv-bio">{user?.bio || "Passionné par le partage et l'économie collaborative."}</p>
+        <p className="pv-since">📍 {user?.location || 'France'} · Membre depuis {user?.since || 2024}</p>
+        <div className="pv-stats">
+          <div className="pv-stat"><strong>{myListings.length}</strong><span>Annonces</span></div>
+          <div className="pv-stat-sep"/>
+          <div className="pv-stat"><strong>{avgRating}★</strong><span>Note moy.</span></div>
+          <div className="pv-stat-sep"/>
+          <div className="pv-stat"><strong>{myBookings.length}</strong><span>Locations</span></div>
+        </div>
+        <div className="pv-actions">
+          <button className="pv-btn-edit" onClick={() => setTab('settings')}>Modifier le profil</button>
+          <button className="pv-btn-share">Partager</button>
         </div>
       </div>
 
-      {/* Sticky tabs */}
-      <div className="prof-tabs">
+      <div className="pv-tabs">
         {tabs.map(t => (
-          <div key={t.id} className={`prof-tab${tab===t.id?' active':''}`} onClick={() => setTab(t.id)}>
-            {t.label}
-          </div>
+          <button key={t.id} className={'pv-tab' + (tab === t.id ? ' on' : '')} onClick={() => setTab(t.id)}>
+            {t.icon} {t.label}
+          </button>
         ))}
       </div>
 
-      {/* Content */}
-      <div className="prof-content">
-
-        {tab === 'annonces' && (
-          <div className="prof-grid">
-            {listings.map(l => (
-              <div key={l.id} className="prof-card">
-                <div className="prof-card-img">{l.img}</div>
-                <div className="prof-card-body">
-                  <p className="prof-card-title">{l.title}</p>
-                  <p className="prof-card-price">{l.price}€/jour</p>
-                  <p className="prof-card-rating">⭐ {l.rating}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {tab === 'reservations' && (
+      <div className="pv-body">
+        {tab === 'listings' && (
           <div>
-            {reservations.map(r => (
-              <div key={r.id} className="res-card">
-                <div className="res-icon">📦</div>
-                <div className="res-info">
-                  <p className="res-item">{r.item}</p>
-                  <p className="res-dates">📅 {r.dates}</p>
-                  <div className="res-footer">
-                    <span className="res-status" style={{background: r.statusColor+'22', color: r.statusColor}}>{r.status}</span>
-                    <span className="res-price">{r.price}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {tab === 'avis' && (
-          <div>
-            <div className="avis-header">
-              <div className="avis-big">4.8</div>
-              <div className="avis-stars">★★★★★</div>
-              <div className="avis-count">Basé sur {reviews.length} avis</div>
-              <div className="avis-bars">
-                {[5,4,3,2,1].map(n => (
-                  <div key={n} className="avis-bar-row">
-                    <span className="avis-bar-label">{n}</span>
-                    <div className="avis-bar-track">
-                      <div className="avis-bar-fill" style={{width: n===5?'80%':n===4?'15%':'5%'}} />
+            <div className="pv-section-header">
+              <div><div className="pv-sh-title">Mes annonces</div><div className="pv-sh-sub">{myListings.length} article{myListings.length !== 1 ? 's' : ''}</div></div>
+              <button className="bp" style={{fontSize:12,padding:'8px 16px'}} onClick={() => setPage('create')}>+ Ajouter</button>
+            </div>
+            {myListings.length === 0 ? (
+              <div className="pv-empty"><span>📦</span><h3>Aucune annonce</h3><p>Publiez votre première annonce !</p><button className="bp pv-empty-cta" onClick={() => setPage('create')}>+ Créer une annonce</button></div>
+            ) : (
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+                {myListings.map(item => (
+                  <div key={item.id} style={{background:'var(--w)',border:'1px solid var(--bd)',borderRadius:12,overflow:'hidden',cursor:'pointer'}} onClick={() => setSelected && setSelected(item)}>
+                    <img src={item.images[0]} alt="" style={{width:'100%',height:90,objectFit:'cover'}}/>
+                    <div style={{padding:10}}>
+                      <p style={{fontSize:13,fontWeight:600,color:'var(--tx)',margin:'0 0 4px'}}>{item.title}</p>
+                      <p style={{fontSize:12,color:'var(--p)',fontWeight:700}}>{item.price}€/jour</p>
+                      <p style={{fontSize:11,color:'var(--g)',marginTop:2}}>⭐ {item.rating}</p>
                     </div>
                   </div>
                 ))}
               </div>
+            )}
+          </div>
+        )}
+
+        {tab === 'bookings' && (
+          <div>
+            <div className="pv-section-header">
+              <div><div className="pv-sh-title">Mes réservations</div><div className="pv-sh-sub">{myBookings.length} réservation{myBookings.length !== 1 ? 's' : ''}</div></div>
             </div>
-            {reviews.map(r => (
-              <div key={r.id} className="avis-card">
-                <div className="avis-card-top">
-                  <div className="avis-avatar">{r.author[0]}</div>
-                  <div>
-                    <div className="avis-author">{r.author}</div>
-                    <div className="avis-date">{r.date} · {'★'.repeat(r.rating)}</div>
+            {myBookings.length === 0 ? (
+              <div className="pv-empty"><span>📅</span><h3>Aucune réservation</h3><p>Vos locations apparaîtront ici.</p></div>
+            ) : (
+              myBookings.map(b => (
+                <div key={b.id} className="pv-book-row">
+                  <img className="pv-book-img" src={b.itemImg || ''} alt="" style={{background:'var(--bgw)'}}/>
+                  <div style={{flex:1}}>
+                    <div style={{fontSize:14,fontWeight:600,color:'var(--dk)'}}>{b.itemTitle}</div>
+                    <div style={{fontSize:12,color:'var(--g)',margin:'2px 0'}}>📅 {b.startDate} → {b.endDate}</div>
+                    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                      <span className="pv-pill" style={{background:b.status==='confirmed'?'#ECFDF5':'#F3F4F6',color:b.status==='confirmed'?'#059669':'#6B7280'}}>{b.status==='confirmed'?'Confirmé':'Annulé'}</span>
+                      <span style={{fontSize:13,fontWeight:700,color:'var(--dk)'}}>{b.total}€</span>
+                    </div>
                   </div>
                 </div>
-                <p className="avis-text">{r.text}</p>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         )}
 
-        {tab === 'favoris' && (
-          <div className="prof-grid">
-            {listings.slice(0,2).map(l => (
-              <div key={l.id} className="prof-card">
-                <div className="prof-card-img">{l.img}</div>
-                <div className="prof-card-body">
-                  <p className="prof-card-title">{l.title}</p>
-                  <p className="prof-card-price">{l.price}€/jour</p>
-                  <p className="prof-card-rating">⭐ {l.rating}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {tab === 'parametres' && (
+        {tab === 'reviews' && (
           <div>
-            <div className="settings-section">
-              <p className="settings-label">Informations personnelles</p>
-              <div className="settings-field">
-                <label>Nom complet</label>
-                <input value={profileData.name} onChange={e => setProfileData({...profileData, name: e.target.value})} />
+            <div className="pv-rating-card">
+              <div className="pv-rating-big">
+                <div className="pv-rating-num">{avgRating}</div>
+                <div className="pv-stars">{'★'.repeat(Math.round(parseFloat(avgRating)))}{'☆'.repeat(5 - Math.round(parseFloat(avgRating)))}</div>
+                <div style={{fontSize:11,color:'var(--g)',marginTop:4}}>{myReviews.length} avis</div>
               </div>
-              <div className="settings-field">
-                <label>Email</label>
-                <input value={profileData.email} onChange={e => setProfileData({...profileData, email: e.target.value})} />
-              </div>
-              <div className="settings-field">
-                <label>Téléphone</label>
-                <input value={profileData.phone} onChange={e => setProfileData({...profileData, phone: e.target.value})} />
-              </div>
-              <div className="settings-field">
-                <label>Bio</label>
-                <textarea rows={3} value={profileData.bio} onChange={e => setProfileData({...profileData, bio: e.target.value})} />
-              </div>
-            </div>
-
-            <div className="settings-section">
-              <p className="settings-label">Notifications</p>
-              <div className="settings-toggle-row">
-                <span className="settings-toggle-info">📧 Notifications email</span>
-                <div
-                  className="toggle-switch"
-                  style={{background: profileData.notifEmail ? '#6C63FF' : '#d1d5db'}}
-                  onClick={() => setProfileData({...profileData, notifEmail: !profileData.notifEmail})}
-                >
-                  <div className="toggle-knob" style={{left: profileData.notifEmail ? '23px' : '3px'}} />
-                </div>
-              </div>
-              <div className="settings-toggle-row">
-                <span className="settings-toggle-info">🔔 Notifications push</span>
-                <div
-                  className="toggle-switch"
-                  style={{background: profileData.notifPush ? '#6C63FF' : '#d1d5db'}}
-                  onClick={() => setProfileData({...profileData, notifPush: !profileData.notifPush})}
-                >
-                  <div className="toggle-knob" style={{left: profileData.notifPush ? '23px' : '3px'}} />
-                </div>
+              <div className="pv-rating-bars">
+                {[5,4,3,2,1].map(n => {
+                  const count = myReviews.filter(r => r.rating === n).length;
+                  const pct = myReviews.length > 0 ? Math.round((count / myReviews.length) * 100) : (n === 5 ? 80 : n === 4 ? 15 : 5);
+                  return (
+                    <div key={n} className="pv-bar-row">
+                      <span className="pv-bar-label">{n}</span>
+                      <div className="pv-bar-track"><div className="pv-bar-fill" style={{width: pct + '%'}}/></div>
+                      <span className="pv-bar-count">{count}</span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
-
-            <button className="btn-save">Sauvegarder</button>
-            <button className="btn-logout">Se déconnecter</button>
+            {myReviews.length === 0 ? (
+              <div className="pv-empty"><span>⭐</span><h3>Aucun avis</h3><p>Les avis de vos locataires apparaîtront ici.</p></div>
+            ) : (
+              myReviews.map(r => (
+                <div key={r.id} className="pv-review-card">
+                  <div className="pv-review-header">
+                    <div className="pv-review-av">{r.fromUserAvatar || '😊'}</div>
+                    <div>
+                      <div className="pv-review-name">{r.fromUserName}</div>
+                      <div className="pv-review-date">{r.createdAt ? new Date(r.createdAt).toLocaleDateString('fr-FR',{month:'short',year:'numeric'}) : ''} · <span className="pv-review-stars">{'★'.repeat(r.rating)}</span></div>
+                    </div>
+                  </div>
+                  <p className="pv-review-text">{r.text}</p>
+                </div>
+              ))
+            )}
           </div>
         )}
 
+        {tab === 'favorites' && (
+          <div>
+            <div className="pv-section-header">
+              <div><div className="pv-sh-title">Mes favoris</div><div className="pv-sh-sub">{myFavs.length} article{myFavs.length !== 1 ? 's' : ''}</div></div>
+            </div>
+            {myFavs.length === 0 ? (
+              <div className="pv-empty"><span>❤️</span><h3>Aucun favori</h3><p>Sauvegardez des articles qui vous intéressent.</p></div>
+            ) : (
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+                {myFavs.map(item => (
+                  <div key={item.id} style={{background:'var(--w)',border:'1px solid var(--bd)',borderRadius:12,overflow:'hidden',cursor:'pointer'}} onClick={() => setSelected && setSelected(item)}>
+                    <img src={item.images[0]} alt="" style={{width:'100%',height:90,objectFit:'cover'}}/>
+                    <div style={{padding:10}}>
+                      <p style={{fontSize:13,fontWeight:600,color:'var(--tx)',margin:'0 0 4px'}}>{item.title}</p>
+                      <p style={{fontSize:12,color:'var(--p)',fontWeight:700}}>{item.price}€/jour</p>
+                      <p style={{fontSize:11,color:'var(--g)',marginTop:2}}>⭐ {item.rating}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {tab === 'settings' && (
+          <div>
+            <div className="pv-settings-card">
+              <div className="pv-settings-title">Informations personnelles</div>
+              <div className="pv-settings-row"><div><div className="pv-row-label">Nom</div><div className="pv-row-sub">{user?.name}</div></div></div>
+              <div className="pv-settings-row"><div><div className="pv-row-label">Email</div><div className="pv-row-sub">{user?.email}</div></div></div>
+              <div className="pv-settings-row"><div><div className="pv-row-label">Ville</div><div className="pv-row-sub">📍 {user?.location}</div></div></div>
+              <div className="pv-settings-row"><div><div className="pv-row-label">Bio</div><div className="pv-row-sub">{user?.bio || '—'}</div></div></div>
+            </div>
+            {!user?.verified && (
+              <div className="pv-verify-banner">
+                <span>🆔</span>
+                <div style={{flex:1}}><div style={{fontSize:13,fontWeight:600}}>Vérifiez votre identité</div><div style={{fontSize:11,color:'var(--g)'}}>Augmentez la confiance des locataires</div></div>
+                <button className="bs" style={{fontSize:11,padding:'6px 12px'}} onClick={() => setPage('verify')}>Vérifier →</button>
+              </div>
+            )}
+            <div className="pv-settings-card">
+              <div className="pv-settings-title">Notifications</div>
+              <div className="pv-settings-row">
+                <div><div className="pv-row-label">📧 Notifications email</div></div>
+                <label className="pv-toggle"><input type="checkbox" checked={notifEmail} onChange={() => setNotifEmail(!notifEmail)}/><span className="pv-toggle-track"><span className="pv-toggle-dot"/></span></label>
+              </div>
+              <div className="pv-settings-row">
+                <div><div className="pv-row-label">🔔 Notifications push</div></div>
+                <label className="pv-toggle"><input type="checkbox" checked={notifPush} onChange={() => setNotifPush(!notifPush)}/><span className="pv-toggle-track"><span className="pv-toggle-dot"/></span></label>
+              </div>
+            </div>
+            <div className="pv-settings-card pv-danger-card">
+              <div className="pv-settings-title pv-danger-title">Zone dangereuse</div>
+              <div className="pv-settings-row">
+                <div><div className="pv-row-label">Se déconnecter</div></div>
+                <button className="pv-danger-btn-outline" onClick={() => { dispatch({type:'LOGOUT'}); setPage('home'); }}>Déconnexion</button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
+      <button className="pv-fab" onClick={() => setPage('create')}>+</button>
     </div>
   );
 }
