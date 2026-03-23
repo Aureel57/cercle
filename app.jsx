@@ -881,10 +881,10 @@ function calcSavings(rentals, avgPrice) {
   return Math.floor(rentals * avgPrice * 3 * (base - current));
 }
 
-function Profile({dark, setPage}) {
-  const [tab, setTab] = React.useState('annonces');
+function Profile({state, dispatch, setPage, setSelected, initTab}) {
+  const [tab, setTab] = React.useState(initTab||'annonces');
   const [profileData, setProfileData] = React.useState({
-    name: 'Noah M.',
+    name: (state&&state.user&&state.user.name)||'Noah M.',
     email: 'noah@cercle.fr',
     phone: '+33 6 12 34 56 78',
     bio: "Passionné par le partage et l'économie collaborative.",
