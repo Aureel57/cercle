@@ -881,217 +881,278 @@ function calcSavings(rentals, avgPrice) {
   return Math.floor(rentals * avgPrice * 3 * (base - current));
 }
 
-function Profile({state, dispatch, setPage, setSelected, initTab}) {
-  const [tab, setTab] = useState(initTab || 'listings');
-  const [notifEmail, setNotifEmail] = useState(true);
-  const [notifPush, setNotifPush] = useState(false);
-  const user = state.user;
-  const myListings = [...state.items, ...state.userItems].filter(i => i.owner?.id === user?.id);
-  const myBookings = state.bookings.filter(b => b.userId === user?.id);
-  const myFavs = [...state.items, ...state.userItems, ...state.proItems].filter(i => state.favorites.has(i.id));
-  const myReviews = state.reviews.filter(r => myListings.some(l => l.id === r.itemId));
-  const avgRating = myReviews.length > 0
-    ? (myReviews.reduce((s, r) => s + r.rating, 0) / myReviews.length).toFixed(1)
-    : (user?.rating || 4.8).toFixed(1);
+function Profile({dark, setPage}) {
+  const [tab, setTab] = React.useState('annonces');
+  const [profileData, setProfileData] = React.useState({
+    name: 'Noah M.',
+    email: 'noah@cercle.fr',
+    phone: '+33 6 12 34 56 78',
+    bio: "Passionné par le partage et l'économie collaborative.",
+    notifEmail: true,
+    notifPush: false,
+  });
+
   const tabs = [
-    {id:'listings', icon:'📦', label:'Annonces'},
-    {id:'bookings', icon:'📅', label:'Réservations'},
-    {id:'reviews', icon:'⭐', label:'Avis'},
-    {id:'favorites', icon:'❤️', label:'Favoris'},
-    {id:'settings', icon:'⚙️', label:'Paramètres'},
+    {id:'annonces', label:'📦 Annonces'},
+    {id:'reservations', label:'📅 Réservations'},
+    {id:'avis', label:'⭐ Avis'},
+    {id:'favoris', label:'❤️ Favoris'},
+    {id:'parametres', label:'⚙️ Paramètres'},
   ];
 
+  const listings = [
+    {id:1, title:'Vélo électrique', price:25, rating:4.8, img:'🚲'},
+    {id:2, title:'Appareil photo', price:40, rating:4.9, img:'📷'},
+    {id:3, title:'Trottinette', price:15, rating:4.7, img:'🛴'},
+  ];
+
+  const reservations = [
+    {id:1, item:'Perceuse Bosch', dates:'15-17 Mars', status:'En cours', statusColor:'#22c55e', price:'30€'},
+    {id:2, item:'Vélo de route', dates:'5-7 Mars', status:'Terminée', statusColor:'#9ca3af', price:'45€'},
+    {id:3, item:'Kayak double', dates:'25-27 Mars', status:'À venir', statusColor:'#3b82f6', price:'80€'},
+  ];
+
+  const reviews = [
+    {id:1, author:'Marie L.', date:'Mars 2024', rating:5, text:'Très bon contact, matériel en parfait état. Je recommande !'},
+    {id:2, author:'Thomas B.', date:'Fév 2024', rating:5, text:'Transaction rapide et sans problème. Super expérience.'},
+    {id:3, author:'Julie K.', date:'Jan 2024', rating:4, text:'Bon état général, livraison ponctuelle.'},
+  ];
 
   return (
-    <div className="pv-page">
-      <div className="pv-header">
-        <button className="pv-back" onClick={() => setPage('home')}>← Retour</button>
-        <button className="pv-share-top">🔗</button>
-        <div className="pv-av-wrap">
-          <div className="pv-av">{user?.avatar || '👤'}</div>
-          {user?.verified && <div className="pv-av-badge">✓</div>}
+    <div style={{maxWidth:'600px',margin:'0 auto',paddingBottom:'80px'}}>
+
+      {/* Header gradient */}
+      <div style={{
+        background:'linear-gradient(135deg,#6C63FF 0%,#4ECDC4 100%)',
+        padding:'40px 20px 24px',
+        display:'flex',
+        flexDirection:'column',
+        alignItems:'center',
+        textAlign:'center',
+      }}>
+        <div style={{
+          width:'90px',height:'90px',borderRadius:'50%',
+          background:'rgba(255,255,255,0.25)',
+          display:'flex',alignItems:'center',justifyContent:'center',
+          fontSize:'36px',border:'3px solid white',
+          marginBottom:'12px',position:'relative',
+        }}>
+          👤
+          <div style={{
+            position:'absolute',bottom:'2px',right:'2px',
+            background:'#22c55e',color:'white',
+            borderRadius:'50%',width:'22px',height:'22px',
+            display:'flex',alignItems:'center',justifyContent:'center',
+            fontSize:'12px',border:'2px solid white',
+          }}>✓</div>
         </div>
-        <div className="pv-name-row">
-          <span className="pv-name">{user?.name || 'Mon profil'}</span>
-          {user?.verified && <span className="pv-verified">✓ Vérifié</span>}
+        <h2 style={{fontSize:'22px',fontWeight:'700',margin:'0 0 4px',color:'white'}}>{profileData.name}</h2>
+        <p style={{fontSize:'13px',margin:'0 0 2px',color:'rgba(255,255,255,0.85)'}}>📍 Paris, France</p>
+        <p style={{fontSize:'12px',margin:'0 0 16px',color:'rgba(255,255,255,0.7)'}}>Membre depuis 2024</p>
+        <div style={{display:'flex',gap:'24px',marginBottom:'16px'}}>
+          <div style={{textAlign:'center'}}>
+            <strong style={{display:'block',fontSize:'18px',fontWeight:'700',color:'white'}}>3</strong>
+            <span style={{fontSize:'11px',color:'rgba(255,255,255,0.8)'}}>Annonces</span>
+          </div>
+          <div style={{textAlign:'center'}}>
+            <strong style={{display:'block',fontSize:'18px',fontWeight:'700',color:'white'}}>4.8★</strong>
+            <span style={{fontSize:'11px',color:'rgba(255,255,255,0.8)'}}>Note moy.</span>
+          </div>
+          <div style={{textAlign:'center'}}>
+            <strong style={{display:'block',fontSize:'18px',fontWeight:'700',color:'white'}}>🏅</strong>
+            <span style={{fontSize:'11px',color:'rgba(255,255,255,0.8)'}}>Super hôte</span>
+          </div>
         </div>
-        <p className="pv-bio">{user?.bio || "Passionné par le partage et l'économie collaborative."}</p>
-        <p className="pv-since">📍 {user?.location || 'France'} · Membre depuis {user?.since || 2024}</p>
-        <div className="pv-stats">
-          <div className="pv-stat"><strong>{myListings.length}</strong><span>Annonces</span></div>
-          <div className="pv-stat-sep"/>
-          <div className="pv-stat"><strong>{avgRating}★</strong><span>Note moy.</span></div>
-          <div className="pv-stat-sep"/>
-          <div className="pv-stat"><strong>{myBookings.length}</strong><span>Locations</span></div>
-        </div>
-        <div className="pv-actions">
-          <button className="pv-btn-edit" onClick={() => setTab('settings')}>Modifier le profil</button>
-          <button className="pv-btn-share">Partager</button>
+        <div style={{display:'flex',gap:'10px'}}>
+          <button onClick={() => setTab('parametres')} style={{
+            padding:'8px 20px',borderRadius:'20px',fontSize:'13px',fontWeight:'600',
+            cursor:'pointer',background:'transparent',border:'2px solid white',color:'white',
+          }}>Modifier le profil</button>
+          <button style={{
+            padding:'8px 20px',borderRadius:'20px',fontSize:'13px',fontWeight:'600',
+            cursor:'pointer',background:'white',border:'2px solid white',color:'#6C63FF',
+          }}>Partager</button>
         </div>
       </div>
 
-      <div className="pv-tabs">
+      {/* Sticky tabs */}
+      <div style={{
+        display:'flex',overflowX:'auto',background:'var(--w)',
+        borderBottom:'1px solid var(--bd)',position:'sticky',top:'56px',zIndex:10,
+      }}>
         {tabs.map(t => (
-          <button key={t.id} className={'pv-tab' + (tab === t.id ? ' on' : '')} onClick={() => setTab(t.id)}>
-            {t.icon} {t.label}
-          </button>
+          <div key={t.id}
+            onClick={() => setTab(t.id)}
+            style={{
+              flex:'none',padding:'12px 14px',fontSize:'12px',fontWeight:'600',
+              color: tab===t.id ? '#6C63FF' : 'var(--g)',
+              cursor:'pointer',
+              borderBottom: tab===t.id ? '2px solid #6C63FF' : '2px solid transparent',
+              whiteSpace:'nowrap',
+            }}
+          >{t.label}</div>
         ))}
       </div>
 
-      <div className="pv-body">
-        {tab === 'listings' && (
+      {/* Content */}
+      <div style={{padding:'16px'}}>
+
+        {tab==='annonces' && (
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'12px'}}>
+            {listings.map(l => (
+              <div key={l.id} style={{background:'var(--w)',border:'1px solid var(--bd)',borderRadius:'12px',overflow:'hidden',cursor:'pointer'}}>
+                <div style={{height:'90px',background:'linear-gradient(135deg,#f0f0ff,#e8f8f8)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'32px'}}>{l.img}</div>
+                <div style={{padding:'10px'}}>
+                  <p style={{fontSize:'13px',fontWeight:'600',color:'var(--tx)',margin:'0 0 4px'}}>{l.title}</p>
+                  <p style={{fontSize:'12px',color:'#6C63FF',fontWeight:'700',margin:'0'}}>{l.price}€/jour</p>
+                  <p style={{fontSize:'11px',color:'var(--g)',margin:'2px 0 0'}}>⭐ {l.rating}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {tab==='reservations' && (
           <div>
-            <div className="pv-section-header">
-              <div><div className="pv-sh-title">Mes annonces</div><div className="pv-sh-sub">{myListings.length} article{myListings.length !== 1 ? 's' : ''}</div></div>
-              <button className="bp" style={{fontSize:12,padding:'8px 16px'}} onClick={() => setPage('create')}>+ Ajouter</button>
-            </div>
-            {myListings.length === 0 ? (
-              <div className="pv-empty"><span>📦</span><h3>Aucune annonce</h3><p>Publiez votre première annonce !</p><button className="bp pv-empty-cta" onClick={() => setPage('create')}>+ Créer une annonce</button></div>
-            ) : (
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
-                {myListings.map(item => (
-                  <div key={item.id} style={{background:'var(--w)',border:'1px solid var(--bd)',borderRadius:12,overflow:'hidden',cursor:'pointer'}} onClick={() => setSelected && setSelected(item)}>
-                    <img src={item.images[0]} alt="" style={{width:'100%',height:90,objectFit:'cover'}}/>
-                    <div style={{padding:10}}>
-                      <p style={{fontSize:13,fontWeight:600,color:'var(--tx)',margin:'0 0 4px'}}>{item.title}</p>
-                      <p style={{fontSize:12,color:'var(--p)',fontWeight:700}}>{item.price}€/jour</p>
-                      <p style={{fontSize:11,color:'var(--g)',marginTop:2}}>⭐ {item.rating}</p>
+            {reservations.map(r => (
+              <div key={r.id} style={{
+                background:'var(--w)',border:'1px solid var(--bd)',borderRadius:'12px',
+                padding:'14px',marginBottom:'10px',display:'flex',gap:'12px',alignItems:'center',
+              }}>
+                <div style={{fontSize:'28px'}}>📦</div>
+                <div style={{flex:1}}>
+                  <p style={{fontSize:'14px',fontWeight:'600',color:'var(--tx)',margin:'0 0 2px'}}>{r.item}</p>
+                  <p style={{fontSize:'12px',color:'var(--g)',margin:'0 0 6px'}}>📅 {r.dates}</p>
+                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                    <span style={{fontSize:'11px',fontWeight:'600',padding:'2px 8px',borderRadius:'10px',background:r.statusColor+'22',color:r.statusColor}}>{r.status}</span>
+                    <span style={{fontSize:'13px',fontWeight:'700',color:'var(--tx)'}}>{r.price}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {tab==='avis' && (
+          <div>
+            <div style={{background:'var(--w)',border:'1px solid var(--bd)',borderRadius:'12px',padding:'16px',marginBottom:'16px',textAlign:'center'}}>
+              <div style={{fontSize:'48px',fontWeight:'800',color:'var(--tx)'}}>4.8</div>
+              <div style={{fontSize:'20px',color:'#f59e0b',margin:'4px 0'}}>★★★★★</div>
+              <div style={{fontSize:'13px',color:'var(--g)'}}>Basé sur {reviews.length} avis</div>
+              <div style={{marginTop:'12px'}}>
+                {[5,4,3,2,1].map(n => (
+                  <div key={n} style={{display:'flex',alignItems:'center',gap:'8px',marginBottom:'4px'}}>
+                    <span style={{fontSize:'11px',color:'var(--g)',width:'16px',textAlign:'right'}}>{n}</span>
+                    <div style={{flex:1,height:'6px',background:'var(--bd)',borderRadius:'3px',overflow:'hidden'}}>
+                      <div style={{height:'100%',background:'#f59e0b',borderRadius:'3px',width:n===5?'80%':n===4?'15%':'5%'}} />
                     </div>
                   </div>
                 ))}
               </div>
-            )}
-          </div>
-        )}
-
-        {tab === 'bookings' && (
-          <div>
-            <div className="pv-section-header">
-              <div><div className="pv-sh-title">Mes réservations</div><div className="pv-sh-sub">{myBookings.length} réservation{myBookings.length !== 1 ? 's' : ''}</div></div>
             </div>
-            {myBookings.length === 0 ? (
-              <div className="pv-empty"><span>📅</span><h3>Aucune réservation</h3><p>Vos locations apparaîtront ici.</p></div>
-            ) : (
-              myBookings.map(b => (
-                <div key={b.id} className="pv-book-row">
-                  <img className="pv-book-img" src={b.itemImg || ''} alt="" style={{background:'var(--bgw)'}}/>
-                  <div style={{flex:1}}>
-                    <div style={{fontSize:14,fontWeight:600,color:'var(--dk)'}}>{b.itemTitle}</div>
-                    <div style={{fontSize:12,color:'var(--g)',margin:'2px 0'}}>📅 {b.startDate} → {b.endDate}</div>
-                    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-                      <span className="pv-pill" style={{background:b.status==='confirmed'?'#ECFDF5':'#F3F4F6',color:b.status==='confirmed'?'#059669':'#6B7280'}}>{b.status==='confirmed'?'Confirmé':'Annulé'}</span>
-                      <span style={{fontSize:13,fontWeight:700,color:'var(--dk)'}}>{b.total}€</span>
-                    </div>
+            {reviews.map(r => (
+              <div key={r.id} style={{background:'var(--w)',border:'1px solid var(--bd)',borderRadius:'12px',padding:'14px',marginBottom:'10px'}}>
+                <div style={{display:'flex',alignItems:'center',gap:'10px',marginBottom:'8px'}}>
+                  <div style={{
+                    width:'36px',height:'36px',borderRadius:'50%',
+                    background:'linear-gradient(135deg,#6C63FF,#4ECDC4)',
+                    display:'flex',alignItems:'center',justifyContent:'center',
+                    color:'white',fontWeight:'700',fontSize:'14px',
+                  }}>{r.author[0]}</div>
+                  <div>
+                    <div style={{fontSize:'13px',fontWeight:'600',color:'var(--tx)'}}>{r.author}</div>
+                    <div style={{fontSize:'11px',color:'var(--g)'}}>{r.date} · {'★'.repeat(r.rating)}</div>
                   </div>
                 </div>
-              ))
-            )}
+                <p style={{fontSize:'13px',color:'var(--g)',lineHeight:'1.5',margin:0}}>{r.text}</p>
+              </div>
+            ))}
           </div>
         )}
 
-        {tab === 'reviews' && (
-          <div>
-            <div className="pv-rating-card">
-              <div className="pv-rating-big">
-                <div className="pv-rating-num">{avgRating}</div>
-                <div className="pv-stars">{'★'.repeat(Math.round(parseFloat(avgRating)))}{'☆'.repeat(5 - Math.round(parseFloat(avgRating)))}</div>
-                <div style={{fontSize:11,color:'var(--g)',marginTop:4}}>{myReviews.length} avis</div>
-              </div>
-              <div className="pv-rating-bars">
-                {[5,4,3,2,1].map(n => {
-                  const count = myReviews.filter(r => r.rating === n).length;
-                  const pct = myReviews.length > 0 ? Math.round((count / myReviews.length) * 100) : (n === 5 ? 80 : n === 4 ? 15 : 5);
-                  return (
-                    <div key={n} className="pv-bar-row">
-                      <span className="pv-bar-label">{n}</span>
-                      <div className="pv-bar-track"><div className="pv-bar-fill" style={{width: pct + '%'}}/></div>
-                      <span className="pv-bar-count">{count}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-            {myReviews.length === 0 ? (
-              <div className="pv-empty"><span>⭐</span><h3>Aucun avis</h3><p>Les avis de vos locataires apparaîtront ici.</p></div>
-            ) : (
-              myReviews.map(r => (
-                <div key={r.id} className="pv-review-card">
-                  <div className="pv-review-header">
-                    <div className="pv-review-av">{r.fromUserAvatar || '😊'}</div>
-                    <div>
-                      <div className="pv-review-name">{r.fromUserName}</div>
-                      <div className="pv-review-date">{r.createdAt ? new Date(r.createdAt).toLocaleDateString('fr-FR',{month:'short',year:'numeric'}) : ''} · <span className="pv-review-stars">{'★'.repeat(r.rating)}</span></div>
-                    </div>
-                  </div>
-                  <p className="pv-review-text">{r.text}</p>
+        {tab==='favoris' && (
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'12px'}}>
+            {listings.slice(0,2).map(l => (
+              <div key={l.id} style={{background:'var(--w)',border:'1px solid var(--bd)',borderRadius:'12px',overflow:'hidden',cursor:'pointer'}}>
+                <div style={{height:'90px',background:'linear-gradient(135deg,#f0f0ff,#e8f8f8)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'32px'}}>{l.img}</div>
+                <div style={{padding:'10px'}}>
+                  <p style={{fontSize:'13px',fontWeight:'600',color:'var(--tx)',margin:'0 0 4px'}}>{l.title}</p>
+                  <p style={{fontSize:'12px',color:'#6C63FF',fontWeight:'700',margin:'0'}}>{l.price}€/jour</p>
+                  <p style={{fontSize:'11px',color:'var(--g)',margin:'2px 0 0'}}>⭐ {l.rating}</p>
                 </div>
-              ))
-            )}
+              </div>
+            ))}
           </div>
         )}
 
-        {tab === 'favorites' && (
+        {tab==='parametres' && (
           <div>
-            <div className="pv-section-header">
-              <div><div className="pv-sh-title">Mes favoris</div><div className="pv-sh-sub">{myFavs.length} article{myFavs.length !== 1 ? 's' : ''}</div></div>
-            </div>
-            {myFavs.length === 0 ? (
-              <div className="pv-empty"><span>❤️</span><h3>Aucun favori</h3><p>Sauvegardez des articles qui vous intéressent.</p></div>
-            ) : (
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
-                {myFavs.map(item => (
-                  <div key={item.id} style={{background:'var(--w)',border:'1px solid var(--bd)',borderRadius:12,overflow:'hidden',cursor:'pointer'}} onClick={() => setSelected && setSelected(item)}>
-                    <img src={item.images[0]} alt="" style={{width:'100%',height:90,objectFit:'cover'}}/>
-                    <div style={{padding:10}}>
-                      <p style={{fontSize:13,fontWeight:600,color:'var(--tx)',margin:'0 0 4px'}}>{item.title}</p>
-                      <p style={{fontSize:12,color:'var(--p)',fontWeight:700}}>{item.price}€/jour</p>
-                      <p style={{fontSize:11,color:'var(--g)',marginTop:2}}>⭐ {item.rating}</p>
-                    </div>
-                  </div>
-                ))}
+            <p style={{fontSize:'12px',fontWeight:'700',color:'var(--g)',textTransform:'uppercase',margin:'0 0 8px',letterSpacing:'0.5px'}}>Informations personnelles</p>
+            {[
+              {label:'Nom complet', key:'name'},
+              {label:'Email', key:'email'},
+              {label:'Téléphone', key:'phone'},
+            ].map(f => (
+              <div key={f.key} style={{background:'var(--w)',border:'1px solid var(--bd)',borderRadius:'10px',padding:'12px 14px',marginBottom:'8px'}}>
+                <label style={{fontSize:'11px',color:'var(--g)',display:'block',marginBottom:'4px'}}>{f.label}</label>
+                <input
+                  value={profileData[f.key]}
+                  onChange={e => setProfileData({...profileData, [f.key]: e.target.value})}
+                  style={{width:'100%',border:'none',background:'transparent',fontSize:'14px',color:'var(--tx)',outline:'none',boxSizing:'border-box'}}
+                />
               </div>
-            )}
+            ))}
+            <div style={{background:'var(--w)',border:'1px solid var(--bd)',borderRadius:'10px',padding:'12px 14px',marginBottom:'8px'}}>
+              <label style={{fontSize:'11px',color:'var(--g)',display:'block',marginBottom:'4px'}}>Bio</label>
+              <textarea
+                rows={3}
+                value={profileData.bio}
+                onChange={e => setProfileData({...profileData, bio: e.target.value})}
+                style={{width:'100%',border:'none',background:'transparent',fontSize:'14px',color:'var(--tx)',outline:'none',resize:'none',boxSizing:'border-box'}}
+              />
+            </div>
+
+            <p style={{fontSize:'12px',fontWeight:'700',color:'var(--g)',textTransform:'uppercase',margin:'16px 0 8px',letterSpacing:'0.5px'}}>Notifications</p>
+            {[
+              {label:'📧 Notifications email', key:'notifEmail'},
+              {label:'🔔 Notifications push', key:'notifPush'},
+            ].map(f => (
+              <div key={f.key} style={{
+                background:'var(--w)',border:'1px solid var(--bd)',borderRadius:'10px',
+                padding:'12px 14px',marginBottom:'8px',
+                display:'flex',justifyContent:'space-between',alignItems:'center',
+              }}>
+                <span style={{fontSize:'13px',color:'var(--tx)'}}>{f.label}</span>
+                <div
+                  onClick={() => setProfileData({...profileData, [f.key]: !profileData[f.key]})}
+                  style={{
+                    width:'44px',height:'24px',borderRadius:'12px',position:'relative',
+                    cursor:'pointer',background: profileData[f.key] ? '#6C63FF' : '#d1d5db',transition:'background 0.2s',
+                  }}
+                >
+                  <div style={{
+                    position:'absolute',top:'3px',left: profileData[f.key] ? '23px' : '3px',
+                    width:'18px',height:'18px',borderRadius:'50%',
+                    background:'white',transition:'left 0.2s',boxShadow:'0 1px 3px rgba(0,0,0,0.2)',
+                  }} />
+                </div>
+              </div>
+            ))}
+
+            <button style={{
+              width:'100%',padding:'14px',borderRadius:'12px',
+              background:'#6C63FF',border:'none',color:'white',
+              fontSize:'15px',fontWeight:'700',cursor:'pointer',marginTop:'8px',marginBottom:'8px',
+            }}>Sauvegarder</button>
+            <button style={{
+              width:'100%',padding:'14px',borderRadius:'12px',
+              background:'transparent',border:'2px solid #ef4444',color:'#ef4444',
+              fontSize:'15px',fontWeight:'700',cursor:'pointer',
+            }}>Se déconnecter</button>
           </div>
         )}
 
-        {tab === 'settings' && (
-          <div>
-            <div className="pv-settings-card">
-              <div className="pv-settings-title">Informations personnelles</div>
-              <div className="pv-settings-row"><div><div className="pv-row-label">Nom</div><div className="pv-row-sub">{user?.name}</div></div></div>
-              <div className="pv-settings-row"><div><div className="pv-row-label">Email</div><div className="pv-row-sub">{user?.email}</div></div></div>
-              <div className="pv-settings-row"><div><div className="pv-row-label">Ville</div><div className="pv-row-sub">📍 {user?.location}</div></div></div>
-              <div className="pv-settings-row"><div><div className="pv-row-label">Bio</div><div className="pv-row-sub">{user?.bio || '—'}</div></div></div>
-            </div>
-            {!user?.verified && (
-              <div className="pv-verify-banner">
-                <span>🆔</span>
-                <div style={{flex:1}}><div style={{fontSize:13,fontWeight:600}}>Vérifiez votre identité</div><div style={{fontSize:11,color:'var(--g)'}}>Augmentez la confiance des locataires</div></div>
-                <button className="bs" style={{fontSize:11,padding:'6px 12px'}} onClick={() => setPage('verify')}>Vérifier →</button>
-              </div>
-            )}
-            <div className="pv-settings-card">
-              <div className="pv-settings-title">Notifications</div>
-              <div className="pv-settings-row">
-                <div><div className="pv-row-label">📧 Notifications email</div></div>
-                <label className="pv-toggle"><input type="checkbox" checked={notifEmail} onChange={() => setNotifEmail(!notifEmail)}/><span className="pv-toggle-track"><span className="pv-toggle-dot"/></span></label>
-              </div>
-              <div className="pv-settings-row">
-                <div><div className="pv-row-label">🔔 Notifications push</div></div>
-                <label className="pv-toggle"><input type="checkbox" checked={notifPush} onChange={() => setNotifPush(!notifPush)}/><span className="pv-toggle-track"><span className="pv-toggle-dot"/></span></label>
-              </div>
-            </div>
-            <div className="pv-settings-card pv-danger-card">
-              <div className="pv-settings-title pv-danger-title">Zone dangereuse</div>
-              <div className="pv-settings-row">
-                <div><div className="pv-row-label">Se déconnecter</div></div>
-                <button className="pv-danger-btn-outline" onClick={() => { dispatch({type:'LOGOUT'}); setPage('home'); }}>Déconnexion</button>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
-      <button className="pv-fab" onClick={() => setPage('create')}>+</button>
     </div>
   );
 }
