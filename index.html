@@ -865,8 +865,7 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
       position: 'relative',
     },
     heroInner: {
-      background: 'white',
-      borderRadius: 25,
+      background: 'transparent',
       padding: '0 24px 24px',
     },
     avatarWrap: {
@@ -878,84 +877,89 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
     },
     avatar: {
       width: 88, height: 88, borderRadius: '50%',
-      background: 'linear-gradient(135deg,#6C63FF,#4ECDC4)',
-      border: '3px solid white',
+      background: 'linear-gradient(135deg,rgba(255,255,255,0.3),rgba(255,255,255,0.1))',
+      border: '3px solid rgba(255,255,255,0.9)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       fontSize: 32,
-      boxShadow: '0 4px 16px rgba(108,99,255,0.35)',
+      boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
       position: 'relative',
       flexShrink: 0,
+      backdropFilter: 'blur(8px)',
     },
     verifiedBadge: {
       position: 'absolute', bottom: 2, right: 2,
       width: 24, height: 24, borderRadius: '50%',
-      background: '#10b981', border: '2px solid white',
+      background: '#10b981', border: '2px solid rgba(255,255,255,0.9)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       fontSize: 11, color: 'white', fontWeight: 700,
     },
     heroActions: { display: 'flex', gap: 8 },
     btnEdit: {
       padding: '8px 16px', borderRadius: 20, fontSize: 13, fontWeight: 600,
-      background: '#f3f4f6', border: 'none', color: '#374151',
-      cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4,
+      background: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.4)',
+      color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4,
+      backdropFilter: 'blur(8px)',
     },
     btnShare: {
       padding: '8px 12px', borderRadius: 20, fontSize: 13,
-      background: '#f3f4f6', border: 'none', color: '#374151',
-      cursor: 'pointer', display: 'flex', alignItems: 'center',
+      background: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.4)',
+      color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center',
+      backdropFilter: 'blur(8px)',
     },
-    name: { fontSize: 22, fontWeight: 800, color: '#111827', margin: '0 0 4px', letterSpacing: -0.3 },
-    subInfo: { fontSize: 13, color: '#6b7280', margin: '0 0 10px', display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' },
+    name: { fontSize: 22, fontWeight: 800, color: 'white', margin: '0 0 4px', letterSpacing: -0.3 },
+    subInfo: { fontSize: 13, color: 'rgba(255,255,255,0.75)', margin: '0 0 10px', display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' },
     pill: {
       display: 'inline-flex', alignItems: 'center', gap: 4,
-      background: '#f3f4f6', borderRadius: 20, padding: '3px 10px',
-      fontSize: 12, color: '#374151', fontWeight: 500,
+      background: 'rgba(255,255,255,0.18)', borderRadius: 20, padding: '3px 10px',
+      fontSize: 12, color: 'white', fontWeight: 500,
+      border: '1px solid rgba(255,255,255,0.25)',
     },
     pillGreen: {
       display: 'inline-flex', alignItems: 'center', gap: 4,
-      background: '#d1fae5', borderRadius: 20, padding: '3px 10px',
-      fontSize: 12, color: '#065f46', fontWeight: 600,
+      background: 'rgba(16,185,129,0.25)', borderRadius: 20, padding: '3px 10px',
+      fontSize: 12, color: '#a7f3d0', fontWeight: 600,
+      border: '1px solid rgba(16,185,129,0.4)',
     },
     pillPurple: {
       display: 'inline-flex', alignItems: 'center', gap: 4,
-      background: '#ede9fe', borderRadius: 20, padding: '3px 10px',
-      fontSize: 12, color: '#6C63FF', fontWeight: 600,
+      background: 'rgba(255,255,255,0.18)', borderRadius: 20, padding: '3px 10px',
+      fontSize: 12, color: 'white', fontWeight: 600,
+      border: '1px solid rgba(255,255,255,0.3)',
     },
     stars: { display: 'flex', gap: 2, alignItems: 'center' },
-    bio: { fontSize: 14, color: '#6b7280', lineHeight: 1.6, margin: '0 0 20px' },
+    bio: { fontSize: 14, color: 'rgba(255,255,255,0.7)', lineHeight: 1.6, margin: '0 0 20px' },
     statsRow: {
       display: 'grid', gridTemplateColumns: 'repeat(3,1fr)',
-      gap: 1, background: '#f3f4f6', borderRadius: 16, overflow: 'hidden',
+      gap: 1, background: 'rgba(255,255,255,0.1)', borderRadius: 16, overflow: 'hidden',
       margin: '0 0 20px',
+      border: '1px solid rgba(255,255,255,0.15)',
     },
     statCell: {
-      background: 'white', padding: '14px 8px', textAlign: 'center',
+      background: 'transparent', padding: '14px 8px', textAlign: 'center',
     },
-    statNum: { fontSize: 20, fontWeight: 800, color: '#111827', display: 'block', lineHeight: 1 },
-    statLbl: { fontSize: 11, color: '#9ca3af', marginTop: 3, display: 'block', textTransform: 'uppercase', letterSpacing: 0.5 },
+    statNum: { fontSize: 20, fontWeight: 800, color: 'white', display: 'block', lineHeight: 1 },
+    statLbl: { fontSize: 11, color: 'rgba(255,255,255,0.55)', marginTop: 3, display: 'block', textTransform: 'uppercase', letterSpacing: 0.5 },
     trustRow: { display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 4 },
 
     // Tabs
     tabsWrap: {
-      background: 'rgba(255,255,255,0.92)',
-      backdropFilter: 'blur(16px)',
-      WebkitBackdropFilter: 'blur(16px)',
-      borderBottom: '1px solid rgba(255,255,255,0.4)',
+      background: 'transparent',
+      borderBottom: '1px solid rgba(255,255,255,0.2)',
       position: 'sticky', top: 56, zIndex: 20,
       overflowX: 'auto', display: 'flex', justifyContent: 'center',
     },
     tab: (active) => ({
       flex: 'none', padding: '14px 16px', fontSize: 13, fontWeight: active ? 700 : 500,
-      color: active ? '#6C63FF' : '#6b7280',
-      borderBottom: active ? '2px solid #6C63FF' : '2px solid transparent',
+      color: active ? 'white' : 'rgba(255,255,255,0.55)',
+      borderBottom: active ? '2px solid white' : '2px solid transparent',
       cursor: 'pointer', whiteSpace: 'nowrap',
       display: 'flex', alignItems: 'center', gap: 6, transition: 'all 0.15s',
-      background: 'none', border: 'none', borderBottom: active ? '2px solid #6C63FF' : '2px solid transparent',
+      background: 'none', border: 'none', borderBottom: active ? '2px solid white' : '2px solid transparent',
     }),
     tabCount: (active) => ({
       fontSize: 11, fontWeight: 700,
-      background: active ? '#ede9fe' : '#f3f4f6',
-      color: active ? '#6C63FF' : '#9ca3af',
+      background: active ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.1)',
+      color: active ? 'white' : 'rgba(255,255,255,0.5)',
       borderRadius: 10, padding: '1px 6px', minWidth: 18, textAlign: 'center',
     }),
 
@@ -1144,10 +1148,9 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
         {/* Background pattern dots */}
         <div style={{position:'absolute',top:0,left:0,right:0,bottom:0,backgroundImage:'radial-gradient(circle,rgba(255,255,255,0.12) 1px,transparent 1px)',backgroundSize:'24px 24px',pointerEvents:'none'}} />
         <div style={{position:'relative'}}>
-          <div className="profile-card-border">
           <div style={S.heroInner}>
             <div style={S.avatarWrap}>
-              <div style={{borderRadius:'50%',background:'#6C63FF',padding:3,flexShrink:0,position:'relative',display:'inline-flex'}}>
+              <div style={{borderRadius:'50%',background:'rgba(255,255,255,0.35)',padding:3,flexShrink:0,position:'relative',display:'inline-flex'}}>
                 <div style={S.avatar}>
                   {userAvatar ? <img src={userAvatar} style={{width:'100%',height:'100%',borderRadius:'50%',objectFit:'cover'}} /> : '👤'}
                   <div style={S.verifiedBadge}>✓</div>
@@ -1170,8 +1173,8 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
 
             <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:12}}>
               <StarRow n={5} />
-              <span style={{fontSize:15,fontWeight:800,color:'#111827'}}>4.9</span>
-              <span style={{fontSize:13,color:'#9ca3af'}}>· 12 avis</span>
+              <span style={{fontSize:15,fontWeight:800,color:'white'}}>4.9</span>
+              <span style={{fontSize:13,color:'rgba(255,255,255,0.6)'}}>· 12 avis</span>
             </div>
 
             {profileData.bio && <p style={S.bio}>{profileData.bio}</p>}
@@ -1195,7 +1198,6 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
               <span style={S.pill}>🛡️ Caution assurée</span>
             </div>
           </div>
-          </div>{/* end profile-card-border */}
         </div>
       </div>
 
