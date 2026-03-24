@@ -828,7 +828,7 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
   ];
 
   const S = {
-    page: { maxWidth: 680, margin: '0 auto', paddingBottom: 100, fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif' },
+    page: { maxWidth: '100%', margin: '0 auto', paddingBottom: 100, fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif' },
 
     // Hero card
     hero: {
@@ -2053,15 +2053,9 @@ function App(){
           {menu&&<div className="dd" onClick={e=>e.stopPropagation()}>
             {state.user?<><div className="di b" onClick={()=>{setProfTab("listings");setPage("profile");setMenu(false)}}>👤 Mon profil</div><div className="di" onClick={()=>{setPage("messages");setMenu(false);dispatch({type:"READ_N"})}}>💬 Messages{unread>0&&<span style={{background:"var(--p)",color:"#fff",borderRadius:8,padding:"1px 6px",fontSize:10,fontWeight:700,marginLeft:4}}>{unread}</span>}</div><div className="di" onClick={()=>{setProfTab("favorites");setPage("profile");setMenu(false)}}>❤️ Favoris</div><div className="di" onClick={()=>{setProfTab("bookings");setPage("profile");setMenu(false)}}>📅 Réservations</div><div className="di" onClick={()=>{setPage("create");setMenu(false)}}>➕ Proposer</div>
               <div className="di" onClick={()=>{setPage("dashboard");setMenu(false)}}>📊 Dashboard</div>
-              <div className="di" onClick={()=>{setPage("referral");setMenu(false)}}>⭐ Parrainage</div>
               <div className="di" onClick={()=>{setPage("notifs");setMenu(false);dispatch({type:"READ_N"})}}>🔔 Notifications{unread>0&&<span style={{background:"var(--p)",color:"#fff",borderRadius:8,padding:"1px 6px",fontSize:10,fontWeight:700}}>{unread}</span>}</div>
-              <div className="dsp"/>
-              <div className="di" onClick={()=>{setPage("wallet");setMenu(false)}}>💳 Wallet · {state.wallet}€</div>
-              <div className="di" onClick={()=>{setPage("badges");setMenu(false)}}>🏅 Badges · {state.badges.length}/{ALL_BADGES.length}</div>
               <div className="di" onClick={()=>{setPage("verify");setMenu(false)}}>🆔 Vérifier identité</div>
-              <div className="di" onClick={()=>{setPage("dispute");setMenu(false)}}>⚖️ Litiges</div>
               <div className="di" onClick={()=>{setDark(!dark);setMenu(false)}}>{dark?"☀️ Mode clair":"🌙 Mode sombre"}</div>
-              <div className="di" onClick={()=>{const ls=["fr","en","es"];setLang(ls[(ls.indexOf(lang)+1)%3]);setMenu(false)}}>🌐 {LANGS[lang]}</div>
               <div className="dsp"/><div className="di" onClick={()=>{dispatch({type:"LOGOUT"});setMenu(false);home()}}>🚪 Déconnexion</div></>:
             <><div className="di b" onClick={()=>{setShowA("login");setMenu(false)}}>Se connecter</div><div className="di" onClick={()=>{setShowA("register");setMenu(false)}}>S'inscrire</div></>}
           </div>}
