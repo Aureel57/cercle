@@ -930,7 +930,7 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
     tabsWrap: {
       background: 'white', borderBottom: '1px solid #f3f4f6',
       position: 'sticky', top: 56, zIndex: 20,
-      overflowX: 'auto', display: 'flex',
+      overflowX: 'auto', display: 'flex', justifyContent: 'center',
     },
     tab: (active) => ({
       flex: 'none', padding: '14px 16px', fontSize: 13, fontWeight: active ? 700 : 500,
@@ -2039,7 +2039,7 @@ function App(){
   
   const[state,dispatch]=useReducer(reducer,init);
   const[page,setPage]=useState("home");
-  const[profTab,setProfTab]=useState("listings");
+  const[profTab,setProfTab]=useState("annonces");
   const[cat,setCat]=useState("all");
   const[sel,setSel]=useState(null);
   const[showF,setShowF]=useState(false);
