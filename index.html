@@ -870,10 +870,10 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
     avatar: {
       width: 88, height: 88, borderRadius: '50%',
       background: 'linear-gradient(135deg,#6C63FF,#4ECDC4)',
-      border: '4px solid white',
+      border: '3px solid white',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       fontSize: 32,
-      boxShadow: '0 4px 16px rgba(108,99,255,0.35)',
+      boxShadow: '0 0 0 3px #6C63FF, 0 4px 16px rgba(108,99,255,0.35)',
       position: 'relative',
       flexShrink: 0,
     },
@@ -2111,7 +2111,7 @@ function App(){
         <button className="pb" onClick={()=>setMenu(!menu)} style={{position:"relative"}}>
           <I.Menu/><div className="pav">{state.user?state.user.avatar:<I.User/>}</div>
           {menu&&<div className="dd" onClick={e=>e.stopPropagation()}>
-            {state.user?<><div className="di b" onClick={()=>{setProfTab("listings");setPage("profile");setMenu(false)}}>👤 Mon profil</div><div className="di" onClick={()=>{setPage("messages");setMenu(false);dispatch({type:"READ_N"})}}>💬 Messages{unread>0&&<span style={{background:"var(--p)",color:"#fff",borderRadius:8,padding:"1px 6px",fontSize:10,fontWeight:700,marginLeft:4}}>{unread}</span>}</div><div className="di" onClick={()=>{setProfTab("favorites");setPage("profile");setMenu(false)}}>❤️ Favoris</div><div className="di" onClick={()=>{setProfTab("bookings");setPage("profile");setMenu(false)}}>📅 Réservations</div><div className="di" onClick={()=>{setPage("create");setMenu(false)}}>➕ Proposer</div>
+            {state.user?<><div className="di b" onClick={()=>{setProfTab("annonces");setPage("profile");setMenu(false)}}>👤 Mon profil</div><div className="di" onClick={()=>{setPage("messages");setMenu(false);dispatch({type:"READ_N"})}}>💬 Messages{unread>0&&<span style={{background:"var(--p)",color:"#fff",borderRadius:8,padding:"1px 6px",fontSize:10,fontWeight:700,marginLeft:4}}>{unread}</span>}</div><div className="di" onClick={()=>{setProfTab("favoris");setPage("profile");setMenu(false)}}>❤️ Favoris</div><div className="di" onClick={()=>{setProfTab("reservations");setPage("profile");setMenu(false)}}>📅 Réservations</div><div className="di" onClick={()=>{setPage("create");setMenu(false)}}>➕ Proposer</div>
               <div className="di" onClick={()=>{setPage("dashboard");setMenu(false)}}>📊 Dashboard</div>
               <div className="di" onClick={()=>{setPage("notifs");setMenu(false);dispatch({type:"READ_N"})}}>🔔 Notifications{unread>0&&<span style={{background:"var(--p)",color:"#fff",borderRadius:8,padding:"1px 6px",fontSize:10,fontWeight:700}}>{unread}</span>}</div>
               <div className="di" onClick={()=>{setPage("verify");setMenu(false)}}>🆔 Vérifier identité</div>
@@ -2200,7 +2200,7 @@ function App(){
       <button className={"bn"+(page==="map"?" on":"")} onClick={()=>setPage("map")}><I.MapPin/><span>Carte</span></button>
       {state.user&&<button className={"bn"+(page==="messages"?" on":"")} onClick={()=>setPage("messages")}><I.Msg/><span>Messages</span></button>}
       {state.user&&<button className={"bn"+(page==="notifs"?" on":"")} onClick={()=>{setPage("notifs");dispatch({type:"READ_N"})}}><I.Bell/>{unread>0&&<span className="bnd"/>}<span>Notifs</span></button>}
-      <button className={"bn"+(page==="profile"?" on":"")} onClick={()=>state.user?setPage("profile"):setShowA("login")}><I.Prof/><span>Profil</span></button>
+      <button className={"bn"+(page==="profile"?" on":"")} onClick={()=>state.user?(setProfTab("annonces"),setPage("profile")):setShowA("login")}><I.Prof/><span>Profil</span></button>
     </div></nav>
   </div></Ctx.Provider>
 }
