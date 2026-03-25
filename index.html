@@ -1763,9 +1763,11 @@ function Dashboard({state,dispatch,setPage}){
   const myBookAsOwner=state.bookings.filter(b=>b.ownerId===u.id);
   const revenue=myBookAsOwner.filter(b=>b.status==="confirmed").reduce((s,b)=>s+b.total,0);
   const depOwner=state.payments.filter(p=>p.type==="deposit"&&p.ownerId===u.id);
+  const pending=myBookAsOwner.filter(b=>b.status==="pending").length;
   const months=["Jan","Fév","Mar","Avr","Mai","Juin","Jul","Août","Sep","Oct","Nov","Déc"];
-  const seed=revenue||120;
-  const monthlyVals=months.map((_,i)=>Math.max(4,Math.floor(seed/12*(0.4+Math.sin(i*.9+1)*.45+.15))));
+  const seed=revenue||240;
+  const monthlyVals=months.map((_,i)=>Math.max(8,Math.floor(seed/12*(0.4+Math.sin(i*.9+1)*.45+.15))));
+  const maxVal=Math.max(...monthlyVals);
   const catData=Object.entries(myItems.reduce((acc,it)=>{acc[it.cat]=(acc[it.cat]||0)+1;return acc},{}));
   const barRef=useRef(null);const pieRef=useRef(null);
   const barInst=useRef(null);const pieInst=useRef(null);
@@ -1774,80 +1776,172 @@ function Dashboard({state,dispatch,setPage}){
     if(barInst.current)barInst.current.destroy();
     barInst.current=new window.Chart(barRef.current,{
       type:"bar",
-      data:{labels:months,datasets:[{label:"Revenus (€)",data:monthlyVals,backgroundColor:"rgba(255,90,95,.7)",borderColor:"#FF5A5F",borderWidth:0,borderRadius:6,borderSkipped:false}]},
-      options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{grid:{color:"rgba(128,128,128,.1)"},ticks:{callback:v=>v+"€",font:{size:10}}}}}
+      data:{labels:months,datasets:[{label:"Revenus (€)",data:monthlyVals,backgroundColor:months.map((_,i)=>i===new Date().getMonth()?"#6C63FF":"rgba(108,99,255,0.25)"),borderRadius:6,borderSkipped:false}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.raw+"€"}}},scales:{x:{grid:{display:false},ticks:{font:{size:10},color:"#9ca3af"}},y:{grid:{color:"rgba(0,0,0,0.04)"},ticks:{callback:v=>v+"€",font:{size:10},color:"#9ca3af"},border:{display:false}}}}
     });
     return()=>{if(barInst.current)barInst.current.destroy()};
   },[revenue]);
   useEffect(()=>{
     if(!window.Chart||!pieRef.current||catData.length===0)return;
     if(pieInst.current)pieInst.current.destroy();
-    const colors=["#FF5A5F","#00A699","#FC642D","#3B82F6","#8B5CF6","#10B981","#F59E0B","#EC4899"];
+    const colors=["#6C63FF","#4ECDC4","#FF6B6B","#FFD93D","#6BCB77","#4D96FF","#C77DFF","#FF9F1C"];
     pieInst.current=new window.Chart(pieRef.current,{
       type:"doughnut",
-      data:{labels:catData.map(([c])=>c),datasets:[{data:catData.map(([,v])=>v),backgroundColor:colors.slice(0,catData.length),borderWidth:2,borderColor:"var(--w)"}]},
-      options:{responsive:true,plugins:{legend:{position:"right",labels:{font:{size:11},boxWidth:12}}}}
+      data:{labels:catData.map(([c])=>c),datasets:[{data:catData.map(([,v])=>v),backgroundColor:colors.slice(0,catData.length),borderWidth:3,borderColor:"#fff",hoverOffset:4}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:11},boxWidth:10,padding:12}}},cutout:"65%"}
     });
     return()=>{if(pieInst.current)pieInst.current.destroy()};
   },[myItems.length]);
   const exportPDF=()=>{
-    if(!window.jspdf){alert("jsPDF non disponible. Vérifiez la connexion.");return}
-    const {jsPDF}=window.jspdf;
-    const doc=new jsPDF();
+    if(!window.jspdf){alert("jsPDF non disponible.");return}
+    const {jsPDF}=window.jspdf;const doc=new jsPDF();
     const now=new Date().toLocaleDateString("fr-FR");
-    doc.setFont("helvetica","bold");doc.setFontSize(22);doc.setTextColor(255,90,95);
-    doc.text("Cercle",20,22);
-    doc.setTextColor(34,34,34);doc.setFontSize(13);doc.setFont("helvetica","normal");
-    doc.text("Dashboard propriétaire",20,30);
-    doc.setFontSize(10);doc.setTextColor(120,120,120);
-    doc.text(`Généré le ${now} · ${u.name}`,20,38);
-    doc.setDrawColor(235,235,235);doc.line(20,42,190,42);
-    doc.setTextColor(34,34,34);doc.setFont("helvetica","bold");doc.setFontSize(14);doc.text("Résumé",20,52);
-    doc.setFont("helvetica","normal");doc.setFontSize(11);
-    const kpis=[["Revenus totaux",revenue+" €"],["Annonces actives",myItems.length],["Locations reçues",myBookAsOwner.length],["Cautions en cours",depOwner.filter(d=>d.status==="held").length]];
-    kpis.forEach(([k,v],i)=>{doc.setFont("helvetica","bold");doc.text(k+":  ",20,62+i*9);doc.setFont("helvetica","normal");doc.text(String(v),75,62+i*9)});
-    doc.line(20,100,190,100);
-    doc.setFont("helvetica","bold");doc.setFontSize(14);doc.text("Revenus mensuels",20,110);
-    doc.setFont("helvetica","normal");doc.setFontSize(10);
-    months.forEach((m,i)=>{const col=i<6?20:110;const row=120+(i%6)*9;doc.text(`${m}: ${monthlyVals[i]} €`,col,row)});
-    doc.line(20,178,190,178);
-    doc.setFont("helvetica","bold");doc.setFontSize(14);doc.text("Annonces",20,188);
-    doc.setFont("helvetica","normal");doc.setFontSize(10);
-    myItems.slice(0,8).forEach((it,i)=>doc.text(`• ${it.title} – ${it.price}€/j – ${it.available?"Disponible":"Indisponible"}`,20,198+i*9));
-    doc.setFont("helvetica","italic");doc.setFontSize(9);doc.setTextColor(160,160,160);
-    doc.text("Cercle © 2026 · Plateforme de location entre particuliers",20,285);
+    doc.setFont("helvetica","bold");doc.setFontSize(20);doc.setTextColor(108,99,255);doc.text("Cercle",20,22);
+    doc.setTextColor(34,34,34);doc.setFontSize(12);doc.setFont("helvetica","normal");doc.text("Dashboard propriétaire · "+now,20,32);
+    doc.setDrawColor(230,230,230);doc.line(20,38,190,38);
+    [["Revenus totaux",revenue+" €"],["Annonces actives",myItems.length],["Locations reçues",myBookAsOwner.length],["Demandes en attente",pending]].forEach(([k,v],i)=>{doc.setFont("helvetica","bold");doc.text(k+": ",20,52+i*10);doc.setFont("helvetica","normal");doc.text(String(v),80,52+i*10)});
     doc.save(`cercle-dashboard-${now.replace(/\//g,"-")}.pdf`);
   };
-  return <div style={{maxWidth:920,margin:"0 auto",padding:28}}>
-    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16,flexWrap:"wrap",gap:10}}>
-      <div><button className="cl" style={{marginBottom:6,display:"flex",alignItems:"center",gap:5}} onClick={()=>setPage("home")}><I.Back/> Retour</button>
-        <h1 style={{fontFamily:"var(--fd)",fontSize:22}}>📊 Dashboard propriétaire</h1></div>
-      <button className="bs" style={{display:"flex",alignItems:"center",gap:7,fontSize:12,padding:"10px 18px"}} onClick={exportPDF}>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{width:14,height:14}}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Exporter PDF
-      </button>
-    </div>
-    <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:20}} className="dboard-grid">
-      {[["💰",revenue+" €","Revenus totaux","#ECFDF5"],["📦",myItems.length,"Annonces actives","var(--bgw)"],["📅",myBookAsOwner.length,"Locations reçues","var(--bgw)"],["🔒",depOwner.filter(d=>d.status==="held").length,"Cautions en cours","#FEF3C7"]].map(([ic,val,label,bg],i)=>
-      <div key={i} style={{background:bg,borderRadius:12,padding:14,textAlign:"center"}}><span style={{fontSize:22}}>{ic}</span><div style={{fontFamily:"var(--fd)",fontSize:20,fontWeight:700,margin:"4px 0"}}>{val}</div><div style={{fontSize:10,color:"var(--g)"}}>{label}</div></div>)}
-    </div>
-    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginBottom:20}} className="dboard-grid">
-      <div className="dboard-chart">
-        <h3 style={{fontFamily:"var(--fd)",fontSize:15,marginBottom:14}}>📈 Revenus mensuels</h3>
-        {window.Chart?<canvas ref={barRef}/>:<div style={{height:160,display:"flex",alignItems:"flex-end",gap:3}}>{monthlyVals.map((v,i)=><div key={i} style={{flex:1,textAlign:"center"}}><div style={{background:"linear-gradient(var(--acc),var(--p))",borderRadius:"4px 4px 0 0",height:Math.max(4,v/3),margin:"0 auto",width:"80%"}}/><div style={{fontSize:8,color:"var(--g)",marginTop:3}}>{months[i]}</div></div>)}</div>}
+  const kpis=[
+    {icon:"💰",val:revenue+"€",label:"Revenus",sub:"total confirmé",color:"#6C63FF",bg:"linear-gradient(135deg,#ede9fe,#ddd6fe)"},
+    {icon:"📦",val:myItems.length,label:"Annonces",sub:"actives",color:"#0ea5e9",bg:"linear-gradient(135deg,#e0f2fe,#bae6fd)"},
+    {icon:"📅",val:myBookAsOwner.length,label:"Locations",sub:"reçues",color:"#10b981",bg:"linear-gradient(135deg,#d1fae5,#a7f3d0)"},
+    {icon:"⏳",val:pending,label:"En attente",sub:"à confirmer",color:"#f59e0b",bg:"linear-gradient(135deg,#fef3c7,#fde68a)"},
+  ];
+  return(
+  <div style={{minHeight:"100vh",background:"var(--bg)",overflowX:"hidden",paddingBottom:90,fontFamily:"-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif"}}>
+    {/* ── Header ── */}
+    <div style={{background:"linear-gradient(135deg,#6C63FF 0%,#7c5ce7 60%,#4ECDC4 100%)",padding:"48px 20px 32px",position:"relative",overflow:"hidden"}}>
+      <div style={{position:"absolute",inset:0,backgroundImage:"radial-gradient(circle,rgba(255,255,255,0.08) 1px,transparent 1px)",backgroundSize:"20px 20px"}}/>
+      <div style={{position:"relative",maxWidth:860,margin:"0 auto"}}>
+        <button onClick={()=>setPage("home")} style={{display:"inline-flex",alignItems:"center",gap:6,background:"rgba(255,255,255,0.15)",border:"1px solid rgba(255,255,255,0.3)",borderRadius:20,padding:"6px 14px",color:"white",fontSize:13,fontWeight:600,marginBottom:20,cursor:"pointer",backdropFilter:"blur(8px)"}}>
+          <I.Back/> Retour
+        </button>
+        <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",flexWrap:"wrap",gap:12}}>
+          <div>
+            <div style={{fontSize:13,color:"rgba(255,255,255,0.7)",fontWeight:500,marginBottom:4}}>Tableau de bord</div>
+            <h1 style={{fontSize:26,fontWeight:800,color:"white",margin:0,letterSpacing:-0.5}}>Bonjour {u.name.split(" ")[0]} 👋</h1>
+            <p style={{fontSize:13,color:"rgba(255,255,255,0.65)",margin:"6px 0 0"}}>Voici un résumé de votre activité</p>
+          </div>
+          <button onClick={exportPDF} style={{display:"flex",alignItems:"center",gap:7,background:"rgba(255,255,255,0.2)",border:"1px solid rgba(255,255,255,0.35)",borderRadius:12,padding:"10px 18px",color:"white",fontSize:13,fontWeight:600,cursor:"pointer",backdropFilter:"blur(8px)"}}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{width:14,height:14}}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Export PDF
+          </button>
+        </div>
       </div>
-      <div className="dboard-chart">
-        <h3 style={{fontFamily:"var(--fd)",fontSize:15,marginBottom:14}}>🗂️ Répartition par catégorie</h3>
-        {catData.length>0&&window.Chart?<canvas ref={pieRef}/>:catData.length===0?<div style={{textAlign:"center",paddingTop:40,color:"var(--g)",fontSize:12}}>Aucune annonce</div>:<div style={{fontSize:12,color:"var(--g)"}}>Chart.js non chargé</div>}
-      </div>
     </div>
-    <h3 style={{fontFamily:"var(--fd)",fontSize:16,marginBottom:10}}>Disponibilité des annonces</h3>
-    {myItems.length===0&&<div className="empty"><span>📦</span><h2>Aucune annonce</h2><p>Proposez vos premiers objets pour voir vos stats.</p><button className="bp" style={{marginTop:12}} onClick={()=>setPage("create")}>Créer une annonce</button></div>}
-    {myItems.map(it=><div key={it.id} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:10,border:"1px solid var(--bd)",borderRadius:8,marginBottom:6}}>
-      <div style={{display:"flex",alignItems:"center",gap:8}}><img src={it.images[0]} alt="" style={{width:40,height:30,objectFit:"cover",borderRadius:6}}/><div><div style={{fontSize:13,fontWeight:600}}>{it.title}</div><div style={{fontSize:11,color:"var(--g)"}}>{it.price}€/j · {it.cat}</div></div></div>
-      <button className={"pill"+(it.available?" on":"")} style={{fontSize:11}} onClick={()=>dispatch({type:"TOGGLE_AVAIL",id:it.id})}>{it.available?"✓ Disponible":"Indisponible"}</button>
-    </div>)}
+
+    <div style={{maxWidth:860,margin:"0 auto",padding:"0 16px"}}>
+
+      {/* ── KPIs ── */}
+      <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:12,marginTop:-24,marginBottom:24}}>
+        {kpis.map((k,i)=>(
+          <div key={i} style={{background:"white",borderRadius:16,padding:"16px 18px",boxShadow:"0 4px 24px rgba(0,0,0,0.07)",border:"1px solid rgba(0,0,0,0.04)"}}>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
+              <div style={{width:40,height:40,borderRadius:12,background:k.bg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>{k.icon}</div>
+              <span style={{fontSize:10,fontWeight:700,color:k.color,background:k.bg,padding:"3px 8px",borderRadius:20}}>{k.sub}</span>
+            </div>
+            <div style={{fontSize:24,fontWeight:800,color:"#111827",letterSpacing:-0.5,lineHeight:1}}>{k.val}</div>
+            <div style={{fontSize:12,color:"#6b7280",marginTop:4}}>{k.label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* ── Charts ── */}
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginBottom:24}} className="dboard-grid">
+        <div style={{background:"white",borderRadius:16,padding:"18px 16px",boxShadow:"0 2px 16px rgba(0,0,0,0.06)",border:"1px solid rgba(0,0,0,0.05)"}}>
+          <div style={{fontSize:13,fontWeight:700,color:"#111827",marginBottom:4}}>Revenus mensuels</div>
+          <div style={{fontSize:11,color:"#9ca3af",marginBottom:16}}>{new Date().getFullYear()}</div>
+          {window.Chart
+            ? <div style={{height:160,position:"relative"}}><canvas ref={barRef}/></div>
+            : <div style={{height:160,display:"flex",alignItems:"flex-end",gap:3,paddingTop:8}}>
+                {monthlyVals.map((v,i)=><div key={i} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
+                  <div style={{width:"100%",background:i===new Date().getMonth()?"#6C63FF":"#e9d5ff",borderRadius:"4px 4px 0 0",height:Math.max(6,Math.round(v/maxVal*120))}}/>
+                  <div style={{fontSize:7,color:"#9ca3af"}}>{months[i].slice(0,1)}</div>
+                </div>)}
+              </div>
+          }
+        </div>
+        <div style={{background:"white",borderRadius:16,padding:"18px 16px",boxShadow:"0 2px 16px rgba(0,0,0,0.06)",border:"1px solid rgba(0,0,0,0.05)"}}>
+          <div style={{fontSize:13,fontWeight:700,color:"#111827",marginBottom:4}}>Par catégorie</div>
+          <div style={{fontSize:11,color:"#9ca3af",marginBottom:16}}>Répartition des annonces</div>
+          {catData.length>0&&window.Chart
+            ? <div style={{height:160,position:"relative"}}><canvas ref={pieRef}/></div>
+            : catData.length===0
+              ? <div style={{height:160,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:8,color:"#9ca3af"}}>
+                  <span style={{fontSize:32}}>📦</span><span style={{fontSize:12}}>Aucune annonce</span>
+                </div>
+              : <div style={{display:"flex",flexDirection:"column",gap:8,marginTop:4}}>
+                  {catData.slice(0,5).map(([cat,cnt],i)=>{
+                    const colors=["#6C63FF","#4ECDC4","#FF6B6B","#FFD93D","#6BCB77"];
+                    return <div key={i} style={{display:"flex",alignItems:"center",gap:8}}>
+                      <div style={{width:8,height:8,borderRadius:"50%",background:colors[i%5],flexShrink:0}}/>
+                      <div style={{flex:1,fontSize:11,color:"#374151"}}>{cat}</div>
+                      <div style={{width:60,height:6,background:"#f3f4f6",borderRadius:3,overflow:"hidden"}}>
+                        <div style={{width:Math.round(cnt/myItems.length*100)+"%",height:"100%",background:colors[i%5],borderRadius:3}}/>
+                      </div>
+                      <div style={{fontSize:11,fontWeight:700,color:"#111827",minWidth:14}}>{cnt}</div>
+                    </div>;
+                  })}
+                </div>
+          }
+        </div>
+      </div>
+
+      {/* ── Quick actions ── */}
+      <div style={{marginBottom:24}}>
+        <div style={{fontSize:14,fontWeight:700,color:"#111827",marginBottom:12}}>Actions rapides</div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10}}>
+          {[
+            {icon:"➕",label:"Nouvelle annonce",color:"#6C63FF",bg:"#ede9fe",action:()=>setPage("create")},
+            {icon:"📅",label:"Voir réservations",color:"#0ea5e9",bg:"#e0f2fe",action:()=>setPage("profile")},
+            {icon:"🆔",label:"Vérifier identité",color:"#10b981",bg:"#d1fae5",action:()=>setPage("verify")},
+          ].map((a,i)=>(
+            <button key={i} onClick={a.action} style={{background:"white",border:"1px solid rgba(0,0,0,0.06)",borderRadius:14,padding:"14px 10px",display:"flex",flexDirection:"column",alignItems:"center",gap:8,cursor:"pointer",boxShadow:"0 2px 12px rgba(0,0,0,0.05)",transition:"transform .15s,box-shadow .15s"}}
+              onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.boxShadow="0 6px 20px rgba(0,0,0,0.1)"}}
+              onMouseLeave={e=>{e.currentTarget.style.transform="translateY(0)";e.currentTarget.style.boxShadow="0 2px 12px rgba(0,0,0,0.05)"}}>
+              <div style={{width:38,height:38,borderRadius:10,background:a.bg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>{a.icon}</div>
+              <span style={{fontSize:11,fontWeight:600,color:"#374151",textAlign:"center",lineHeight:1.3}}>{a.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Listings availability ── */}
+      <div style={{background:"white",borderRadius:16,padding:"18px 16px",boxShadow:"0 2px 16px rgba(0,0,0,0.06)",border:"1px solid rgba(0,0,0,0.05)",marginBottom:24}}>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
+          <div style={{fontSize:14,fontWeight:700,color:"#111827"}}>Mes annonces</div>
+          <button onClick={()=>setPage("create")} style={{fontSize:12,fontWeight:600,color:"#6C63FF",background:"#ede9fe",border:"none",borderRadius:20,padding:"5px 12px",cursor:"pointer"}}>+ Ajouter</button>
+        </div>
+        {myItems.length===0
+          ? <div style={{textAlign:"center",padding:"28px 0",color:"#9ca3af"}}>
+              <div style={{fontSize:32,marginBottom:8}}>📦</div>
+              <div style={{fontSize:13,fontWeight:600,color:"#374151",marginBottom:4}}>Aucune annonce</div>
+              <div style={{fontSize:12}}>Proposez vos premiers objets</div>
+              <button className="bp" style={{marginTop:14,fontSize:12,padding:"8px 20px"}} onClick={()=>setPage("create")}>Créer une annonce</button>
+            </div>
+          : <div style={{display:"flex",flexDirection:"column",gap:8}}>
+              {myItems.slice(0,6).map(it=>(
+                <div key={it.id} style={{display:"flex",alignItems:"center",gap:12,padding:"10px 0",borderBottom:"1px solid #f9fafb"}}>
+                  <img src={it.images[0]} alt="" style={{width:44,height:36,objectFit:"cover",borderRadius:8,flexShrink:0}}/>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontSize:13,fontWeight:600,color:"#111827",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{it.title}</div>
+                    <div style={{fontSize:11,color:"#9ca3af",marginTop:2}}>{it.price}€/j · {it.cat}</div>
+                  </div>
+                  <button onClick={()=>dispatch({type:"TOGGLE_AVAIL",id:it.id})} style={{flexShrink:0,fontSize:11,fontWeight:700,padding:"5px 12px",borderRadius:20,border:"none",cursor:"pointer",
+                    background:it.available?"linear-gradient(135deg,#d1fae5,#a7f3d0)":"#f3f4f6",
+                    color:it.available?"#065f46":"#6b7280"}}>
+                    {it.available?"✓ Dispo":"Indispo"}
+                  </button>
+                </div>
+              ))}
+            </div>
+        }
+      </div>
+
+    </div>
   </div>
+  );
 }
 
 /* ===== REFERRAL ===== */
