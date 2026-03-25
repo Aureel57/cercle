@@ -11,6 +11,7 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap');
 *{margin:0;padding:0;box-sizing:border-box}
@@ -1821,14 +1822,104 @@ function Dashboard({state,dispatch,setPage}){
     });
     return()=>{if(pieInst.current)pieInst.current.destroy()};
   },[myItems.length]);
-  const exportPDF=()=>{
+  const exportPDF=async()=>{
     if(!window.jspdf){alert("jsPDF non disponible.");return}
-    const{jsPDF}=window.jspdf;const doc=new jsPDF();const now=new Date().toLocaleDateString("fr-FR");
-    doc.setFont("helvetica","bold");doc.setFontSize(20);doc.setTextColor(108,99,255);doc.text("Cercle",20,22);
-    doc.setTextColor(34,34,34);doc.setFontSize(12);doc.setFont("helvetica","normal");doc.text("Dashboard · "+u.name+" · "+now,20,32);
-    doc.setDrawColor(230,230,230);doc.line(20,38,190,38);
-    [["Revenus totaux",revenue+"€"],["Annonces actives",myItems.length],["Locations reçues",myBookAsOwner.length],["En attente",pending]].forEach(([k,v],i)=>{doc.setFont("helvetica","bold");doc.text(k+": ",20,52+i*10);doc.setFont("helvetica","normal");doc.text(String(v),85,52+i*10)});
-    doc.save(`cercle-dashboard-${now.replace(/\//g,"-")}.pdf`);
+    if(!window.html2canvas){alert("html2canvas non disponible.");return}
+    const now=new Date().toLocaleDateString("fr-FR");
+    const kpiData=[
+      {icon:"💰",val:revenue+"€",label:"Revenus",sub:"confirmés",color:"#6C63FF",lightBg:"#ede9fe"},
+      {icon:"📦",val:myItems.length,label:"Annonces",sub:"actives",color:"#0ea5e9",lightBg:"#e0f2fe"},
+      {icon:"✅",val:myBookAsOwner.filter(b=>b.status==="confirmed").length,label:"Confirmées",sub:"locations",color:"#10b981",lightBg:"#d1fae5"},
+      {icon:"⏳",val:pending,label:"En attente",sub:"à confirmer",color:"#f59e0b",lightBg:"#fef3c7"},
+    ];
+    const wrapper=document.createElement("div");
+    wrapper.style.cssText="position:absolute;left:-9999px;top:0;width:794px;background:#ffffff;font-family:'DM Sans',system-ui,sans-serif;";
+    wrapper.innerHTML=`
+      <div style="width:794px;background:#ffffff;padding:0;font-family:'DM Sans',system-ui,sans-serif;">
+        <!-- Header -->
+        <div style="background:linear-gradient(135deg,#6C63FF 0%,#7c5ce7 50%,#4ECDC4 100%);padding:40px 40px 36px;position:relative;overflow:hidden;">
+          <div style="position:absolute;inset:0;background-image:radial-gradient(circle,rgba(255,255,255,0.08) 1px,transparent 1px);background-size:22px 22px;pointer-events:none;"></div>
+          <div style="position:relative;">
+            <div style="font-size:11px;color:rgba(255,255,255,0.65);font-weight:600;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;">Tableau de bord</div>
+            <div style="font-size:28px;font-weight:800;color:#ffffff;letter-spacing:-0.5px;line-height:1.1;margin-bottom:6px;">Dashboard Cercle</div>
+            <div style="font-size:13px;color:rgba(255,255,255,0.75);font-weight:500;">${u.name} &nbsp;·&nbsp; Exporté le ${now}</div>
+          </div>
+        </div>
+        <!-- KPIs -->
+        <div style="padding:32px 40px 24px;">
+          <div style="font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:1.2px;margin-bottom:16px;">Résumé</div>
+          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px;">
+            ${kpiData.map(k=>`
+              <div style="background:#ffffff;border-radius:14px;padding:18px 20px;box-shadow:0 2px 16px rgba(0,0,0,0.07);border:1px solid rgba(0,0,0,0.05);">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                  <div style="width:38px;height:38px;border-radius:11px;background:${k.lightBg};display:flex;align-items:center;justify-content:center;font-size:18px;">${k.icon}</div>
+                  <span style="font-size:10px;font-weight:700;color:${k.color};background:${k.lightBg};padding:3px 9px;border-radius:20px;">${k.sub}</span>
+                </div>
+                <div style="font-size:28px;font-weight:800;color:#111827;letter-spacing:-0.5px;line-height:1;">${k.val}</div>
+                <div style="font-size:12px;color:#6b7280;margin-top:5px;">${k.label}</div>
+              </div>`).join("")}
+          </div>
+        </div>
+        <!-- Monthly revenue table -->
+        <div style="padding:4px 40px 32px;">
+          <div style="font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:1.2px;margin-bottom:16px;">Revenus mensuels — ${new Date().getFullYear()}</div>
+          <div style="background:#ffffff;border-radius:14px;box-shadow:0 2px 16px rgba(0,0,0,0.07);border:1px solid rgba(0,0,0,0.05);overflow:hidden;">
+            <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:0;">
+              ${monthlyVals.map((v,i)=>{
+                const isCur=i===curMonth;
+                const barH=monthlyVals.length?Math.max(4,Math.round(v/Math.max(...monthlyVals,1)*48)):4;
+                return`<div style="padding:14px 8px 12px;text-align:center;border-right:${i%6===5?"none":"1px solid #f3f4f6"};border-bottom:${i<6?"1px solid #f3f4f6":"none"};background:${isCur?"#f5f3ff":"#ffffff"};">
+                  <div style="font-size:9px;font-weight:${isCur?700:500};color:${isCur?"#6C63FF":"#9ca3af"};margin-bottom:6px;">${months[i]}</div>
+                  <div style="height:48px;display:flex;align-items:flex-end;justify-content:center;margin-bottom:6px;">
+                    <div style="width:20px;height:${barH}px;background:${isCur?"#6C63FF":v>0?"rgba(108,99,255,0.35)":"rgba(108,99,255,0.1)"};border-radius:4px 4px 0 0;"></div>
+                  </div>
+                  <div style="font-size:11px;font-weight:${isCur?700:600};color:${isCur?"#6C63FF":"#374151"};">${v}€</div>
+                </div>`;
+              }).join("")}
+            </div>
+          </div>
+        </div>
+        <!-- Footer -->
+        <div style="padding:0 40px 32px;text-align:center;">
+          <div style="border-top:1px solid #f3f4f6;padding-top:18px;font-size:10px;color:#d1d5db;letter-spacing:0.5px;">
+            Généré le ${now} &nbsp;•&nbsp; Cercle — Location entre voisins
+          </div>
+        </div>
+      </div>`;
+    document.body.appendChild(wrapper);
+    try{
+      const canvas=await window.html2canvas(wrapper.firstElementChild,{scale:2,useCORS:true,backgroundColor:"#ffffff",logging:false});
+      const{jsPDF}=window.jspdf;
+      const doc=new jsPDF({orientation:"portrait",unit:"px",format:"a4",hotfixes:["px_scaling"]});
+      const pageW=doc.internal.pageSize.getWidth();
+      const pageH=doc.internal.pageSize.getHeight();
+      const imgW=pageW;
+      const imgH=(canvas.height*pageW)/canvas.width;
+      let y=0;
+      if(imgH<=pageH){
+        doc.addImage(canvas.toDataURL("image/png"),"PNG",0,0,imgW,imgH);
+      }else{
+        // multi-page if content is taller than one page
+        let remaining=imgH;
+        while(remaining>0){
+          const sliceH=Math.min(remaining,pageH);
+          const sliceCanvas=document.createElement("canvas");
+          sliceCanvas.width=canvas.width;
+          sliceCanvas.height=Math.round(sliceH*(canvas.height/imgH));
+          const ctx=sliceCanvas.getContext("2d");
+          ctx.drawImage(canvas,0,-Math.round(y*(canvas.height/imgH)));
+          doc.addImage(sliceCanvas.toDataURL("image/png"),"PNG",0,0,imgW,sliceH);
+          remaining-=sliceH;y+=sliceH;
+          if(remaining>0)doc.addPage();
+        }
+      }
+      doc.save(`cercle-dashboard-${now.replace(/\//g,"-")}.pdf`);
+    }catch(e){
+      console.error("PDF export error:",e);
+      alert("Erreur lors de l'export PDF.");
+    }finally{
+      document.body.removeChild(wrapper);
+    }
   };
   const kpis=[
     {icon:"💰",val:revenue+"€",label:"Revenus",sub:"confirmés",color:"#6C63FF",bg:"linear-gradient(135deg,#ede9fe,#ddd6fe)"},
