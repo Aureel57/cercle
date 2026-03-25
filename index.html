@@ -1832,6 +1832,10 @@ function Dashboard({state,dispatch,setPage}){
       {icon:"✅",val:myBookAsOwner.filter(b=>b.status==="confirmed").length,label:"Confirmées",sub:"locations",color:"#10b981",lightBg:"#d1fae5"},
       {icon:"⏳",val:pending,label:"En attente",sub:"à confirmer",color:"#f59e0b",lightBg:"#fef3c7"},
     ];
+    const totalAnnuel=monthlyVals.reduce((a,b)=>a+b,0);
+    const currentYear=new Date().getFullYear();
+    const confirmedCount=myBookAsOwner.filter(b=>b.status==="confirmed").length;
+    const pendingCount=myBookAsOwner.filter(b=>b.status==="pending").length;
     const wrapper=document.createElement("div");
     wrapper.style.cssText="position:absolute;left:-9999px;top:0;width:794px;background:#ffffff;font-family:'DM Sans',system-ui,sans-serif;";
     wrapper.innerHTML=`
@@ -1845,9 +1849,34 @@ function Dashboard({state,dispatch,setPage}){
             <div style="font-size:13px;color:rgba(255,255,255,0.75);font-weight:500;">${u.name} &nbsp;·&nbsp; Exporté le ${now}</div>
           </div>
         </div>
+        <!-- Résumé global card -->
+        <div style="padding:28px 40px 0;">
+          <div style="background:linear-gradient(135deg,#f8f7ff,#f0f4ff);border-left:4px solid #6C63FF;border-radius:16px;padding:28px 32px;box-shadow:0 2px 20px rgba(108,99,255,0.10);display:flex;align-items:center;gap:32px;">
+            <div style="font-size:48px;line-height:1;flex-shrink:0;">💰</div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:14px;color:#9ca3af;font-weight:500;margin-bottom:4px;">Revenus totaux</div>
+              <div style="font-size:42px;font-weight:800;color:#6C63FF;letter-spacing:-1px;line-height:1;">${totalAnnuel}€</div>
+              <div style="font-size:12px;color:#9ca3af;font-style:italic;margin-top:4px;">Exercice ${currentYear}</div>
+            </div>
+            <div style="display:flex;gap:0;flex-shrink:0;">
+              <div style="text-align:center;padding:0 24px;border-right:1px solid #e5e7eb;">
+                <div style="font-size:11px;color:#9ca3af;margin-bottom:4px;">Annonces</div>
+                <div style="font-size:22px;font-weight:700;color:#111827;">${myItems.length}</div>
+              </div>
+              <div style="text-align:center;padding:0 24px;border-right:1px solid #e5e7eb;">
+                <div style="font-size:11px;color:#9ca3af;margin-bottom:4px;">Locations</div>
+                <div style="font-size:22px;font-weight:700;color:#10b981;">${confirmedCount}</div>
+              </div>
+              <div style="text-align:center;padding:0 24px;">
+                <div style="font-size:11px;color:#9ca3af;margin-bottom:4px;">En attente</div>
+                <div style="font-size:22px;font-weight:700;color:#f59e0b;">${pendingCount}</div>
+              </div>
+            </div>
+          </div>
+        </div>
         <!-- KPIs -->
-        <div style="padding:32px 40px 24px;">
-          <div style="font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:1.2px;margin-bottom:16px;">Résumé</div>
+        <div style="padding:24px 40px 24px;">
+          <div style="font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:1.2px;margin-bottom:16px;">Indicateurs clés</div>
           <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px;">
             ${kpiData.map(k=>`
               <div style="background:#ffffff;border-radius:14px;padding:18px 20px;box-shadow:0 2px 16px rgba(0,0,0,0.07);border:1px solid rgba(0,0,0,0.05);">
@@ -1862,7 +1891,10 @@ function Dashboard({state,dispatch,setPage}){
         </div>
         <!-- Monthly revenue table -->
         <div style="padding:4px 40px 32px;">
-          <div style="font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:1.2px;margin-bottom:16px;">Revenus mensuels — ${new Date().getFullYear()}</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+            <div style="font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:1.2px;">Revenus mensuels — ${currentYear}</div>
+            <span style="background:#6C63FF;color:white;border-radius:20px;padding:4px 16px;font-size:11px;font-weight:700;">Total ${currentYear} : ${totalAnnuel}€</span>
+          </div>
           <div style="background:#ffffff;border-radius:14px;box-shadow:0 2px 16px rgba(0,0,0,0.07);border:1px solid rgba(0,0,0,0.05);overflow:hidden;">
             <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:0;">
               ${monthlyVals.map((v,i)=>{
@@ -1876,6 +1908,10 @@ function Dashboard({state,dispatch,setPage}){
                   <div style="font-size:11px;font-weight:${isCur?700:600};color:${isCur?"#6C63FF":"#374151"};">${v}€</div>
                 </div>`;
               }).join("")}
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:0;background:#f3f0ff;border-top:2px solid #e0d9ff;">
+              <div style="grid-column:1/5;padding:10px 16px;font-size:11px;font-weight:700;color:#6C63FF;">Total annuel</div>
+              <div style="grid-column:5/7;padding:10px 16px;text-align:right;font-size:13px;font-weight:800;color:#6C63FF;">${totalAnnuel}€</div>
             </div>
           </div>
         </div>
