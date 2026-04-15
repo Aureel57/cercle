@@ -2337,6 +2337,8 @@ function App(){
   const[showShop,setShowShop]=useState(null);
   const[infoPage,setInfoPage]=useState(null);
   const[pushNotif,setPushNotif]=useState(null);
+  const[openSection,setOpenSection]=useState(null);
+  const toggleSection=(name)=>setOpenSection(prev=>prev===name?null:name);
   const[lang,setLang]=useState('fr');
   const[filters,setFilters]=useState({priceMin:0,priceMax:500,condition:"Tous",options:[],sort:"pertinence",filterCat:"all",minRating:0});
 
@@ -2439,10 +2441,42 @@ function App(){
         </div>
       </div>
       <div className="ftg">
-        <div className="ftc"><h4>🆘 Assistance</h4><a onClick={()=>setShowChat(true)}>💬 Centre d'aide</a><a onClick={()=>{setInfoPage("guide");window.scrollTo(0,0)}}>📖 Guide de démarrage</a><a onClick={()=>{setInfoPage("cover");window.scrollTo(0,0)}}>🛡️ Assurance CercleCover</a><a onClick={()=>{if(state.user)setPage("dispute");else setShowA("login")}}>⚖️ Résoudre un litige</a><a onClick={()=>{setInfoPage("security");window.scrollTo(0,0)}}>🔒 Sécurité des paiements</a><a onClick={()=>{setInfoPage("contact");window.scrollTo(0,0)}}>📞 Nous contacter</a></div>
-        <div className="ftc"><h4>🌍 Communauté</h4><a onClick={()=>{setInfoPage("blog");window.scrollTo(0,0)}}>📝 Blog Cercle</a><a onClick={()=>{setInfoPage("forum");window.scrollTo(0,0)}}>💬 Forum d'entraide</a><a onClick={()=>{setInfoPage("guides");window.scrollTo(0,0)}}>📚 Guides pratiques</a><a onClick={()=>{if(state.user)setPage("referral");else setShowA("login")}}>🎁 Programme parrainage</a><a onClick={()=>{setInfoPage("impact");window.scrollTo(0,0)}}>🌱 Impact environnemental</a><a onClick={()=>{setInfoPage("temoignages");window.scrollTo(0,0)}}>📣 Témoignages</a></div>
-        <div className="ftc"><h4>🏠 Propriétaire</h4><a onClick={()=>{if(state.user)setPage("create");else setShowA("login")}}>➕ Proposer un objet</a><a onClick={()=>{if(state.user)setPage("dashboard");else setShowA("login")}}>📊 Tableau de bord</a><a onClick={()=>{setInfoPage("conseils");window.scrollTo(0,0)}}>💡 Conseils pour louer</a><a onClick={()=>{setInfoPage("revenus");window.scrollTo(0,0)}}>📈 Maximiser ses revenus</a><a onClick={()=>{setInfoPage("photos");window.scrollTo(0,0)}}>📸 Prendre de bonnes photos</a><a onClick={()=>{setInfoPage("superproprio");window.scrollTo(0,0)}}>⭐ Devenir Super Proprio</a></div>
-        <div className="ftc"><h4>🔵 Cercle</h4><a onClick={()=>{setInfoPage("about");window.scrollTo(0,0)}}>🏢 À propos de nous</a><a onClick={()=>{setInfoPage("mission");window.scrollTo(0,0)}}>🎯 Notre mission</a><a onClick={()=>{setInfoPage("careers");window.scrollTo(0,0)}}>💼 Carrières — On recrute !</a><a onClick={()=>{setInfoPage("press");window.scrollTo(0,0)}}>📰 Espace presse</a><a onClick={()=>{setInfoPage("partners");window.scrollTo(0,0)}}>🤝 Partenariats</a><a onClick={()=>{setInfoPage("newsletter");window.scrollTo(0,0)}}>📧 Newsletter</a></div>
+        <div className="ftc" style={{borderBottom:'1px solid rgba(0,0,0,0.08)'}}>
+          <div onClick={()=>toggleSection('assistance')} style={{display:'flex',justifyContent:'space-between',alignItems:'center',cursor:'pointer',padding:'14px 0',userSelect:'none'}}>
+            <span style={{fontSize:11,fontWeight:700,letterSpacing:'0.06em',color:'var(--dk)',textTransform:'uppercase'}}>🆘 Assistance</span>
+            <span style={{fontSize:18,color:'#6C63FF',display:'inline-block',transform:openSection==='assistance'?'rotate(180deg)':'rotate(0deg)',transition:'transform 0.25s ease'}}>▾</span>
+          </div>
+          <div style={{maxHeight:openSection==='assistance'?'300px':'0',overflow:'hidden',transition:'max-height 0.3s ease',paddingBottom:openSection==='assistance'?12:0}}>
+            <a onClick={()=>setShowChat(true)}>💬 Centre d'aide</a><a onClick={()=>{setInfoPage("guide");window.scrollTo(0,0)}}>📖 Guide de démarrage</a><a onClick={()=>{setInfoPage("cover");window.scrollTo(0,0)}}>🛡️ Assurance CercleCover</a><a onClick={()=>{if(state.user)setPage("dispute");else setShowA("login")}}>⚖️ Résoudre un litige</a><a onClick={()=>{setInfoPage("security");window.scrollTo(0,0)}}>🔒 Sécurité des paiements</a><a onClick={()=>{setInfoPage("contact");window.scrollTo(0,0)}}>📞 Nous contacter</a>
+          </div>
+        </div>
+        <div className="ftc" style={{borderBottom:'1px solid rgba(0,0,0,0.08)'}}>
+          <div onClick={()=>toggleSection('communaute')} style={{display:'flex',justifyContent:'space-between',alignItems:'center',cursor:'pointer',padding:'14px 0',userSelect:'none'}}>
+            <span style={{fontSize:11,fontWeight:700,letterSpacing:'0.06em',color:'var(--dk)',textTransform:'uppercase'}}>🌍 Communauté</span>
+            <span style={{fontSize:18,color:'#6C63FF',display:'inline-block',transform:openSection==='communaute'?'rotate(180deg)':'rotate(0deg)',transition:'transform 0.25s ease'}}>▾</span>
+          </div>
+          <div style={{maxHeight:openSection==='communaute'?'300px':'0',overflow:'hidden',transition:'max-height 0.3s ease',paddingBottom:openSection==='communaute'?12:0}}>
+            <a onClick={()=>{setInfoPage("blog");window.scrollTo(0,0)}}>📝 Blog Cercle</a><a onClick={()=>{setInfoPage("forum");window.scrollTo(0,0)}}>💬 Forum d'entraide</a><a onClick={()=>{setInfoPage("guides");window.scrollTo(0,0)}}>📚 Guides pratiques</a><a onClick={()=>{if(state.user)setPage("referral");else setShowA("login")}}>🎁 Programme parrainage</a><a onClick={()=>{setInfoPage("impact");window.scrollTo(0,0)}}>🌱 Impact environnemental</a><a onClick={()=>{setInfoPage("temoignages");window.scrollTo(0,0)}}>📣 Témoignages</a>
+          </div>
+        </div>
+        <div className="ftc" style={{borderBottom:'1px solid rgba(0,0,0,0.08)'}}>
+          <div onClick={()=>toggleSection('proprietaire')} style={{display:'flex',justifyContent:'space-between',alignItems:'center',cursor:'pointer',padding:'14px 0',userSelect:'none'}}>
+            <span style={{fontSize:11,fontWeight:700,letterSpacing:'0.06em',color:'var(--dk)',textTransform:'uppercase'}}>🏠 Propriétaire</span>
+            <span style={{fontSize:18,color:'#6C63FF',display:'inline-block',transform:openSection==='proprietaire'?'rotate(180deg)':'rotate(0deg)',transition:'transform 0.25s ease'}}>▾</span>
+          </div>
+          <div style={{maxHeight:openSection==='proprietaire'?'300px':'0',overflow:'hidden',transition:'max-height 0.3s ease',paddingBottom:openSection==='proprietaire'?12:0}}>
+            <a onClick={()=>{if(state.user)setPage("create");else setShowA("login")}}>➕ Proposer un objet</a><a onClick={()=>{if(state.user)setPage("dashboard");else setShowA("login")}}>📊 Tableau de bord</a><a onClick={()=>{setInfoPage("conseils");window.scrollTo(0,0)}}>💡 Conseils pour louer</a><a onClick={()=>{setInfoPage("revenus");window.scrollTo(0,0)}}>📈 Maximiser ses revenus</a><a onClick={()=>{setInfoPage("photos");window.scrollTo(0,0)}}>📸 Prendre de bonnes photos</a><a onClick={()=>{setInfoPage("superproprio");window.scrollTo(0,0)}}>⭐ Devenir Super Proprio</a>
+          </div>
+        </div>
+        <div className="ftc" style={{borderBottom:'1px solid rgba(0,0,0,0.08)'}}>
+          <div onClick={()=>toggleSection('cercle')} style={{display:'flex',justifyContent:'space-between',alignItems:'center',cursor:'pointer',padding:'14px 0',userSelect:'none'}}>
+            <span style={{fontSize:11,fontWeight:700,letterSpacing:'0.06em',color:'var(--dk)',textTransform:'uppercase'}}>🔵 Cercle</span>
+            <span style={{fontSize:18,color:'#6C63FF',display:'inline-block',transform:openSection==='cercle'?'rotate(180deg)':'rotate(0deg)',transition:'transform 0.25s ease'}}>▾</span>
+          </div>
+          <div style={{maxHeight:openSection==='cercle'?'300px':'0',overflow:'hidden',transition:'max-height 0.3s ease',paddingBottom:openSection==='cercle'?12:0}}>
+            <a onClick={()=>{setInfoPage("about");window.scrollTo(0,0)}}>🏢 À propos de nous</a><a onClick={()=>{setInfoPage("mission");window.scrollTo(0,0)}}>🎯 Notre mission</a><a onClick={()=>{setInfoPage("careers");window.scrollTo(0,0)}}>💼 Carrières — On recrute !</a><a onClick={()=>{setInfoPage("press");window.scrollTo(0,0)}}>📰 Espace presse</a><a onClick={()=>{setInfoPage("partners");window.scrollTo(0,0)}}>🤝 Partenariats</a><a onClick={()=>{setInfoPage("newsletter");window.scrollTo(0,0)}}>📧 Newsletter</a>
+          </div>
+        </div>
       </div>
       <div style={{maxWidth:1520,margin:"0 auto",padding:"18px 0 0",borderTop:"1px solid var(--bd)",fontSize:11,color:"var(--g)",display:"flex",flexDirection:"column",gap:10}}>
         <div className="ft-legal"><a style={{cursor:"pointer"}} onClick={()=>{setInfoPage("guide");window.scrollTo(0,0)}}>Conditions générales</a><a style={{cursor:"pointer"}} onClick={()=>{setInfoPage("security");window.scrollTo(0,0)}}>Politique de confidentialité</a><a style={{cursor:"pointer"}} onClick={()=>{setInfoPage("about");window.scrollTo(0,0)}}>Mentions légales</a><a style={{cursor:"pointer"}}>Cookies</a><a style={{cursor:"pointer"}}>Accessibilité</a></div>
