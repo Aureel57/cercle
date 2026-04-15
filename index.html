@@ -834,6 +834,7 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
     { id: 'reservations', label: 'Réservations', icon: '📅', count: 3 },
     { id: 'avis', label: 'Avis', icon: '⭐', count: 12 },
     { id: 'favoris', label: 'Favoris', icon: '❤️', count: favs.length || 2 },
+    { id: 'grade', label: 'Mon Grade', icon: '🏅', count: null },
     { id: 'parametres', label: 'Paramètres', icon: '⚙️', count: null },
   ];
 
@@ -1340,6 +1341,63 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
             ))}
           </div>
         )}
+
+        {/* ── Grade ── */}
+        {tab === 'grade' && (() => {
+          const rentals = user.rentals || 0;
+          const grade = getGrade(rentals);
+          const next = getNextGrade(rentals);
+          const prog = next ? Math.round(((rentals - grade.min) / (next.min - grade.min)) * 100) : 100;
+          const gradeColors = { bronze:'#CD7F32', silver:'#A0A0A0', gold:'#FFD700', platinum:'#7C3AED', diamond:'#06B6D4' };
+          const gc = gradeColors[grade.id] || '#6C63FF';
+          return (
+            <div>
+              <div className="grade-card" style={{background:`linear-gradient(135deg,${gc}18,${gc}08)`,border:`1.5px solid ${gc}44`,color:gc}}>
+                <div style={{display:'flex',alignItems:'center',gap:14}}>
+                  <div style={{fontSize:52,lineHeight:1}}>{grade.icon}</div>
+                  <div>
+                    <div style={{fontSize:11,fontWeight:600,opacity:.7,textTransform:'uppercase',letterSpacing:'.06em'}}>Votre grade actuel</div>
+                    <div style={{fontSize:26,fontWeight:800,color:gc}}>{grade.name}</div>
+                    <div style={{fontSize:12,opacity:.8}}>{rentals} location{rentals!==1?'s':''} complétée{rentals!==1?'s':''}</div>
+                  </div>
+                  <div style={{marginLeft:'auto',textAlign:'right'}}>
+                    <div style={{fontSize:11,opacity:.7}}>Commission</div>
+                    <div style={{fontSize:28,fontWeight:800}}>{Math.round(grade.feeRate*100)}%</div>
+                  </div>
+                </div>
+                {next && (
+                  <div className="grade-progress">
+                    <div style={{display:'flex',justifyContent:'space-between',fontSize:11,opacity:.75}}>
+                      <span>Progression vers {next.icon} {next.name}</span>
+                      <span>{rentals}/{next.min} locations</span>
+                    </div>
+                    <div className="grade-progress-bar">
+                      <div className={`grade-progress-fill ${grade.id}`} style={{width:`${prog}%`}}/>
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div style={{marginTop:18,marginBottom:10,fontWeight:700,fontSize:14,color:'#1a1a2e'}}>Avantages de votre grade</div>
+              <div style={{display:'flex',flexDirection:'column',gap:8}}>
+                {grade.perks.map(p=>(
+                  <div key={p} style={{display:'flex',alignItems:'center',gap:10,padding:'10px 14px',background:'#f8f7ff',borderRadius:12,fontSize:13}}>
+                    <span style={{color:gc,fontWeight:700}}>✓</span><span>{p}</span>
+                  </div>
+                ))}
+              </div>
+              <div style={{marginTop:22,marginBottom:10,fontWeight:700,fontSize:14,color:'#1a1a2e'}}>Tous les grades</div>
+              <div className="all-grades">
+                {GRADES.map(g=>(
+                  <div key={g.id} className={`all-grade${g.id===grade.id?' current':''}`} style={g.id===grade.id?{borderColor:gradeColors[g.id]||gc}:{}}>
+                    <span className="ag-icon">{g.icon}</span>
+                    <span className="ag-name">{g.name}</span>
+                    <span className="ag-range">{g.max===Infinity?`${g.min}+`:`${g.min}-${g.max}`} loc.</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
 
         {/* ── Paramètres ── */}
         {tab === 'parametres' && (
