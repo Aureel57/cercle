@@ -1347,54 +1347,94 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
           const rentals = user.rentals || 0;
           const grade = getGrade(rentals);
           const next = getNextGrade(rentals);
-          const prog = next ? Math.round(((rentals - grade.min) / (next.min - grade.min)) * 100) : 100;
-          const gradeColors = { bronze:'#CD7F32', silver:'#A0A0A0', gold:'#FFD700', platinum:'#7C3AED', diamond:'#06B6D4' };
-          const gc = gradeColors[grade.id] || '#6C63FF';
+          const prog = next ? Math.min(100, Math.round(((rentals - grade.min) / (next.min - grade.min)) * 100)) : 100;
+          const GC = { bronze:'#CD7F32', silver:'#9ca3af', gold:'#F59E0B', platinum:'#7C3AED', diamond:'#06B6D4' };
+          const gc = GC[grade.id] || '#6C63FF';
+          const gcLight = gc + '20';
           return (
-            <div>
-              <div className="grade-card" style={{background:`linear-gradient(135deg,${gc}18,${gc}08)`,border:`1.5px solid ${gc}44`,color:gc}}>
-                <div style={{display:'flex',alignItems:'center',gap:14}}>
-                  <div style={{fontSize:52,lineHeight:1}}>{grade.icon}</div>
+            <div style={{maxWidth:560,margin:'0 auto'}}>
+
+              {/* Hero grade */}
+              <div style={{borderRadius:20,overflow:'hidden',marginBottom:20,background:`linear-gradient(135deg,${gc},${gc}cc)`,padding:'28px 24px',color:'#fff',position:'relative'}}>
+                <div style={{position:'absolute',top:-20,right:-20,fontSize:120,opacity:.12,lineHeight:1}}>{grade.icon}</div>
+                <div style={{fontSize:11,fontWeight:700,letterSpacing:'.1em',textTransform:'uppercase',opacity:.8,marginBottom:6}}>Votre grade</div>
+                <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:16}}>
+                  <span style={{fontSize:44}}>{grade.icon}</span>
                   <div>
-                    <div style={{fontSize:11,fontWeight:600,opacity:.7,textTransform:'uppercase',letterSpacing:'.06em'}}>Votre grade actuel</div>
-                    <div style={{fontSize:26,fontWeight:800,color:gc}}>{grade.name}</div>
-                    <div style={{fontSize:12,opacity:.8}}>{rentals} location{rentals!==1?'s':''} complétée{rentals!==1?'s':''}</div>
-                  </div>
-                  <div style={{marginLeft:'auto',textAlign:'right'}}>
-                    <div style={{fontSize:11,opacity:.7}}>Commission</div>
-                    <div style={{fontSize:28,fontWeight:800}}>{Math.round(grade.feeRate*100)}%</div>
+                    <div style={{fontSize:30,fontWeight:900,lineHeight:1}}>{grade.name}</div>
+                    <div style={{fontSize:13,opacity:.85,marginTop:2}}>{rentals} location{rentals!==1?'s':''} complétée{rentals!==1?'s':''}</div>
                   </div>
                 </div>
-                {next && (
-                  <div className="grade-progress">
-                    <div style={{display:'flex',justifyContent:'space-between',fontSize:11,opacity:.75}}>
-                      <span>Progression vers {next.icon} {next.name}</span>
-                      <span>{rentals}/{next.min} locations</span>
+                {next ? (
+                  <div>
+                    <div style={{display:'flex',justifyContent:'space-between',fontSize:12,opacity:.9,marginBottom:6}}>
+                      <span>Vers {next.icon} {next.name}</span>
+                      <span style={{fontWeight:700}}>{rentals}/{next.min}</span>
                     </div>
-                    <div className="grade-progress-bar">
-                      <div className={`grade-progress-fill ${grade.id}`} style={{width:`${prog}%`}}/>
+                    <div style={{height:8,borderRadius:4,background:'rgba(255,255,255,0.25)',overflow:'hidden'}}>
+                      <div style={{height:'100%',borderRadius:4,background:'#fff',width:`${prog}%`,transition:'width .8s ease'}}/>
                     </div>
+                    <div style={{fontSize:11,opacity:.75,marginTop:6}}>{next.min - rentals} location{(next.min-rentals)!==1?'s':''} restante{(next.min-rentals)!==1?'s':''} pour le grade suivant</div>
                   </div>
+                ) : (
+                  <div style={{fontSize:13,fontWeight:700,opacity:.9}}>🏆 Grade maximum atteint !</div>
                 )}
               </div>
-              <div style={{marginTop:18,marginBottom:10,fontWeight:700,fontSize:14,color:'#1a1a2e'}}>Avantages de votre grade</div>
-              <div style={{display:'flex',flexDirection:'column',gap:8}}>
-                {grade.perks.map(p=>(
-                  <div key={p} style={{display:'flex',alignItems:'center',gap:10,padding:'10px 14px',background:'#f8f7ff',borderRadius:12,fontSize:13}}>
-                    <span style={{color:gc,fontWeight:700}}>✓</span><span>{p}</span>
-                  </div>
-                ))}
+
+              {/* Stats */}
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:20}}>
+                <div style={{background:'#f8f7ff',borderRadius:16,padding:'16px 18px'}}>
+                  <div style={{fontSize:11,color:'#9ca3af',fontWeight:600,marginBottom:4}}>Commission actuelle</div>
+                  <div style={{fontSize:26,fontWeight:900,color:gc}}>{Math.round(grade.feeRate*100)}%</div>
+                  <div style={{fontSize:11,color:'#9ca3af',marginTop:2}}>au lieu de 10%</div>
+                </div>
+                <div style={{background:'#f8f7ff',borderRadius:16,padding:'16px 18px'}}>
+                  <div style={{fontSize:11,color:'#9ca3af',fontWeight:600,marginBottom:4}}>Économie par location</div>
+                  <div style={{fontSize:26,fontWeight:900,color:'#10b981'}}>{Math.round((0.10 - grade.feeRate)*100)}%</div>
+                  <div style={{fontSize:11,color:'#9ca3af',marginTop:2}}>d'économie sur les frais</div>
+                </div>
               </div>
-              <div style={{marginTop:22,marginBottom:10,fontWeight:700,fontSize:14,color:'#1a1a2e'}}>Tous les grades</div>
-              <div className="all-grades">
-                {GRADES.map(g=>(
-                  <div key={g.id} className={`all-grade${g.id===grade.id?' current':''}`} style={g.id===grade.id?{borderColor:gradeColors[g.id]||gc}:{}}>
-                    <span className="ag-icon">{g.icon}</span>
-                    <span className="ag-name">{g.name}</span>
-                    <span className="ag-range">{g.max===Infinity?`${g.min}+`:`${g.min}-${g.max}`} loc.</span>
-                  </div>
-                ))}
+
+              {/* Perks */}
+              <div style={{marginBottom:20}}>
+                <div style={{fontSize:15,fontWeight:800,color:'#1a1a2e',marginBottom:12}}>Avantages inclus</div>
+                <div style={{display:'flex',flexDirection:'column',gap:8}}>
+                  {grade.perks.map(p=>(
+                    <div key={p} style={{display:'flex',alignItems:'center',gap:12,padding:'12px 16px',background:'#fff',border:'1.5px solid #f0eeff',borderRadius:14,fontSize:14,color:'#1a1a2e',fontWeight:500}}>
+                      <div style={{width:24,height:24,borderRadius:8,background:gcLight,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                        <span style={{fontSize:13,color:gc,fontWeight:800}}>✓</span>
+                      </div>
+                      {p}
+                    </div>
+                  ))}
+                </div>
               </div>
+
+              {/* All grades */}
+              <div>
+                <div style={{fontSize:15,fontWeight:800,color:'#1a1a2e',marginBottom:12}}>Parcours des grades</div>
+                <div style={{display:'flex',flexDirection:'column',gap:8}}>
+                  {GRADES.map((g,i)=>{
+                    const isCurrent = g.id===grade.id;
+                    const isDone = rentals >= g.min;
+                    const gColor = GC[g.id]||'#6C63FF';
+                    return (
+                      <div key={g.id} style={{display:'flex',alignItems:'center',gap:14,padding:'14px 16px',borderRadius:16,background:isCurrent?`${gColor}12`:'#fafafa',border:`1.5px solid ${isCurrent?gColor:'#f0f0f0'}`,transition:'all .2s'}}>
+                        <div style={{fontSize:28,width:36,textAlign:'center'}}>{g.icon}</div>
+                        <div style={{flex:1}}>
+                          <div style={{display:'flex',alignItems:'center',gap:8}}>
+                            <span style={{fontSize:14,fontWeight:700,color:isCurrent?gColor:'#374151'}}>{g.name}</span>
+                            {isCurrent && <span style={{fontSize:10,fontWeight:700,color:gColor,background:`${gColor}18`,padding:'2px 8px',borderRadius:6}}>ACTUEL</span>}
+                          </div>
+                          <div style={{fontSize:12,color:'#9ca3af',marginTop:2}}>{g.max===Infinity?`${g.min}+ locations`:`${g.min} – ${g.max} locations`} · Commission {Math.round(g.feeRate*100)}%</div>
+                        </div>
+                        <div style={{fontSize:18,color:isDone?'#10b981':'#e5e7eb'}}>{isDone?'✓':'○'}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
             </div>
           );
         })()}
