@@ -2385,7 +2385,7 @@ function App(){
     {/* Splash Screen */}
     {splash&&<div className="splash" style={{opacity:1,transition:"opacity .5s"}}><div className="splash-logo" style={{background:'rgba(255,255,255,0.2)',backdropFilter:'blur(12px)',border:'2px solid rgba(255,255,255,0.4)',borderRadius:24,padding:'18px 22px',display:'flex',alignItems:'center',justifyContent:'center'}}><svg viewBox="0 0 220 160" width="110" height="80" xmlns="http://www.w3.org/2000/svg"><circle cx="75" cy="80" r="50" fill="none" stroke="white" strokeWidth="4"/><circle cx="115" cy="80" r="50" fill="none" stroke="white" strokeWidth="4"/><path d="M95 38 A50 50 0 0 1 95 122 A50 50 0 0 1 95 38Z" fill="white" opacity=".25"/></svg></div><h2 style={{fontFamily:'Georgia,serif',fontWeight:400,letterSpacing:3,fontSize:28}}>Cercle</h2><p>Location entre particuliers & pros</p></div>}
     {page!=="messages"&&page!=="notifs"&&page!=="dashboard"&&page!=="referral"&&page!=="verify"&&page!=="dispute"&&page!=="wallet"&&page!=="badges"&&<header className={"hdr"+(mode==="pro"?" pro-hdr":"")}><div className="hi">
-      <a className="logo" onClick={home} style={{textDecoration:'none'}}><svg viewBox="0 0 400 200" width="175" height="62" xmlns="http://www.w3.org/2000/svg"><circle cx="75" cy="100" r="50" fill="none" stroke={mode==='pro'?"#2563EB":"#6C63FF"} strokeWidth="3.5"/><circle cx="115" cy="100" r="50" fill="none" stroke={mode==='pro'?"#2563EB":"#6C63FF"} strokeWidth="3.5"/><path d="M95 58 A50 50 0 0 1 95 142 A50 50 0 0 1 95 58Z" fill={mode==='pro'?"#2563EB":"#6C63FF"} opacity=".15"/><text x="265" y="111" textAnchor="middle" fontFamily="Georgia,serif" fontSize="44" fontWeight="400" fill={mode==='pro'?"#2563EB":"#6C63FF"} letterSpacing="3">{mode==='pro'?'Cercle Pro':'Cercle'}</text></svg></a>
+      <a className="logo" onClick={home} style={{textDecoration:'none'}}><svg viewBox="0 0 400 200" width="180" height="64" xmlns="http://www.w3.org/2000/svg"><circle cx="75" cy="100" r="50" fill="none" stroke={mode==='pro'?"#2563EB":"#6C63FF"} strokeWidth="7"/><circle cx="115" cy="100" r="50" fill="none" stroke={mode==='pro'?"#2563EB":"#6C63FF"} strokeWidth="7"/><path d="M95 58 A50 50 0 0 1 95 142 A50 50 0 0 1 95 58Z" fill={mode==='pro'?"#2563EB":"#6C63FF"} opacity=".25"/><text x="268" y="115" textAnchor="middle" fontFamily="Georgia,serif" fontSize="52" fontWeight="700" fill={mode==='pro'?"#2563EB":"#6C63FF"} letterSpacing="2">{mode==='pro'?'Cercle Pro':'Cercle'}</text></svg></a>
       <div className="mode-sw">
         <button className={"mode-btn"+(mode==='perso'?' on':'')} onClick={()=>setMode('perso')}>👤 Particulier</button>
         <button className={"mode-btn"+(mode==='pro'?' pro-on':'')} onClick={()=>setMode('pro')}>🏢 Professionnel</button>
@@ -2437,58 +2437,40 @@ function App(){
     {page==="create"&&state.user&&<CreateListing state={state} dispatch={dispatch} setPage={setPage} mode={mode}/>}
     {(page==="create"||page==="profile"||page==="messages"||page==="dashboard"||page==="referral"||page==="verify"||page==="dispute"||page==="wallet"||page==="badges")&&!state.user&&<div className="empty" style={{paddingTop:100}}><span>🔒</span><h2>Connectez-vous</h2><p>Vous devez être connecté pour accéder à cette page.</p><button className="bp" style={{marginTop:14}} onClick={()=>setShowA("login")}>Se connecter</button></div>}
 
-    {page==="home"&&<footer className="ft" style={{background:"linear-gradient(to bottom,#F4F3FF 0%,#ffffff 120px)",borderTop:"none",marginTop:0}}>
-      <div style={{height:40,background:"linear-gradient(to bottom,transparent,#F4F3FF)",marginTop:-40,pointerEvents:"none"}}/>
-      <div style={{maxWidth:1520,margin:"0 auto",marginBottom:28,paddingTop:8}}>
-        <div className="ft-promo">
-          <div style={{background:"linear-gradient(135deg,#f8f7ff,#f0f4ff)",borderRadius:20,padding:20,textAlign:"center",transition:"transform .2s",cursor:"pointer",borderLeft:"4px solid #6C63FF"}} onMouseEnter={e=>e.currentTarget.style.transform="translateY(-3px)"} onMouseLeave={e=>e.currentTarget.style.transform=""}><span style={{fontSize:32}}>🎁</span><h3 style={{fontFamily:"var(--fd)",fontSize:15,marginTop:6,color:"#6C63FF"}}>Parrainez un ami</h3><p style={{fontSize:11,color:"var(--g)",marginTop:4}}>Gagnez 5€ par filleul inscrit</p><button className="bp" style={{marginTop:8,fontSize:11,padding:"6px 14px"}} onClick={()=>{if(state.user)setPage("referral");else setShowA("login")}}>Inviter →</button></div>
-          <div style={{background:"linear-gradient(135deg,#f8f7ff,#f0f4ff)",borderRadius:20,padding:20,textAlign:"center",transition:"transform .2s",cursor:"pointer",borderLeft:"4px solid #4ECDC4"}} onMouseEnter={e=>e.currentTarget.style.transform="translateY(-3px)"} onMouseLeave={e=>e.currentTarget.style.transform=""}><span style={{fontSize:32}}>🛡️</span><h3 style={{fontFamily:"var(--fd)",fontSize:15,marginTop:6,color:"#6C63FF"}}>CercleCover</h3><p style={{fontSize:11,color:"var(--g)",marginTop:4}}>Couverture jusqu'à 2 000 €</p><button className="bp" style={{marginTop:8,fontSize:11,padding:"6px 14px"}}>En savoir plus</button></div>
-          <div style={{background:"linear-gradient(135deg,#f8f7ff,#f0f4ff)",borderRadius:20,padding:20,textAlign:"center",transition:"transform .2s",cursor:"pointer",borderLeft:"4px solid #6C63FF"}} onMouseEnter={e=>e.currentTarget.style.transform="translateY(-3px)"} onMouseLeave={e=>e.currentTarget.style.transform=""}><span style={{fontSize:32}}>📊</span><h3 style={{fontFamily:"var(--fd)",fontSize:15,marginTop:6,color:"#6C63FF"}}>Dashboard Pro</h3><p style={{fontSize:11,color:"var(--g)",marginTop:4}}>Gérez vos locations facilement</p><button className="bp" style={{marginTop:8,fontSize:11,padding:"6px 14px"}} onClick={()=>{if(state.user)setPage("dashboard");else setShowA("login")}}>Accéder →</button></div>
-          <div style={{background:"linear-gradient(135deg,#f8f7ff,#f0f4ff)",borderRadius:20,padding:20,textAlign:"center",transition:"transform .2s",cursor:"pointer",borderLeft:"4px solid #7c5ce7"}} onMouseEnter={e=>e.currentTarget.style.transform="translateY(-3px)"} onMouseLeave={e=>e.currentTarget.style.transform=""}><span style={{fontSize:32}}>🏅</span><h3 style={{fontFamily:"var(--fd)",fontSize:15,marginTop:6,color:"#6C63FF"}}>Programme fidélité</h3><p style={{fontSize:11,color:"var(--g)",marginTop:4}}>Réduisez vos commissions</p><button className="bp" style={{marginTop:8,fontSize:11,padding:"6px 14px"}} onClick={()=>{if(state.user){setProfTab("grade");setPage("profile")}else setShowA("login")}}>Voir mon grade →</button></div>
+    {page==="home"&&<footer style={{background:"linear-gradient(160deg,#6C63FF 0%,#7c5ce7 35%,#5a7fff 65%,#4ECDC4 100%)",marginTop:0,paddingBottom:0}}>
+      {/* Fondu de transition */}
+      <div style={{height:56,background:"linear-gradient(to bottom,#F4F3FF,transparent)",marginBottom:0}}/>
+      {/* Cartes promo */}
+      <div style={{maxWidth:1200,margin:"0 auto",padding:"0 24px 40px"}}>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:16}}>
+          {[{icon:"🎁",title:"Parrainez un ami",sub:"Gagnez 5€ par filleul",cta:"Inviter →",action:()=>{if(state.user)setPage("referral");else setShowA("login")}},{icon:"🛡️",title:"CercleCover",sub:"Couverture jusqu'à 2 000€",cta:"En savoir plus",action:()=>{}},{icon:"📊",title:"Dashboard Pro",sub:"Gérez vos locations",cta:"Accéder →",action:()=>{if(state.user)setPage("dashboard");else setShowA("login")}},{icon:"🏅",title:"Programme fidélité",sub:"Réduisez vos commissions",cta:"Voir mon grade →",action:()=>{if(state.user){setProfTab("grade");setPage("profile")}else setShowA("login")}}].map(c=>(
+            <div key={c.title} onClick={c.action} style={{background:"rgba(255,255,255,0.12)",backdropFilter:"blur(12px)",border:"1px solid rgba(255,255,255,0.25)",borderRadius:20,padding:"20px 16px",textAlign:"center",cursor:"pointer",transition:"all .2s"}} onMouseEnter={e=>{e.currentTarget.style.background="rgba(255,255,255,0.2)";e.currentTarget.style.transform="translateY(-4px)"}} onMouseLeave={e=>{e.currentTarget.style.background="rgba(255,255,255,0.12)";e.currentTarget.style.transform=""}}>
+              <div style={{fontSize:32,marginBottom:8}}>{c.icon}</div>
+              <div style={{fontWeight:700,fontSize:14,color:"#fff",marginBottom:4}}>{c.title}</div>
+              <div style={{fontSize:11,color:"rgba(255,255,255,0.75)",marginBottom:12}}>{c.sub}</div>
+              <div style={{display:"inline-block",background:"rgba(255,255,255,0.2)",color:"#fff",borderRadius:20,padding:"5px 14px",fontSize:11,fontWeight:600}}>{c.cta}</div>
+            </div>
+          ))}
         </div>
       </div>
-      <div className="ftg">
-        <div className="ftc" style={{borderBottom:'1px solid rgba(0,0,0,0.08)'}}>
-          <div onClick={()=>toggleSection('assistance')} style={{display:'flex',justifyContent:'space-between',alignItems:'center',cursor:'pointer',padding:'14px 0',userSelect:'none'}}>
-            <span style={{fontSize:11,fontWeight:700,letterSpacing:'0.06em',color:'var(--dk)',textTransform:'uppercase'}}>🆘 Assistance</span>
-            <span style={{fontSize:18,color:'#6C63FF',display:'inline-block',transform:openSection==='assistance'?'rotate(180deg)':'rotate(0deg)',transition:'transform 0.25s ease'}}>▾</span>
+      {/* Accordéons */}
+      <div style={{maxWidth:1200,margin:"0 auto",padding:"0 24px",display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:32,borderTop:"1px solid rgba(255,255,255,0.15)",paddingTop:32}}>
+        {[{key:"assistance",label:"Assistance",links:[{t:"Centre d'aide",a:()=>setShowChat(true)},{t:"Guide de démarrage",a:()=>{setInfoPage("guide");window.scrollTo(0,0)}},{t:"CercleCover",a:()=>{setInfoPage("cover");window.scrollTo(0,0)}},{t:"Résoudre un litige",a:()=>{if(state.user)setPage("dispute");else setShowA("login")}},{t:"Sécurité paiements",a:()=>{setInfoPage("security");window.scrollTo(0,0)}},{t:"Nous contacter",a:()=>{setInfoPage("contact");window.scrollTo(0,0)}}]},{key:"communaute",label:"Communauté",links:[{t:"Blog Cercle",a:()=>{setInfoPage("blog");window.scrollTo(0,0)}},{t:"Forum d'entraide",a:()=>{setInfoPage("forum");window.scrollTo(0,0)}},{t:"Guides pratiques",a:()=>{setInfoPage("guides");window.scrollTo(0,0)}},{t:"Parrainage",a:()=>{if(state.user)setPage("referral");else setShowA("login")}},{t:"Impact environnemental",a:()=>{setInfoPage("impact");window.scrollTo(0,0)}},{t:"Témoignages",a:()=>{setInfoPage("temoignages");window.scrollTo(0,0)}}]},{key:"proprietaire",label:"Propriétaire",links:[{t:"Proposer un objet",a:()=>{if(state.user)setPage("create");else setShowA("login")}},{t:"Tableau de bord",a:()=>{if(state.user)setPage("dashboard");else setShowA("login")}},{t:"Conseils pour louer",a:()=>{setInfoPage("conseils");window.scrollTo(0,0)}},{t:"Maximiser ses revenus",a:()=>{setInfoPage("revenus");window.scrollTo(0,0)}},{t:"Bonnes photos",a:()=>{setInfoPage("photos");window.scrollTo(0,0)}},{t:"Super Proprio",a:()=>{setInfoPage("superproprio");window.scrollTo(0,0)}}]},{key:"cercle",label:"Cercle",links:[{t:"À propos",a:()=>{setInfoPage("about");window.scrollTo(0,0)}},{t:"Notre mission",a:()=>{setInfoPage("mission");window.scrollTo(0,0)}},{t:"Carrières",a:()=>{setInfoPage("careers");window.scrollTo(0,0)}},{t:"Espace presse",a:()=>{setInfoPage("press");window.scrollTo(0,0)}},{t:"Partenariats",a:()=>{setInfoPage("partners");window.scrollTo(0,0)}},{t:"Newsletter",a:()=>{setInfoPage("newsletter");window.scrollTo(0,0)}}]}].map(sec=>(
+          <div key={sec.key}>
+            <div style={{fontWeight:700,fontSize:11,letterSpacing:"0.08em",textTransform:"uppercase",color:"rgba(255,255,255,0.6)",marginBottom:14}}>{sec.label}</div>
+            {sec.links.map(l=><div key={l.t} onClick={l.a} style={{fontSize:13,color:"rgba(255,255,255,0.85)",padding:"5px 0",cursor:"pointer",transition:"color .15s"}} onMouseEnter={e=>e.currentTarget.style.color="#fff"} onMouseLeave={e=>e.currentTarget.style.color="rgba(255,255,255,0.85)"}>{l.t}</div>)}
           </div>
-          <div style={{maxHeight:openSection==='assistance'?'300px':'0',overflow:'hidden',transition:'max-height 0.3s ease',paddingBottom:openSection==='assistance'?12:0}}>
-            <a onClick={()=>setShowChat(true)}>💬 Centre d'aide</a><a onClick={()=>{setInfoPage("guide");window.scrollTo(0,0)}}>📖 Guide de démarrage</a><a onClick={()=>{setInfoPage("cover");window.scrollTo(0,0)}}>🛡️ Assurance CercleCover</a><a onClick={()=>{if(state.user)setPage("dispute");else setShowA("login")}}>⚖️ Résoudre un litige</a><a onClick={()=>{setInfoPage("security");window.scrollTo(0,0)}}>🔒 Sécurité des paiements</a><a onClick={()=>{setInfoPage("contact");window.scrollTo(0,0)}}>📞 Nous contacter</a>
-          </div>
-        </div>
-        <div className="ftc" style={{borderBottom:'1px solid rgba(0,0,0,0.08)'}}>
-          <div onClick={()=>toggleSection('communaute')} style={{display:'flex',justifyContent:'space-between',alignItems:'center',cursor:'pointer',padding:'14px 0',userSelect:'none'}}>
-            <span style={{fontSize:11,fontWeight:700,letterSpacing:'0.06em',color:'var(--dk)',textTransform:'uppercase'}}>🌍 Communauté</span>
-            <span style={{fontSize:18,color:'#6C63FF',display:'inline-block',transform:openSection==='communaute'?'rotate(180deg)':'rotate(0deg)',transition:'transform 0.25s ease'}}>▾</span>
-          </div>
-          <div style={{maxHeight:openSection==='communaute'?'300px':'0',overflow:'hidden',transition:'max-height 0.3s ease',paddingBottom:openSection==='communaute'?12:0}}>
-            <a onClick={()=>{setInfoPage("blog");window.scrollTo(0,0)}}>📝 Blog Cercle</a><a onClick={()=>{setInfoPage("forum");window.scrollTo(0,0)}}>💬 Forum d'entraide</a><a onClick={()=>{setInfoPage("guides");window.scrollTo(0,0)}}>📚 Guides pratiques</a><a onClick={()=>{if(state.user)setPage("referral");else setShowA("login")}}>🎁 Programme parrainage</a><a onClick={()=>{setInfoPage("impact");window.scrollTo(0,0)}}>🌱 Impact environnemental</a><a onClick={()=>{setInfoPage("temoignages");window.scrollTo(0,0)}}>📣 Témoignages</a>
-          </div>
-        </div>
-        <div className="ftc" style={{borderBottom:'1px solid rgba(0,0,0,0.08)'}}>
-          <div onClick={()=>toggleSection('proprietaire')} style={{display:'flex',justifyContent:'space-between',alignItems:'center',cursor:'pointer',padding:'14px 0',userSelect:'none'}}>
-            <span style={{fontSize:11,fontWeight:700,letterSpacing:'0.06em',color:'var(--dk)',textTransform:'uppercase'}}>🏠 Propriétaire</span>
-            <span style={{fontSize:18,color:'#6C63FF',display:'inline-block',transform:openSection==='proprietaire'?'rotate(180deg)':'rotate(0deg)',transition:'transform 0.25s ease'}}>▾</span>
-          </div>
-          <div style={{maxHeight:openSection==='proprietaire'?'300px':'0',overflow:'hidden',transition:'max-height 0.3s ease',paddingBottom:openSection==='proprietaire'?12:0}}>
-            <a onClick={()=>{if(state.user)setPage("create");else setShowA("login")}}>➕ Proposer un objet</a><a onClick={()=>{if(state.user)setPage("dashboard");else setShowA("login")}}>📊 Tableau de bord</a><a onClick={()=>{setInfoPage("conseils");window.scrollTo(0,0)}}>💡 Conseils pour louer</a><a onClick={()=>{setInfoPage("revenus");window.scrollTo(0,0)}}>📈 Maximiser ses revenus</a><a onClick={()=>{setInfoPage("photos");window.scrollTo(0,0)}}>📸 Prendre de bonnes photos</a><a onClick={()=>{setInfoPage("superproprio");window.scrollTo(0,0)}}>⭐ Devenir Super Proprio</a>
-          </div>
-        </div>
-        <div className="ftc" style={{borderBottom:'1px solid rgba(0,0,0,0.08)'}}>
-          <div onClick={()=>toggleSection('cercle')} style={{display:'flex',justifyContent:'space-between',alignItems:'center',cursor:'pointer',padding:'14px 0',userSelect:'none'}}>
-            <span style={{fontSize:11,fontWeight:700,letterSpacing:'0.06em',color:'var(--dk)',textTransform:'uppercase'}}>🔵 Cercle</span>
-            <span style={{fontSize:18,color:'#6C63FF',display:'inline-block',transform:openSection==='cercle'?'rotate(180deg)':'rotate(0deg)',transition:'transform 0.25s ease'}}>▾</span>
-          </div>
-          <div style={{maxHeight:openSection==='cercle'?'300px':'0',overflow:'hidden',transition:'max-height 0.3s ease',paddingBottom:openSection==='cercle'?12:0}}>
-            <a onClick={()=>{setInfoPage("about");window.scrollTo(0,0)}}>🏢 À propos de nous</a><a onClick={()=>{setInfoPage("mission");window.scrollTo(0,0)}}>🎯 Notre mission</a><a onClick={()=>{setInfoPage("careers");window.scrollTo(0,0)}}>💼 Carrières — On recrute !</a><a onClick={()=>{setInfoPage("press");window.scrollTo(0,0)}}>📰 Espace presse</a><a onClick={()=>{setInfoPage("partners");window.scrollTo(0,0)}}>🤝 Partenariats</a><a onClick={()=>{setInfoPage("newsletter");window.scrollTo(0,0)}}>📧 Newsletter</a>
-          </div>
-        </div>
+        ))}
       </div>
-      <div style={{maxWidth:1520,margin:"0 auto",padding:"18px 0 0",borderTop:"1px solid var(--bd)",fontSize:11,color:"var(--g)",display:"flex",flexDirection:"column",gap:10}}>
-        <div className="ft-legal"><a style={{cursor:"pointer"}} onClick={()=>{setInfoPage("guide");window.scrollTo(0,0)}}>Conditions générales</a><a style={{cursor:"pointer"}} onClick={()=>{setInfoPage("security");window.scrollTo(0,0)}}>Politique de confidentialité</a><a style={{cursor:"pointer"}} onClick={()=>{setInfoPage("about");window.scrollTo(0,0)}}>Mentions légales</a><a style={{cursor:"pointer"}}>Cookies</a><a style={{cursor:"pointer"}}>Accessibilité</a></div>
-        <div className="ft-legal-bottom"><span>🌐 {LANGS[lang]}</span><span>€ EUR</span><span>© 2026 Cercle</span></div>
+      {/* Bas de page */}
+      <div style={{maxWidth:1200,margin:"32px auto 0",padding:"20px 24px",borderTop:"1px solid rgba(255,255,255,0.15)",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:12}}>
+        <svg viewBox="0 0 220 80" width="88" height="32" xmlns="http://www.w3.org/2000/svg"><circle cx="30" cy="40" r="25" fill="none" stroke="white" strokeWidth="4"/><circle cx="54" cy="40" r="25" fill="none" stroke="white" strokeWidth="4"/><path d="M42 17 A25 25 0 0 1 42 63 A25 25 0 0 1 42 17Z" fill="white" opacity=".2"/><text x="130" y="47" textAnchor="middle" fontFamily="Georgia,serif" fontSize="28" fontWeight="700" fill="white" letterSpacing="2">Cercle</text></svg>
+        <div style={{display:"flex",gap:20,flexWrap:"wrap"}}>
+          {["Conditions générales","Confidentialité","Mentions légales","Cookies"].map(t=><span key={t} style={{fontSize:11,color:"rgba(255,255,255,0.55)",cursor:"pointer"}} onClick={()=>{setInfoPage("guide");window.scrollTo(0,0)}}>{t}</span>)}
+        </div>
+        <span style={{fontSize:11,color:"rgba(255,255,255,0.55)"}}>© 2026 Cercle</span>
       </div>
+      <div style={{height:80}}/>
     </footer>}
 
     {sel&&<Detail item={sel} onClose={()=>setSel(null)} state={state} dispatch={dispatch} setPage={setPage} setConvId={setCid} setShowShop={setShowShop} setProfTab={setProfTab}/>}
