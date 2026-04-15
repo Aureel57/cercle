@@ -2385,7 +2385,7 @@ function App(){
     {/* Splash Screen */}
     {splash&&<div className="splash" style={{opacity:1,transition:"opacity .5s"}}><div className="splash-logo" style={{background:'rgba(255,255,255,0.2)',backdropFilter:'blur(12px)',border:'2px solid rgba(255,255,255,0.4)',borderRadius:24,padding:'18px 22px',display:'flex',alignItems:'center',justifyContent:'center'}}><svg viewBox="0 0 220 160" width="110" height="80" xmlns="http://www.w3.org/2000/svg"><circle cx="75" cy="80" r="50" fill="none" stroke="white" strokeWidth="4"/><circle cx="115" cy="80" r="50" fill="none" stroke="white" strokeWidth="4"/><path d="M95 38 A50 50 0 0 1 95 122 A50 50 0 0 1 95 38Z" fill="white" opacity=".25"/></svg></div><h2 style={{fontFamily:'Georgia,serif',fontWeight:400,letterSpacing:3,fontSize:28}}>Cercle</h2><p>Location entre particuliers & pros</p></div>}
     {page!=="messages"&&page!=="notifs"&&page!=="dashboard"&&page!=="referral"&&page!=="verify"&&page!=="dispute"&&page!=="wallet"&&page!=="badges"&&<header className={"hdr"+(mode==="pro"?" pro-hdr":"")}><div className="hi">
-      <a className="logo" onClick={home} style={{textDecoration:'none'}}><svg viewBox="0 0 400 200" width="180" height="64" xmlns="http://www.w3.org/2000/svg"><circle cx="75" cy="100" r="50" fill="none" stroke={mode==='pro'?"#2563EB":"#6C63FF"} strokeWidth="7"/><circle cx="115" cy="100" r="50" fill="none" stroke={mode==='pro'?"#2563EB":"#6C63FF"} strokeWidth="7"/><path d="M95 58 A50 50 0 0 1 95 142 A50 50 0 0 1 95 58Z" fill={mode==='pro'?"#2563EB":"#6C63FF"} opacity=".25"/><text x="268" y="115" textAnchor="middle" fontFamily="Georgia,serif" fontSize="52" fontWeight="700" fill={mode==='pro'?"#2563EB":"#6C63FF"} letterSpacing="2">{mode==='pro'?'Cercle Pro':'Cercle'}</text></svg></a>
+      <a className="logo" onClick={home} style={{textDecoration:'none'}}><svg viewBox="0 0 400 200" width="180" height="64" xmlns="http://www.w3.org/2000/svg"><circle cx="75" cy="100" r="50" fill="none" stroke={mode==='pro'?"#2563EB":"#6C63FF"} strokeWidth="10"/><circle cx="115" cy="100" r="50" fill="none" stroke={mode==='pro'?"#2563EB":"#6C63FF"} strokeWidth="10"/><path d="M95 58 A50 50 0 0 1 95 142 A50 50 0 0 1 95 58Z" fill={mode==='pro'?"#2563EB":"#6C63FF"} opacity=".35"/><text x="268" y="115" textAnchor="middle" fontFamily="Georgia,serif" fontSize="54" fontWeight="800" fill={mode==='pro'?"#2563EB":"#6C63FF"} letterSpacing="2">{mode==='pro'?'Cercle Pro':'Cercle'}</text></svg></a>
       <div className="mode-sw">
         <button className={"mode-btn"+(mode==='perso'?' on':'')} onClick={()=>setMode('perso')}>👤 Particulier</button>
         <button className={"mode-btn"+(mode==='pro'?' pro-on':'')} onClick={()=>setMode('pro')}>🏢 Professionnel</button>
@@ -2425,8 +2425,25 @@ function App(){
       </div>}
       {mode==='pro'&&<div className="pro-banner"><h2 style={{fontFamily:"var(--fd)",fontSize:22,marginBottom:4}}>🏢 Espace Professionnel</h2><p style={{fontSize:13,opacity:.8}}>Matériel pro certifié · Grandes quantités · Livraison chantier · Facturation entreprise</p></div>}
       {q&&<div style={{padding:"6px 28px 0",fontSize:12,color:"var(--g)"}}>{filtered.length} résultat{filtered.length!==1?"s":""} pour <strong>"{q}"</strong>{lq&&<> à <strong>{lq}</strong></>}<button className="cl" style={{marginLeft:6}} onClick={()=>{setQ("");setLq("")}}>✕</button></div>}
+      {!q&&mode!=='pro'&&cat==='all'&&<div style={{padding:"36px 28px 0",maxWidth:1520,margin:"0 auto"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-end",marginBottom:0}}>
+          <div>
+            <h2 style={{fontFamily:"var(--fd)",fontSize:24,fontWeight:800,letterSpacing:"-.02em",color:"var(--dk)",marginBottom:4}}>Disponibles près de chez vous</h2>
+            <p style={{fontSize:13,color:"var(--g)",lineHeight:1.5}}>{all.length} objets à la location · Livraison ou remise en main propre</p>
+          </div>
+          <button className="cl" style={{color:"var(--p)",fontSize:13,fontWeight:700,flexShrink:0}}>Voir tout →</button>
+        </div>
+      </div>}
+      {!q&&mode==='pro'&&<div style={{padding:"36px 28px 0",maxWidth:1520,margin:"0 auto"}}>
+        <h2 style={{fontFamily:"var(--fd)",fontSize:24,fontWeight:800,letterSpacing:"-.02em",color:"var(--dk)",marginBottom:4}}>Matériel professionnel</h2>
+        <p style={{fontSize:13,color:"var(--g)"}}>{filtered.length} équipements certifiés disponibles</p>
+      </div>}
+      {!q&&cat!=='all'&&<div style={{padding:"36px 28px 0",maxWidth:1520,margin:"0 auto"}}>
+        <h2 style={{fontFamily:"var(--fd)",fontSize:24,fontWeight:800,letterSpacing:"-.02em",color:"var(--dk)",marginBottom:4}}>{CATS.find(c=>c.id===cat)?.icon} {CATS.find(c=>c.id===cat)?.label}</h2>
+        <p style={{fontSize:13,color:"var(--g)"}}>{filtered.length} annonce{filtered.length!==1?"s":""} dans cette catégorie</p>
+      </div>}
       {filtered.length===0?<div className="empty"><span>🔍</span><h2>Aucun résultat trouvé</h2><p style={{maxWidth:320,margin:"6px auto 16px",lineHeight:1.5}}>Essayez d'élargir votre recherche ou de modifier vos filtres.</p><button className="bs" onClick={()=>{setQ("");setCat("all")}}>Réinitialiser la recherche</button></div>:
-      <div className="grid">{filtered.map(i=><Card key={i.id} item={i} onOpen={setSel} favs={state.favorites} dispatch={dispatch}/>)}</div>}
+      <div className="grid" style={{paddingTop:20}}>{filtered.map(i=><Card key={i.id} item={i} onOpen={setSel} favs={state.favorites} dispatch={dispatch}/>)}</div>}
       {!q&&cat==="all"&&<div className="reco"><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}><h3 style={{fontFamily:"var(--fd)",fontSize:20,fontWeight:700,letterSpacing:"-.01em"}}>{mode==="pro"?"Sélection Pro":"Recommandé pour vous"}</h3><button className="cl" style={{color:"var(--p)"}}>Voir tout →</button></div>
         <div className="reco-sc">{all.sort(()=>Math.random()-.5).slice(0,8).map(i=><div key={i.id} className="reco-c" onClick={()=>setSel(i)}><img className="reco-ci" src={i.images[0]} alt=""/><div style={{fontSize:12,fontWeight:600,marginTop:4}}>{i.title}</div><div style={{fontSize:12,fontWeight:700,color:"var(--p)"}}>{i.price}€<span style={{fontWeight:400,color:"var(--g)"}}>/j</span></div></div>)}</div>
       </div>}
