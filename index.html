@@ -25,6 +25,32 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:#F9FAFB;overflow-x:hi
 .profile-page-grain::before{content:'';position:fixed;inset:0;opacity:0.04;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");background-size:200px;pointer-events:none;z-index:0}
 .ld h2{font-family:'DM Sans',system-ui;font-size:24px;margin-top:16px;font-weight:700;color:#111827}
 .ld p{color:#9CA3AF;font-size:11px;margin-top:6px;letter-spacing:.08em;text-transform:uppercase;font-weight:500}
+/* ===== CHARTE GRAPHIQUE CERCLE ===== */
+:root{--brand:#6C63FF;--brand2:#7c5ce7;--teal:#4ECDC4}
+body{background:#F4F3FF}
+.hdr{background:rgba(255,255,255,0.97)!important;box-shadow:0 2px 20px rgba(108,99,255,0.09)!important;backdrop-filter:blur(20px)!important}
+.lc{background:linear-gradient(135deg,#6C63FF,#7c5ce7)!important}
+.lt{color:#6C63FF!important}
+.nb{color:#6C63FF!important;font-weight:600!important}
+.sbb{background:linear-gradient(135deg,#6C63FF,#7c5ce7)!important}
+.sbb:hover{box-shadow:0 4px 12px rgba(108,99,255,0.35)!important}
+.card{border-radius:16px!important;box-shadow:0 4px 24px rgba(108,99,255,0.10)!important;background:#fff!important;overflow:hidden!important}
+.card:hover{box-shadow:0 8px 32px rgba(108,99,255,0.18)!important;transform:translateY(-4px)}
+.cbp strong{color:#6C63FF!important}
+.ct.on{border-bottom-color:#6C63FF!important}
+.ct.on .ctl{color:#6C63FF!important}
+.bn.on{color:#6C63FF!important}
+.bn.on svg{stroke:#6C63FF!important}
+.bp{background:linear-gradient(135deg,#6C63FF,#7c5ce7)!important}
+.bp:hover{box-shadow:0 4px 16px rgba(108,99,255,0.30)!important}
+.bub.me,.chatbot-msg.user,.smgo,.mip button,.chatbot-ft button,.chatbot-hd,.chatbot-btn{background:linear-gradient(135deg,#6C63FF,#7c5ce7)!important}
+.chatbot-btn{box-shadow:0 4px 20px rgba(108,99,255,0.35)!important}
+.splash{background:linear-gradient(160deg,#6C63FF 0%,#7c5ce7 35%,#5a7fff 65%,#4ECDC4 100%)!important}
+.splash-logo{color:#6C63FF!important}
+.hero-stats{background:rgba(255,255,255,0.15)!important;backdrop-filter:blur(12px)!important}
+.reco{border-top:1px solid rgba(108,99,255,0.12)!important}
+.t2-b{background:linear-gradient(135deg,#6C63FF,#7c5ce7)!important}
+.ld div:first-child{background:#6C63FF!important}
 </style>
 </head>
 <body>
@@ -2406,7 +2432,7 @@ function App(){
     </header>}
 
     {page==="home"&&<main className="page-tr">
-      {mode!=='pro'&&!q&&cat==='all'&&<div style={{background:dark?"linear-gradient(135deg,#1a1a2e 0%,#16213e 60%,#0f3460 100%)":"linear-gradient(135deg,#FF5A5F 0%,#FF8A5C 50%,#FFB067 100%)",padding:"56px 28px 0",textAlign:"center",marginBottom:4}}>
+      {mode!=='pro'&&!q&&cat==='all'&&<div style={{background:dark?"linear-gradient(135deg,#1a1a2e 0%,#16213e 60%,#0f3460 100%)":"linear-gradient(160deg,#6C63FF 0%,#7c5ce7 28%,#5a7fff 62%,#4ECDC4 100%)",backgroundAttachment:"fixed",padding:"56px 28px 0",textAlign:"center",marginBottom:4}}>
         <div style={{display:"inline-flex",alignItems:"center",gap:6,background:"rgba(255,255,255,.15)",backdropFilter:"blur(8px)",border:"1px solid rgba(255,255,255,.25)",color:"#fff",padding:"5px 16px",borderRadius:24,fontSize:11,fontWeight:700,letterSpacing:".06em",marginBottom:14}}>🆕 NOUVEAU · 2 400+ articles disponibles</div>
         <h1 style={{fontFamily:"var(--fd)",fontSize:"clamp(28px,5vw,48px)",fontWeight:800,color:"#fff",letterSpacing:"-.03em",marginBottom:10,lineHeight:1.1}}>Louez tout,<br/>près de chez vous</h1>
         <p style={{color:"rgba(255,255,255,.85)",fontSize:15,maxWidth:520,margin:"0 auto 22px",lineHeight:1.6}}>Des milliers d'objets disponibles à la location entre particuliers et professionnels. Économique, écologique, pratique.</p>
@@ -2434,10 +2460,10 @@ function App(){
     {page==="home"&&<footer className="ft">
       <div style={{maxWidth:1520,margin:"0 auto",marginBottom:28}}>
         <div className="ft-promo">
-          <div style={{background:"linear-gradient(135deg,#FEF3C7,#FFFBEB)",borderRadius:20,padding:20,textAlign:"center",transition:"transform .2s",cursor:"pointer"}} onMouseEnter={e=>e.currentTarget.style.transform="translateY(-3px)"} onMouseLeave={e=>e.currentTarget.style.transform=""}><span style={{fontSize:32}}>🎁</span><h3 style={{fontFamily:"var(--fd)",fontSize:15,marginTop:6}}>Parrainez un ami</h3><p style={{fontSize:11,color:"var(--g)",marginTop:4}}>Gagnez 5€ par filleul inscrit</p><button className="bp" style={{marginTop:8,fontSize:11,padding:"6px 14px"}} onClick={()=>{if(state.user)setPage("referral");else setShowA("login")}}>Inviter →</button></div>
-          <div style={{background:"linear-gradient(135deg,#ECFDF5,#D1FAE5)",borderRadius:20,padding:20,textAlign:"center",transition:"transform .2s",cursor:"pointer"}} onMouseEnter={e=>e.currentTarget.style.transform="translateY(-3px)"} onMouseLeave={e=>e.currentTarget.style.transform=""}><span style={{fontSize:32}}>🛡️</span><h3 style={{fontFamily:"var(--fd)",fontSize:15,marginTop:6}}>CercleCover</h3><p style={{fontSize:11,color:"var(--g)",marginTop:4}}>Couverture jusqu'à 2 000 €</p><button className="bs" style={{marginTop:8,fontSize:11,padding:"6px 14px"}}>En savoir plus</button></div>
-          <div style={{background:"linear-gradient(135deg,#EEF2FF,#E0E7FF)",borderRadius:20,padding:20,textAlign:"center",transition:"transform .2s",cursor:"pointer"}} onMouseEnter={e=>e.currentTarget.style.transform="translateY(-3px)"} onMouseLeave={e=>e.currentTarget.style.transform=""}><span style={{fontSize:32}}>📊</span><h3 style={{fontFamily:"var(--fd)",fontSize:15,marginTop:6}}>Dashboard Pro</h3><p style={{fontSize:11,color:"var(--g)",marginTop:4}}>Gérez vos locations facilement</p><button className="bs" style={{marginTop:8,fontSize:11,padding:"6px 14px"}} onClick={()=>{if(state.user)setPage("dashboard");else setShowA("login")}}>Accéder →</button></div>
-          <div style={{background:"linear-gradient(135deg,#FDF2F8,#FCE7F3)",borderRadius:20,padding:20,textAlign:"center",transition:"transform .2s",cursor:"pointer"}} onMouseEnter={e=>e.currentTarget.style.transform="translateY(-3px)"} onMouseLeave={e=>e.currentTarget.style.transform=""}><span style={{fontSize:32}}>🏅</span><h3 style={{fontFamily:"var(--fd)",fontSize:15,marginTop:6}}>Programme fidélité</h3><p style={{fontSize:11,color:"var(--g)",marginTop:4}}>Réduisez vos commissions</p><button className="bs" style={{marginTop:8,fontSize:11,padding:"6px 14px"}} onClick={()=>{if(state.user){setProfTab("grade");setPage("profile")}else setShowA("login")}}>Voir mon grade →</button></div>
+          <div style={{background:"linear-gradient(135deg,#f8f7ff,#f0f4ff)",borderRadius:20,padding:20,textAlign:"center",transition:"transform .2s",cursor:"pointer",borderLeft:"4px solid #6C63FF"}} onMouseEnter={e=>e.currentTarget.style.transform="translateY(-3px)"} onMouseLeave={e=>e.currentTarget.style.transform=""}><span style={{fontSize:32}}>🎁</span><h3 style={{fontFamily:"var(--fd)",fontSize:15,marginTop:6,color:"#6C63FF"}}>Parrainez un ami</h3><p style={{fontSize:11,color:"var(--g)",marginTop:4}}>Gagnez 5€ par filleul inscrit</p><button className="bp" style={{marginTop:8,fontSize:11,padding:"6px 14px"}} onClick={()=>{if(state.user)setPage("referral");else setShowA("login")}}>Inviter →</button></div>
+          <div style={{background:"linear-gradient(135deg,#f8f7ff,#f0f4ff)",borderRadius:20,padding:20,textAlign:"center",transition:"transform .2s",cursor:"pointer",borderLeft:"4px solid #4ECDC4"}} onMouseEnter={e=>e.currentTarget.style.transform="translateY(-3px)"} onMouseLeave={e=>e.currentTarget.style.transform=""}><span style={{fontSize:32}}>🛡️</span><h3 style={{fontFamily:"var(--fd)",fontSize:15,marginTop:6,color:"#6C63FF"}}>CercleCover</h3><p style={{fontSize:11,color:"var(--g)",marginTop:4}}>Couverture jusqu'à 2 000 €</p><button className="bp" style={{marginTop:8,fontSize:11,padding:"6px 14px"}}>En savoir plus</button></div>
+          <div style={{background:"linear-gradient(135deg,#f8f7ff,#f0f4ff)",borderRadius:20,padding:20,textAlign:"center",transition:"transform .2s",cursor:"pointer",borderLeft:"4px solid #6C63FF"}} onMouseEnter={e=>e.currentTarget.style.transform="translateY(-3px)"} onMouseLeave={e=>e.currentTarget.style.transform=""}><span style={{fontSize:32}}>📊</span><h3 style={{fontFamily:"var(--fd)",fontSize:15,marginTop:6,color:"#6C63FF"}}>Dashboard Pro</h3><p style={{fontSize:11,color:"var(--g)",marginTop:4}}>Gérez vos locations facilement</p><button className="bp" style={{marginTop:8,fontSize:11,padding:"6px 14px"}} onClick={()=>{if(state.user)setPage("dashboard");else setShowA("login")}}>Accéder →</button></div>
+          <div style={{background:"linear-gradient(135deg,#f8f7ff,#f0f4ff)",borderRadius:20,padding:20,textAlign:"center",transition:"transform .2s",cursor:"pointer",borderLeft:"4px solid #7c5ce7"}} onMouseEnter={e=>e.currentTarget.style.transform="translateY(-3px)"} onMouseLeave={e=>e.currentTarget.style.transform=""}><span style={{fontSize:32}}>🏅</span><h3 style={{fontFamily:"var(--fd)",fontSize:15,marginTop:6,color:"#6C63FF"}}>Programme fidélité</h3><p style={{fontSize:11,color:"var(--g)",marginTop:4}}>Réduisez vos commissions</p><button className="bp" style={{marginTop:8,fontSize:11,padding:"6px 14px"}} onClick={()=>{if(state.user){setProfTab("grade");setPage("profile")}else setShowA("login")}}>Voir mon grade →</button></div>
         </div>
       </div>
       <div className="ftg">
