@@ -796,14 +796,21 @@ function Detail({item,onClose,state,dispatch,setPage,setConvId,setShowShop,setPr
 
 /* ========== GRADE SYSTEM ========== */
 const GRADES = [
-  { id:"bronze", name:"Bronze", icon:"🥉", min:0, max:4, feeRate:0.10, perks:["Commission standard 10%","Assurance de base","Messagerie standard"] },
-  { id:"silver", name:"Argent", icon:"🥈", min:5, max:14, feeRate:0.08, perks:["Commission réduite 8%","Assurance étendue","Badge Argent","Priorité dans les résultats"] },
-  { id:"gold", name:"Or", icon:"🥇", min:15, max:34, feeRate:0.06, perks:["Commission réduite 6%","Assurance premium","Badge Or","Mise en avant","Support prioritaire"] },
-  { id:"platinum", name:"Platine", icon:"💎", min:35, max:74, feeRate:0.04, perks:["Commission réduite 4%","Assurance tous risques","Badge Platine","Top des résultats","Support VIP","Accès bêta"] },
-  { id:"diamond", name:"Diamant", icon:"👑", min:75, max:Infinity, feeRate:0.02, perks:["Commission mini 2%","Assurance illimitée","Badge Diamant","#1 des résultats","Conciergerie dédiée","Accès bêta","Événements exclusifs"] },
+  { id:"bronze", name:"Bronze", icon:"🥉", min:0,  max:14,  feeRate:0.10, divs:[{label:"I",min:0,max:4},{label:"II",min:5,max:9},{label:"III",min:10,max:14}], perks:["Commission standard 10%","Assurance de base","Messagerie standard"] },
+  { id:"silver", name:"Argent", icon:"🥈", min:15, max:34,  feeRate:0.08, divs:[{label:"I",min:15,max:21},{label:"II",min:22,max:28},{label:"III",min:29,max:34}], perks:["Commission réduite 8%","Assurance étendue","Badge Argent","Priorité dans les résultats"] },
+  { id:"gold",   name:"Or",     icon:"🥇", min:35, max:74,  feeRate:0.06, divs:[{label:"I",min:35,max:47},{label:"II",min:48,max:61},{label:"III",min:62,max:74}], perks:["Commission réduite 6%","Assurance premium","Badge Or","Mise en avant","Support prioritaire"] },
+  { id:"platinum",name:"Platine",icon:"💎",min:75, max:149, feeRate:0.04, divs:[{label:"I",min:75,max:99},{label:"II",min:100,max:124},{label:"III",min:125,max:149}], perks:["Commission réduite 4%","Assurance tous risques","Badge Platine","Top des résultats","Support VIP","Accès bêta"] },
+  { id:"diamond", name:"Diamant",icon:"👑",min:150,max:Infinity,feeRate:0.02, divs:[{label:"I",min:150,max:199},{label:"II",min:200,max:274},{label:"III",min:275,max:Infinity}], perks:["Commission mini 2%","Assurance illimitée","Badge Diamant","#1 des résultats","Conciergerie dédiée","Accès bêta","Événements exclusifs"] },
 ];
 function getGrade(rentals) { return GRADES.find(g => rentals >= g.min && rentals <= g.max) || GRADES[0]; }
 function getNextGrade(rentals) { const i = GRADES.findIndex(g => rentals >= g.min && rentals <= g.max); return i < GRADES.length - 1 ? GRADES[i + 1] : null; }
+function getDivision(rentals) {
+  const g = getGrade(rentals);
+  const div = g.divs.find(d => rentals >= d.min && rentals <= d.max) || g.divs[0];
+  const nextDiv = g.divs[g.divs.findIndex(d => rentals >= d.min && rentals <= d.max) + 1] || null;
+  const prog = nextDiv ? Math.min(100, Math.round(((rentals - div.min) / (nextDiv.min - div.min)) * 100)) : 100;
+  return { div, nextDiv, prog };
+}
 function calcSavings(rentals, avgPrice) {
   const base = GRADES[0].feeRate;
   const current = getGrade(rentals).feeRate;
@@ -1347,62 +1354,83 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
           const rentals = user.rentals || 0;
           const grade = getGrade(rentals);
           const next = getNextGrade(rentals);
-          const prog = next ? Math.min(100, Math.round(((rentals - grade.min) / (next.min - grade.min)) * 100)) : 100;
+          const {div, nextDiv, prog: divProg} = getDivision(rentals);
           const GC = { bronze:'#CD7F32', silver:'#9ca3af', gold:'#F59E0B', platinum:'#7C3AED', diamond:'#06B6D4' };
           const gc = GC[grade.id] || '#6C63FF';
           const gcLight = gc + '20';
+          const fullLabel = `${grade.name} ${div.label}`;
+          const nextLabel = nextDiv ? `${grade.name} ${nextDiv.label}` : (next ? `${next.name} I` : null);
+          const nextMin = nextDiv ? nextDiv.min : (next ? next.min : null);
+          const divTotal = nextDiv ? nextDiv.min - div.min : (div.max === Infinity ? null : div.max - div.min + 1);
+          const divDone = rentals - div.min;
           return (
             <div style={{maxWidth:560,margin:'0 auto'}}>
 
-              {/* Hero grade */}
-              <div style={{borderRadius:20,overflow:'hidden',marginBottom:20,background:`linear-gradient(135deg,${gc},${gc}cc)`,padding:'28px 24px',color:'#fff',position:'relative'}}>
-                <div style={{position:'absolute',top:-20,right:-20,fontSize:120,opacity:.12,lineHeight:1}}>{grade.icon}</div>
-                <div style={{fontSize:11,fontWeight:700,letterSpacing:'.1em',textTransform:'uppercase',opacity:.8,marginBottom:6}}>Votre grade</div>
-                <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:16}}>
-                  <span style={{fontSize:44}}>{grade.icon}</span>
+              {/* Hero */}
+              <div style={{borderRadius:22,marginBottom:20,background:`linear-gradient(135deg,${gc},${gc}bb)`,padding:'28px 24px',color:'#fff',position:'relative',overflow:'hidden'}}>
+                <div style={{position:'absolute',top:-16,right:-16,fontSize:130,opacity:.1,lineHeight:1,pointerEvents:'none'}}>{grade.icon}</div>
+                <div style={{fontSize:11,fontWeight:700,letterSpacing:'.1em',textTransform:'uppercase',opacity:.75,marginBottom:8}}>Votre rang actuel</div>
+                <div style={{display:'flex',alignItems:'center',gap:14,marginBottom:20}}>
+                  <span style={{fontSize:48}}>{grade.icon}</span>
                   <div>
-                    <div style={{fontSize:30,fontWeight:900,lineHeight:1}}>{grade.name}</div>
-                    <div style={{fontSize:13,opacity:.85,marginTop:2}}>{rentals} location{rentals!==1?'s':''} complétée{rentals!==1?'s':''}</div>
+                    <div style={{fontSize:32,fontWeight:900,lineHeight:1.1,letterSpacing:'-.02em'}}>{fullLabel}</div>
+                    <div style={{fontSize:13,opacity:.8,marginTop:4}}>{rentals} location{rentals!==1?'s':''} complétée{rentals!==1?'s':''}</div>
                   </div>
                 </div>
-                {next ? (
+
+                {/* Divisions row */}
+                <div style={{display:'flex',gap:6,marginBottom:16}}>
+                  {grade.divs.map(d=>{
+                    const isThis = d.label===div.label;
+                    const isPast = grade.divs.indexOf(d) < grade.divs.findIndex(x=>x.label===div.label);
+                    return (
+                      <div key={d.label} style={{flex:1,textAlign:'center',padding:'6px 4px',borderRadius:10,background:isThis?'rgba(255,255,255,0.3)':isPast?'rgba(255,255,255,0.15)':'rgba(255,255,255,0.08)',border:`1.5px solid ${isThis?'rgba(255,255,255,0.7)':'rgba(255,255,255,0.2)'}`,transition:'all .2s'}}>
+                        <div style={{fontSize:11,fontWeight:700,opacity:isThis?1:.6}}>{grade.name} {d.label}</div>
+                        <div style={{fontSize:9,opacity:.6,marginTop:1}}>{isPast?'✓ Atteint':isThis?'En cours':'Bloqué'}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Progress bar */}
+                {nextLabel ? (
                   <div>
-                    <div style={{display:'flex',justifyContent:'space-between',fontSize:12,opacity:.9,marginBottom:6}}>
-                      <span>Vers {next.icon} {next.name}</span>
-                      <span style={{fontWeight:700}}>{rentals}/{next.min}</span>
+                    <div style={{display:'flex',justifyContent:'space-between',fontSize:12,opacity:.85,marginBottom:6}}>
+                      <span>Vers <strong>{nextLabel}</strong></span>
+                      <span style={{fontWeight:700}}>{divDone}{divTotal?`/${divTotal}`:''} loc.</span>
                     </div>
-                    <div style={{height:8,borderRadius:4,background:'rgba(255,255,255,0.25)',overflow:'hidden'}}>
-                      <div style={{height:'100%',borderRadius:4,background:'#fff',width:`${prog}%`,transition:'width .8s ease'}}/>
+                    <div style={{height:8,borderRadius:4,background:'rgba(255,255,255,0.2)',overflow:'hidden'}}>
+                      <div style={{height:'100%',borderRadius:4,background:'#fff',width:`${divProg}%`,transition:'width .8s ease'}}/>
                     </div>
-                    <div style={{fontSize:11,opacity:.75,marginTop:6}}>{next.min - rentals} location{(next.min-rentals)!==1?'s':''} restante{(next.min-rentals)!==1?'s':''} pour le grade suivant</div>
+                    {nextMin && <div style={{fontSize:11,opacity:.7,marginTop:6}}>{nextMin - rentals} location{(nextMin-rentals)!==1?'s':''} pour atteindre {nextLabel}</div>}
                   </div>
                 ) : (
-                  <div style={{fontSize:13,fontWeight:700,opacity:.9}}>🏆 Grade maximum atteint !</div>
+                  <div style={{fontSize:14,fontWeight:800,opacity:.95}}>🏆 Rang maximum — Diamant III !</div>
                 )}
               </div>
 
               {/* Stats */}
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:20}}>
-                <div style={{background:'#f8f7ff',borderRadius:16,padding:'16px 18px'}}>
+                <div style={{background:'#f8f7ff',borderRadius:16,padding:'16px 18px',border:'1.5px solid #f0eeff'}}>
                   <div style={{fontSize:11,color:'#9ca3af',fontWeight:600,marginBottom:4}}>Commission actuelle</div>
                   <div style={{fontSize:26,fontWeight:900,color:gc}}>{Math.round(grade.feeRate*100)}%</div>
                   <div style={{fontSize:11,color:'#9ca3af',marginTop:2}}>au lieu de 10%</div>
                 </div>
-                <div style={{background:'#f8f7ff',borderRadius:16,padding:'16px 18px'}}>
-                  <div style={{fontSize:11,color:'#9ca3af',fontWeight:600,marginBottom:4}}>Économie par location</div>
+                <div style={{background:'#f0fdf4',borderRadius:16,padding:'16px 18px',border:'1.5px solid #d1fae5'}}>
+                  <div style={{fontSize:11,color:'#9ca3af',fontWeight:600,marginBottom:4}}>Économie sur les frais</div>
                   <div style={{fontSize:26,fontWeight:900,color:'#10b981'}}>{Math.round((0.10 - grade.feeRate)*100)}%</div>
-                  <div style={{fontSize:11,color:'#9ca3af',marginTop:2}}>d'économie sur les frais</div>
+                  <div style={{fontSize:11,color:'#9ca3af',marginTop:2}}>par rapport au taux de base</div>
                 </div>
               </div>
 
               {/* Perks */}
-              <div style={{marginBottom:20}}>
+              <div style={{marginBottom:24}}>
                 <div style={{fontSize:15,fontWeight:800,color:'#1a1a2e',marginBottom:12}}>Avantages inclus</div>
                 <div style={{display:'flex',flexDirection:'column',gap:8}}>
                   {grade.perks.map(p=>(
                     <div key={p} style={{display:'flex',alignItems:'center',gap:12,padding:'12px 16px',background:'#fff',border:'1.5px solid #f0eeff',borderRadius:14,fontSize:14,color:'#1a1a2e',fontWeight:500}}>
                       <div style={{width:24,height:24,borderRadius:8,background:gcLight,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-                        <span style={{fontSize:13,color:gc,fontWeight:800}}>✓</span>
+                        <span style={{fontSize:12,color:gc,fontWeight:900}}>✓</span>
                       </div>
                       {p}
                     </div>
@@ -1410,25 +1438,39 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
                 </div>
               </div>
 
-              {/* All grades */}
+              {/* Parcours complet avec divisions */}
               <div>
-                <div style={{fontSize:15,fontWeight:800,color:'#1a1a2e',marginBottom:12}}>Parcours des grades</div>
-                <div style={{display:'flex',flexDirection:'column',gap:8}}>
-                  {GRADES.map((g,i)=>{
-                    const isCurrent = g.id===grade.id;
-                    const isDone = rentals >= g.min;
+                <div style={{fontSize:15,fontWeight:800,color:'#1a1a2e',marginBottom:12}}>Parcours complet</div>
+                <div style={{display:'flex',flexDirection:'column',gap:6}}>
+                  {GRADES.map(g=>{
                     const gColor = GC[g.id]||'#6C63FF';
+                    const isCurrentGrade = g.id === grade.id;
                     return (
-                      <div key={g.id} style={{display:'flex',alignItems:'center',gap:14,padding:'14px 16px',borderRadius:16,background:isCurrent?`${gColor}12`:'#fafafa',border:`1.5px solid ${isCurrent?gColor:'#f0f0f0'}`,transition:'all .2s'}}>
-                        <div style={{fontSize:28,width:36,textAlign:'center'}}>{g.icon}</div>
-                        <div style={{flex:1}}>
-                          <div style={{display:'flex',alignItems:'center',gap:8}}>
-                            <span style={{fontSize:14,fontWeight:700,color:isCurrent?gColor:'#374151'}}>{g.name}</span>
-                            {isCurrent && <span style={{fontSize:10,fontWeight:700,color:gColor,background:`${gColor}18`,padding:'2px 8px',borderRadius:6}}>ACTUEL</span>}
-                          </div>
-                          <div style={{fontSize:12,color:'#9ca3af',marginTop:2}}>{g.max===Infinity?`${g.min}+ locations`:`${g.min} – ${g.max} locations`} · Commission {Math.round(g.feeRate*100)}%</div>
+                      <div key={g.id}>
+                        {/* Grade header */}
+                        <div style={{display:'flex',alignItems:'center',gap:10,padding:'10px 14px',borderRadius:12,background:isCurrentGrade?`${gColor}10`:'#fafafa',marginBottom:4}}>
+                          <span style={{fontSize:22}}>{g.icon}</span>
+                          <span style={{fontSize:14,fontWeight:800,color:isCurrentGrade?gColor:'#374151',flex:1}}>{g.name}</span>
+                          <span style={{fontSize:11,color:'#9ca3af'}}>Commission {Math.round(g.feeRate*100)}%</span>
                         </div>
-                        <div style={{fontSize:18,color:isDone?'#10b981':'#e5e7eb'}}>{isDone?'✓':'○'}</div>
+                        {/* Divisions */}
+                        <div style={{display:'flex',flexDirection:'column',gap:4,paddingLeft:14,marginBottom:8}}>
+                          {g.divs.map(d=>{
+                            const isThisDiv = isCurrentGrade && d.label===div.label;
+                            const isPastDiv = rentals >= (d.max===Infinity ? d.min+1 : d.max+1) || (isCurrentGrade && g.divs.indexOf(d) < g.divs.findIndex(x=>x.label===div.label)) || rentals > g.max;
+                            const isLocked = rentals < d.min;
+                            return (
+                              <div key={d.label} style={{display:'flex',alignItems:'center',gap:10,padding:'8px 14px',borderRadius:10,background:isThisDiv?`${gColor}14`:isPastDiv?'#f0fdf4':isLocked?'#fafafa':'#fafafa',border:`1.5px solid ${isThisDiv?gColor:isPastDiv?'#d1fae5':'#f0f0f0'}`,transition:'all .2s'}}>
+                                <div style={{width:20,height:20,borderRadius:6,background:isThisDiv?gColor:isPastDiv?'#10b981':isLocked?'#e5e7eb':'#e5e7eb',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                                  <span style={{fontSize:10,color:'#fff',fontWeight:800}}>{isPastDiv?'✓':isThisDiv?'▶':'○'}</span>
+                                </div>
+                                <span style={{fontSize:13,fontWeight:isThisDiv?700:500,color:isThisDiv?gColor:isPastDiv?'#374151':isLocked?'#c0c0c0':'#374151',flex:1}}>{g.name} {d.label}</span>
+                                <span style={{fontSize:11,color:isLocked?'#d1d5db':'#9ca3af'}}>{d.max===Infinity?`${d.min}+ loc.`:`${d.min}–${d.max} loc.`}</span>
+                                {isThisDiv && <span style={{fontSize:10,fontWeight:700,color:gColor,background:`${gColor}18`,padding:'2px 8px',borderRadius:6}}>EN COURS</span>}
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
                     );
                   })}
