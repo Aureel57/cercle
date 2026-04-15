@@ -26,30 +26,10 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:#F9FAFB;overflow-x:hi
 .ld h2{font-family:'DM Sans',system-ui;font-size:24px;margin-top:16px;font-weight:700;color:#111827}
 .ld p{color:#9CA3AF;font-size:11px;margin-top:6px;letter-spacing:.08em;text-transform:uppercase;font-weight:500}
 /* ===== CHARTE GRAPHIQUE CERCLE ===== */
-:root{--brand:#6C63FF;--brand2:#7c5ce7;--teal:#4ECDC4}
 body{background:#F4F3FF}
-.hdr{background:rgba(255,255,255,0.97)!important;box-shadow:0 2px 20px rgba(108,99,255,0.09)!important;backdrop-filter:blur(20px)!important}
-.lc{background:linear-gradient(135deg,#6C63FF,#7c5ce7)!important}
-.lt{color:#6C63FF!important}
-.nb{color:#6C63FF!important;font-weight:600!important}
-.sbb{background:linear-gradient(135deg,#6C63FF,#7c5ce7)!important}
-.sbb:hover{box-shadow:0 4px 12px rgba(108,99,255,0.35)!important}
-.card{border-radius:16px!important;box-shadow:0 4px 24px rgba(108,99,255,0.10)!important;background:#fff!important;overflow:hidden!important}
-.card:hover{box-shadow:0 8px 32px rgba(108,99,255,0.18)!important;transform:translateY(-4px)}
-.cbp strong{color:#6C63FF!important}
-.ct.on{border-bottom-color:#6C63FF!important}
-.ct.on .ctl{color:#6C63FF!important}
-.bn.on{color:#6C63FF!important}
-.bn.on svg{stroke:#6C63FF!important}
-.bp{background:linear-gradient(135deg,#6C63FF,#7c5ce7)!important}
-.bp:hover{box-shadow:0 4px 16px rgba(108,99,255,0.30)!important}
-.bub.me,.chatbot-msg.user,.smgo,.mip button,.chatbot-ft button,.chatbot-hd,.chatbot-btn{background:linear-gradient(135deg,#6C63FF,#7c5ce7)!important}
-.chatbot-btn{box-shadow:0 4px 20px rgba(108,99,255,0.35)!important}
-.splash{background:linear-gradient(160deg,#6C63FF 0%,#7c5ce7 35%,#5a7fff 65%,#4ECDC4 100%)!important}
-.splash-logo{color:#6C63FF!important}
-.hero-stats{background:rgba(255,255,255,0.15)!important;backdrop-filter:blur(12px)!important}
-.reco{border-top:1px solid rgba(108,99,255,0.12)!important}
-.t2-b{background:linear-gradient(135deg,#6C63FF,#7c5ce7)!important}
+.hero-stats{background:rgba(255,255,255,0.15);backdrop-filter:blur(12px)}
+.reco{border-top:1px solid rgba(108,99,255,0.12)}
+.card:hover{box-shadow:0 8px 32px rgba(108,99,255,0.18);transform:translateY(-4px)}
 .ld div:first-child{background:#6C63FF!important}
 </style>
 </head>
@@ -141,7 +121,7 @@ const I={
 
 /* ========== STYLES ========== */
 const css=`@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fraunces:wght@400;500;600;700;800&display=swap');
-*{margin:0;padding:0;box-sizing:border-box}:root{--p:#FF5A5F;--pd:#E04850;--acc:#00A699;--dk:#222;--tx:#484848;--g:#767676;--gl:#B0B0B0;--bd:#EBEBEB;--bg:#F7F7F7;--bgw:#F0F0F0;--w:#FFF;--sh:0 1px 2px rgba(0,0,0,.04),0 4px 12px rgba(0,0,0,.03);--shm:0 2px 8px rgba(0,0,0,.06),0 8px 20px rgba(0,0,0,.05);--shl:0 8px 28px rgba(0,0,0,.1),0 2px 4px rgba(0,0,0,.04);--glass:rgba(255,255,255,.75);--blur:blur(20px);--r:16px;--rl:24px;--f:'Inter',system-ui,-apple-system,sans-serif;--fd:'Fraunces',Georgia,serif;--ease:cubic-bezier(.4,0,.2,1)}
+*{margin:0;padding:0;box-sizing:border-box}:root{--p:#6C63FF;--pd:#5a4ee0;--acc:#4ECDC4;--dk:#222;--tx:#484848;--g:#767676;--gl:#B0B0B0;--bd:#EBEBEB;--bg:#F7F7F7;--bgw:#F0F0F0;--w:#FFF;--sh:0 1px 2px rgba(0,0,0,.04),0 4px 12px rgba(0,0,0,.03);--shm:0 2px 8px rgba(0,0,0,.06),0 8px 20px rgba(0,0,0,.05);--shl:0 8px 28px rgba(0,0,0,.1),0 2px 4px rgba(0,0,0,.04);--glass:rgba(255,255,255,.75);--blur:blur(20px);--r:16px;--rl:24px;--f:'Inter',system-ui,-apple-system,sans-serif;--fd:'Fraunces',Georgia,serif;--ease:cubic-bezier(.4,0,.2,1)}
 body,html,#root{font-family:var(--f);color:var(--tx);background:var(--bg);-webkit-font-smoothing:antialiased;letter-spacing:-.01em}button{font-family:var(--f);cursor:pointer}input,select,textarea{font-family:var(--f)}
 /* Header */
 .hdr{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid rgba(0,0,0,.06)}.hi{display:flex;align-items:center;justify-content:space-between;padding:0 28px;max-width:1520px;margin:0 auto;height:72px;gap:12px}
@@ -394,8 +374,8 @@ body,html,#root{font-family:var(--f);color:var(--tx);background:var(--bg);-webki
 .wallet-c{background:linear-gradient(135deg,#1A1A2E,#16213E);color:#fff;border-radius:var(--rl);padding:24px;margin-bottom:20px;box-shadow:var(--shm)}
 .wallet-bal{font-family:var(--fd);font-size:36px;font-weight:700;letter-spacing:-.02em}
 /* Splash */
-.splash{position:fixed;inset:0;background:linear-gradient(135deg,#FF5A5F,#FF8A5C,#FFB067);z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column}
-.splash-logo{width:88px;height:88px;background:#fff;border-radius:24px;display:flex;align-items:center;justify-content:center;font-size:40px;font-weight:800;color:#FF5A5F;font-family:var(--fd);box-shadow:0 16px 48px rgba(0,0,0,.15);animation:pulse 1.5s ease infinite}
+.splash{position:fixed;inset:0;background:linear-gradient(160deg,#6C63FF 0%,#7c5ce7 35%,#5a7fff 65%,#4ECDC4 100%);z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column}
+.splash-logo{width:88px;height:88px;background:#fff;border-radius:24px;display:flex;align-items:center;justify-content:center;font-size:40px;font-weight:800;color:#6C63FF;font-family:var(--fd);box-shadow:0 16px 48px rgba(0,0,0,.15);animation:pulse 1.5s ease infinite}
 .splash h2{color:#fff;font-family:var(--fd);font-size:28px;margin-top:20px;letter-spacing:-.01em}
 .splash p{color:rgba(255,255,255,.75);font-size:13px;margin-top:8px}
 /* Page transitions */
@@ -1513,7 +1493,7 @@ function Messages({state,dispatch,cid,setCid,setPage}){
   const getO=cv=>{const oid=cv.parts.find(p=>p!==state.user?.id);return USERS.find(u=>u.id===oid)||{name:"Utilisateur",avatar:"😊"}};
   return <div style={{height:"100vh",display:"flex",flexDirection:"column"}}><div style={{display:"flex",alignItems:"center",gap:10,padding:"10px 16px",borderBottom:"1px solid var(--bd)",background:"var(--w)",flexShrink:0}}>
     <button className="mx" style={{position:"static"}} onClick={()=>setPage("home")}><I.Back/></button>
-    <a className="logo" onClick={()=>setPage("home")}><div className="lc">C</div><span className="lt">Cercle</span></a>
+    <a className="logo" onClick={()=>setPage("home")} style={{textDecoration:'none'}}><svg viewBox="0 0 400 200" width="100" height="36" xmlns="http://www.w3.org/2000/svg"><circle cx="75" cy="100" r="50" fill="none" stroke="#6C63FF" strokeWidth="3.5"/><circle cx="115" cy="100" r="50" fill="none" stroke="#6C63FF" strokeWidth="3.5"/><path d="M95 58 A50 50 0 0 1 95 142 A50 50 0 0 1 95 58Z" fill="#6C63FF" opacity=".15"/><text x="265" y="111" textAnchor="middle" fontFamily="Georgia,serif" fontSize="44" fontWeight="400" fill="#6C63FF" letterSpacing="3">Cercle</text></svg></a>
     <span style={{fontSize:15,fontWeight:600,fontFamily:"var(--fd)",marginLeft:8}}>Messages</span>
   </div><div className="ml"><div className="mls"><div style={{padding:14,fontFamily:"var(--fd)",fontSize:16,fontWeight:600,borderBottom:"1px solid var(--bd)"}}>Messages</div>{convs.length===0?<div style={{padding:18,textAlign:"center",color:"var(--g)",fontSize:12}}>Aucune conversation</div>:convs.map(c=>{const o=getO(c);return <div key={c.id} className={"mc"+(cid===c.id?" on":"")} onClick={()=>setCid(c.id)}><div className="mca" style={{position:"relative"}}>{o.avatar}<span className="online-dot"/></div><div className="mci"><div className="mcn">{o.name}</div><div className="mcl">{c.last}</div></div></div>})}</div>
   <div className="mch">{!ac?<div style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",color:"var(--g)"}}><div style={{textAlign:"center"}}><span style={{fontSize:36,display:"block",marginBottom:6}}>💬</span>Sélectionnez une conversation</div></div>:<><div className="mchd"><span style={{fontSize:20}}>{getO(ac).avatar}</span>{getO(ac).name}</div><div className="mcbd" ref={ref}>{msgs.map(m=><div key={m.id} className={"bub"+(m.from===state.user?.id?" me":" th")}>{m.text}<span className="bt">{new Date(m.timestamp).toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})}{m.from===state.user?.id&&" ✓✓"}</span></div>)}{typing&&<div className="typing"><span/><span/><span/></div>}</div><div className="mip"><input value={msg} onChange={e=>setMsg(e.target.value)} placeholder="Écrire un message..." onKeyDown={e=>e.key==="Enter"&&send()}/><button onClick={send}><I.Send/></button></div></>}</div></div></div>
@@ -2404,9 +2384,9 @@ function App(){
 
   return <Ctx.Provider value={{dark,setDark,lang,setLang}}><div className={(dark?"dark":"")}><style>{css}</style>
     {/* Splash Screen */}
-    {splash&&<div className="splash" style={{opacity:1,transition:"opacity .5s"}}><div className="splash-logo">C</div><h2>Cercle</h2><p>Location entre particuliers & pros</p></div>}
+    {splash&&<div className="splash" style={{opacity:1,transition:"opacity .5s"}}><div className="splash-logo" style={{background:'rgba(255,255,255,0.2)',backdropFilter:'blur(12px)',border:'2px solid rgba(255,255,255,0.4)',borderRadius:24,padding:'18px 22px',display:'flex',alignItems:'center',justifyContent:'center'}}><svg viewBox="0 0 220 160" width="110" height="80" xmlns="http://www.w3.org/2000/svg"><circle cx="75" cy="80" r="50" fill="none" stroke="white" strokeWidth="4"/><circle cx="115" cy="80" r="50" fill="none" stroke="white" strokeWidth="4"/><path d="M95 38 A50 50 0 0 1 95 122 A50 50 0 0 1 95 38Z" fill="white" opacity=".25"/></svg></div><h2 style={{fontFamily:'Georgia,serif',fontWeight:400,letterSpacing:3,fontSize:28}}>Cercle</h2><p>Location entre particuliers & pros</p></div>}
     {page!=="messages"&&page!=="notifs"&&page!=="dashboard"&&page!=="referral"&&page!=="verify"&&page!=="dispute"&&page!=="wallet"&&page!=="badges"&&<header className={"hdr"+(mode==="pro"?" pro-hdr":"")}><div className="hi">
-      <a className="logo" onClick={home}><div className="lc">{mode==='pro'?'P':'C'}</div><span className="lt">{mode==='pro'?'Cercle Pro':'Cercle'}</span></a>
+      <a className="logo" onClick={home} style={{textDecoration:'none'}}><svg viewBox="0 0 400 200" width="136" height="48" xmlns="http://www.w3.org/2000/svg"><circle cx="75" cy="100" r="50" fill="none" stroke={mode==='pro'?"#2563EB":"#6C63FF"} strokeWidth="3.5"/><circle cx="115" cy="100" r="50" fill="none" stroke={mode==='pro'?"#2563EB":"#6C63FF"} strokeWidth="3.5"/><path d="M95 58 A50 50 0 0 1 95 142 A50 50 0 0 1 95 58Z" fill={mode==='pro'?"#2563EB":"#6C63FF"} opacity=".15"/><text x="265" y="111" textAnchor="middle" fontFamily="Georgia,serif" fontSize="44" fontWeight="400" fill={mode==='pro'?"#2563EB":"#6C63FF"} letterSpacing="3">{mode==='pro'?'Cercle Pro':'Cercle'}</text></svg></a>
       <div className="mode-sw">
         <button className={"mode-btn"+(mode==='perso'?' on':'')} onClick={()=>setMode('perso')}>👤 Particulier</button>
         <button className={"mode-btn"+(mode==='pro'?' pro-on':'')} onClick={()=>setMode('pro')}>🏢 Professionnel</button>
