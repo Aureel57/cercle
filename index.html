@@ -1447,16 +1447,6 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
                     const isCurrentGrade = g.id===grade.id;
                     const isUnlocked = rentals >= g.min;
                     return (
-<<<<<<< HEAD
-                      <div key={g.id} style={{borderRadius:18,overflow:'hidden',border:`2px solid ${isCurrentGrade?gColor:isUnlocked?gColor+'66':'#e5e7eb'}`,background:isCurrentGrade?`linear-gradient(160deg,${gColor}22,${gColor}08)`:'#fafafa',transition:'all .25s',opacity:isUnlocked?1:.65}}>
-                        {/* Top color band */}
-                        <div style={{height:7,background:isUnlocked?`linear-gradient(90deg,${gColor},${gColor}88)`:'#d1d5db'}}/>
-                        <div style={{padding:'14px 10px 16px',textAlign:'center'}}>
-                          <div style={{fontSize:34,marginBottom:8,filter:isUnlocked?'none':'grayscale(1)'}}>{g.icon}</div>
-                          <div style={{fontSize:13,fontWeight:800,color:isCurrentGrade?gColor:'#1f2937',marginBottom:8}}>{g.name}</div>
-                          {/* 3 division dots */}
-                          <div style={{display:'flex',justifyContent:'center',gap:5,marginBottom:8}}>
-=======
                       <div key={g.id} style={{
                         minWidth:170,flex:'0 0 170px',
                         borderRadius:20,overflow:'hidden',
@@ -1482,7 +1472,6 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
                           <div style={{fontSize:16,fontWeight:800,color:isCurrentGrade?gColor:isUnlocked?'#1a1a2e':'#9ca3af',marginBottom:12,letterSpacing:'-.01em'}}>{g.name}</div>
                           {/* 3 divisions */}
                           <div style={{display:'flex',justifyContent:'center',gap:5,marginBottom:12}}>
->>>>>>> a8a9722 (Fix rank cards - bigger, readable, horizontal scroll)
                             {g.divs.map((d,di)=>{
                               const isThisDot = isCurrentGrade && d.label===div.label;
                               const isPastDot = !isCurrentGrade && isUnlocked || (isCurrentGrade && di < g.divs.findIndex(x=>x.label===div.label));
