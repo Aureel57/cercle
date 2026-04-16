@@ -959,23 +959,24 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
 
     // Tabs
     tabsWrap: {
-      background: 'transparent',
-      borderBottom: '1px solid rgba(255,255,255,0.2)',
+      background: '#fff',
+      borderBottom: '1px solid #e5e7eb',
+      boxShadow: '0 2px 8px rgba(0,0,0,0.07)',
       position: 'sticky', top: 56, zIndex: 20,
       overflowX: 'auto', display: 'flex', justifyContent: 'center',
     },
     tab: (active) => ({
-      flex: 'none', padding: '14px 16px', fontSize: 13, fontWeight: active ? 700 : 500,
-      color: active ? 'white' : 'rgba(255,255,255,0.55)',
-      borderBottom: active ? '2px solid white' : '2px solid transparent',
+      flex: 'none', padding: '13px 14px', fontSize: 12, fontWeight: active ? 700 : 500,
+      color: active ? '#6C63FF' : '#6b7280',
       cursor: 'pointer', whiteSpace: 'nowrap',
-      display: 'flex', alignItems: 'center', gap: 6, transition: 'all 0.15s',
-      background: 'none', border: 'none', borderBottom: active ? '2px solid white' : '2px solid transparent',
+      display: 'flex', alignItems: 'center', gap: 5, transition: 'all 0.15s',
+      background: 'none', border: 'none',
+      borderBottom: active ? '2.5px solid #6C63FF' : '2.5px solid transparent',
     }),
     tabCount: (active) => ({
-      fontSize: 11, fontWeight: 700,
-      background: active ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.1)',
-      color: active ? 'white' : 'rgba(255,255,255,0.5)',
+      fontSize: 10, fontWeight: 700,
+      background: active ? '#f0eeff' : '#f3f4f6',
+      color: active ? '#6C63FF' : '#9ca3af',
       borderRadius: 10, padding: '1px 6px', minWidth: 18, textAlign: 'center',
     }),
 
@@ -1441,60 +1442,48 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
               {/* Parcours — grille de cartes */}
               <div>
                 <div style={{fontSize:15,fontWeight:800,color:'#1a1a2e',marginBottom:16}}>Tous les rangs</div>
-                <div style={{display:'flex',overflowX:'auto',gap:16,paddingBottom:8,scrollbarWidth:'none',msOverflowStyle:'none'}}>
+                <div style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:10}}>
                   {GRADES.map(g=>{
                     const gColor = GC[g.id]||'#6C63FF';
                     const isCurrentGrade = g.id===grade.id;
                     const isUnlocked = rentals >= g.min;
                     return (
                       <div key={g.id} style={{
-                        minWidth:170,flex:'0 0 170px',
-                        borderRadius:20,overflow:'hidden',
-                        border:`2px solid ${isCurrentGrade?gColor:isUnlocked?gColor+'55':'#ebebeb'}`,
-                        background:isCurrentGrade?`linear-gradient(160deg,${gColor}22,${gColor}08)`:'#fff',
-                        boxShadow:isCurrentGrade?`0 6px 24px ${gColor}35`:'0 1px 6px rgba(0,0,0,0.07)',
+                        borderRadius:16,overflow:'hidden',
+                        border:`2px solid ${isCurrentGrade?gColor:isUnlocked?gColor+'60':'#e5e7eb'}`,
+                        background:isCurrentGrade
+                          ?`linear-gradient(160deg,${gColor},${gColor}cc)`
+                          :isUnlocked?`linear-gradient(160deg,${gColor}22,${gColor}08)`:'#f9fafb',
+                        boxShadow:isCurrentGrade?`0 6px 20px ${gColor}45`:'0 1px 4px rgba(0,0,0,0.06)',
                         transition:'all .25s',
-                        filter:isUnlocked?'none':'grayscale(.7)',
-                        opacity:isUnlocked?1:.65
+                        filter:isUnlocked?'none':'grayscale(.65)',
+                        opacity:isUnlocked?1:.6
                       }}>
-                        {/* Bande couleur en haut */}
-                        <div style={{height:7,background:isUnlocked?`linear-gradient(90deg,${gColor},${gColor}66)`:'#e5e7eb'}}/>
-                        <div style={{padding:'22px 14px 22px',textAlign:'center'}}>
-                          {/* Icône dans un cercle */}
-                          <div style={{
-                            width:68,height:68,borderRadius:'50%',
-                            background:isCurrentGrade?`${gColor}22`:isUnlocked?`${gColor}12`:'#f3f4f6',
-                            border:`2px solid ${isCurrentGrade?gColor:isUnlocked?gColor+'44':'#e5e7eb'}`,
-                            display:'flex',alignItems:'center',justifyContent:'center',
-                            margin:'0 auto 12px',fontSize:34
-                          }}>{g.icon}</div>
-                          {/* Nom */}
-                          <div style={{fontSize:16,fontWeight:800,color:isCurrentGrade?gColor:isUnlocked?'#1a1a2e':'#9ca3af',marginBottom:12,letterSpacing:'-.01em'}}>{g.name}</div>
-                          {/* 3 divisions */}
-                          <div style={{display:'flex',justifyContent:'center',gap:5,marginBottom:12}}>
+                        <div style={{padding:'14px 8px 16px',textAlign:'center'}}>
+                          <div style={{fontSize:28,marginBottom:8,lineHeight:1}}>{g.icon}</div>
+                          <div style={{fontSize:12,fontWeight:800,color:isCurrentGrade?'#fff':isUnlocked?gColor:'#9ca3af',marginBottom:8,letterSpacing:'-.01em'}}>{g.name}</div>
+                          <div style={{display:'flex',justifyContent:'center',gap:3,marginBottom:8}}>
                             {g.divs.map((d,di)=>{
                               const isThisDot = isCurrentGrade && d.label===div.label;
                               const isPastDot = !isCurrentGrade && isUnlocked || (isCurrentGrade && di < g.divs.findIndex(x=>x.label===div.label));
                               return (
                                 <div key={d.label} style={{
-                                  height:7,borderRadius:4,
-                                  width:isThisDot?28:isUnlocked||isPastDot?12:10,
-                                  background:isThisDot?gColor:isPastDot?gColor+'77':'#e5e7eb',
+                                  height:5,borderRadius:3,
+                                  width:isThisDot?20:isUnlocked||isPastDot?8:6,
+                                  background:isThisDot?(isCurrentGrade?'rgba(255,255,255,0.9)':gColor):isPastDot?(isCurrentGrade?'rgba(255,255,255,0.4)':gColor+'66'):'#e5e7eb',
                                   transition:'all .3s',
-                                  boxShadow:isThisDot?`0 0 8px ${gColor}99`:''
+                                  boxShadow:isThisDot&&isCurrentGrade?`0 0 6px rgba(255,255,255,0.7)`:''
                                 }}/>
                               );
                             })}
                           </div>
-                          {/* Commission */}
-                          <div style={{fontSize:13,fontWeight:700,color:isCurrentGrade?gColor:isUnlocked?'#374151':'#c0c0c0',marginBottom:10}}>{Math.round(g.feeRate*100)}% comm.</div>
-                          {/* Badge statut */}
+                          <div style={{fontSize:11,fontWeight:700,color:isCurrentGrade?'rgba(255,255,255,0.85)':isUnlocked?'#374151':'#c0c0c0',marginBottom:8}}>{Math.round(g.feeRate*100)}% comm.</div>
                           <div>
                             {isCurrentGrade
-                              ? <span style={{fontSize:11,fontWeight:800,color:'#fff',background:gColor,padding:'4px 12px',borderRadius:20,letterSpacing:'.04em'}}>EN COURS</span>
+                              ? <span style={{fontSize:9,fontWeight:800,color:gColor,background:'rgba(255,255,255,0.9)',padding:'3px 8px',borderRadius:20,letterSpacing:'.04em'}}>EN COURS</span>
                               : isUnlocked
-                                ? <span style={{fontSize:11,fontWeight:700,color:'#10b981',background:'#f0fdf4',padding:'4px 10px',borderRadius:20,border:'1px solid #d1fae5'}}>✓ Atteint</span>
-                                : <span style={{fontSize:11,fontWeight:600,color:'#9ca3af',background:'#f3f4f6',padding:'4px 10px',borderRadius:20}}>🔒 {g.min.toLocaleString()} loc.</span>
+                                ? <span style={{fontSize:9,fontWeight:700,color:'#10b981',background:'#f0fdf4',padding:'3px 7px',borderRadius:20,border:'1px solid #d1fae5'}}>✓ Atteint</span>
+                                : <span style={{fontSize:9,fontWeight:600,color:'#9ca3af',background:'#f3f4f6',padding:'3px 7px',borderRadius:20}}>🔒 {g.min.toLocaleString()}</span>
                             }
                           </div>
                         </div>
