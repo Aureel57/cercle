@@ -796,7 +796,7 @@ function Detail({item,onClose,state,dispatch,setPage,setConvId,setShowShop,setPr
 
 /* ========== GRADE SYSTEM ========== */
 const GRADES = [
-  { id:"voisin",   name:"Voisin",   icon:"🤝", min:0,    max:49,   feeRate:0.10, divs:[{label:"I",min:0,max:9},{label:"II",min:10,max:24},{label:"III",min:25,max:49}],        perks:["Commission 10%","Accès à toutes les catégories","Messagerie standard","Profil public Cercle"] },
+  { id:"voisin",   name:"Voisin",   icon:"🤝", min:0,    max:49,   feeRate:0.10, divs:[{label:"I",min:0,max:9},{label:"II",min:10,max:24},{label:"III",min:25,max:49}],        perks:["Commission 10%","Accès à toutes les catégories","Messagerie standard"] },
   { id:"habitant", name:"Habitant", icon:"🏠", min:50,   max:199,  feeRate:0.09, divs:[{label:"I",min:50,max:89},{label:"II",min:90,max:139},{label:"III",min:140,max:199}],   perks:["Commission 9%","Badge Habitant sur le profil","1 annonce mise en avant / mois","Priorité légère dans les résultats"] },
   { id:"pilier",   name:"Pilier",   icon:"🏛️", min:200,  max:849,  feeRate:0.07, divs:[{label:"I",min:200,max:349},{label:"II",min:350,max:549},{label:"III",min:550,max:849}], perks:["Commission 7%","Badge Pilier doré","3 annonces mises en avant / mois","Apparition boostée dans la recherche","Statistiques avancées sur ses annonces"] },
   { id:"gardien",  name:"Gardien",  icon:"🛡️", min:850,  max:5774, feeRate:0.05, divs:[{label:"I",min:850,max:1299},{label:"II",min:1300,max:1999},{label:"III",min:2000,max:5774}], perks:["Commission 5%","Badge Gardien premium","6 annonces mises en avant / mois","Boost automatique des nouvelles annonces","Insigne premium visible","Accès aux fonctionnalités bêta"] },
@@ -1447,12 +1447,12 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
                     const isCurrentGrade = g.id===grade.id;
                     const isUnlocked = rentals >= g.min;
                     return (
-                      <div key={g.id} style={{borderRadius:18,overflow:'hidden',border:`2px solid ${isCurrentGrade?gColor:isUnlocked?gColor+'44':'#f0f0f0'}`,background:isCurrentGrade?`linear-gradient(160deg,${gColor}18,${gColor}06)`:'#fafafa',transition:'all .25s',opacity:isUnlocked?1:.5}}>
+                      <div key={g.id} style={{borderRadius:18,overflow:'hidden',border:`2px solid ${isCurrentGrade?gColor:isUnlocked?gColor+'66':'#e5e7eb'}`,background:isCurrentGrade?`linear-gradient(160deg,${gColor}22,${gColor}08)`:'#fafafa',transition:'all .25s',opacity:isUnlocked?1:.65}}>
                         {/* Top color band */}
-                        <div style={{height:6,background:isUnlocked?`linear-gradient(90deg,${gColor},${gColor}88)`:'#e5e7eb'}}/>
-                        <div style={{padding:'12px 10px 14px',textAlign:'center'}}>
-                          <div style={{fontSize:30,marginBottom:6,filter:isUnlocked?'none':'grayscale(1)'}}>{g.icon}</div>
-                          <div style={{fontSize:12,fontWeight:800,color:isCurrentGrade?gColor:'#374151',marginBottom:8}}>{g.name}</div>
+                        <div style={{height:7,background:isUnlocked?`linear-gradient(90deg,${gColor},${gColor}88)`:'#d1d5db'}}/>
+                        <div style={{padding:'14px 10px 16px',textAlign:'center'}}>
+                          <div style={{fontSize:34,marginBottom:8,filter:isUnlocked?'none':'grayscale(1)'}}>{g.icon}</div>
+                          <div style={{fontSize:13,fontWeight:800,color:isCurrentGrade?gColor:'#1f2937',marginBottom:8}}>{g.name}</div>
                           {/* 3 division dots */}
                           <div style={{display:'flex',justifyContent:'center',gap:5,marginBottom:8}}>
                             {g.divs.map((d,di)=>{
