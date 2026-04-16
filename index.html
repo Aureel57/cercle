@@ -171,7 +171,7 @@ body,html,#root{font-family:var(--f);color:var(--tx);background:var(--bg);-webki
 /* Grade system */
 .grade-card{border-radius:var(--rl);padding:20px;margin-bottom:20px;position:relative;overflow:hidden}.grade-card::before{content:'';position:absolute;inset:0;opacity:.06;background:radial-gradient(circle at 30% 50%,currentColor,transparent 70%)}
 .grade-progress{margin-top:14px}.grade-progress-bar{height:6px;border-radius:3px;background:var(--bd);overflow:hidden;margin:6px 0}.grade-progress-fill{height:100%;border-radius:3px;transition:width .8s var(--ease)}
-.grade-progress-fill.bronze{background:linear-gradient(90deg,#CD7F32,#E8A862)}.grade-progress-fill.silver{background:linear-gradient(90deg,#A0A0A0,#D0D0D0)}.grade-progress-fill.gold{background:linear-gradient(90deg,#FFD700,#FFC107)}.grade-progress-fill.platinum{background:linear-gradient(90deg,#7C3AED,#A78BFA)}.grade-progress-fill.diamond{background:linear-gradient(90deg,#06B6D4,#67E8F9)}
+.grade-progress-fill.voisin{background:linear-gradient(90deg,#6b7280,#9ca3af)}.grade-progress-fill.habitant{background:linear-gradient(90deg,#3b82f6,#60a5fa)}.grade-progress-fill.pilier{background:linear-gradient(90deg,#F59E0B,#FCD34D)}.grade-progress-fill.gardien{background:linear-gradient(90deg,#7C3AED,#A78BFA)}.grade-progress-fill.legende{background:linear-gradient(90deg,#06B6D4,#67E8F9)}
 .savings-card{border:1px solid var(--bd);border-radius:var(--rl);padding:20px;margin-bottom:20px;background:linear-gradient(135deg,#F0FDF4,#ECFDF5);display:flex;align-items:center;gap:16px}
 .savings-amount{font-family:var(--fd);font-size:28px;font-weight:700;color:var(--acc)}
 .all-grades{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:14px}.all-grade{text-align:center;padding:12px 6px;border-radius:14px;border:1.5px solid var(--bd);font-size:10px;transition:all .25s var(--ease);cursor:default}.all-grade.current{border-color:var(--dk);background:var(--bg);transform:scale(1.05)}.all-grade .ag-icon{font-size:24px;display:block;margin-bottom:4px}.all-grade .ag-name{font-weight:700;display:block}.all-grade .ag-range{color:var(--g);font-size:9px}
@@ -796,11 +796,11 @@ function Detail({item,onClose,state,dispatch,setPage,setConvId,setShowShop,setPr
 
 /* ========== GRADE SYSTEM ========== */
 const GRADES = [
-  { id:"bronze", name:"Bronze", icon:"🥉", min:0,  max:14,  feeRate:0.10, divs:[{label:"I",min:0,max:4},{label:"II",min:5,max:9},{label:"III",min:10,max:14}], perks:["Commission standard 10%","Assurance de base","Messagerie standard"] },
-  { id:"silver", name:"Argent", icon:"🥈", min:15, max:34,  feeRate:0.08, divs:[{label:"I",min:15,max:21},{label:"II",min:22,max:28},{label:"III",min:29,max:34}], perks:["Commission réduite 8%","Assurance étendue","Badge Argent","Priorité dans les résultats"] },
-  { id:"gold",   name:"Or",     icon:"🥇", min:35, max:74,  feeRate:0.06, divs:[{label:"I",min:35,max:47},{label:"II",min:48,max:61},{label:"III",min:62,max:74}], perks:["Commission réduite 6%","Assurance premium","Badge Or","Mise en avant","Support prioritaire"] },
-  { id:"platinum",name:"Platine",icon:"💎",min:75, max:149, feeRate:0.04, divs:[{label:"I",min:75,max:99},{label:"II",min:100,max:124},{label:"III",min:125,max:149}], perks:["Commission réduite 4%","Assurance tous risques","Badge Platine","Top des résultats","Support VIP","Accès bêta"] },
-  { id:"diamond", name:"Diamant",icon:"👑",min:150,max:Infinity,feeRate:0.02, divs:[{label:"I",min:150,max:199},{label:"II",min:200,max:274},{label:"III",min:275,max:Infinity}], perks:["Commission mini 2%","Assurance illimitée","Badge Diamant","#1 des résultats","Conciergerie dédiée","Accès bêta","Événements exclusifs"] },
+  { id:"voisin",   name:"Voisin",   icon:"🤝", min:0,    max:49,   feeRate:0.10, divs:[{label:"I",min:0,max:9},{label:"II",min:10,max:24},{label:"III",min:25,max:49}],        perks:["Commission 10%","Accès à toutes les catégories","Messagerie standard","Profil public Cercle"] },
+  { id:"habitant", name:"Habitant", icon:"🏠", min:50,   max:199,  feeRate:0.09, divs:[{label:"I",min:50,max:89},{label:"II",min:90,max:139},{label:"III",min:140,max:199}],   perks:["Commission 9%","Badge Habitant sur le profil","1 annonce mise en avant / mois","Priorité légère dans les résultats"] },
+  { id:"pilier",   name:"Pilier",   icon:"🏛️", min:200,  max:849,  feeRate:0.07, divs:[{label:"I",min:200,max:349},{label:"II",min:350,max:549},{label:"III",min:550,max:849}], perks:["Commission 7%","Badge Pilier doré","3 annonces mises en avant / mois","Apparition boostée dans la recherche","Statistiques avancées sur ses annonces"] },
+  { id:"gardien",  name:"Gardien",  icon:"🛡️", min:850,  max:5774, feeRate:0.05, divs:[{label:"I",min:850,max:1299},{label:"II",min:1300,max:1999},{label:"III",min:2000,max:5774}], perks:["Commission 5%","Badge Gardien premium","6 annonces mises en avant / mois","Boost automatique des nouvelles annonces","Insigne premium visible","Accès aux fonctionnalités bêta"] },
+  { id:"legende",  name:"Légende",  icon:"👑", min:5775, max:Infinity, feeRate:0.03, divs:[{label:"I",min:5775,max:6999},{label:"II",min:7000,max:8999},{label:"III",min:9000,max:Infinity}], perks:["Commission 3%","Badge Légende ultra-rare","12 annonces mises en avant / mois","Visibilité maximale dans les résultats","Accès aux événements exclusifs Cercle","Légende III : toutes les annonces mises en avant","Légende III : Récompense exclusive secrète 🎁"] },
 ];
 function getGrade(rentals) { return GRADES.find(g => rentals >= g.min && rentals <= g.max) || GRADES[0]; }
 function getNextGrade(rentals) { const i = GRADES.findIndex(g => rentals >= g.min && rentals <= g.max); return i < GRADES.length - 1 ? GRADES[i + 1] : null; }
@@ -1355,7 +1355,7 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
           const grade = getGrade(rentals);
           const next = getNextGrade(rentals);
           const {div, nextDiv, prog: divProg} = getDivision(rentals);
-          const GC = { bronze:'#CD7F32', silver:'#9ca3af', gold:'#F59E0B', platinum:'#7C3AED', diamond:'#06B6D4' };
+          const GC = { voisin:'#6b7280', habitant:'#3b82f6', pilier:'#F59E0B', gardien:'#7C3AED', legende:'#06B6D4' };
           const gc = GC[grade.id] || '#6C63FF';
           const gcLight = gc + '20';
           const fullLabel = `${grade.name} ${div.label}`;
@@ -2392,7 +2392,7 @@ function Shop({owner,items,onClose,onOpen,state,dispatch}){
   return <div className="ov">
     <div className="dh"><button className="mx" onClick={onClose} style={{position:"static"}}><I.X/></button><span style={{fontWeight:600}}>Boutique</span></div>
     <div className="shop-hd">
-      <div className="shop-av" style={{border:`3px solid ${grade.id==="diamond"?"#06B6D4":grade.id==="platinum"?"#7C3AED":grade.id==="gold"?"#FFD700":"var(--bd)"}`}}>{owner.avatarUrl?<img src={owner.avatarUrl} style={{width:"100%",height:"100%",borderRadius:"50%",objectFit:"cover"}} alt=""/>:owner.avatar}</div>
+      <div className="shop-av" style={{border:`3px solid ${grade.id==="legende"?"#06B6D4":grade.id==="gardien"?"#7C3AED":grade.id==="pilier"?"#F59E0B":grade.id==="habitant"?"#3b82f6":"var(--bd)"}`}}>{owner.avatarUrl?<img src={owner.avatarUrl} style={{width:"100%",height:"100%",borderRadius:"50%",objectFit:"cover"}} alt=""/>:owner.avatar}</div>
       <h2 style={{fontFamily:"var(--fd)",fontSize:20}}>{owner.name}</h2>
       <div style={{display:"flex",gap:8,justifyContent:"center",marginTop:6,fontSize:12,color:"var(--g)"}}>
         <span>{grade.icon} {grade.name}</span><span>·</span><span>★ {owner.rating}</span><span>·</span><span>{owner.rentals} locations</span><span>·</span><span>Depuis {owner.since}</span>
