@@ -1441,12 +1441,13 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
               {/* Parcours — grille de cartes */}
               <div>
                 <div style={{fontSize:15,fontWeight:800,color:'#1a1a2e',marginBottom:16}}>Tous les rangs</div>
-                <div style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:10}}>
+                <div style={{display:'flex',overflowX:'auto',gap:16,paddingBottom:8,scrollbarWidth:'none',msOverflowStyle:'none'}}>
                   {GRADES.map(g=>{
                     const gColor = GC[g.id]||'#6C63FF';
                     const isCurrentGrade = g.id===grade.id;
                     const isUnlocked = rentals >= g.min;
                     return (
+<<<<<<< HEAD
                       <div key={g.id} style={{borderRadius:18,overflow:'hidden',border:`2px solid ${isCurrentGrade?gColor:isUnlocked?gColor+'66':'#e5e7eb'}`,background:isCurrentGrade?`linear-gradient(160deg,${gColor}22,${gColor}08)`:'#fafafa',transition:'all .25s',opacity:isUnlocked?1:.65}}>
                         {/* Top color band */}
                         <div style={{height:7,background:isUnlocked?`linear-gradient(90deg,${gColor},${gColor}88)`:'#d1d5db'}}/>
@@ -1455,20 +1456,58 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
                           <div style={{fontSize:13,fontWeight:800,color:isCurrentGrade?gColor:'#1f2937',marginBottom:8}}>{g.name}</div>
                           {/* 3 division dots */}
                           <div style={{display:'flex',justifyContent:'center',gap:5,marginBottom:8}}>
+=======
+                      <div key={g.id} style={{
+                        minWidth:170,flex:'0 0 170px',
+                        borderRadius:20,overflow:'hidden',
+                        border:`2px solid ${isCurrentGrade?gColor:isUnlocked?gColor+'55':'#ebebeb'}`,
+                        background:isCurrentGrade?`linear-gradient(160deg,${gColor}22,${gColor}08)`:'#fff',
+                        boxShadow:isCurrentGrade?`0 6px 24px ${gColor}35`:'0 1px 6px rgba(0,0,0,0.07)',
+                        transition:'all .25s',
+                        filter:isUnlocked?'none':'grayscale(.7)',
+                        opacity:isUnlocked?1:.65
+                      }}>
+                        {/* Bande couleur en haut */}
+                        <div style={{height:7,background:isUnlocked?`linear-gradient(90deg,${gColor},${gColor}66)`:'#e5e7eb'}}/>
+                        <div style={{padding:'22px 14px 22px',textAlign:'center'}}>
+                          {/* Icône dans un cercle */}
+                          <div style={{
+                            width:68,height:68,borderRadius:'50%',
+                            background:isCurrentGrade?`${gColor}22`:isUnlocked?`${gColor}12`:'#f3f4f6',
+                            border:`2px solid ${isCurrentGrade?gColor:isUnlocked?gColor+'44':'#e5e7eb'}`,
+                            display:'flex',alignItems:'center',justifyContent:'center',
+                            margin:'0 auto 12px',fontSize:34
+                          }}>{g.icon}</div>
+                          {/* Nom */}
+                          <div style={{fontSize:16,fontWeight:800,color:isCurrentGrade?gColor:isUnlocked?'#1a1a2e':'#9ca3af',marginBottom:12,letterSpacing:'-.01em'}}>{g.name}</div>
+                          {/* 3 divisions */}
+                          <div style={{display:'flex',justifyContent:'center',gap:5,marginBottom:12}}>
+>>>>>>> a8a9722 (Fix rank cards - bigger, readable, horizontal scroll)
                             {g.divs.map((d,di)=>{
                               const isThisDot = isCurrentGrade && d.label===div.label;
-                              const isPastDot = isUnlocked && (rentals > g.max || (isCurrentGrade && di < g.divs.findIndex(x=>x.label===div.label)) || (!isCurrentGrade && rentals>=g.min));
+                              const isPastDot = !isCurrentGrade && isUnlocked || (isCurrentGrade && di < g.divs.findIndex(x=>x.label===div.label));
                               return (
-                                <div key={d.label} style={{width:isThisDot?22:10,height:10,borderRadius:5,background:isThisDot?gColor:isPastDot?gColor+'88':'#e5e7eb',transition:'all .3s',position:'relative'}}>
-                                  {isThisDot && <div style={{position:'absolute',inset:0,borderRadius:5,background:gColor,animation:'pulse 2s infinite',opacity:.6}}/>}
-                                </div>
+                                <div key={d.label} style={{
+                                  height:7,borderRadius:4,
+                                  width:isThisDot?28:isUnlocked||isPastDot?12:10,
+                                  background:isThisDot?gColor:isPastDot?gColor+'77':'#e5e7eb',
+                                  transition:'all .3s',
+                                  boxShadow:isThisDot?`0 0 8px ${gColor}99`:''
+                                }}/>
                               );
                             })}
                           </div>
-                          <div style={{fontSize:10,color:'#9ca3af',fontWeight:600}}>{Math.round(g.feeRate*100)}% comm.</div>
-                          {isCurrentGrade && <div style={{marginTop:6,fontSize:9,fontWeight:700,color:gColor,background:`${gColor}18`,padding:'3px 8px',borderRadius:20,display:'inline-block'}}>EN COURS</div>}
-                          {!isCurrentGrade && isUnlocked && !isCurrentGrade && <div style={{marginTop:6,fontSize:9,fontWeight:700,color:'#10b981',background:'#f0fdf4',padding:'3px 8px',borderRadius:20,display:'inline-block'}}>✓ Atteint</div>}
-                          {!isUnlocked && <div style={{marginTop:6,fontSize:9,fontWeight:700,color:'#9ca3af',background:'#f3f4f6',padding:'3px 8px',borderRadius:20,display:'inline-block'}}>🔒 {g.min} loc.</div>}
+                          {/* Commission */}
+                          <div style={{fontSize:13,fontWeight:700,color:isCurrentGrade?gColor:isUnlocked?'#374151':'#c0c0c0',marginBottom:10}}>{Math.round(g.feeRate*100)}% comm.</div>
+                          {/* Badge statut */}
+                          <div>
+                            {isCurrentGrade
+                              ? <span style={{fontSize:11,fontWeight:800,color:'#fff',background:gColor,padding:'4px 12px',borderRadius:20,letterSpacing:'.04em'}}>EN COURS</span>
+                              : isUnlocked
+                                ? <span style={{fontSize:11,fontWeight:700,color:'#10b981',background:'#f0fdf4',padding:'4px 10px',borderRadius:20,border:'1px solid #d1fae5'}}>✓ Atteint</span>
+                                : <span style={{fontSize:11,fontWeight:600,color:'#9ca3af',background:'#f3f4f6',padding:'4px 10px',borderRadius:20}}>🔒 {g.min.toLocaleString()} loc.</span>
+                            }
+                          </div>
                         </div>
                       </div>
                     );
