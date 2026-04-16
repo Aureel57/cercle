@@ -960,9 +960,11 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
     // Tabs
     tabsWrap: {
       background: '#fff',
-      borderBottom: '1px solid #e5e7eb',
-      boxShadow: '0 2px 8px rgba(0,0,0,0.07)',
-      position: 'sticky', top: 56, zIndex: 20,
+      border: '1px solid #e5e7eb',
+      boxShadow: '0 2px 12px rgba(0,0,0,0.09)',
+      borderRadius: 16,
+      margin: '0 16px',
+      position: 'sticky', top: 64, zIndex: 20,
       overflowX: 'auto', display: 'flex', justifyContent: 'center',
     },
     tab: (active) => ({
