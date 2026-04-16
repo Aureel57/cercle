@@ -1438,38 +1438,37 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
                 </div>
               </div>
 
-              {/* Parcours complet avec divisions */}
+              {/* Parcours — grille de cartes */}
               <div>
-                <div style={{fontSize:15,fontWeight:800,color:'#1a1a2e',marginBottom:12}}>Parcours complet</div>
-                <div style={{display:'flex',flexDirection:'column',gap:6}}>
+                <div style={{fontSize:15,fontWeight:800,color:'#1a1a2e',marginBottom:16}}>Tous les rangs</div>
+                <div style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:10}}>
                   {GRADES.map(g=>{
                     const gColor = GC[g.id]||'#6C63FF';
-                    const isCurrentGrade = g.id === grade.id;
+                    const isCurrentGrade = g.id===grade.id;
+                    const isUnlocked = rentals >= g.min;
                     return (
-                      <div key={g.id}>
-                        {/* Grade header */}
-                        <div style={{display:'flex',alignItems:'center',gap:10,padding:'10px 14px',borderRadius:12,background:isCurrentGrade?`${gColor}10`:'#fafafa',marginBottom:4}}>
-                          <span style={{fontSize:22}}>{g.icon}</span>
-                          <span style={{fontSize:14,fontWeight:800,color:isCurrentGrade?gColor:'#374151',flex:1}}>{g.name}</span>
-                          <span style={{fontSize:11,color:'#9ca3af'}}>Commission {Math.round(g.feeRate*100)}%</span>
-                        </div>
-                        {/* Divisions */}
-                        <div style={{display:'flex',flexDirection:'column',gap:4,paddingLeft:14,marginBottom:8}}>
-                          {g.divs.map(d=>{
-                            const isThisDiv = isCurrentGrade && d.label===div.label;
-                            const isPastDiv = rentals >= (d.max===Infinity ? d.min+1 : d.max+1) || (isCurrentGrade && g.divs.indexOf(d) < g.divs.findIndex(x=>x.label===div.label)) || rentals > g.max;
-                            const isLocked = rentals < d.min;
-                            return (
-                              <div key={d.label} style={{display:'flex',alignItems:'center',gap:10,padding:'8px 14px',borderRadius:10,background:isThisDiv?`${gColor}14`:isPastDiv?'#f0fdf4':isLocked?'#fafafa':'#fafafa',border:`1.5px solid ${isThisDiv?gColor:isPastDiv?'#d1fae5':'#f0f0f0'}`,transition:'all .2s'}}>
-                                <div style={{width:20,height:20,borderRadius:6,background:isThisDiv?gColor:isPastDiv?'#10b981':isLocked?'#e5e7eb':'#e5e7eb',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-                                  <span style={{fontSize:10,color:'#fff',fontWeight:800}}>{isPastDiv?'✓':isThisDiv?'▶':'○'}</span>
+                      <div key={g.id} style={{borderRadius:18,overflow:'hidden',border:`2px solid ${isCurrentGrade?gColor:isUnlocked?gColor+'44':'#f0f0f0'}`,background:isCurrentGrade?`linear-gradient(160deg,${gColor}18,${gColor}06)`:'#fafafa',transition:'all .25s',opacity:isUnlocked?1:.5}}>
+                        {/* Top color band */}
+                        <div style={{height:6,background:isUnlocked?`linear-gradient(90deg,${gColor},${gColor}88)`:'#e5e7eb'}}/>
+                        <div style={{padding:'12px 10px 14px',textAlign:'center'}}>
+                          <div style={{fontSize:30,marginBottom:6,filter:isUnlocked?'none':'grayscale(1)'}}>{g.icon}</div>
+                          <div style={{fontSize:12,fontWeight:800,color:isCurrentGrade?gColor:'#374151',marginBottom:8}}>{g.name}</div>
+                          {/* 3 division dots */}
+                          <div style={{display:'flex',justifyContent:'center',gap:5,marginBottom:8}}>
+                            {g.divs.map((d,di)=>{
+                              const isThisDot = isCurrentGrade && d.label===div.label;
+                              const isPastDot = isUnlocked && (rentals > g.max || (isCurrentGrade && di < g.divs.findIndex(x=>x.label===div.label)) || (!isCurrentGrade && rentals>=g.min));
+                              return (
+                                <div key={d.label} style={{width:isThisDot?22:10,height:10,borderRadius:5,background:isThisDot?gColor:isPastDot?gColor+'88':'#e5e7eb',transition:'all .3s',position:'relative'}}>
+                                  {isThisDot && <div style={{position:'absolute',inset:0,borderRadius:5,background:gColor,animation:'pulse 2s infinite',opacity:.6}}/>}
                                 </div>
-                                <span style={{fontSize:13,fontWeight:isThisDiv?700:500,color:isThisDiv?gColor:isPastDiv?'#374151':isLocked?'#c0c0c0':'#374151',flex:1}}>{g.name} {d.label}</span>
-                                <span style={{fontSize:11,color:isLocked?'#d1d5db':'#9ca3af'}}>{d.max===Infinity?`${d.min}+ loc.`:`${d.min}–${d.max} loc.`}</span>
-                                {isThisDiv && <span style={{fontSize:10,fontWeight:700,color:gColor,background:`${gColor}18`,padding:'2px 8px',borderRadius:6}}>EN COURS</span>}
-                              </div>
-                            );
-                          })}
+                              );
+                            })}
+                          </div>
+                          <div style={{fontSize:10,color:'#9ca3af',fontWeight:600}}>{Math.round(g.feeRate*100)}% comm.</div>
+                          {isCurrentGrade && <div style={{marginTop:6,fontSize:9,fontWeight:700,color:gColor,background:`${gColor}18`,padding:'3px 8px',borderRadius:20,display:'inline-block'}}>EN COURS</div>}
+                          {!isCurrentGrade && isUnlocked && !isCurrentGrade && <div style={{marginTop:6,fontSize:9,fontWeight:700,color:'#10b981',background:'#f0fdf4',padding:'3px 8px',borderRadius:20,display:'inline-block'}}>✓ Atteint</div>}
+                          {!isUnlocked && <div style={{marginTop:6,fontSize:9,fontWeight:700,color:'#9ca3af',background:'#f3f4f6',padding:'3px 8px',borderRadius:20,display:'inline-block'}}>🔒 {g.min} loc.</div>}
                         </div>
                       </div>
                     );
