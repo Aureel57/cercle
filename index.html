@@ -963,8 +963,7 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
       border: '1px solid #e5e7eb',
       boxShadow: '0 2px 12px rgba(0,0,0,0.09)',
       borderRadius: 16,
-      margin: '0 16px',
-      position: 'sticky', top: 64, zIndex: 20,
+      position: 'fixed', top: 66, left: 16, right: 16, zIndex: 100,
       overflowX: 'auto', display: 'flex', justifyContent: 'center',
     },
     tab: (active) => ({
@@ -983,7 +982,7 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
     }),
 
     // Content
-    content: { padding: '20px 16px' },
+    content: { padding: '74px 16px 20px' },
 
     // Cards
     card: {
