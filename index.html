@@ -959,30 +959,27 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
 
     // Tabs
     tabsWrap: {
-      background: '#fff',
-      border: '1px solid #e5e7eb',
-      boxShadow: '0 2px 12px rgba(0,0,0,0.09)',
-      borderRadius: 16,
-      position: 'fixed', top: 66, left: 16, right: 16, zIndex: 100,
+      background: 'transparent',
+      borderBottom: '1px solid rgba(255,255,255,0.2)',
+      position: 'sticky', top: 56, zIndex: 20,
       overflowX: 'auto', display: 'flex', justifyContent: 'center',
     },
     tab: (active) => ({
-      flex: 'none', padding: '13px 14px', fontSize: 12, fontWeight: active ? 700 : 500,
-      color: active ? '#6C63FF' : '#6b7280',
+      flex: 'none', padding: '14px 16px', fontSize: 13, fontWeight: active ? 700 : 500,
+      color: active ? 'white' : 'rgba(255,255,255,0.55)',
       cursor: 'pointer', whiteSpace: 'nowrap',
-      display: 'flex', alignItems: 'center', gap: 5, transition: 'all 0.15s',
-      background: 'none', border: 'none',
-      borderBottom: active ? '2.5px solid #6C63FF' : '2.5px solid transparent',
+      display: 'flex', alignItems: 'center', gap: 6, transition: 'all 0.15s',
+      background: 'none', border: 'none', borderBottom: active ? '2px solid white' : '2px solid transparent',
     }),
     tabCount: (active) => ({
-      fontSize: 10, fontWeight: 700,
-      background: active ? '#f0eeff' : '#f3f4f6',
-      color: active ? '#6C63FF' : '#9ca3af',
+      fontSize: 11, fontWeight: 700,
+      background: active ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.1)',
+      color: active ? 'white' : 'rgba(255,255,255,0.5)',
       borderRadius: 10, padding: '1px 6px', minWidth: 18, textAlign: 'center',
     }),
 
     // Content
-    content: { padding: '74px 16px 20px' },
+    content: { padding: '20px 16px' },
 
     // Cards
     card: {
