@@ -50,7 +50,7 @@ function mkImg(cat,id,v=0){const c=CC[cat]||["#9CA3AF","#6B7280"],e=CE[cat]||"�
 const LOCS=["Paris 11e","Lyon 3e","Marseille 6e","Bordeaux","Nantes","Toulouse","Lille","Strasbourg","Montpellier","Nice","Rennes","Grenoble"];
 const LL={"Paris 11e":[48.859,2.381],"Lyon 3e":[45.753,4.851],"Marseille 6e":[43.289,5.381],Bordeaux:[44.837,-.579],Nantes:[47.218,-1.553],Toulouse:[43.604,1.444],Lille:[50.629,3.057],Strasbourg:[48.573,7.752],Montpellier:[43.61,3.876],Nice:[43.71,7.262],Rennes:[48.117,-1.677],Grenoble:[45.188,5.724]};
 const DESCS=["En excellent état, entretenu régulièrement. Idéal pour vos projets du week-end.","Peu utilisé, comme neuf. Livré avec tous les accessoires.","Matériel professionnel en parfait état. Nettoyé après chaque location.","Utilisé quelques fois. Mode d'emploi et accessoires inclus.","Investissement récent rentabilisé en location. Assurance incluse.","Fiable et testé avant chaque location. Je réponds rapidement !"];
-const RAW=[{t:"Perceuse visseuse Bosch Pro",c:"tools",p:12},{t:"Ponceuse orbitale Makita",c:"tools",p:15},{t:"Échelle télescopique 5m",c:"tools",p:8},{t:"Nettoyeur haute pression Kärcher",c:"tools",p:20},{t:"Drone DJI Mini 3 Pro",c:"electronics",p:35},{t:"Console PS5 + 2 manettes",c:"electronics",p:18},{t:"Vidéoprojecteur 4K portable",c:"electronics",p:25},{t:"Enceinte JBL PartyBox 310",c:"electronics",p:22},{t:"Camionnette Renault Master",c:"vehicles",p:55},{t:"Vélo électrique Moustache",c:"vehicles",p:18},{t:"Trottinette électrique Xiaomi",c:"vehicles",p:10},{t:"Remorque porte-vélos",c:"vehicles",p:25},{t:"Paddle gonflable + pagaie",c:"sports",p:20},{t:"Ski Rossignol + chaussures 42",c:"sports",p:22},{t:"VTT Decathlon Rockrider",c:"sports",p:14},{t:"Kayak biplace gonflable",c:"sports",p:28},{t:"Tondeuse robot Husqvarna",c:"garden",p:16},{t:"Taille-haie Stihl",c:"garden",p:14},{t:"Motoculteur 5CV",c:"garden",p:30},{t:"Machine à barbe à papa",c:"events",p:25},{t:"Lot 50 chaises pliantes",c:"events",p:40},{t:"Tonnelle 3x6m + LED",c:"events",p:35},{t:"Guitare acoustique Martin",c:"music",p:15},{t:"Platines DJ Pioneer",c:"music",p:30},{t:"Piano numérique Yamaha",c:"music",p:20},{t:"Casque VR Meta Quest 3",c:"gaming",p:22},{t:"Volant Logitech G29",c:"gaming",p:18},{t:"Poussette Yoyo Babyzen",c:"baby",p:12},{t:"Siège auto Cybex",c:"baby",p:8},{t:"Tente 4 places Quechua",c:"camping",p:15},{t:"Glacière électrique 40L",c:"camping",p:10},{t:"Robot pâtissier KitchenAid",c:"kitchen",p:18},{t:"Raclette & fondue 8 pers.",c:"kitchen",p:10},{t:"Canon EOS R6 + 24-70mm",c:"photo",p:45},{t:"Stabilisateur DJI RS3",c:"photo",p:25},{t:"Robe Sézane T.38",c:"fashion",p:15},{t:"Costume Hugo Boss M",c:"fashion",p:20},{t:"Machine à coudre Singer",c:"diy",p:12},{t:"Imprimante 3D Creality",c:"diy",p:18}];
+const RAW=[{t:"Perceuse visseuse Bosch Pro",c:"tools",p:12},{t:"Ponceuse orbitale Makita",c:"tools",p:15},{t:"Échelle télescopique 5m",c:"tools",p:8},{t:"Nettoyeur haute pression Kärcher",c:"tools",p:20},{t:"Drone DJI Mini 3 Pro",c:"electronics",p:35},{t:"Console PS5 + 2 manettes",c:"electronics",p:18},{t:"Vidéoprojecteur 4K portable",c:"electronics",p:25},{t:"Enceinte JBL PartyBox 310",c:"electronics",p:22},{t:"Camionnette Renault Master",c:"vehicles",p:55},{t:"Vélo électrique Moustache",c:"vehicles",p:18},{t:"Trottinette électrique Xiaomi",c:"vehicles",p:10},{t:"Remorque porte-vélos",c:"vehicles",p:25},{t:"Paddle gonflable + pagaie",c:"sports",p:20},{t:"Ski Rossignol + chaussures 42",c:"sports",p:22},{t:"VTT Decathlon Rockrider",c:"sports",p:14},{t:"Kayak biplace gonflable",c:"sports",p:28},{t:"Tondeuse robot Husqvarna",c:"garden",p:16},{t:"Taille-haie Stihl",c:"garden",p:14},{t:"Motoculteur 5CV",c:"garden",p:30},{t:"Machine à barbe à papa",c:"events",p:25},{t:"Lot 50 chaises pliantes",c:"events",p:40},{t:"Tonnelle 3x6m + LED",c:"events",p:35},{t:"Guitare acoustique Martin",c:"music",p:15},{t:"Platines DJ Pioneer",c:"music",p:30},{t:"Piano numérique Yamaha",c:"music",p:20},{t:"Casque VR Meta Quest 3",c:"gaming",p:22},{t:"Volant Logitech G29",c:"gaming",p:18},{t:"Poussette Yoyo Babyzen",c:"baby",p:12},{t:"Siège auto Cybex",c:"baby",p:8},{t:"Tente 4 places Quechua",c:"camping",p:15},{t:"Glacière électrique 40L",c:"camping",p:10},{t:"Robot pâtissier KitchenAid",c:"kitchen",p:18},{t:"Raclette & fondue 8 pers.",c:"kitchen",p:10},{t:"Canon EOS R6 + 24-70mm",c:"photo",p:45},{t:"Stabilisateur DJI RS3",c:"photo",p:25},{t:"Robe Sézane T.38",c:"fashion",p:15},{t:"Costume Hugo Boss M",c:"fashion",p:20},{t:"Machine à coudre Singer",c:"diy",p:12},{t:"Imprimante 3D Creality",c:"diy",p:18},{t:"Caméra GoPro Hero 11",c:"electronics",p:28},{t:"Trépied professionnel Manfrotto",c:"photo",p:18},{t:"Téléobjectif Canon 70-200mm",c:"photo",p:35},{t:"VTT électrique Specialized",c:"vehicles",p:32},{t:"Hammock et système de suspension",c:"camping",p:12},{t:"Barbecue gaz Weber Genesis",c:"garden",p:38},{t:"Étagères industrielles en metal",c:"furniture",p:45},{t:"Table basse vintage design",c:"furniture",p:28}];
 const USERS=[{id:"u1",name:"Léa Martin",email:"lea@email.com",avatar:"👩‍🦰",verified:true,since:2022,bio:"Passionnée de partage !",location:"Paris 11e",rating:4.9,rentals:87,responseTime:"~15 min"},{id:"u2",name:"Maxime Dupont",email:"max@email.com",avatar:"👨‍🦱",verified:true,since:2021,bio:"Je loue ce que je n'utilise pas.",location:"Lyon 3e",rating:4.95,rentals:142,responseTime:"~30 min"},{id:"u3",name:"Chloé Bernard",email:"chloe@email.com",avatar:"👩",verified:true,since:2023,bio:"Maman de 2 enfants.",location:"Bordeaux",rating:4.8,rentals:34,responseTime:"~1h"},{id:"u4",name:"Antoine Moreau",email:"antoine@email.com",avatar:"👨",verified:false,since:2024,bio:"Nouveau sur Cercle !",location:"Nantes",rating:4.7,rentals:12,responseTime:"~2h"},{id:"u5",name:"Sarah Petit",email:"sarah@email.com",avatar:"👩‍🦱",verified:true,since:2020,bio:"Membre fidèle.",location:"Marseille 6e",rating:4.98,rentals:256,responseTime:"~10 min"},{id:"u6",name:"Hugo Lambert",email:"hugo@email.com",avatar:"👨‍🦳",verified:true,since:2021,bio:"J'adore rendre service.",location:"Toulouse",rating:4.85,rentals:98,responseTime:"~45 min"}];
 const buildItems=()=>RAW.map((r,i)=>({id:i+1,title:r.t,cat:r.c,price:r.p,images:[mkImg(r.c,i+1,0),mkImg(r.c,i+1,1),mkImg(r.c,i+1,2)],location:LOCS[i%LOCS.length],rating:+(4.4+Math.random()*.59).toFixed(2),reviews:Math.floor(5+Math.random()*95),owner:USERS[i%USERS.length],description:DESCS[i%DESCS.length],deposit:Math.floor(r.p*3+Math.random()*100),condition:["Comme neuf","Très bon état","Bon état"][i%3],createdAt:"2025",available:true,lat:(LL[LOCS[i%LOCS.length]]||[48.86,2.35])[0]+(.01*Math.random()-.005),lng:(LL[LOCS[i%LOCS.length]]||[48.86,2.35])[1]+(.01*Math.random()-.005)}));
 const uid=()=>"_"+Math.random().toString(36).slice(2,8);
@@ -836,10 +836,18 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
   const listings = (state && state.items && state.items.filter(i => i.owner === user.id)) || [];
   const favs = (state && state.favs) || [];
 
+  const mockListings = [
+    { id: 101, title: 'Perceuse Bosch Pro', price: 12, rating: 4.95, reviews: 87, img: '🔧' },
+    { id: 102, title: 'Vélo électrique Moustache', price: 18, rating: 4.9, reviews: 142, img: '🚲' },
+    { id: 103, title: 'Drone DJI Mini 3 Pro', price: 35, rating: 4.88, reviews: 64, img: '🚁' },
+  ];
+
+  const displayListings = listings.length > 0 ? listings : mockListings;
+
   const tabs = [
-    { id: 'annonces', label: 'Annonces', icon: '🏷️', count: listings.length || 0 },
-    { id: 'reservations', label: 'Réservations', icon: '📅', count: 3 },
-    { id: 'avis', label: 'Avis', icon: '⭐', count: 12 },
+    { id: 'annonces', label: 'Annonces', icon: '🏷️', count: displayListings.length || 0 },
+    { id: 'reservations', label: 'Réservations', icon: '📅', count: mockReservations.length },
+    { id: 'avis', label: 'Avis', icon: '⭐', count: mockReviews.length },
     { id: 'favoris', label: 'Favoris', icon: '❤️', count: favs.length || 2 },
     { id: 'grade', label: 'Mon Grade', icon: '🏅', count: null },
     { id: 'parametres', label: 'Paramètres', icon: '⚙️', count: null },
@@ -847,21 +855,26 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
 
   const mockReservations = [
     { id: 1, item: 'Perceuse Bosch Pro', img: '🔧', dates: '15 – 17 Mars', status: 'En cours', color: '#10b981', bg: '#d1fae5', price: '30 €', renter: 'Marie L.' },
-    { id: 2, item: 'Vélo électrique', img: '🚲', dates: '5 – 7 Mars', status: 'Terminée', color: '#6b7280', bg: '#f3f4f6', price: '45 €', renter: 'Thomas B.' },
-    { id: 3, item: 'Kayak double', img: '🛶', dates: '25 – 27 Avr.', status: 'À venir', color: '#3b82f6', bg: '#dbeafe', price: '80 €', renter: 'Julie K.' },
+    { id: 2, item: 'Vélo électrique Moustache', img: '🚲', dates: '5 – 7 Mars', status: 'Terminée', color: '#6b7280', bg: '#f3f4f6', price: '45 €', renter: 'Thomas B.' },
+    { id: 3, item: 'Kayak biplace gonflable', img: '🛶', dates: '25 – 27 Avr.', status: 'À venir', color: '#3b82f6', bg: '#dbeafe', price: '80 €', renter: 'Julie K.' },
+    { id: 4, item: 'Drone DJI Mini 3 Pro', img: '🚁', dates: '18 – 20 Avr.', status: 'À venir', color: '#3b82f6', bg: '#dbeafe', price: '120 €', renter: 'Pierre M.' },
+    { id: 5, item: 'Canon EOS R6 + objectif', img: '📷', dates: '12 – 14 Avr.', status: 'Terminée', color: '#6b7280', bg: '#f3f4f6', price: '95 €', renter: 'Sophie D.' },
   ];
 
   const mockReviews = [
-    { id: 1, author: 'Marie L.', initials: 'ML', date: 'Mars 2024', rating: 5, text: 'Très sérieux, matériel en parfait état. Je recommande vivement !', color: '#8b5cf6' },
-    { id: 2, author: 'Thomas B.', initials: 'TB', date: 'Fév. 2024', rating: 5, text: 'Transaction rapide, objet conforme. Super expérience, merci !', color: '#3b82f6' },
-    { id: 3, author: 'Julie K.', initials: 'JK', date: 'Jan. 2024', rating: 4, text: 'Bon état général, échange ponctuel. À recommander.', color: '#10b981' },
+    { id: 1, author: 'Marie L.', initials: 'ML', date: 'Avr. 2024', rating: 5, text: 'Très sérieux, matériel en parfait état. Nettoyage impeccable après la location. Je recommande vivement !', color: '#8b5cf6' },
+    { id: 2, author: 'Thomas B.', initials: 'TB', date: 'Mars 2024', rating: 5, text: 'Transaction rapide et sans souci. L\'objet était exactement conforme à la description. Super hôte, à recommander !', color: '#3b82f6' },
+    { id: 3, author: 'Julie K.', initials: 'JK', date: 'Fév. 2024', rating: 5, text: 'Livraison impeccable et matériel de première qualité. Très professionnel et à l\'écoute des besoins.', color: '#10b981' },
+    { id: 4, author: 'Sophie D.', initials: 'SD', date: 'Jan. 2024', rating: 4, text: 'Bon état général, échange ponctuel et correct. Petit manque de communication au démarrage mais très arrangeant.', color: '#f59e0b' },
+    { id: 5, author: 'Pierre M.', initials: 'PM', date: 'Déc. 2023', rating: 5, text: 'Location sans prise de tête. Propriétaire réactif et responsable. Matériel bien entretenu. Parfait !', color: '#06b6d4' },
   ];
 
   const mockFavs = [
-    { id: 1, title: 'Tente 4 places', price: 18, rating: 4.9, reviews: 24, img: '⛺', owner: 'Lucas M.', badge: '🏅' },
-    { id: 2, title: 'Appareil photo Sony', price: 45, rating: 4.8, reviews: 31, img: '📷', owner: 'Emma R.', badge: '' },
-    { id: 3, title: 'Paddle gonflable', price: 22, rating: 4.7, reviews: 18, img: '🏄', owner: 'Alex V.', badge: '⚡' },
-    { id: 4, title: 'Perceuse Makita', price: 12, rating: 5.0, reviews: 47, img: '🔩', owner: 'Paul D.', badge: '🏅' },
+    { id: 1, title: 'Tente 4 places Quechua', price: 15, rating: 4.95, reviews: 52, img: '⛺', owner: 'Lucas M.', badge: '🏅' },
+    { id: 2, title: 'Canon EOS R6 + 24-70mm', price: 45, rating: 4.92, reviews: 68, img: '📷', owner: 'Emma R.', badge: '' },
+    { id: 3, title: 'Paddle gonflable + accessoires', price: 28, rating: 4.88, reviews: 41, img: '🏄', owner: 'Alex V.', badge: '⚡' },
+    { id: 4, title: 'Perceuse Bosch Pro', price: 12, rating: 4.98, reviews: 103, img: '🔧', owner: 'Paul D.', badge: '🏅' },
+    { id: 5, title: 'Drone DJI Mini 3 Pro', price: 35, rating: 4.89, reviews: 79, img: '🚁', owner: 'Sophie D.', badge: '' },
   ];
 
   const S = {
@@ -1238,34 +1251,18 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
 
         {/* ── Annonces ── */}
         {tab === 'annonces' && (
-          listings.length === 0 ? (
-            <div style={S.empty}>
-              <div style={S.emptyIllus}>📦</div>
-              <h3 style={S.emptyTitle}>Pas encore d'annonces</h3>
-              <p style={S.emptyText}>Commencez à louer vos objets et gagnez de l'argent facilement. Vos voisins cherchent peut-être ce que vous avez !</p>
-              <button style={S.btnPrimary} onClick={() => setPage && setPage('create')}>
-                ＋ Créer ma première annonce
-              </button>
-              <div style={S.suggestions}>
-                {['🔧 Outils', '🚲 Vélo', '📷 Caméra', '⛺ Camping', '🎮 Jeux', '🛺 Véhicule'].map(s => (
-                  <span key={s} style={S.suggestionChip}>{s}</span>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <div style={S.listingGrid}>
-              {listings.map(l => (
-                <div key={l.id} style={S.card} onClick={() => { setSelected && setSelected(l); setPage && setPage('detail'); }}>
-                  <div style={S.listingImg}>{l.img || '📦'}</div>
-                  <div style={S.listingBody}>
-                    <p style={S.listingTitle}>{l.title}</p>
-                    <p style={S.listingPrice}>{l.price}€<span style={{fontWeight:400,fontSize:11,color:'#9ca3af'}}>/jour</span></p>
-                    <div style={S.listingRating}>⭐ {l.rating || '4.8'} <span>· {l.reviews || 0} avis</span></div>
-                  </div>
+          <div style={S.listingGrid}>
+            {displayListings.map(l => (
+              <div key={l.id} style={S.card} onClick={() => { setSelected && setSelected(l); setPage && setPage('detail'); }}>
+                <div style={S.listingImg}>{l.img || '📦'}</div>
+                <div style={S.listingBody}>
+                  <p style={S.listingTitle}>{l.title}</p>
+                  <p style={S.listingPrice}>{l.price}€<span style={{fontWeight:400,fontSize:11,color:'#9ca3af'}}>/jour</span></p>
+                  <div style={S.listingRating}>⭐ {l.rating || '4.8'} <span>· {l.reviews || 0} avis</span></div>
                 </div>
-              ))}
-            </div>
-          )
+              </div>
+            ))}
+          </div>
         )}
 
         {/* ── Réservations ── */}
@@ -2572,14 +2569,14 @@ function App(){
 
     {page==="home"&&<main className="page-tr">
       {mode!=='pro'&&!q&&cat==='all'&&<div style={{background:dark?"linear-gradient(135deg,#1a1a2e 0%,#16213e 60%,#0f3460 100%)":"linear-gradient(160deg,#6C63FF 0%,#7c5ce7 28%,#5a7fff 62%,#4ECDC4 100%)",backgroundAttachment:"fixed",padding:"56px 28px 0",textAlign:"center",borderRadius:"0 0 48px 48px",marginBottom:0,position:"relative",overflow:"hidden"}}>
-        <div style={{display:"inline-flex",alignItems:"center",gap:6,background:"rgba(255,255,255,.15)",backdropFilter:"blur(8px)",border:"1px solid rgba(255,255,255,.25)",color:"#fff",padding:"5px 16px",borderRadius:24,fontSize:11,fontWeight:700,letterSpacing:".06em",marginBottom:14}}>🆕 NOUVEAU · 2 400+ articles disponibles</div>
-        <h1 style={{fontFamily:"var(--fd)",fontSize:"clamp(28px,5vw,48px)",fontWeight:800,color:"#fff",letterSpacing:"-.03em",marginBottom:10,lineHeight:1.1}}>Louez tout,<br/>près de chez vous</h1>
-        <p style={{color:"rgba(255,255,255,.85)",fontSize:15,maxWidth:520,margin:"0 auto 22px",lineHeight:1.6}}>Des milliers d'objets disponibles à la location entre particuliers et professionnels. Économique, écologique, pratique.</p>
+        <div style={{display:"inline-flex",alignItems:"center",gap:6,background:"rgba(255,255,255,.15)",backdropFilter:"blur(8px)",border:"1px solid rgba(255,255,255,.25)",color:"#fff",padding:"5px 16px",borderRadius:24,fontSize:11,fontWeight:700,letterSpacing:".06em",marginBottom:14}}>🚀 NOUVELLE PLATEFORME · 2 500+ articles à louer</div>
+        <h1 style={{fontFamily:"var(--fd)",fontSize:"clamp(28px,5vw,48px)",fontWeight:800,color:"#fff",letterSpacing:"-.03em",marginBottom:10,lineHeight:1.1}}>Louez, partagez,<br/>économisez</h1>
+        <p style={{color:"rgba(255,255,255,.85)",fontSize:15,maxWidth:550,margin:"0 auto 22px",lineHeight:1.6}}>Accédez à des milliers d'objets à louer entre particuliers et professionnels. Une solution économique, écologique et pratique pour tous vos besoins.</p>
         <div style={{display:"flex",gap:10,justifyContent:"center",flexWrap:"wrap",marginBottom:32}}>
-          {[["🔧","Bricolage"],["🎮","Gaming"],["🚲","Véhicules"],["📷","Photo"],["🏄","Sports"]].map(([ic,t])=><button key={t} onClick={()=>setCat(Object.keys(CE).find(k=>CE[k]===ic)||"all")} style={{background:"rgba(255,255,255,.18)",backdropFilter:"blur(8px)",border:"1px solid rgba(255,255,255,.25)",color:"#fff",padding:"10px 18px",borderRadius:24,fontSize:13,fontWeight:600,cursor:"pointer",display:"flex",alignItems:"center",gap:6,transition:"all .2s"}}>{ic} {t}</button>)}
+          {[["🔧","Outils"],["🚲","Véhicules"],["📷","Photo/Vidéo"],["🎮","Gaming"],["⛺","Camping"],["🎉","Événementiel"]].map(([ic,t])=><button key={t} onClick={()=>setCat(Object.keys(CE).find(k=>CE[k]===ic)||"all")} style={{background:"rgba(255,255,255,.18)",backdropFilter:"blur(8px)",border:"1px solid rgba(255,255,255,.25)",color:"#fff",padding:"10px 18px",borderRadius:24,fontSize:13,fontWeight:600,cursor:"pointer",display:"flex",alignItems:"center",gap:6,transition:"all .2s",":hover":{background:"rgba(255,255,255,.28)"}}}>{ic} {t}</button>)}
         </div>
         <div className="hero-stats" style={{marginBottom:0}}>
-          {[["2 400+","articles disponibles"],["12","villes couvertes"],["98%","de satisfaction"],["4.9 ★","note moyenne"]].map(([n,l])=><div key={l} className="hero-stat"><span className="hero-stat-n">{n}</span><span className="hero-stat-l">{l}</span></div>)}
+          {[["2 500+","articles disponibles"],["15","villes couvertes"],["98%","de satisfaction"],["4.9 ★","note moyenne"]].map(([n,l])=><div key={l} className="hero-stat"><span className="hero-stat-n">{n}</span><span className="hero-stat-l">{l}</span></div>)}
         </div>
         <div style={{height:48}}/>
       </div>}
@@ -2588,8 +2585,8 @@ function App(){
       {!q&&mode!=='pro'&&cat==='all'&&<div style={{padding:"36px 28px 0",maxWidth:1520,margin:"0 auto"}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-end",marginBottom:0}}>
           <div>
-            <h2 style={{fontFamily:"var(--fd)",fontSize:24,fontWeight:800,letterSpacing:"-.02em",color:"var(--dk)",marginBottom:4}}>Disponibles près de chez vous</h2>
-            <p style={{fontSize:13,color:"var(--g)",lineHeight:1.5}}>{all.length} objets à la location · Livraison ou remise en main propre</p>
+            <h2 style={{fontFamily:"var(--fd)",fontSize:24,fontWeight:800,letterSpacing:"-.02em",color:"var(--dk)",marginBottom:4}}>Découvrez nos annonces</h2>
+            <p style={{fontSize:13,color:"var(--g)",lineHeight:1.5}}>{all.length} articles disponibles · Livraison ou remise en main propre possible</p>
           </div>
           <button className="cl" style={{color:"var(--p)",fontSize:13,fontWeight:700,flexShrink:0}}>Voir tout →</button>
         </div>
