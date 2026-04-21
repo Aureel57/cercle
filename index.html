@@ -532,9 +532,9 @@ body,html,#root{font-family:var(--f);color:var(--tx);background:var(--bg);-webki
 /* ========== COMPONENTS ========== */
 function Carousel({images,onClick}){const[c,setC]=useState(0);return <div className="ciw"><img className="cimg" src={images[c]} alt="" loading="lazy" onClick={onClick}/>{images.length>1&&<><button className="nav l" onClick={e=>{e.stopPropagation();setC(x=>(x-1+images.length)%images.length)}}><I.Chv d="l"/></button><button className="nav r" onClick={e=>{e.stopPropagation();setC(x=>(x+1)%images.length)}}><I.Chv d="r"/></button><div className="dts">{images.map((_,i)=><div key={i} className={"dt"+(i===c?" on":"")}/>)}</div></>}</div>}
 
-function Card({item,onOpen,favs,dispatch}){return <div className={"card"+(item.isPro?" pro-card":"")} onClick={()=>onOpen(item)}>
+function Card({item,onOpen,favs,dispatch,onAuthRequired}){return <div className={"card"+(item.isPro?" pro-card":"")} onClick={()=>onOpen(item)}>
   <Carousel images={item.images} onClick={()=>onOpen(item)}/>
-  <button className="cfav" onClick={e=>{e.stopPropagation();dispatch({type:"TOG_FAV",id:item.id})}}><I.Heart f={favs.has(item.id)}/></button>
+  <button className="cfav" onClick={e=>{e.stopPropagation();if(onAuthRequired){onAuthRequired();return;}dispatch({type:"TOG_FAV",id:item.id})}}><I.Heart f={favs.has(item.id)}/></button>
   {item.isPro&&<div className="pro-badge">PRO</div>}
   {item.owner?.verified&&<div className="cbdg">✓</div>}
   <div className="card-cta">Voir l'annonce →</div>
@@ -740,7 +740,7 @@ function MiniCal({value,onChange,label,minDate}){
   </div>
 }
 
-function Detail({item,onClose,state,dispatch,setPage,setConvId,setShowShop,setProfTab}){
+function Detail({item,onClose,state,dispatch,setPage,setConvId,setShowShop,setProfTab,onAuthRequired}){
   const[gal,setGal]=useState(null);
   const[days,setDays]=useState(3);const[sd,setSd]=useState("2026-03-12");const[ed,setEd]=useState("2026-03-14");const[durType,setDurType]=useState("jour");const[timeSlot,setTimeSlot]=useState("");const[booked,setBooked]=useState(false);const[showRF,setShowRF]=useState(false);const[rt,setRt]=useState("");const[rr,setRr]=useState(5);
   const[payStep,setPayStep]=useState(0);const[showBid,setShowBid]=useState(false);const[bidAmt,setBidAmt]=useState('');const[payMethod,setPayMethod]=useState("card");const[cardNum,setCardNum]=useState("");const[cardExp,setCardExp]=useState("");const[cardCvc,setCardCvc]=useState("");
@@ -770,7 +770,7 @@ function Detail({item,onClose,state,dispatch,setPage,setConvId,setShowShop,setPr
         </div>
       </div>
     </div>}
-    <div style={{position:"absolute",top:12,left:12,right:12,display:"flex",justifyContent:"space-between",alignItems:"center",zIndex:10}}><button className="ov-close" onClick={onClose}>&#x2715;</button><div style={{display:"flex",gap:8}}><button className="ov-close" onClick={()=>dispatch({type:"TOG_FAV",id:item.id})}><I.Heart f={state.favorites.has(item.id)}/></button><button className="ov-close"><I.Share/></button></div></div>
+    <div style={{position:"absolute",top:12,left:12,right:12,display:"flex",justifyContent:"space-between",alignItems:"center",zIndex:10}}><button className="ov-close" onClick={onClose}>&#x2715;</button><div style={{display:"flex",gap:8}}><button className="ov-close" onClick={()=>{if(!state.user){onAuthRequired?.();return;}dispatch({type:"TOG_FAV",id:item.id})}}><I.Heart f={state.favorites.has(item.id)}/></button><button className="ov-close"><I.Share/></button></div></div>
     <div className="dimgs"><img className="dimg0" src={item.images[0]} alt="" style={{cursor:"pointer"}} onClick={()=>setGal({imgs:item.images,idx:0})}/>{item.images.slice(1).map((im,i)=><img key={i} src={im} alt=""/>)}</div>
     <div className="dc"><div>
       <h1 style={{fontFamily:"var(--fd)",fontSize:24,fontWeight:600,marginBottom:4}}>{item.title}</h1>
@@ -2494,7 +2494,7 @@ function Chatbot({items,onOpen,onClose}){
 }
 
 /* ===== OWNER SHOP ===== */
-function Shop({owner,items,onClose,onOpen,state,dispatch}){
+function Shop({owner,items,onClose,onOpen,state,dispatch,onAuthRequired}){
   const ownerItems=items.filter(i=>i.owner?.id===owner.id);
   const grade=getGrade(owner.rentals||0);
   return <div className="ov">
@@ -2510,7 +2510,7 @@ function Shop({owner,items,onClose,onOpen,state,dispatch}){
     </div>
     <div style={{padding:20}}>
       <h3 style={{fontFamily:"var(--fd)",fontSize:16,marginBottom:12}}>{ownerItems.length} annonces</h3>
-      <div className="grid" style={{padding:0}}>{ownerItems.map(i=><Card key={i.id} item={i} onOpen={onOpen} favs={state.favorites} dispatch={dispatch}/>)}</div>
+      <div className="grid" style={{padding:0}}>{ownerItems.map(i=><Card key={i.id} item={i} onOpen={onOpen} favs={state.favorites} dispatch={dispatch} onAuthRequired={state.user?null:onAuthRequired}/>)}</div>
     </div>
   </div>
 }
@@ -2702,7 +2702,7 @@ function App(){
         <div className="reco-sc">{all.sort(()=>Math.random()-.5).slice(0,8).map(i=><div key={i.id} className="reco-c" onClick={()=>setSel(i)}><img className="reco-ci" src={i.images[0]} alt=""/><div style={{padding:"4px 8px 8px"}}><div style={{fontSize:12,fontWeight:600,marginTop:4,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{i.title}</div><div style={{fontSize:12,fontWeight:700,color:"var(--p)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{i.price}€<span style={{fontWeight:400,color:"var(--g)"}}>/j</span></div></div></div>)}</div>
       </div>}
       {filtered.length===0?<div className="empty"><span>🔍</span><h2>Aucun résultat trouvé</h2><p style={{maxWidth:320,margin:"6px auto 16px",lineHeight:1.5}}>Essayez d'élargir votre recherche ou de modifier vos filtres.</p><button className="bs" onClick={()=>{setQ("");setCat("all")}}>Réinitialiser la recherche</button></div>:
-      <div className="grid" style={{paddingTop:20}}>{filtered.map(i=><Card key={i.id} item={i} onOpen={setSel} favs={state.favorites} dispatch={dispatch}/>)}</div>}
+      <div className="grid" style={{paddingTop:20}}>{filtered.map(i=><Card key={i.id} item={i} onOpen={setSel} favs={state.favorites} dispatch={dispatch} onAuthRequired={state.user?null:()=>setShowA("login")}/>)}</div>}
     </main>}
 
     {page==="profile"&&state.user&&<Profile state={state} dispatch={dispatch} setPage={setPage} setSelected={setSel} initTab={profTab}/>}
@@ -2746,7 +2746,7 @@ function App(){
       <div style={{height:80}}/>
     </footer>}
 
-    {sel&&<Detail item={sel} onClose={()=>setSel(null)} state={state} dispatch={dispatch} setPage={setPage} setConvId={setCid} setShowShop={setShowShop} setProfTab={setProfTab}/>}
+    {sel&&<Detail item={sel} onClose={()=>setSel(null)} state={state} dispatch={dispatch} setPage={setPage} setConvId={setCid} setShowShop={setShowShop} setProfTab={setProfTab} onAuthRequired={()=>setShowA("login")}/>}
     {showF&&<FilterM onClose={()=>setShowF(false)} filters={filters} setFilters={setFilters} count={filtered.length}/>}
     {showS&&<SearchM onClose={()=>setShowS(false)} onSearch={search} allItems={all} filters={filters} setFilters={setFilters}/>}
     {showA&&<AuthModal onClose={()=>setShowA(null)} dispatch={dispatch} mode={showA}/>}
@@ -2761,7 +2761,7 @@ function App(){
     {page==="dispute"&&state.user&&<DisputePage state={state} dispatch={dispatch} setPage={setPage}/>}
     {page==="wallet"&&state.user&&<WalletPage state={state} dispatch={dispatch} setPage={setPage}/>}
     {page==="badges"&&state.user&&<BadgesPage state={state} setPage={setPage}/>}
-    {showShop&&<Shop owner={showShop} items={all} onClose={()=>setShowShop(null)} onOpen={i=>{setShowShop(null);setSel(i)}} state={state} dispatch={dispatch}/>}
+    {showShop&&<Shop owner={showShop} items={all} onClose={()=>setShowShop(null)} onOpen={i=>{setShowShop(null);setSel(i)}} state={state} dispatch={dispatch} onAuthRequired={()=>setShowA("login")}/>}
     {showGallery&&<Gallery images={showGallery.imgs} start={showGallery.idx||0} onClose={()=>setShowGallery(null)}/>}
     {/* Chatbot */}
     {showChat?<Chatbot items={all} onOpen={i=>{setShowChat(false);setSel(i)}} onClose={()=>setShowChat(false)}/>:<button className="chatbot-btn" onClick={()=>setShowChat(true)}>🤖</button>}
