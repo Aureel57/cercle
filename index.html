@@ -234,6 +234,12 @@ body,html,#root{font-family:var(--f);color:var(--tx);background:var(--bg);-webki
 .all-grade:nth-child(4){animation-delay:0.4s}
 .all-grade:nth-child(5){animation-delay:0.5s}
 .all-grade.current{border-color:var(--dk);background:var(--bg);transform:scale(1.08)}.all-grade .ag-icon{font-size:24px;display:block;margin-bottom:4px}.all-grade .ag-name{font-weight:700;display:block}.all-grade .ag-range{color:var(--g);font-size:9px}
+/* Profile tab animations */
+.prof-listing-card:hover{transform:scale(1.02)!important;box-shadow:0 8px 28px rgba(0,0,0,0.13)!important}
+.prof-fav-card:hover{transform:scale(1.02)!important;box-shadow:0 8px 28px rgba(0,0,0,0.11)!important}
+@keyframes statusPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.8;transform:scale(1.04)}}
+.prof-badge-pulse{animation:statusPulse 2.2s ease-in-out infinite}
+@keyframes gradeGlow{0%,100%{box-shadow:0 8px 32px rgba(0,0,0,0.18)}50%{box-shadow:0 8px 48px rgba(0,0,0,0.28),0 0 40px currentColor}}
 /* Tabs */
 .tabs{display:flex;gap:4px;border-bottom:1px solid var(--bd);margin-bottom:20px}.tab{padding:10px 18px;font-size:13px;font-weight:600;border:none;border-bottom:2.5px solid transparent;color:var(--g);background:none;transition:all .2s var(--ease)}.tab:hover{color:var(--dk)}.tab.on{color:var(--dk);border-bottom-color:var(--dk)}
 /* Messages */
@@ -898,6 +904,7 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
 
   const [tab, setTab] = React.useState(initTab || 'annonces');
   const [editMode, setEditMode] = React.useState(false);
+  const [gradeBarWidth, setGradeBarWidth] = React.useState(0);
   const [profileData, setProfileData] = React.useState({
     name: userName,
     email: user.email || 'noah@cercle.fr',
@@ -906,6 +913,15 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
     notifEmail: true,
     notifPush: true,
   });
+
+  React.useEffect(() => {
+    if (tab === 'grade') {
+      setGradeBarWidth(0);
+      const r = (state && state.user && state.user.rentals) || 0;
+      const tid = setTimeout(() => setGradeBarWidth(getDivision(r).prog), 80);
+      return () => clearTimeout(tid);
+    }
+  }, [tab]);
 
   const listings = (state && state.items && state.items.filter(i => i.owner === user.id)) || [];
   const favs = (state && state.favs) || [];
@@ -1321,13 +1337,13 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
       </div>
 
       {/* ─── CONTENT ─── */}
-      <div style={S.content}>
+      <div key={tab} style={{...S.content, animation:'fadeSlideUp 0.35s cubic-bezier(0.34,1.56,0.64,1) both'}}>
 
         {/* ── Annonces ── */}
         {tab === 'annonces' && (
           <div style={S.listingGrid}>
-            {displayListings.map(l => (
-              <div key={l.id} style={S.card} onClick={() => { setSelected && setSelected(l); setPage && setPage('detail'); }}>
+            {displayListings.map((l, i) => (
+              <div key={l.id} className="prof-listing-card" style={{...S.card, animation:'fadeSlideUp 0.4s cubic-bezier(0.34,1.56,0.64,1) both', animationDelay:`${i*0.07}s`}} onClick={() => { setSelected && setSelected(l); setPage && setPage('detail'); }}>
                 <div style={S.listingImg}>{l.img || '📦'}</div>
                 <div style={S.listingBody}>
                   <p style={S.listingTitle}>{l.title}</p>
@@ -1343,14 +1359,14 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
         {tab === 'reservations' && (
           <div>
             <p style={{fontSize:13,color:'#9ca3af',margin:'0 0 16px',fontWeight:500}}>3 réservations au total</p>
-            {mockReservations.map(r => (
-              <div key={r.id} style={S.resCard}>
+            {mockReservations.map((r, i) => (
+              <div key={r.id} style={{...S.resCard, animation:'fadeSlideIn 0.4s cubic-bezier(0.34,1.56,0.64,1) both', animationDelay:`${i*0.07}s`}}>
                 <div style={S.resImgBox}>{r.img}</div>
                 <div style={S.resInfo}>
                   <p style={S.resTitle}>{r.item}</p>
                   <p style={S.resMeta}>📅 {r.dates} · avec {r.renter}</p>
                   <div style={S.resFooter}>
-                    <span style={S.resBadge(r.color, r.bg)}>{r.status}</span>
+                    <span className="prof-badge-pulse" style={{...S.resBadge(r.color, r.bg), animationDelay:`${i*0.1+0.3}s`}}>{r.status}</span>
                     <span style={S.resPrice}>{r.price}</span>
                   </div>
                 </div>
@@ -1382,14 +1398,14 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
                 ))}
               </div>
             </div>
-            {mockReviews.map(r => (
-              <div key={r.id} style={S.reviewCard}>
+            {mockReviews.map((r, i) => (
+              <div key={r.id} style={{...S.reviewCard, animation:'scaleIn 0.4s cubic-bezier(0.34,1.56,0.64,1) both', animationDelay:`${i*0.08}s`}}>
                 <div style={S.reviewTop}>
                   <div style={S.reviewAvatar(r.color)}>{r.initials}</div>
                   <div style={{flex:1}}>
                     <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
                       <span style={S.reviewName}>{r.author}</span>
-                      <span style={{fontSize:12,color:'#f59e0b',letterSpacing:1}}>{'★'.repeat(r.rating)}</span>
+                      <span style={{fontSize:12,letterSpacing:1}}>{Array.from({length:r.rating}).map((_,si)=><span key={si} style={{color:'#f59e0b',display:'inline-block',animation:'scaleIn 0.3s cubic-bezier(0.34,1.56,0.64,1) both',animationDelay:`${i*0.08+si*0.06}s`}}>★</span>)}</span>
                     </div>
                     <div style={S.reviewDate}>{r.date}</div>
                   </div>
@@ -1403,11 +1419,11 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
         {/* ── Favoris ── */}
         {tab === 'favoris' && (
           <div style={S.listingGrid}>
-            {mockFavs.map(f => (
-              <div key={f.id} style={S.favCard}>
+            {mockFavs.map((f, i) => (
+              <div key={f.id} className="prof-fav-card" style={{...S.favCard, animation:'fadeSlideUp 0.4s cubic-bezier(0.34,1.56,0.64,1) both', animationDelay:`${i*0.07}s`}}>
                 <div style={S.favImg}>
                   {f.img}
-                  <div style={S.favHeart}>❤️</div>
+                  <div style={{...S.favHeart, animation:'float 3s ease-in-out infinite', animationDelay:`${i*0.3}s`}}>❤️</div>
                   {f.badge && <div style={{position:'absolute',top:8,left:8,fontSize:14}}>{f.badge}</div>}
                 </div>
                 <div style={S.favBody}>
@@ -1441,7 +1457,7 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
             <div style={{maxWidth:560,margin:'0 auto'}}>
 
               {/* Hero */}
-              <div style={{borderRadius:22,marginBottom:20,background:`linear-gradient(135deg,${gc},${gc}bb)`,padding:'28px 24px',color:'#fff',position:'relative',overflow:'hidden'}}>
+              <div style={{borderRadius:22,marginBottom:20,background:`linear-gradient(135deg,${gc},${gc}bb)`,padding:'28px 24px',color:'#fff',position:'relative',overflow:'hidden',animation:'glowPulse 3s ease-in-out infinite'}}>
                 <div style={{position:'absolute',top:-16,right:-16,fontSize:130,opacity:.1,lineHeight:1,pointerEvents:'none'}}>{grade.icon}</div>
                 <div style={{fontSize:11,fontWeight:700,letterSpacing:'.1em',textTransform:'uppercase',opacity:.75,marginBottom:8}}>Votre rang actuel</div>
                 <div style={{display:'flex',alignItems:'center',gap:14,marginBottom:20}}>
@@ -1474,7 +1490,7 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
                       <span style={{fontWeight:700}}>{divDone}{divTotal?`/${divTotal}`:''} loc.</span>
                     </div>
                     <div style={{height:8,borderRadius:4,background:'rgba(255,255,255,0.2)',overflow:'hidden'}}>
-                      <div style={{height:'100%',borderRadius:4,background:'#fff',width:`${divProg}%`,transition:'width .8s ease'}}/>
+                      <div style={{height:'100%',borderRadius:4,background:'#fff',width:`${gradeBarWidth}%`,transition:'width 0.8s ease'}}/>
                     </div>
                     {nextMin && <div style={{fontSize:11,opacity:.7,marginTop:6}}>{nextMin - rentals} location{(nextMin-rentals)!==1?'s':''} pour atteindre {nextLabel}</div>}
                   </div>
@@ -1516,13 +1532,14 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
               <div>
                 <div style={{fontSize:15,fontWeight:800,color:'#1a1a2e',marginBottom:16}}>Tous les rangs</div>
                 <div style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:10}}>
-                  {GRADES.map(g=>{
+                  {GRADES.map((g,gi)=>{
                     const gColor = GC[g.id]||'#6C63FF';
                     const isCurrentGrade = g.id===grade.id;
                     const isUnlocked = rentals >= g.min;
                     return (
                       <div key={g.id} style={{
                         borderRadius:16,overflow:'hidden',
+                        animation:'scaleIn 0.4s cubic-bezier(0.34,1.56,0.64,1) both', animationDelay:`${gi*0.07}s`,
                         border:`2px solid ${isCurrentGrade?gColor:isUnlocked?gColor+'60':'#e5e7eb'}`,
                         background:isCurrentGrade
                           ?`linear-gradient(160deg,${gColor},${gColor}cc)`
@@ -1590,7 +1607,7 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
                 }
               };
               return (
-                <div style={{marginBottom:24}}>
+                <div style={{marginBottom:24,animation:'fadeSlideUp 0.4s cubic-bezier(0.34,1.56,0.64,1) both',animationDelay:'0s'}}>
                   <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:10}}>
                     <p style={{fontSize:15,fontWeight:700,color:'#111827',fontFamily:'DM Sans,system-ui,sans-serif'}}>Complétion du profil</p>
                     <span style={{fontSize:13,fontWeight:600,color:'#6C63FF'}}>{doneCount}/{steps.length}</span>
@@ -1616,7 +1633,7 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
                 </div>
               );
             })()}
-            <div style={S.settingsSection}>
+            <div style={{...S.settingsSection,animation:'fadeSlideUp 0.4s cubic-bezier(0.34,1.56,0.64,1) both',animationDelay:'0.08s'}}>
               <p style={S.sectionTitle}>Mon profil</p>
               <div style={S.fieldCard}>
                 {[
@@ -1640,7 +1657,7 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
               </div>
             </div>
 
-            <div style={S.settingsSection}>
+            <div style={{...S.settingsSection,animation:'fadeSlideUp 0.4s cubic-bezier(0.34,1.56,0.64,1) both',animationDelay:'0.16s'}}>
               <p style={S.sectionTitle}>Notifications</p>
               <div style={S.toggleCard}>
                 {[
@@ -1661,7 +1678,7 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
               </div>
             </div>
 
-            <div style={S.settingsSection}>
+            <div style={{...S.settingsSection,animation:'fadeSlideUp 0.4s cubic-bezier(0.34,1.56,0.64,1) both',animationDelay:'0.24s'}}>
               <p style={S.sectionTitle}>Confiance &amp; Sécurité</p>
               <div style={S.fieldCard}>
                 {[
@@ -1681,8 +1698,8 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
               </div>
             </div>
 
-            <button style={S.savBtn}>Sauvegarder les modifications</button>
-            <button style={S.logoutBtn}>🚪 Se déconnecter</button>
+            <button style={{...S.savBtn,animation:'fadeSlideUp 0.4s cubic-bezier(0.34,1.56,0.64,1) both',animationDelay:'0.32s'}}>Sauvegarder les modifications</button>
+            <button style={{...S.logoutBtn,animation:'fadeSlideUp 0.4s cubic-bezier(0.34,1.56,0.64,1) both',animationDelay:'0.38s'}}>🚪 Se déconnecter</button>
           </div>
         )}
 
