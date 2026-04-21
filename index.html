@@ -770,7 +770,7 @@ function Detail({item,onClose,state,dispatch,setPage,setConvId,setShowShop,setPr
         </div>
       </div>
     </div>}
-    <div className="dh"><button className="ov-close" onClick={onClose}>&#x2715;</button><div style={{display:"flex",gap:6}}><button className="cl" style={{display:"flex",alignItems:"center",gap:4}} onClick={()=>dispatch({type:"TOG_FAV",id:item.id})}><I.Heart f={state.favorites.has(item.id)}/></button><button className="cl" style={{display:"flex",alignItems:"center",gap:4}}><I.Share/></button></div></div>
+    <div style={{position:"absolute",top:12,left:12,right:12,display:"flex",justifyContent:"space-between",alignItems:"center",zIndex:10}}><button className="ov-close" onClick={onClose}>&#x2715;</button><div style={{display:"flex",gap:8}}><button className="ov-close" onClick={()=>dispatch({type:"TOG_FAV",id:item.id})}><I.Heart f={state.favorites.has(item.id)}/></button><button className="ov-close"><I.Share/></button></div></div>
     <div className="dimgs"><img className="dimg0" src={item.images[0]} alt="" style={{cursor:"pointer"}} onClick={()=>setGal({imgs:item.images,idx:0})}/>{item.images.slice(1).map((im,i)=><img key={i} src={im} alt=""/>)}</div>
     <div className="dc"><div>
       <h1 style={{fontFamily:"var(--fd)",fontSize:24,fontWeight:600,marginBottom:4}}>{item.title}</h1>
