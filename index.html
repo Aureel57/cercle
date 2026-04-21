@@ -925,7 +925,9 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
   }, [tab]);
 
   const listings = (state && state.items && state.items.filter(i => i.owner === user.id)) || [];
-  const favs = (state && state.favs) || [];
+  const allItems = [...(state.items||[]), ...(state.proItems||[]), ...(state.userItems||[])];
+  const favItems = allItems.filter(i => state.favorites && state.favorites.has(i.id));
+  const favs = state.favorites || new Set();
 
   const mockListings = [
     { id: 101, title: 'Perceuse Bosch Pro', price: 12, rating: 4.95, reviews: 87, img: '🔧' },
@@ -955,7 +957,7 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
     { id: 'annonces', label: 'Annonces', icon: '🏷️', count: displayListings.length || 0 },
     { id: 'reservations', label: 'Réservations', icon: '📅', count: mockReservations.length },
     { id: 'avis', label: 'Avis', icon: '⭐', count: mockReviews.length },
-    { id: 'favoris', label: 'Favoris', icon: '❤️', count: favs.length || 2 },
+    { id: 'favoris', label: 'Favoris', icon: '❤️', count: favItems.length },
     { id: 'grade', label: 'Mon Grade', icon: '🏅', count: null },
     { id: 'parametres', label: 'Paramètres', icon: '⚙️', count: null },
   ];
@@ -1419,24 +1421,34 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
 
         {/* ── Favoris ── */}
         {tab === 'favoris' && (
-          <div style={S.listingGrid}>
-            {mockFavs.map((f, i) => (
-              <div key={f.id} className="prof-fav-card" style={{...S.favCard, animation:'fadeSlideUp 0.4s cubic-bezier(0.34,1.56,0.64,1) both', animationDelay:`${i*0.07}s`}}>
-                <div style={S.favImg}>
-                  {f.img}
-                  <div style={{...S.favHeart, animation:'float 3s ease-in-out infinite', animationDelay:`${i*0.3}s`}}>❤️</div>
-                  {f.badge && <div style={{position:'absolute',top:8,left:8,fontSize:14}}>{f.badge}</div>}
-                </div>
-                <div style={S.favBody}>
-                  <p style={S.favTitle}>{f.title}</p>
-                  <p style={S.favOwner}>par {f.owner}</p>
-                  <div style={S.favBottom}>
-                    <span style={S.favPrice}>{f.price}€<span style={{fontWeight:400,fontSize:11,color:'#9ca3af'}}>/j</span></span>
-                    <span style={S.favRating}>⭐ {f.rating} <span style={{color:'#d1d5db'}}>·</span> {f.reviews}</span>
-                  </div>
-                </div>
+          <div key="favoris">
+            {favItems.length === 0 ? (
+              <div style={{textAlign:'center',padding:'48px 20px',color:'#9ca3af'}}>
+                <div style={{fontSize:44,marginBottom:12,animation:'float 3s ease-in-out infinite'}}>❤️</div>
+                <p style={{fontWeight:700,color:'#374151',fontSize:15,marginBottom:4}}>Aucun favori pour l'instant</p>
+                <p style={{fontSize:13}}>Likez des annonces pour les retrouver ici</p>
               </div>
-            ))}
+            ) : (
+              <div style={S.listingGrid}>
+                {favItems.map((f, i) => (
+                  <div key={f.id} className="prof-fav-card" style={{...S.favCard, animation:'fadeSlideUp 0.4s cubic-bezier(0.34,1.56,0.64,1) both', animationDelay:`${i*0.07}s`, cursor:'pointer'}} onClick={()=>setSelected&&setSelected(f)}>
+                    <div style={{...S.favImg, fontSize:0}}>
+                      <img src={f.images&&f.images[0]} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}}/>
+                      <div style={{...S.favHeart, animation:'float 3s ease-in-out infinite', animationDelay:`${i*0.3}s`}}>❤️</div>
+                      {f.owner?.verified && <div style={{position:'absolute',top:8,left:8,background:'rgba(0,0,0,0.5)',color:'#fff',borderRadius:6,padding:'2px 6px',fontSize:11,fontWeight:700}}>✓</div>}
+                    </div>
+                    <div style={S.favBody}>
+                      <p style={S.favTitle}>{f.title}</p>
+                      <p style={S.favOwner}>par {f.owner?.name||'Propriétaire'}</p>
+                      <div style={S.favBottom}>
+                        <span style={S.favPrice}>{f.price}€<span style={{fontWeight:400,fontSize:11,color:'#9ca3af'}}>/j</span></span>
+                        <span style={S.favRating}>⭐ {f.rating} <span style={{color:'#d1d5db'}}>·</span> {f.reviews}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
