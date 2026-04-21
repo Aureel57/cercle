@@ -918,15 +918,6 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
 
   const displayListings = listings.length > 0 ? listings : mockListings;
 
-  const tabs = [
-    { id: 'annonces', label: 'Annonces', icon: '🏷️', count: displayListings.length || 0 },
-    { id: 'reservations', label: 'Réservations', icon: '📅', count: mockReservations.length },
-    { id: 'avis', label: 'Avis', icon: '⭐', count: mockReviews.length },
-    { id: 'favoris', label: 'Favoris', icon: '❤️', count: favs.length || 2 },
-    { id: 'grade', label: 'Mon Grade', icon: '🏅', count: null },
-    { id: 'parametres', label: 'Paramètres', icon: '⚙️', count: null },
-  ];
-
   const mockReservations = [
     { id: 1, item: 'Perceuse Bosch Pro', img: '🔧', dates: '15 – 17 Mars', status: 'En cours', color: '#10b981', bg: '#d1fae5', price: '30 €', renter: 'Marie L.' },
     { id: 2, item: 'Vélo électrique Moustache', img: '🚲', dates: '5 – 7 Mars', status: 'Terminée', color: '#6b7280', bg: '#f3f4f6', price: '45 €', renter: 'Thomas B.' },
@@ -941,6 +932,15 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
     { id: 3, author: 'Julie K.', initials: 'JK', date: 'Fév. 2024', rating: 5, text: 'Livraison impeccable et matériel de première qualité. Très professionnel et à l\'écoute des besoins.', color: '#10b981' },
     { id: 4, author: 'Sophie D.', initials: 'SD', date: 'Jan. 2024', rating: 4, text: 'Bon état général, échange ponctuel et correct. Petit manque de communication au démarrage mais très arrangeant.', color: '#f59e0b' },
     { id: 5, author: 'Pierre M.', initials: 'PM', date: 'Déc. 2023', rating: 5, text: 'Location sans prise de tête. Propriétaire réactif et responsable. Matériel bien entretenu. Parfait !', color: '#06b6d4' },
+  ];
+
+  const tabs = [
+    { id: 'annonces', label: 'Annonces', icon: '🏷️', count: displayListings.length || 0 },
+    { id: 'reservations', label: 'Réservations', icon: '📅', count: mockReservations.length },
+    { id: 'avis', label: 'Avis', icon: '⭐', count: mockReviews.length },
+    { id: 'favoris', label: 'Favoris', icon: '❤️', count: favs.length || 2 },
+    { id: 'grade', label: 'Mon Grade', icon: '🏅', count: null },
+    { id: 'parametres', label: 'Paramètres', icon: '⚙️', count: null },
   ];
 
   const mockFavs = [
