@@ -319,6 +319,14 @@ html.dark,html.dark body,html.dark #root{background:#0f0f13 !important;color:#f1
 .dark .chatbot-bd{background:#0F0F0F}
 .dark .chatbot-msg.bot{background:#1E1E1E;color:#F5F5F5}
 .dark .mip input{background:#1E1E1E;border-color:rgba(255,255,255,.14);color:#F5F5F5}
+/* Dark mode — additional fixes */
+.dark footer>div:first-child{background:linear-gradient(to bottom,#0f0f13,transparent) !important}
+.dark .mf{background:#1a1a24 !important}
+.dark .bd{background:var(--p) !important;color:#fff !important}
+.dark .pb{color:#f1f1f5 !important}
+.dark .di{color:#e0e0f0 !important}
+.dark .tabs-bar{background:#1e1e2e !important;box-shadow:0 2px 12px rgba(0,0,0,.4) !important}
+.dark .tabs-bar button{color:#a0a0b8 !important}
 /* Bottom nav */
 .bnav{display:none;position:fixed;bottom:0;left:0;right:0;background:rgba(255,255,255,.95);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-top:1px solid rgba(0,0,0,.08);z-index:90;padding:8px 0 max(8px,env(safe-area-inset-bottom));box-shadow:0 -4px 16px rgba(0,0,0,.08)}
 .dark .bnav{background:rgba(21,21,21,.96);border-top:1px solid rgba(255,255,255,.08)}
@@ -1331,7 +1339,7 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
       </div>
 
       {/* ─── TABS ─── */}
-      <div style={S.tabsWrap}>
+      <div style={S.tabsWrap} className="tabs-bar">
         {tabs.map(t => (
           <button key={t.id} onClick={() => setTab(t.id)}
             style={{...S.tab(tab===t.id), background:'none', outline:'none',
