@@ -276,7 +276,11 @@ body,html,#root{font-family:var(--f);color:var(--tx);background:var(--bg);-webki
 .rev{padding:14px 0;border-bottom:1px solid var(--bd)}.revh{display:flex;align-items:center;gap:10px;margin-bottom:5px}.reva{width:34px;height:34px;border-radius:50%;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:18px}.revn{font-size:13px;font-weight:600}.revd{font-size:10px;color:var(--gl)}.revs{color:var(--p);font-size:12px}.revt{font-size:13px;line-height:1.5}
 @media(max-width:1024px){.dc{grid-template-columns:1fr;gap:24px}.bc{position:relative;top:0}.ml{grid-template-columns:1fr}}
 /* Dark mode — variables */
-.dark{--p:#FF6B6B;--pd:#FF5A5F;--acc:#4FD1C5;--dk:#F5F5F5;--tx:#D1D5DB;--g:#9CA3AF;--gl:#6B7280;--bd:rgba(255,255,255,0.08);--bg:#0F0F0F;--bgw:#242424;--w:#1A1A1A;--sh:0 1px 4px rgba(0,0,0,.5);--shm:0 2px 12px rgba(0,0,0,.5);--shl:0 8px 32px rgba(0,0,0,.6),0 2px 8px rgba(0,0,0,.4)}
+html.dark,html.dark body,html.dark #root{background:#0f0f13 !important;color:#f1f1f5}
+.dark{--p:#7c74ff;--pd:#6a63f0;--acc:#4FD1C5;--dk:#f1f1f5;--tx:#e0e0f0;--g:#a0a0b8;--gl:#7070a0;--bd:#2d2d3d;--bg:#0f0f13;--bgw:#1a1a24;--w:#1e1e2e;--sh:0 2px 8px rgba(0,0,0,.5);--shm:0 2px 16px rgba(0,0,0,.55);--shl:0 8px 32px rgba(0,0,0,.65),0 2px 8px rgba(0,0,0,.45)}
+.dark .card{background:#1e1e2e !important;box-shadow:0 2px 12px rgba(0,0,0,.4) !important}
+.dark .reco,.dark .reco-c{background:#1a1a24 !important}
+.dark .grid{background:transparent}
 /* Dark mode — component overrides */
 .dark .hdr{background:rgba(17,17,17,.94);border-bottom:1px solid rgba(255,255,255,.06)}
 .dark .sb{background:#1E1E1E;border-color:rgba(255,255,255,.14)}
@@ -2597,6 +2601,7 @@ function App(){
   const[showOnboarding,setShowOnboarding]=useState(()=>{try{return!localStorage.getItem('cercle_ob')}catch{return true}});
   const[cid,setCid]=useState(null);
   const[dark,setDark]=useState(false);
+  useEffect(()=>{document.documentElement.classList.toggle('dark',dark);document.body.style.background=dark?'#0f0f13':''},[dark]);
   const[mode,setMode]=useState('perso'); // 'perso' or 'pro'
   const[showChat,setShowChat]=useState(false);
   const[showGallery,setShowGallery]=useState(null);
