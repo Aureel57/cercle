@@ -2246,7 +2246,7 @@ function Dashboard({state,dispatch,setPage}){
   ];
   const card={background:"var(--w)",borderRadius:18,boxShadow:"0 2px 20px rgba(0,0,0,0.07)",overflow:"hidden",border:"1px solid var(--bd)"};
   return(
-  <div style={{minHeight:"100vh",background:"linear-gradient(160deg,#6C63FF 0%,#7c5ce7 28%,#5a7fff 62%,#4ECDC4 100%)",backgroundAttachment:"fixed",overflowX:"hidden",paddingBottom:90}}>
+  <div style={{minHeight:"100vh",background:"linear-gradient(160deg,#6C63FF 0%,#7c5ce7 28%,#5a7fff 62%,#4ECDC4 100%)",backgroundAttachment:"fixed",overflowX:"hidden",paddingBottom:90,animation:"fadeSlideUp 0.4s both"}}>
     {/* ── Header ── */}
     <div style={{padding:"52px 20px 28px",position:"relative"}}>
       <div style={{position:"absolute",inset:0,backgroundImage:"radial-gradient(circle,rgba(255,255,255,0.1) 1px,transparent 1px)",backgroundSize:"22px 22px",pointerEvents:"none"}}/>
@@ -2276,26 +2276,26 @@ function Dashboard({state,dispatch,setPage}){
       {/* ── KPIs ── */}
       <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:12}}>
         {kpis.map((k,i)=>(
-          <div key={i} style={{...card,padding:"16px"}}>
+          <div key={i} style={{...card,padding:"16px",animation:"fadeSlideUp 0.45s cubic-bezier(0.34,1.56,0.64,1) both",animationDelay:`${i*0.08}s`}}>
             <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
-              <div style={{width:40,height:40,borderRadius:12,background:k.bg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:19}}>{k.icon}</div>
+              <div style={{width:40,height:40,borderRadius:12,background:k.bg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:19,animation:"scaleIn 0.4s cubic-bezier(0.34,1.56,0.64,1) both",animationDelay:`${i*0.08+0.1}s`}}>{k.icon}</div>
               <span style={{fontSize:10,fontWeight:700,color:k.color,background:k.bg,padding:"3px 8px",borderRadius:20}}>{k.sub}</span>
             </div>
-            <div style={{fontSize:26,fontWeight:800,color:"var(--dk)",letterSpacing:-0.5,lineHeight:1}}>{k.val}</div>
+            <div style={{fontSize:26,fontWeight:800,color:"var(--dk)",letterSpacing:-0.5,lineHeight:1,animation:i===0?"glowPulse 2.5s ease-in-out infinite":"none"}}>{k.val}</div>
             <div style={{fontSize:12,color:"var(--g)",marginTop:4}}>{k.label}</div>
           </div>
         ))}
       </div>
 
       {/* ── Revenue chart ── */}
-      <div style={{...card,padding:"18px 16px"}}>
+      <div style={{...card,padding:"18px 16px",animation:"fadeSlideIn 0.5s both",animationDelay:"0.35s"}}>
         <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:16}}>
           <div>
             <div style={{fontSize:14,fontWeight:700,color:"var(--dk)"}}>Revenus mensuels</div>
             <div style={{fontSize:11,color:"var(--g)",marginTop:2}}>{new Date().getFullYear()} · {hasReal?"données réelles":"données de démonstration"}</div>
           </div>
           <div style={{textAlign:"right"}}>
-            <div style={{fontSize:18,fontWeight:800,color:"#6C63FF",letterSpacing:-0.5}}>{monthlyVals[curMonth]}€</div>
+            <div style={{fontSize:18,fontWeight:800,color:"#6C63FF",letterSpacing:-0.5,animation:"glowPulse 2.5s ease-in-out infinite"}}>{monthlyVals[curMonth]}€</div>
             <div style={{fontSize:10,color:"var(--g)"}}>ce mois</div>
           </div>
         </div>
@@ -2316,7 +2316,7 @@ function Dashboard({state,dispatch,setPage}){
 
       {/* ── Category chart + Quick actions ── */}
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}} className="dboard-grid">
-        <div style={{...card,padding:"18px 16px"}}>
+        <div style={{...card,padding:"18px 16px",animation:"fadeSlideUp 0.45s cubic-bezier(0.34,1.56,0.64,1) both",animationDelay:"0.42s"}}>
           <div style={{fontSize:14,fontWeight:700,color:"var(--dk)",marginBottom:3}}>Par catégorie</div>
           <div style={{fontSize:11,color:"var(--g)",marginBottom:12}}>Annonces par type</div>
           {catData.length>0&&window.Chart
@@ -2339,7 +2339,7 @@ function Dashboard({state,dispatch,setPage}){
                 </div>
           }
         </div>
-        <div style={{...card,padding:"18px 16px"}}>
+        <div style={{...card,padding:"18px 16px",animation:"fadeSlideUp 0.45s cubic-bezier(0.34,1.56,0.64,1) both",animationDelay:"0.5s"}}>
           <div style={{fontSize:14,fontWeight:700,color:"var(--dk)",marginBottom:14}}>Actions rapides</div>
           <div style={{display:"flex",flexDirection:"column",gap:8}}>
             {[
@@ -2347,8 +2347,8 @@ function Dashboard({state,dispatch,setPage}){
               {icon:"📅",label:"Réservations",color:"#0ea5e9",bg:"#e0f2fe",action:()=>setPage("profile")},
               {icon:"🆔",label:"Vérifier identité",color:"#10b981",bg:"#d1fae5",action:()=>setPage("verify")},
             ].map((a,i)=>(
-              <button key={i} onClick={a.action} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",border:"none",borderRadius:12,background:a.bg,cursor:"pointer",textAlign:"left",transition:"opacity .15s"}}
-                onMouseEnter={e=>e.currentTarget.style.opacity=".8"} onMouseLeave={e=>e.currentTarget.style.opacity="1"}>
+              <button key={i} onClick={a.action} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",border:"none",borderRadius:12,background:a.bg,cursor:"pointer",textAlign:"left",transition:"all .15s",animation:"fadeSlideIn 0.35s both",animationDelay:`${0.55+i*0.07}s`}}
+                onMouseEnter={e=>{e.currentTarget.style.opacity=".8";e.currentTarget.style.transform="translateX(3px)"}} onMouseLeave={e=>{e.currentTarget.style.opacity="1";e.currentTarget.style.transform="translateX(0)"}}>
                 <span style={{fontSize:16}}>{a.icon}</span>
                 <span style={{fontSize:12,fontWeight:600,color:a.color}}>{a.label}</span>
               </button>
@@ -2358,7 +2358,7 @@ function Dashboard({state,dispatch,setPage}){
       </div>
 
       {/* ── Listings ── */}
-      <div style={{...card,padding:"18px 16px"}}>
+      <div style={{...card,padding:"18px 16px",animation:"fadeSlideUp 0.45s cubic-bezier(0.34,1.56,0.64,1) both",animationDelay:"0.58s"}}>
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
           <div style={{fontSize:14,fontWeight:700,color:"var(--dk)"}}>Mes annonces</div>
           <button onClick={()=>setPage("create")} style={{fontSize:12,fontWeight:600,color:"#6C63FF",background:"#ede9fe",border:"none",borderRadius:20,padding:"5px 12px",cursor:"pointer"}}>+ Ajouter</button>
@@ -2371,7 +2371,7 @@ function Dashboard({state,dispatch,setPage}){
             </div>
           : <div style={{display:"flex",flexDirection:"column"}}>
               {myItems.slice(0,6).map((it,idx)=>(
-                <div key={it.id} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 0",borderBottom:idx<Math.min(myItems.length,6)-1?"1px solid var(--bd)":"none"}}>
+                <div key={it.id} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 0",borderBottom:idx<Math.min(myItems.length,6)-1?"1px solid var(--bd)":"none",animation:"fadeSlideIn 0.35s both",animationDelay:`${0.65+idx*0.05}s`}}>
                   <img src={it.images[0]} alt="" style={{width:42,height:34,objectFit:"cover",borderRadius:8,flexShrink:0}}/>
                   <div style={{flex:1,minWidth:0}}>
                     <div style={{fontSize:13,fontWeight:600,color:"var(--dk)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{it.title}</div>
