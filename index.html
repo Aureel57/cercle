@@ -319,6 +319,20 @@ html.dark,html.dark body,html.dark #root{background:#0f0f13 !important;color:#f1
 .dark .chatbot-bd{background:#0F0F0F}
 .dark .chatbot-msg.bot{background:#1E1E1E;color:#F5F5F5}
 .dark .mip input{background:#1E1E1E;border-color:rgba(255,255,255,.14);color:#F5F5F5}
+/* Dark mode — button .bd becomes purple (dark --dk is near-white, would make white-on-white) */
+.dark .bd{background:var(--p);color:#fff}
+/* Dark mode — hamburger icon + nav buttons: browsers reset button color, force inherit */
+.dark .pb{color:var(--dk)}
+.dark .nb{color:var(--dk)}
+/* Dark mode — dropdown items need explicit color */
+.dark .di{color:var(--dk)}
+/* Dark mode — category tabs: boost opacity and fix label color */
+.dark .ct{opacity:.7}
+.dark .ctl{color:rgba(255,255,255,.7)}
+.dark .ct.on .ctl{color:#fff}
+.dark .ct.on{border-bottom-color:rgba(255,255,255,.9)}
+/* Dark mode — filter button */
+.dark .fb{background:var(--w);color:var(--dk);border-color:var(--bd)}
 /* Bottom nav */
 .bnav{display:none;position:fixed;bottom:0;left:0;right:0;background:rgba(255,255,255,.95);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-top:1px solid rgba(0,0,0,.08);z-index:90;padding:8px 0 max(8px,env(safe-area-inset-bottom));box-shadow:0 -4px 16px rgba(0,0,0,.08)}
 .dark .bnav{background:rgba(21,21,21,.96);border-top:1px solid rgba(255,255,255,.08)}
@@ -1069,7 +1083,7 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
 
     // Tabs
     tabsWrap: {
-      background: '#fff',
+      background: 'var(--w)',
       borderRadius: 16,
       margin: '0 auto',
       width: 'fit-content',
@@ -1079,16 +1093,16 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
     },
     tab: (active) => ({
       flex: 'none', padding: '13px 14px', fontSize: 12, fontWeight: active ? 700 : 500,
-      color: active ? '#6C63FF' : '#6b7280',
+      color: active ? 'var(--p)' : 'var(--g)',
       cursor: 'pointer', whiteSpace: 'nowrap',
       display: 'flex', alignItems: 'center', gap: 5, transition: 'all 0.15s',
       background: 'none', border: 'none',
-      borderBottom: active ? '2.5px solid #6C63FF' : '2.5px solid transparent',
+      borderBottom: active ? '2.5px solid var(--p)' : '2.5px solid transparent',
     }),
     tabCount: (active) => ({
       fontSize: 10, fontWeight: 700,
-      background: active ? '#f0eeff' : '#f3f4f6',
-      color: active ? '#6C63FF' : '#9ca3af',
+      background: active ? 'rgba(108,99,255,0.15)' : 'var(--bgw)',
+      color: active ? 'var(--p)' : 'var(--gl)',
       borderRadius: 10, padding: '1px 6px', minWidth: 18, textAlign: 'center',
     }),
 
@@ -1097,8 +1111,8 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
 
     // Cards
     card: {
-      background: 'white', borderRadius: 16,
-      border: '1px solid #f3f4f6',
+      background: 'var(--w)', borderRadius: 16,
+      border: '1px solid var(--bd)',
       boxShadow: '0 1px 8px rgba(0,0,0,0.06)',
       overflow: 'hidden', marginBottom: 12,
       transition: 'box-shadow 0.2s, transform 0.2s',
@@ -1107,22 +1121,22 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
     listingGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 },
     listingImg: {
       height: 110, display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontSize: 40, background: 'linear-gradient(135deg,#f5f3ff,#ecfdf5)',
+      fontSize: 40, background: 'var(--bgw)',
     },
     listingBody: { padding: '10px 12px 12px' },
-    listingTitle: { fontSize: 13, fontWeight: 700, color: '#111827', margin: '0 0 4px' },
-    listingPrice: { fontSize: 14, fontWeight: 800, color: '#6C63FF', margin: 0 },
-    listingRating: { fontSize: 11, color: '#6b7280', marginTop: 4, display: 'flex', alignItems: 'center', gap: 3 },
+    listingTitle: { fontSize: 13, fontWeight: 700, color: 'var(--dk)', margin: '0 0 4px' },
+    listingPrice: { fontSize: 14, fontWeight: 800, color: 'var(--p)', margin: 0 },
+    listingRating: { fontSize: 11, color: 'var(--g)', marginTop: 4, display: 'flex', alignItems: 'center', gap: 3 },
 
     // Empty state
     empty: {
       textAlign: 'center', padding: '48px 24px',
-      background: 'white', borderRadius: 20,
-      border: '2px dashed #e5e7eb',
+      background: 'var(--w)', borderRadius: 20,
+      border: '2px dashed var(--bd)',
     },
     emptyIllus: { fontSize: 56, marginBottom: 16 },
-    emptyTitle: { fontSize: 18, fontWeight: 700, color: '#111827', margin: '0 0 8px' },
-    emptyText: { fontSize: 14, color: '#9ca3af', margin: '0 0 24px', lineHeight: 1.6 },
+    emptyTitle: { fontSize: 18, fontWeight: 700, color: 'var(--dk)', margin: '0 0 8px' },
+    emptyText: { fontSize: 14, color: 'var(--g)', margin: '0 0 24px', lineHeight: 1.6 },
     btnPrimary: {
       display: 'inline-flex', alignItems: 'center', gap: 8,
       padding: '13px 24px', borderRadius: 14, fontSize: 14, fontWeight: 700,
@@ -1141,42 +1155,42 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
 
     // Reservation card
     resCard: {
-      background: 'white', borderRadius: 16, border: '1px solid #f3f4f6',
+      background: 'var(--w)', borderRadius: 16, border: '1px solid var(--bd)',
       boxShadow: '0 1px 8px rgba(0,0,0,0.06)', padding: '16px',
       marginBottom: 10, display: 'flex', gap: 14, alignItems: 'flex-start',
     },
     resImgBox: {
       width: 52, height: 52, borderRadius: 12,
-      background: 'linear-gradient(135deg,#f5f3ff,#ecfdf5)',
+      background: 'var(--bgw)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       fontSize: 24, flexShrink: 0,
     },
     resInfo: { flex: 1 },
-    resTitle: { fontSize: 14, fontWeight: 700, color: '#111827', margin: '0 0 3px' },
-    resMeta: { fontSize: 12, color: '#9ca3af', margin: '0 0 8px' },
+    resTitle: { fontSize: 14, fontWeight: 700, color: 'var(--dk)', margin: '0 0 3px' },
+    resMeta: { fontSize: 12, color: 'var(--g)', margin: '0 0 8px' },
     resFooter: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
     resBadge: (color, bg) => ({
       fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 20,
       background: bg, color: color,
     }),
-    resPrice: { fontSize: 15, fontWeight: 800, color: '#111827' },
+    resPrice: { fontSize: 15, fontWeight: 800, color: 'var(--dk)' },
 
     // Reviews
     ratingHero: {
-      background: 'white', borderRadius: 20, padding: '24px',
-      border: '1px solid #f3f4f6', boxShadow: '0 1px 8px rgba(0,0,0,0.06)',
+      background: 'var(--w)', borderRadius: 20, padding: '24px',
+      border: '1px solid var(--bd)', boxShadow: '0 1px 8px rgba(0,0,0,0.06)',
       marginBottom: 16, display: 'flex', gap: 24, alignItems: 'center',
     },
-    ratingBig: { fontSize: 52, fontWeight: 900, color: '#111827', lineHeight: 1 },
+    ratingBig: { fontSize: 52, fontWeight: 900, color: 'var(--dk)', lineHeight: 1 },
     ratingStars: { fontSize: 18, color: '#f59e0b', letterSpacing: 2 },
-    ratingTotal: { fontSize: 13, color: '#9ca3af', marginTop: 4 },
+    ratingTotal: { fontSize: 13, color: 'var(--g)', marginTop: 4 },
     barRow: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 },
-    barLabel: { fontSize: 12, color: '#6b7280', width: 12, textAlign: 'right' },
-    barTrack: { flex: 1, height: 6, background: '#f3f4f6', borderRadius: 3, overflow: 'hidden' },
+    barLabel: { fontSize: 12, color: 'var(--g)', width: 12, textAlign: 'right' },
+    barTrack: { flex: 1, height: 6, background: 'var(--bgw)', borderRadius: 3, overflow: 'hidden' },
     barFill: (w) => ({ width: w, height: '100%', background: '#f59e0b', borderRadius: 3 }),
     reviewCard: {
-      background: 'white', borderRadius: 16, padding: '16px',
-      border: '1px solid #f3f4f6', boxShadow: '0 1px 8px rgba(0,0,0,0.06)', marginBottom: 10,
+      background: 'var(--w)', borderRadius: 16, padding: '16px',
+      border: '1px solid var(--bd)', boxShadow: '0 1px 8px rgba(0,0,0,0.06)', marginBottom: 10,
     },
     reviewTop: { display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 },
     reviewAvatar: (color) => ({
@@ -1184,18 +1198,18 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
       background: color, display: 'flex', alignItems: 'center',
       justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: 14, flexShrink: 0,
     }),
-    reviewName: { fontSize: 14, fontWeight: 700, color: '#111827' },
-    reviewDate: { fontSize: 12, color: '#9ca3af' },
-    reviewText: { fontSize: 13, color: '#6b7280', lineHeight: 1.65, margin: 0 },
+    reviewName: { fontSize: 14, fontWeight: 700, color: 'var(--dk)' },
+    reviewDate: { fontSize: 12, color: 'var(--g)' },
+    reviewText: { fontSize: 13, color: 'var(--g)', lineHeight: 1.65, margin: 0 },
 
     // Favs
     favCard: {
-      background: 'white', borderRadius: 16, border: '1px solid #f3f4f6',
+      background: 'var(--w)', borderRadius: 16, border: '1px solid var(--bd)',
       boxShadow: '0 1px 8px rgba(0,0,0,0.06)', overflow: 'hidden',
     },
     favImg: {
       height: 100, display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontSize: 38, background: 'linear-gradient(135deg,#fdf4ff,#f0fdf4)', position: 'relative',
+      fontSize: 38, background: 'var(--bgw)', position: 'relative',
     },
     favHeart: {
       position: 'absolute', top: 8, right: 8,
@@ -1205,40 +1219,40 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
       boxShadow: '0 1px 4px rgba(0,0,0,0.1)',
     },
     favBody: { padding: '10px 12px 12px' },
-    favTitle: { fontSize: 13, fontWeight: 700, color: '#111827', margin: '0 0 2px' },
-    favOwner: { fontSize: 11, color: '#9ca3af', margin: '0 0 6px' },
+    favTitle: { fontSize: 13, fontWeight: 700, color: 'var(--dk)', margin: '0 0 2px' },
+    favOwner: { fontSize: 11, color: 'var(--g)', margin: '0 0 6px' },
     favBottom: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
-    favPrice: { fontSize: 14, fontWeight: 800, color: '#6C63FF' },
-    favRating: { fontSize: 11, color: '#6b7280', display: 'flex', alignItems: 'center', gap: 2 },
+    favPrice: { fontSize: 14, fontWeight: 800, color: 'var(--p)' },
+    favRating: { fontSize: 11, color: 'var(--g)', display: 'flex', alignItems: 'center', gap: 2 },
 
     // Settings
     settingsSection: { marginBottom: 24 },
-    sectionTitle: { fontSize: 11, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 0.8, margin: '0 0 10px' },
+    sectionTitle: { fontSize: 11, fontWeight: 700, color: 'var(--g)', textTransform: 'uppercase', letterSpacing: 0.8, margin: '0 0 10px' },
     fieldCard: {
-      background: 'white', borderRadius: 14, border: '1px solid #f3f4f6',
+      background: 'var(--w)', borderRadius: 14, border: '1px solid var(--bd)',
       boxShadow: '0 1px 4px rgba(0,0,0,0.04)', overflow: 'hidden',
     },
     fieldRow: {
-      padding: '14px 16px', borderBottom: '1px solid #f9fafb',
+      padding: '14px 16px', borderBottom: '1px solid var(--bd)',
       display: 'flex', flexDirection: 'column', gap: 2,
     },
-    fieldLabel: { fontSize: 11, color: '#9ca3af', fontWeight: 600 },
+    fieldLabel: { fontSize: 11, color: 'var(--g)', fontWeight: 600 },
     fieldInput: {
-      border: 'none', outline: 'none', fontSize: 14, color: '#111827',
+      border: 'none', outline: 'none', fontSize: 14, color: 'var(--dk)',
       background: 'transparent', padding: 0, width: '100%', fontFamily: 'inherit',
     },
     toggleCard: {
-      background: 'white', borderRadius: 14, border: '1px solid #f3f4f6',
+      background: 'var(--w)', borderRadius: 14, border: '1px solid var(--bd)',
       boxShadow: '0 1px 4px rgba(0,0,0,0.04)', overflow: 'hidden', marginBottom: 8,
     },
     toggleRow: {
       padding: '14px 16px', display: 'flex',
       justifyContent: 'space-between', alignItems: 'center',
-      borderBottom: '1px solid #f9fafb',
+      borderBottom: '1px solid var(--bd)',
     },
     toggleInfo: { display: 'flex', flexDirection: 'column', gap: 2 },
-    toggleTitle: { fontSize: 14, fontWeight: 600, color: '#111827' },
-    toggleSub: { fontSize: 12, color: '#9ca3af' },
+    toggleTitle: { fontSize: 14, fontWeight: 600, color: 'var(--dk)' },
+    toggleSub: { fontSize: 12, color: 'var(--g)' },
     toggle: (on) => ({
       width: 46, height: 26, borderRadius: 13, position: 'relative',
       background: on ? '#6C63FF' : '#d1d5db', cursor: 'pointer', transition: 'background 0.2s',
@@ -1258,7 +1272,7 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
     },
     logoutBtn: {
       width: '100%', padding: '15px', borderRadius: 14,
-      background: 'white', border: '2px solid #fecaca',
+      background: 'var(--w)', border: '2px solid #fecaca',
       color: '#ef4444', fontSize: 15, fontWeight: 700, cursor: 'pointer',
     },
   };
@@ -1354,7 +1368,7 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
                 <div style={S.listingImg}>{l.img || '📦'}</div>
                 <div style={S.listingBody}>
                   <p style={S.listingTitle}>{l.title}</p>
-                  <p style={S.listingPrice}>{l.price}€<span style={{fontWeight:400,fontSize:11,color:'#9ca3af'}}>/jour</span></p>
+                  <p style={S.listingPrice}>{l.price}€<span style={{fontWeight:400,fontSize:11,color:'var(--g)'}}>/jour</span></p>
                   <div style={S.listingRating}>⭐ {l.rating || '4.8'} <span>· {l.reviews || 0} avis</span></div>
                 </div>
               </div>
@@ -1365,7 +1379,7 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
         {/* ── Réservations ── */}
         {tab === 'reservations' && (
           <div>
-            <p style={{fontSize:13,color:'#9ca3af',margin:'0 0 16px',fontWeight:500}}>3 réservations au total</p>
+            <p style={{fontSize:13,color:'var(--g)',margin:'0 0 16px',fontWeight:500}}>3 réservations au total</p>
             {mockReservations.map((r, i) => (
               <div key={r.id} style={{...S.resCard, animation:'fadeSlideIn 0.4s cubic-bezier(0.34,1.56,0.64,1) both', animationDelay:`${i*0.07}s`}}>
                 <div style={S.resImgBox}>{r.img}</div>
@@ -2233,7 +2247,7 @@ function Dashboard({state,dispatch,setPage}){
     {icon:"✅",val:myBookAsOwner.filter(b=>b.status==="confirmed").length,label:"Confirmées",sub:"locations",color:"#10b981",bg:"linear-gradient(135deg,#d1fae5,#a7f3d0)"},
     {icon:"⏳",val:pending,label:"En attente",sub:"à confirmer",color:"#f59e0b",bg:"linear-gradient(135deg,#fef3c7,#fde68a)"},
   ];
-  const card={background:"white",borderRadius:18,boxShadow:"0 2px 20px rgba(0,0,0,0.07)",overflow:"hidden"};
+  const card={background:"var(--w)",borderRadius:18,boxShadow:"0 2px 20px rgba(0,0,0,0.07)",overflow:"hidden"};
   return(
   <div style={{minHeight:"100vh",background:"linear-gradient(160deg,#6C63FF 0%,#7c5ce7 28%,#5a7fff 62%,#4ECDC4 100%)",backgroundAttachment:"fixed",overflowX:"hidden",paddingBottom:90,animation:"fadeSlideUp 0.4s both"}}>
     {/* ── Header ── */}
@@ -2270,8 +2284,8 @@ function Dashboard({state,dispatch,setPage}){
               <div style={{width:40,height:40,borderRadius:12,background:k.bg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:19}}>{k.icon}</div>
               <span style={{fontSize:10,fontWeight:700,color:k.color,background:k.bg,padding:"3px 8px",borderRadius:20}}>{k.sub}</span>
             </div>
-            <div style={{fontSize:26,fontWeight:800,color:"#111827",letterSpacing:-0.5,lineHeight:1}}>{k.val}</div>
-            <div style={{fontSize:12,color:"#6b7280",marginTop:4}}>{k.label}</div>
+            <div style={{fontSize:26,fontWeight:800,color:"var(--dk)",letterSpacing:-0.5,lineHeight:1}}>{k.val}</div>
+            <div style={{fontSize:12,color:"var(--g)",marginTop:4}}>{k.label}</div>
           </div>
         ))}
       </div>
@@ -2280,12 +2294,12 @@ function Dashboard({state,dispatch,setPage}){
       <div style={{...card,padding:"18px 16px",animation:"fadeSlideIn 0.5s 0.35s both"}}>
         <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:16}}>
           <div>
-            <div style={{fontSize:14,fontWeight:700,color:"#111827",animation:"fadeSlideIn 0.4s 0.4s both"}}>Revenus mensuels</div>
-            <div style={{fontSize:11,color:"#9ca3af",marginTop:2}}>{new Date().getFullYear()} · {hasReal?"données réelles":"données de démonstration"}</div>
+            <div style={{fontSize:14,fontWeight:700,color:"var(--dk)",animation:"fadeSlideIn 0.4s 0.4s both"}}>Revenus mensuels</div>
+            <div style={{fontSize:11,color:"var(--g)",marginTop:2}}>{new Date().getFullYear()} · {hasReal?"données réelles":"données de démonstration"}</div>
           </div>
           <div style={{textAlign:"right"}}>
             <div style={{fontSize:18,fontWeight:800,color:"#6C63FF",letterSpacing:-0.5,animation:"glowPulse 2s ease-in-out infinite"}}>{monthlyVals[curMonth]}€</div>
-            <div style={{fontSize:10,color:"#9ca3af"}}>ce mois</div>
+            <div style={{fontSize:10,color:"var(--g)"}}>ce mois</div>
           </div>
         </div>
         {window.Chart
@@ -2306,30 +2320,30 @@ function Dashboard({state,dispatch,setPage}){
       {/* ── Category chart + Quick actions ── */}
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,animation:"fadeSlideIn 0.5s 0.43s both"}} className="dboard-grid">
         <div style={{...card,padding:"18px 16px"}}>
-          <div style={{fontSize:14,fontWeight:700,color:"#111827",marginBottom:3,animation:"fadeSlideIn 0.4s 0.48s both"}}>Par catégorie</div>
-          <div style={{fontSize:11,color:"#9ca3af",marginBottom:12}}>Annonces par type</div>
+          <div style={{fontSize:14,fontWeight:700,color:"var(--dk)",marginBottom:3,animation:"fadeSlideIn 0.4s 0.48s both"}}>Par catégorie</div>
+          <div style={{fontSize:11,color:"var(--g)",marginBottom:12}}>Annonces par type</div>
           {catData.length>0&&window.Chart
             ? <div style={{height:150,position:"relative"}}><canvas ref={pieRef}/></div>
             : catData.length===0
-              ? <div style={{height:140,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:6,color:"#9ca3af"}}>
+              ? <div style={{height:140,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:6,color:"var(--g)"}}>
                   <span style={{fontSize:28}}>📦</span><span style={{fontSize:12}}>Aucune annonce</span>
                 </div>
               : <div style={{display:"flex",flexDirection:"column",gap:7}}>
                   {catData.slice(0,5).map(([cat,cnt],i)=>(
                     <div key={i} style={{display:"flex",alignItems:"center",gap:6}}>
                       <div style={{width:8,height:8,borderRadius:"50%",background:chartColors[i%8],flexShrink:0}}/>
-                      <div style={{flex:1,fontSize:11,color:"#374151",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{cat}</div>
-                      <div style={{width:50,height:5,background:"#f3f4f6",borderRadius:3,overflow:"hidden"}}>
+                      <div style={{flex:1,fontSize:11,color:"var(--dk)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{cat}</div>
+                      <div style={{width:50,height:5,background:"var(--bgw)",borderRadius:3,overflow:"hidden"}}>
                         <div style={{width:Math.round(cnt/myItems.length*100)+"%",height:"100%",background:chartColors[i%8],borderRadius:3}}/>
                       </div>
-                      <div style={{fontSize:11,fontWeight:700,color:"#111827",minWidth:14,textAlign:"right"}}>{cnt}</div>
+                      <div style={{fontSize:11,fontWeight:700,color:"var(--dk)",minWidth:14,textAlign:"right"}}>{cnt}</div>
                     </div>
                   ))}
                 </div>
           }
         </div>
         <div style={{...card,padding:"18px 16px"}}>
-          <div style={{fontSize:14,fontWeight:700,color:"#111827",marginBottom:14,animation:"fadeSlideIn 0.4s 0.48s both"}}>Actions rapides</div>
+          <div style={{fontSize:14,fontWeight:700,color:"var(--dk)",marginBottom:14,animation:"fadeSlideIn 0.4s 0.48s both"}}>Actions rapides</div>
           <div style={{display:"flex",flexDirection:"column",gap:8}}>
             {[
               {icon:"➕",label:"Nouvelle annonce",color:"#6C63FF",bg:"#ede9fe",action:()=>setPage("create")},
@@ -2349,22 +2363,22 @@ function Dashboard({state,dispatch,setPage}){
       {/* ── Listings ── */}
       <div style={{...card,padding:"18px 16px",animation:"fadeSlideIn 0.5s 0.5s both"}}>
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
-          <div style={{fontSize:14,fontWeight:700,color:"#111827",animation:"fadeSlideIn 0.4s 0.55s both"}}>Mes annonces</div>
+          <div style={{fontSize:14,fontWeight:700,color:"var(--dk)",animation:"fadeSlideIn 0.4s 0.55s both"}}>Mes annonces</div>
           <button onClick={()=>setPage("create")} style={{fontSize:12,fontWeight:600,color:"#6C63FF",background:"#ede9fe",border:"none",borderRadius:20,padding:"5px 12px",cursor:"pointer"}}>+ Ajouter</button>
         </div>
         {myItems.length===0
-          ? <div style={{textAlign:"center",padding:"24px 0",color:"#9ca3af"}}>
+          ? <div style={{textAlign:"center",padding:"24px 0",color:"var(--g)"}}>
               <div style={{fontSize:28,marginBottom:6}}>📦</div>
-              <div style={{fontSize:13,fontWeight:600,color:"#374151",marginBottom:4}}>Aucune annonce</div>
+              <div style={{fontSize:13,fontWeight:600,color:"var(--dk)",marginBottom:4}}>Aucune annonce</div>
               <button className="bp" style={{marginTop:10,fontSize:12,padding:"7px 18px"}} onClick={()=>setPage("create")}>Créer une annonce</button>
             </div>
           : <div style={{display:"flex",flexDirection:"column"}}>
               {myItems.slice(0,6).map((it,idx)=>(
-                <div key={it.id} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 0",borderBottom:idx<Math.min(myItems.length,6)-1?"1px solid #f3f4f6":"none",animation:`fadeSlideUp 0.4s ${0.55+idx*0.05}s both`}}>
+                <div key={it.id} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 0",borderBottom:idx<Math.min(myItems.length,6)-1?"1px solid var(--bd)":"none",animation:`fadeSlideUp 0.4s ${0.55+idx*0.05}s both`}}>
                   <img src={it.images[0]} alt="" style={{width:42,height:34,objectFit:"cover",borderRadius:8,flexShrink:0}}/>
                   <div style={{flex:1,minWidth:0}}>
-                    <div style={{fontSize:13,fontWeight:600,color:"#111827",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{it.title}</div>
-                    <div style={{fontSize:11,color:"#9ca3af",marginTop:1}}>{it.price}€/j · {it.cat}</div>
+                    <div style={{fontSize:13,fontWeight:600,color:"var(--dk)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{it.title}</div>
+                    <div style={{fontSize:11,color:"var(--g)",marginTop:1}}>{it.price}€/j · {it.cat}</div>
                   </div>
                   <button onClick={()=>dispatch({type:"TOGGLE_AVAIL",id:it.id})} style={{flexShrink:0,fontSize:11,fontWeight:700,padding:"5px 11px",borderRadius:20,border:"none",cursor:"pointer",
                     background:it.available?"#d1fae5":"#f3f4f6",color:it.available?"#065f46":"#6b7280"}}>
@@ -2729,7 +2743,7 @@ function App(){
 
     {page==="home"&&<footer style={{background:"linear-gradient(160deg,#6C63FF 0%,#7c5ce7 35%,#5a7fff 65%,#4ECDC4 100%)",marginTop:0,paddingBottom:0}}>
       {/* Fondu de transition */}
-      <div style={{height:56,background:"linear-gradient(to bottom,#F4F3FF,transparent)",marginBottom:0}}/>
+      <div style={{height:56,background:dark?"linear-gradient(to bottom,#0f0f13,transparent)":"linear-gradient(to bottom,#F4F3FF,transparent)",marginBottom:0}}/>
       {/* Cartes promo */}
       <div style={{maxWidth:1200,margin:"0 auto",padding:"0 24px 40px"}}>
         <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:16}}>
