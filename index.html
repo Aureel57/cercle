@@ -2065,17 +2065,29 @@ function Dashboard({state,dispatch,setPage}){
   const catData=Object.entries(myItems.reduce((acc,it)=>{acc[it.cat]=(acc[it.cat]||0)+1;return acc},{}));
   const barRef=useRef(null);const pieRef=useRef(null);
   const barInst=useRef(null);const pieInst=useRef(null);
+  const [chartType,setChartType]=useState("bar");
+  const {dark}=useContext(Ctx);
   const chartColors=["#6C63FF","#4ECDC4","#FF6B6B","#FFD93D","#6BCB77","#4D96FF","#C77DFF","#FF9F1C"];
   useEffect(()=>{
     if(!window.Chart||!barRef.current)return;
     if(barInst.current)barInst.current.destroy();
+    const isLine=chartType==="line";
     barInst.current=new window.Chart(barRef.current,{
-      type:"bar",
+      type:chartType,
       data:{labels:months,datasets:[{
         label:"Revenus (€)",data:monthlyVals,
-        backgroundColor:monthlyVals.map((_,i)=>i===curMonth?"#6C63FF":i<curMonth?"rgba(108,99,255,0.35)":"rgba(108,99,255,0.1)"),
-        borderRadius:6,borderSkipped:false,
-        hoverBackgroundColor:monthlyVals.map((_,i)=>i===curMonth?"#5a53e0":"rgba(108,99,255,0.6)"),
+        ...(isLine?{
+          borderColor:"#6C63FF",
+          backgroundColor:"rgba(108,99,255,0.12)",
+          fill:true,tension:0.4,borderWidth:2.5,
+          pointRadius:monthlyVals.map((_,i)=>i===curMonth?5:3),
+          pointBackgroundColor:monthlyVals.map((_,i)=>i===curMonth?"#6C63FF":"rgba(108,99,255,0.55)"),
+          pointBorderColor:"#fff",pointBorderWidth:1.5,hoverPointRadius:6,
+        }:{
+          backgroundColor:monthlyVals.map((_,i)=>i===curMonth?"#6C63FF":i<curMonth?"rgba(108,99,255,0.35)":"rgba(108,99,255,0.1)"),
+          borderRadius:6,borderSkipped:false,
+          hoverBackgroundColor:monthlyVals.map((_,i)=>i===curMonth?"#5a53e0":"rgba(108,99,255,0.6)"),
+        }),
       }]},
       options:{
         responsive:true,maintainAspectRatio:false,
@@ -2095,7 +2107,7 @@ function Dashboard({state,dispatch,setPage}){
       }
     });
     return()=>{if(barInst.current)barInst.current.destroy()};
-  },[JSON.stringify(monthlyVals)]);
+  },[JSON.stringify(monthlyVals),chartType]);
   useEffect(()=>{
     if(!window.Chart||!pieRef.current||catData.length===0)return;
     if(pieInst.current)pieInst.current.destroy();
@@ -2296,6 +2308,13 @@ function Dashboard({state,dispatch,setPage}){
           <div>
             <div style={{fontSize:14,fontWeight:700,color:"var(--dk)",animation:"fadeSlideIn 0.4s 0.4s both"}}>Revenus mensuels</div>
             <div style={{fontSize:11,color:"var(--g)",marginTop:2}}>{new Date().getFullYear()} · {hasReal?"données réelles":"données de démonstration"}</div>
+            <div style={{display:"flex",gap:4,marginTop:8}}>
+              {[{t:"bar",label:"Barres",icon:"▬"},{t:"line",label:"Courbe",icon:"〜"}].map(({t,label,icon})=>(
+                <button key={t} onClick={()=>setChartType(t)} style={{display:"flex",alignItems:"center",gap:4,padding:"3px 10px",borderRadius:20,border:"1.5px solid",fontSize:10,fontWeight:600,cursor:"pointer",transition:"all 0.2s ease",outline:"none",borderColor:chartType===t?"#6C63FF":dark?"rgba(255,255,255,0.15)":"rgba(0,0,0,0.12)",background:chartType===t?"#6C63FF":"transparent",color:chartType===t?"#fff":dark?"#a0a0b8":"#6b7280"}}>
+                  <span style={{fontSize:11}}>{icon}</span>{label}
+                </button>
+              ))}
+            </div>
           </div>
           <div style={{textAlign:"right"}}>
             <div style={{fontSize:18,fontWeight:800,color:"#6C63FF",letterSpacing:-0.5,animation:"glowPulse 2s ease-in-out infinite"}}>{monthlyVals[curMonth]}€</div>
