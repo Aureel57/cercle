@@ -12,6 +12,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap');
 *{margin:0;padding:0;box-sizing:border-box}
@@ -732,6 +733,34 @@ function Onboarding({onClose}){
   </div>
 }
 
+/* ===== QR CODE MODAL ===== */
+function QRModal({item,onClose}){
+  const qrRef=useRef(null);
+  const url=`https://aureel57.github.io/cercle/?annonce=${item.id}`;
+  useEffect(()=>{
+    if(qrRef.current&&window.QRCode){
+      qrRef.current.innerHTML='';
+      new QRCode(qrRef.current,{text:url,width:200,height:200,colorDark:"#6C63FF",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.H});
+    }
+  },[]);
+  const download=()=>{
+    const canvas=qrRef.current?.querySelector('canvas');
+    if(canvas){const a=document.createElement('a');a.download=`qrcode-${item.title.replace(/\s+/g,'-')}.png`;a.href=canvas.toDataURL('image/png');a.click();}
+  };
+  return <div className="bk" onClick={onClose}>
+    <div className="md" onClick={e=>e.stopPropagation()} style={{maxWidth:380,textAlign:'center'}}>
+      <div className="mh"><button className="mx" onClick={onClose}><I.X/></button><h2>📱 QR Code</h2></div>
+      <div className="mb" style={{display:'flex',flexDirection:'column',alignItems:'center',gap:16}}>
+        <div style={{fontSize:15,fontWeight:700,color:'var(--dk)',maxWidth:280,lineHeight:1.4}}>{item.title}</div>
+        <div ref={qrRef} style={{width:200,height:200,display:'flex',alignItems:'center',justifyContent:'center'}}/>
+        <p style={{fontSize:13,color:'var(--g)',fontStyle:'italic',lineHeight:1.65,maxWidth:300,margin:0}}>Collez ce QR code sur votre objet. Les locataires pourront scanner ce code pour accéder directement à votre annonce et effectuer une réservation.</p>
+        <button className="bp" style={{width:'100%'}} onClick={download}>⬇️ Télécharger le QR code</button>
+        <button className="bs" style={{width:'100%'}} onClick={onClose}>Fermer</button>
+      </div>
+    </div>
+  </div>
+}
+
 /* ===== MINI CALENDAR ===== */
 function MiniCal({value,onChange,label,minDate}){
   const d=value?new Date(value):new Date();
@@ -937,6 +966,7 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
   const [tab, setTab] = React.useState(initTab || 'annonces');
   const [editMode, setEditMode] = React.useState(false);
   const [gradeBarWidth, setGradeBarWidth] = React.useState(0);
+  const [qrItem, setQrItem] = React.useState(null);
   const [profileData, setProfileData] = React.useState({
     name: userName,
     email: user.email || 'noah@cercle.fr',
@@ -1393,11 +1423,13 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
                   <p style={S.listingTitle}>{l.title}</p>
                   <p style={S.listingPrice}>{l.price}€<span style={{fontWeight:400,fontSize:11,color:'var(--g)'}}>/jour</span></p>
                   <div style={S.listingRating}>⭐ {l.rating || '4.8'} <span>· {l.reviews || 0} avis</span></div>
+                  <button onClick={e=>{e.stopPropagation();setQrItem(l);}} style={{marginTop:8,width:'100%',padding:'6px 0',border:'1.5px solid #d1c9ff',borderRadius:10,background:'#f5f3ff',color:'#6C63FF',fontSize:11,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:4}}>📱 QR Code</button>
                 </div>
               </div>
             ))}
           </div>
         )}
+        {qrItem&&<QRModal item={qrItem} onClose={()=>setQrItem(null)}/>}
 
         {/* ── Réservations ── */}
         {tab === 'reservations' && (
@@ -2383,6 +2415,7 @@ function GestionPro({state,dispatch,setPage}){
 
 function Dashboard({state,dispatch,setPage}){
   const u=state.user;
+  const[qrItem,setQrItem]=useState(null);
   const myItems=[...state.items.filter(i=>i.owner.id===u.id),...state.userItems];
   const myBookAsOwner=state.bookings.filter(b=>b.ownerId===u.id);
   const revenue=myBookAsOwner.filter(b=>b.status==="confirmed").reduce((s,b)=>s+b.total,0);
@@ -2793,15 +2826,19 @@ function Dashboard({state,dispatch,setPage}){
                     <div style={{fontSize:13,fontWeight:600,color:"var(--dk)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{it.title}</div>
                     <div style={{fontSize:11,color:"var(--g)",marginTop:1}}>{it.price}€/j · {it.cat}</div>
                   </div>
-                  <button onClick={()=>dispatch({type:"TOGGLE_AVAIL",id:it.id})} style={{flexShrink:0,fontSize:11,fontWeight:700,padding:"5px 11px",borderRadius:20,border:"none",cursor:"pointer",
-                    background:it.available?"#d1fae5":"#f3f4f6",color:it.available?"#065f46":"#6b7280"}}>
-                    {it.available?"✓ Dispo":"Indispo"}
-                  </button>
+                  <div style={{display:"flex",flexDirection:"column",gap:4,flexShrink:0}}>
+                    <button onClick={()=>dispatch({type:"TOGGLE_AVAIL",id:it.id})} style={{fontSize:11,fontWeight:700,padding:"5px 11px",borderRadius:20,border:"none",cursor:"pointer",
+                      background:it.available?"#d1fae5":"#f3f4f6",color:it.available?"#065f46":"#6b7280"}}>
+                      {it.available?"✓ Dispo":"Indispo"}
+                    </button>
+                    <button onClick={()=>setQrItem(it)} style={{fontSize:10,fontWeight:700,padding:"4px 8px",borderRadius:20,border:"1.5px solid #d1c9ff",background:"#f5f3ff",color:"#6C63FF",cursor:"pointer"}}>📱 QR</button>
+                  </div>
                 </div>
               ))}
             </div>
         }
       </div>
+      {qrItem&&<QRModal item={qrItem} onClose={()=>setQrItem(null)}/>}
 
     </div>
   </div>
@@ -3030,6 +3067,7 @@ function App(){
   const[dark,setDark]=useState(false);
   useEffect(()=>{document.documentElement.classList.toggle('dark',dark);document.body.style.background=dark?'#0f0f13':''},[dark]);
   const[mode,setMode]=useState('perso'); // 'perso' or 'pro'
+  const[listingTab,setListingTab]=useState('particuliers'); // 'particuliers' or 'professionnels'
   const[showChat,setShowChat]=useState(false);
   const[showGallery,setShowGallery]=useState(null);
   const[showShop,setShowShop]=useState(null);
@@ -3042,7 +3080,7 @@ function App(){
 
   const allPerso=useMemo(()=>[...state.items,...state.userItems].filter(i=>!i.isPro),[state.items,state.userItems]);
   const allPro=useMemo(()=>[...state.proItems,...state.userItems.filter(i=>i.isPro)],[state.proItems,state.userItems]);
-  const all=mode==='pro'?allPro:allPerso;
+  const all=mode==='pro'?allPro:(listingTab==='professionnels'?allPro:allPerso);
   const unread=state.notifications.filter(n=>!n.read).length;
 
   const filtered=useMemo(()=>{
@@ -3146,8 +3184,20 @@ function App(){
       {!q&&cat==="all"&&state.user&&<div className="reco"><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}><h3 style={{fontFamily:"var(--fd)",fontSize:20,fontWeight:700,letterSpacing:"-.01em"}}>{mode==="pro"?"Sélection Pro":"Recommandé pour vous"}</h3><button className="cl" style={{color:"var(--p)"}}>Voir tout →</button></div>
         <div className="reco-sc">{all.sort(()=>Math.random()-.5).slice(0,8).map(i=><div key={i.id} className="reco-c" onClick={()=>setSel(i)}><img className="reco-ci" src={i.images[0]} alt=""/><div style={{padding:"4px 8px 8px"}}><div style={{fontSize:12,fontWeight:600,marginTop:4,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{i.title}</div><div style={{fontSize:12,fontWeight:700,color:"var(--p)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{i.price}€<span style={{fontWeight:400,color:"var(--g)"}}>/j</span></div></div></div>)}</div>
       </div>}
+      {mode!=='pro'&&<div style={{padding:"16px 28px 0",maxWidth:1520,margin:"0 auto"}}>
+        <div style={{display:"flex",gap:4,background:"var(--bg)",borderRadius:28,padding:3,border:"1px solid var(--bd)",width:"fit-content"}}>
+          <button onClick={()=>setListingTab('particuliers')} style={{padding:"8px 18px",borderRadius:24,border:"none",fontSize:12,fontWeight:700,cursor:"pointer",transition:"all .2s",
+            background:listingTab==='particuliers'?"var(--w)":"transparent",
+            color:listingTab==='particuliers'?"var(--dk)":"var(--g)",
+            boxShadow:listingTab==='particuliers'?"var(--sh)":"none"}}>👤 Particuliers</button>
+          <button onClick={()=>setListingTab('professionnels')} style={{padding:"8px 18px",borderRadius:24,border:"none",fontSize:12,fontWeight:700,cursor:"pointer",transition:"all .2s",
+            background:listingTab==='professionnels'?"linear-gradient(135deg,#1E3A5F,#2563EB)":"transparent",
+            color:listingTab==='professionnels'?"#fff":"var(--g)",
+            boxShadow:listingTab==='professionnels'?"0 2px 8px rgba(37,99,235,.25)":"none"}}>🏢 Professionnels</button>
+        </div>
+      </div>}
       {filtered.length===0?<div className="empty"><span>🔍</span><h2>Aucun résultat trouvé</h2><p style={{maxWidth:320,margin:"6px auto 16px",lineHeight:1.5}}>Essayez d'élargir votre recherche ou de modifier vos filtres.</p><button className="bs" onClick={()=>{setQ("");setCat("all")}}>Réinitialiser la recherche</button></div>:
-      <div className="grid" style={{paddingTop:20}}>{filtered.map(i=><Card key={i.id} item={i} onOpen={setSel} favs={state.favorites} dispatch={dispatch} onAuthRequired={state.user?null:()=>setShowA("login")}/>)}</div>}
+      <div className="grid" style={{paddingTop:16}}>{filtered.map(i=><Card key={i.id} item={i} onOpen={setSel} favs={state.favorites} dispatch={dispatch} onAuthRequired={state.user?null:()=>setShowA("login")}/>)}</div>}
     </main>}
 
     {page==="profile"&&state.user&&<Profile state={state} dispatch={dispatch} setPage={setPage} setSelected={setSel} initTab={profTab}/>}
