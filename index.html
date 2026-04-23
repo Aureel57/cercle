@@ -736,7 +736,8 @@ function Onboarding({onClose}){
 /* ===== QR CODE MODAL ===== */
 function QRModal({item,onClose}){
   const qrRef=useRef(null);
-  const url=`https://aureel57.github.io/cercle/?annonce=${item.id}`;
+  const baseUrl=window.location.href.split('?')[0];
+  const url=`${baseUrl}?annonce=${item.id}&action=confirm`;
   useEffect(()=>{
     if(qrRef.current&&window.QRCode){
       qrRef.current.innerHTML='';
@@ -748,12 +749,14 @@ function QRModal({item,onClose}){
     if(canvas){const a=document.createElement('a');a.download=`qrcode-${item.title.replace(/\s+/g,'-')}.png`;a.href=canvas.toDataURL('image/png');a.click();}
   };
   return <div className="bk" onClick={onClose}>
-    <div className="md" onClick={e=>e.stopPropagation()} style={{maxWidth:380,textAlign:'center'}}>
-      <div className="mh"><button className="mx" onClick={onClose}><I.X/></button><h2>📱 QR Code</h2></div>
+    <div className="md" onClick={e=>e.stopPropagation()} style={{maxWidth:420,textAlign:'center'}}>
+      <div className="mh"><button className="mx" onClick={onClose}><I.X/></button><h2>📱 QR Code anti-litige</h2></div>
       <div className="mb" style={{display:'flex',flexDirection:'column',alignItems:'center',gap:16}}>
         <div style={{fontSize:15,fontWeight:700,color:'var(--dk)',maxWidth:280,lineHeight:1.4}}>{item.title}</div>
         <div ref={qrRef} style={{width:200,height:200,display:'flex',alignItems:'center',justifyContent:'center'}}/>
-        <p style={{fontSize:13,color:'var(--g)',fontStyle:'italic',lineHeight:1.65,maxWidth:300,margin:0}}>Collez ce QR code sur votre objet. Les locataires pourront scanner ce code pour accéder directement à votre annonce et effectuer une réservation.</p>
+        <div style={{fontSize:13,color:'var(--tx)',lineHeight:1.65,textAlign:'left',background:'#fef9c3',borderRadius:12,padding:'14px 16px',border:'1px solid #fde68a',margin:0,width:'100%'}}>
+          📌 Collez ce QR code sur votre objet. Lors de la remise, le locataire devra scanner ce code pour confirmer qu'il a bien reçu l'objet. Au retour, vous devrez scanner ce code pour confirmer la récupération. Cela protège les deux parties en cas de litige.
+        </div>
         <button className="bp" style={{width:'100%'}} onClick={download}>⬇️ Télécharger le QR code</button>
         <button className="bs" style={{width:'100%'}} onClick={onClose}>Fermer</button>
       </div>
@@ -985,10 +988,13 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
     }
   }, [tab]);
 
-  const listings = (state && state.items && state.items.filter(i => i.owner === user.id)) || [];
+  const myOwnedItems = (state.items?.filter(i => i.owner?.id === user.id) || []);
+  const listings = [...myOwnedItems, ...(state.userItems || [])];
   const allItems = [...(state.items||[]), ...(state.proItems||[]), ...(state.userItems||[])];
   const favItems = allItems.filter(i => state.favorites && state.favorites.has(i.id));
   const favs = state.favorites || new Set();
+  const isUserPro = user.isPro;
+  const myProItems = listings.filter(i => i.isPro);
 
   const mockListings = [
     { id: 101, title: 'Perceuse Bosch Pro', price: 12, rating: 4.95, reviews: 87, img: '🔧' },
@@ -1024,6 +1030,7 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
   ];
   const tabs = [
     { id: 'annonces', label: 'Annonces', icon: '🏷️', count: displayListings.length || 0 },
+    ...(isUserPro ? [{ id: 'parc', label: 'Mon Parc', icon: '🏗️', count: myProItems.length }] : []),
     { id: 'reservations', label: 'Réservations', icon: '📅', count: mockReservations.length },
     { id: 'avis', label: 'Avis', icon: '⭐', count: mockReviews.length },
     { id: 'favoris', label: 'Favoris', icon: '❤️', count: favItems.length },
@@ -1430,6 +1437,38 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
           </div>
         )}
         {qrItem&&<QRModal item={qrItem} onClose={()=>setQrItem(null)}/>}
+
+        {/* ── Mon Parc (Pro only) ── */}
+        {tab === 'parc' && (
+          <div>
+            <p style={{fontSize:13,color:'var(--g)',margin:'0 0 16px',fontWeight:500}}>{myProItems.length} équipement{myProItems.length!==1?'s':''} dans votre parc professionnel</p>
+            {myProItems.length === 0 ? (
+              <div style={{textAlign:'center',padding:'48px 20px',color:'#9ca3af'}}>
+                <div style={{fontSize:44,marginBottom:12}}>🏗️</div>
+                <p style={{fontWeight:700,color:'#374151',fontSize:15,marginBottom:4}}>Aucun équipement Pro</p>
+                <p style={{fontSize:13}}>Publiez une annonce en mode Professionnel pour l'ajouter ici.</p>
+              </div>
+            ) : (
+              <div style={S.listingGrid}>
+                {myProItems.map((l, i) => (
+                  <div key={l.id} className="prof-listing-card" style={{...S.card,border:'2px solid #2563EB22',animation:'fadeSlideUp 0.4s cubic-bezier(0.34,1.56,0.64,1) both',animationDelay:`${i*0.07}s`}} onClick={() => { setSelected && setSelected(l); setPage && setPage('detail'); }}>
+                    <div style={{...S.listingImg,background:'linear-gradient(135deg,#dbeafe,#eff6ff)'}}>
+                      {l.images&&l.images[0]?<img src={l.images[0]} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}}/>:(l.img||'🏗️')}
+                    </div>
+                    <div style={S.listingBody}>
+                      <div style={{display:'flex',alignItems:'center',gap:4,marginBottom:4}}>
+                        <span style={{fontSize:9,fontWeight:700,color:'#2563EB',background:'#dbeafe',padding:'2px 6px',borderRadius:4}}>PRO</span>
+                      </div>
+                      <p style={S.listingTitle}>{l.title}</p>
+                      <p style={S.listingPrice}>{l.price}€<span style={{fontWeight:400,fontSize:11,color:'var(--g)'}}>/jour</span></p>
+                      <div style={S.listingRating}>⭐ {l.rating||'—'} <span>· {l.reviews||0} avis</span></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* ── Réservations ── */}
         {tab === 'reservations' && (
@@ -1864,7 +1903,7 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
 function CreateListing({state,dispatch,setPage,mode}){
   const[f,setF]=useState({title:"",cat:"tools",price:"",location:state.user?.location||"Paris 11e",condition:"Comme neuf",description:"",deposit:""});
   const u=(k,v)=>setF(p=>({...p,[k]:v}));
-  const go=()=>{if(!f.title||!f.price)return;dispatch({type:"ADD_ITEM",payload:{...f,price:+f.price,deposit:+f.deposit||+f.price*3,images:[mkImg(f.cat,99,0),mkImg(f.cat,99,1),mkImg(f.cat,99,2)]}});setPage("profile")};
+  const go=()=>{if(!f.title||!f.price)return;dispatch({type:"ADD_ITEM",payload:{...f,price:+f.price,deposit:+f.deposit||+f.price*3,images:[mkImg(f.cat,99,0),mkImg(f.cat,99,1),mkImg(f.cat,99,2)],isPro:!!state.user?.isPro}});setPage("profile")};
   return <div style={{maxWidth:540,margin:"0 auto",padding:28}}>
     <button className="cl" style={{marginBottom:14,display:"flex",alignItems:"center",gap:5}} onClick={()=>setPage("profile")}><I.Back/> Retour</button>
     <h1 style={{fontFamily:"var(--fd)",fontSize:22,marginBottom:18}}>Créer une annonce</h1>
@@ -3044,6 +3083,47 @@ function BadgesPage({state,setPage}){
 }
 
 
+/* ===== CONFIRMATION REMISE/RETOUR ===== */
+function ConfirmDeliveryPage({annonceId, allItems, onBack}){
+  const item=allItems.find(i=>String(i.id)===String(annonceId));
+  const[confirmed,setConfirmed]=useState(null);
+  const[ts,setTs]=useState('');
+  const confirm=(type)=>{
+    const now=new Date().toLocaleString('fr-FR',{weekday:'long',year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    setConfirmed(type);setTs(now);
+  };
+  if(confirmed){return(
+    <div style={{maxWidth:480,margin:'0 auto',padding:'60px 28px',textAlign:'center',minHeight:'100vh',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center'}}>
+      <div style={{fontSize:72,marginBottom:16}}>✅</div>
+      <h2 style={{fontFamily:'var(--fd)',fontSize:22,marginBottom:8}}>Confirmation enregistrée</h2>
+      <p style={{fontSize:14,color:'var(--g)',lineHeight:1.6,marginBottom:16}}>
+        {confirmed==='received'?"Vous avez confirmé avoir <strong>reçu</strong> l'objet.":"Vous avez confirmé avoir <strong>récupéré</strong> l'objet."}
+      </p>
+      <div style={{background:'#f0fdf4',border:'1px solid #bbf7d0',borderRadius:12,padding:'14px 20px',fontSize:13,color:'#166534',marginBottom:24,width:'100%'}}>
+        🕐 Horodatage : <strong>{ts}</strong>
+      </div>
+      <p style={{fontSize:12,color:'var(--gl)'}}>Cette confirmation peut servir de preuve en cas de litige.</p>
+      <button className="bs" style={{marginTop:20}} onClick={onBack}>← Retour à l'accueil</button>
+    </div>
+  );}
+  return(
+    <div style={{maxWidth:480,margin:'0 auto',padding:'60px 28px',textAlign:'center',minHeight:'100vh',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center'}}>
+      <div style={{fontSize:52,marginBottom:16}}>📦</div>
+      <h2 style={{fontFamily:'var(--fd)',fontSize:22,marginBottom:6}}>{item?item.title:'Annonce #'+annonceId}</h2>
+      <p style={{fontSize:14,color:'var(--g)',marginBottom:28,lineHeight:1.6}}>Confirmez la remise ou le retour de cet objet pour protéger les deux parties.</p>
+      <div style={{display:'flex',flexDirection:'column',gap:12,width:'100%'}}>
+        <button className="bp" style={{width:'100%',padding:'16px',fontSize:15}} onClick={()=>confirm('received')}>
+          ✅ Je confirme avoir reçu l'objet
+        </button>
+        <button className="bs" style={{width:'100%',padding:'16px',fontSize:15}} onClick={()=>confirm('returned')}>
+          ✅ Je confirme avoir récupéré l'objet
+        </button>
+      </div>
+      <button className="cl" style={{marginTop:20}} onClick={onBack}>← Retour</button>
+    </div>
+  );
+}
+
 /* ========== MAIN APP ========== */
 function App(){
   // Persist login
@@ -3063,6 +3143,7 @@ function App(){
   const[toasts,setToasts]=useState([]);
   const addToast=(text,type='i')=>{const id=uid();setToasts(t=>[...t,{id,text,type}]);setTimeout(()=>setToasts(t=>t.filter(x=>x.id!==id)),3500)};
   const[showOnboarding,setShowOnboarding]=useState(()=>{try{return!localStorage.getItem('cercle_ob')}catch{return true}});
+  const[confirmPage,setConfirmPage]=useState(()=>{try{const p=new URLSearchParams(window.location.search);const a=p.get('annonce'),ac=p.get('action');return(a&&ac==='confirm')?{annonce:a}:null}catch{return null}});
   const[cid,setCid]=useState(null);
   const[dark,setDark]=useState(false);
   useEffect(()=>{document.documentElement.classList.toggle('dark',dark);document.body.style.background=dark?'#0f0f13':''},[dark]);
@@ -3078,8 +3159,8 @@ function App(){
   const[lang,setLang]=useState('fr');
   const[filters,setFilters]=useState({priceMin:0,priceMax:500,condition:"Tous",options:[],sort:"pertinence",filterCat:"all",minRating:0});
 
-  const allPerso=useMemo(()=>[...state.items,...state.userItems].filter(i=>!i.isPro),[state.items,state.userItems]);
-  const allPro=useMemo(()=>[...state.proItems,...state.userItems.filter(i=>i.isPro)],[state.proItems,state.userItems]);
+  const allPerso=useMemo(()=>[...state.items,...state.userItems].filter(i=>!i.isPro&&!i.owner?.isPro),[state.items,state.userItems]);
+  const allPro=useMemo(()=>[...state.proItems,...state.userItems.filter(i=>i.isPro||i.owner?.isPro)],[state.proItems,state.userItems]);
   const all=mode==='pro'?allPro:(listingTab==='professionnels'?allPro:allPerso);
   const unread=state.notifications.filter(n=>!n.read).length;
 
@@ -3118,6 +3199,8 @@ function App(){
   useEffect(()=>{const obs=new IntersectionObserver((entries)=>{entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible');obs.unobserve(e.target)}})},{threshold:0.1});const revealEls=document.querySelectorAll('[data-reveal]');revealEls.forEach(el=>obs.observe(el));return()=>obs.disconnect()},[page]);
 
   const home=()=>{setInfoPage(null);setPage("home");setQ("");setLq("");setCat("all");setSel(null)};
+
+  if(confirmPage){const allIt=[...state.items,...state.proItems,...state.userItems];return <Ctx.Provider value={{dark,setDark,lang,setLang}}><div className={(dark?"dark":"")}><style>{css}</style><ConfirmDeliveryPage annonceId={confirmPage.annonce} allItems={allIt} onBack={()=>setConfirmPage(null)}/></div></Ctx.Provider>;}
 
   return <Ctx.Provider value={{dark,setDark,lang,setLang}}><div className={(dark?"dark":"")}><style>{css}</style>
     {/* Splash Screen */}
