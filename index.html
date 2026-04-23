@@ -227,7 +227,10 @@ body,html,#root{font-family:var(--f);color:var(--tx);background:var(--bg);-webki
 .grade-progress{margin-top:14px}
 .grade-progress-bar{height:6px;border-radius:3px;background:var(--bd);overflow:hidden;margin:6px 0}
 .grade-progress-fill{height:100%;border-radius:3px;transition:width 0.8s cubic-bezier(0.34,1.56,0.64,1);will-change:width}
-.grade-progress-fill.voisin{background:linear-gradient(90deg,#6b7280,#9ca3af)}.grade-progress-fill.habitant{background:linear-gradient(90deg,#3b82f6,#60a5fa)}.grade-progress-fill.pilier{background:linear-gradient(90deg,#F59E0B,#FCD34D)}.grade-progress-fill.gardien{background:linear-gradient(90deg,#7C3AED,#A78BFA)}.grade-progress-fill.legende{background:linear-gradient(90deg,#06B6D4,#67E8F9)}
+.grade-progress-fill.voisin{background:linear-gradient(90deg,#6b7280,#9ca3af)}.grade-progress-fill.habitant{background:linear-gradient(90deg,#3b82f6,#60a5fa)}.grade-progress-fill.pilier{background:linear-gradient(90deg,#F59E0B,#FCD34D)}.grade-progress-fill.gardien{background:linear-gradient(90deg,#7C3AED,#A78BFA)}.grade-progress-fill.legende{background:linear-gradient(90deg,#06B6D4,#67E8F9)}.grade-progress-fill.fondateur{background:linear-gradient(90deg,#1a1a1a,#B8860B,#FFD700,#B8860B,#1a1a1a);background-size:300% auto;animation:shimmerGold 2s linear infinite}
+@keyframes shimmerGold{0%{background-position:0% center}100%{background-position:300% center}}
+@keyframes fondateurBorder{0%,100%{border-color:#D4AF37;box-shadow:0 0 18px rgba(212,175,55,0.5)}50%{border-color:#FFD700;box-shadow:0 0 36px rgba(255,215,0,0.7)}}
+@keyframes shimmerCard{0%{background-position:-200% center}100%{background-position:200% center}}
 .savings-card{border:1px solid var(--bd);border-radius:var(--rl);padding:20px;margin-bottom:20px;background:linear-gradient(135deg,#F0FDF4,#ECFDF5);display:flex;align-items:center;gap:16px}
 .savings-amount{font-family:var(--fd);font-size:28px;font-weight:700;color:var(--acc)}
 .all-grades{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:14px}
@@ -237,6 +240,7 @@ body,html,#root{font-family:var(--f);color:var(--tx);background:var(--bg);-webki
 .all-grade:nth-child(3){animation-delay:0.3s}
 .all-grade:nth-child(4){animation-delay:0.4s}
 .all-grade:nth-child(5){animation-delay:0.5s}
+.all-grade:nth-child(6){animation-delay:0.6s}
 .all-grade.current{border-color:var(--dk);background:var(--bg);transform:scale(1.08)}.all-grade .ag-icon{font-size:24px;display:block;margin-bottom:4px}.all-grade .ag-name{font-weight:700;display:block}.all-grade .ag-range{color:var(--g);font-size:9px}
 /* Profile tab animations */
 .prof-listing-card:hover{transform:scale(1.02)!important;box-shadow:0 8px 28px rgba(0,0,0,0.13)!important}
@@ -821,7 +825,7 @@ function Detail({item,onClose,state,dispatch,setPage,setConvId,setShowShop,setPr
   const[showVerifModal,setShowVerifModal]=useState(false);
   const userRentals=(state.user?.rentals||0)+state.bookings.filter(b=>b.userId===state.user?.id).length;
   const userGrade=getGrade(userRentals);
-  const ins=Math.floor(item.price*days*.08),fee=Math.floor(item.price*days*userGrade.feeRate),feeBase=Math.floor(item.price*days*0.10),feeSaved=feeBase-fee,tot=item.price*days+ins+fee;
+  const ins=Math.floor(item.price*days*.08),fee=Math.floor(item.price*days*userGrade.feeRate),feeBase=Math.floor(item.price*days*0.12),feeSaved=feeBase-fee,tot=item.price*days+ins+fee;
   useEffect(()=>{if(sd&&ed){const d=Math.max(1,Math.round((new Date(ed)-new Date(sd))/864e5));setDays(d)}},[sd,ed]);
   const VEHICLE_CATS=["vehicles","vehicle","voiture","moto","transport"];
   const needsDrivingLicense=VEHICLE_CATS.includes((item.cat||"").toLowerCase());
@@ -951,11 +955,12 @@ function Detail({item,onClose,state,dispatch,setPage,setConvId,setShowShop,setPr
 
 /* ========== GRADE SYSTEM ========== */
 const GRADES = [
-  { id:"voisin",   name:"Voisin",   icon:"🤝", min:0,    max:49,   feeRate:0.10, divs:[{label:"I",min:0,max:9},{label:"II",min:10,max:24},{label:"III",min:25,max:49}],        perks:["Commission 10%","Accès à toutes les catégories","Messagerie standard"] },
-  { id:"habitant", name:"Habitant", icon:"🏠", min:50,   max:199,  feeRate:0.09, divs:[{label:"I",min:50,max:89},{label:"II",min:90,max:139},{label:"III",min:140,max:199}],   perks:["Commission 9%","Badge Habitant sur le profil","1 annonce mise en avant / mois","Priorité légère dans les résultats"] },
-  { id:"pilier",   name:"Pilier",   icon:"🏛️", min:200,  max:849,  feeRate:0.07, divs:[{label:"I",min:200,max:349},{label:"II",min:350,max:549},{label:"III",min:550,max:849}], perks:["Commission 7%","Badge Pilier doré","3 annonces mises en avant / mois","Apparition boostée dans la recherche","Statistiques avancées sur ses annonces"] },
-  { id:"gardien",  name:"Gardien",  icon:"🛡️", min:850,  max:5774, feeRate:0.05, divs:[{label:"I",min:850,max:1299},{label:"II",min:1300,max:1999},{label:"III",min:2000,max:5774}], perks:["Commission 5%","Badge Gardien premium","6 annonces mises en avant / mois","Boost automatique des nouvelles annonces","Insigne premium visible","Accès aux fonctionnalités bêta"] },
-  { id:"legende",  name:"Légende",  icon:"👑", min:5775, max:Infinity, feeRate:0.03, divs:[{label:"I",min:5775,max:6999},{label:"II",min:7000,max:8999},{label:"III",min:9000,max:Infinity}], perks:["Commission 3%","Badge Légende ultra-rare","12 annonces mises en avant / mois","Visibilité maximale dans les résultats","Accès aux événements exclusifs Cercle","Légende III : toutes les annonces mises en avant","Légende III : Récompense exclusive secrète 🎁"] },
+  { id:"voisin",   name:"Voisin",   icon:"🤝", min:0,     max:49,    feeRate:0.12, divs:[{label:"I",min:0,max:16},{label:"II",min:17,max:32},{label:"III",min:33,max:49}],           perks:["Commission 12%","Accès à toutes les catégories","Messagerie standard"] },
+  { id:"habitant", name:"Habitant", icon:"🏠", min:50,    max:499,   feeRate:0.11, divs:[{label:"I",min:50,max:199},{label:"II",min:200,max:349},{label:"III",min:350,max:499}],       perks:["Commission 11%","Badge Habitant sur le profil","1 annonce mise en avant / mois","Priorité légère dans les résultats"] },
+  { id:"pilier",   name:"Pilier",   icon:"🏛️", min:500,   max:1999,  feeRate:0.09, divs:[{label:"I",min:500,max:999},{label:"II",min:1000,max:1499},{label:"III",min:1500,max:1999}],  perks:["Commission 9%","Badge Pilier doré","3 annonces mises en avant / mois","Apparition boostée dans la recherche","Statistiques avancées sur ses annonces"] },
+  { id:"gardien",  name:"Gardien",  icon:"🛡️", min:2000,  max:4999,  feeRate:0.07, divs:[{label:"I",min:2000,max:2999},{label:"II",min:3000,max:3999},{label:"III",min:4000,max:4999}],perks:["Commission 7%","Badge Gardien premium","6 annonces mises en avant / mois","Boost automatique des nouvelles annonces","Insigne premium visible","Accès aux fonctionnalités bêta"] },
+  { id:"legende",  name:"Légende",  icon:"🌟", min:5000,  max:14999, feeRate:0.05, divs:[{label:"I",min:5000,max:7999},{label:"II",min:8000,max:11999},{label:"III",min:12000,max:14999}],perks:["Commission 5%","Badge Légende ultra-rare","12 annonces mises en avant / mois","Visibilité maximale dans les résultats","Accès aux événements exclusifs Cercle"] },
+  { id:"fondateur",name:"Fondateur Cercle",icon:"👑",min:15000,max:Infinity,feeRate:0.03,divs:[{label:"I",min:15000,max:17999},{label:"II",min:18000,max:21999},{label:"III",min:22000,max:Infinity}],perks:["🏅 Ambassadeur officiel Cercle — représente la plateforme lors d'événements","📊 Parts symboliques dans l'entreprise — participation aux décisions stratégiques","🎟️ 5 à 10 annonces sans aucune commission — pour toujours","🏢 Visite privée et rencontre exclusive avec l'équipe fondatrice","🏆 Trophée physique exclusif envoyé à domicile","⭐ Badge Fondateur doré permanent sur le profil"] },
 ];
 function getGrade(rentals) { return GRADES.find(g => rentals >= g.min && rentals <= g.max) || GRADES[0]; }
 function getNextGrade(rentals) { const i = GRADES.findIndex(g => rentals >= g.min && rentals <= g.max); return i < GRADES.length - 1 ? GRADES[i + 1] : null; }
@@ -1015,6 +1020,8 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
   const favs = state.favorites || new Set();
   const isUserPro = user.isPro;
   const myProItems = listings.filter(i => i.isPro);
+  const heroGrade = getGrade(user.rentals || 0);
+  const isHeroFondateur = heroGrade.id === 'fondateur';
 
   const mockListings = [
     { id: 101, title: 'Perceuse Bosch Pro', price: 12, rating: 4.95, reviews: 87, img: '🔧' },
@@ -1372,14 +1379,14 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
         <div style={{position:'relative'}}>
           <div style={S.heroInner}>
             <div style={S.avatarWrap}>
-              <div style={{borderRadius:'50%',background:'rgba(255,255,255,0.35)',padding:3,flexShrink:0,position:'relative',display:'inline-flex'}}>
+              <div style={{borderRadius:'50%',background:isHeroFondateur?'linear-gradient(135deg,#D4AF37,#FFD700,#B8860B)':'rgba(255,255,255,0.35)',padding:3,flexShrink:0,position:'relative',display:'inline-flex',boxShadow:isHeroFondateur?'0 0 20px rgba(212,175,55,0.8)':'none',animation:isHeroFondateur?'fondateurBorder 2.5s ease-in-out infinite':'none'}}>
                 <input ref={avatarInputRef} type="file" accept="image/*" capture="user" style={{display:'none'}} onChange={handleAvatarChange}/>
                 <div className="avatar-edit-wrap" onClick={()=>avatarInputRef.current&&avatarInputRef.current.click()} title="Changer la photo de profil">
                   <div style={S.avatar}>
                     {user.avatarUrl
                       ? <img src={user.avatarUrl} style={{width:'100%',height:'100%',borderRadius:'50%',objectFit:'cover'}} alt="avatar"/>
                       : (userAvatar || '👤')}
-                    <div style={S.verifiedBadge}>✓</div>
+                    <div style={S.verifiedBadge}>{isHeroFondateur?'👑':'✓'}</div>
                   </div>
                   <div className="avatar-edit-badge">📷</div>
                 </div>
@@ -1396,6 +1403,7 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
             <div style={S.subInfo}>
               <span style={S.pillGreen}>✓ Identité vérifiée</span>
               <span style={S.pillPurple}>🏅 Super hôte</span>
+              {isHeroFondateur && <span style={{...S.pill,background:'linear-gradient(90deg,#D4AF37,#FFD700)',color:'#0a0a0a',fontWeight:800,boxShadow:'0 2px 10px rgba(212,175,55,0.5)'}}>👑 Fondateur Cercle</span>}
               <span style={S.pill}>📍 Paris</span>
               <span style={S.pill}>🗓️ Membre depuis 2024</span>
             </div>
@@ -1596,7 +1604,8 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
           const grade = getGrade(rentals);
           const next = getNextGrade(rentals);
           const {div, nextDiv, prog: divProg} = getDivision(rentals);
-          const GC = { voisin:'#6b7280', habitant:'#3b82f6', pilier:'#F59E0B', gardien:'#7C3AED', legende:'#06B6D4' };
+          const GC = { voisin:'#6b7280', habitant:'#3b82f6', pilier:'#F59E0B', gardien:'#7C3AED', legende:'#06B6D4', fondateur:'#D4AF37' };
+          const isFondateur = grade.id === 'fondateur';
           const gc = GC[grade.id] || '#6C63FF';
           const gcLight = gc + '20';
           const fullLabel = `${grade.name} ${div.label}`;
@@ -1608,13 +1617,14 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
             <div style={{maxWidth:560,margin:'0 auto'}}>
 
               {/* Hero */}
-              <div style={{borderRadius:22,marginBottom:20,background:`linear-gradient(135deg,${gc},${gc}bb)`,padding:'28px 24px',color:'#fff',position:'relative',overflow:'hidden',animation:'glowPulse 3s ease-in-out infinite'}}>
-                <div style={{position:'absolute',top:-16,right:-16,fontSize:130,opacity:.1,lineHeight:1,pointerEvents:'none'}}>{grade.icon}</div>
+              <div style={{borderRadius:22,marginBottom:20,background:isFondateur?'linear-gradient(135deg,#0a0a0a 0%,#1a1200 40%,#2a1f00 60%,#0a0a0a 100%)':`linear-gradient(135deg,${gc},${gc}bb)`,padding:'28px 24px',color:'#fff',position:'relative',overflow:'hidden',animation:isFondateur?'fondateurBorder 2.5s ease-in-out infinite':'glowPulse 3s ease-in-out infinite',border:isFondateur?'2px solid #D4AF37':'none',boxSizing:'border-box'}}>
+                {isFondateur&&<div style={{position:'absolute',inset:0,background:'linear-gradient(105deg,transparent 40%,rgba(212,175,55,0.18) 50%,transparent 60%)',backgroundSize:'200% 100%',animation:'shimmerCard 2.5s linear infinite',pointerEvents:'none'}}/>}
+                <div style={{position:'absolute',top:-16,right:-16,fontSize:130,opacity:isFondateur?.15:.1,lineHeight:1,pointerEvents:'none'}}>{grade.icon}</div>
                 <div style={{fontSize:11,fontWeight:700,letterSpacing:'.1em',textTransform:'uppercase',opacity:.75,marginBottom:8}}>Votre rang actuel</div>
                 <div style={{display:'flex',alignItems:'center',gap:14,marginBottom:20}}>
-                  <span style={{fontSize:48}}>{grade.icon}</span>
+                  <span style={{fontSize:48,filter:isFondateur?'drop-shadow(0 0 12px #FFD700)':'none'}}>{grade.icon}</span>
                   <div>
-                    <div style={{fontSize:32,fontWeight:900,lineHeight:1.1,letterSpacing:'-.02em'}}>{fullLabel}</div>
+                    <div style={{fontSize:isFondateur?26:32,fontWeight:900,lineHeight:1.1,letterSpacing:'-.02em',background:isFondateur?'linear-gradient(90deg,#FFD700,#FFF8DC,#D4AF37,#FFD700)':'none',backgroundSize:isFondateur?'200% auto':'auto',WebkitBackgroundClip:isFondateur?'text':'unset',WebkitTextFillColor:isFondateur?'transparent':'inherit',animation:isFondateur?'shimmerCard 2s linear infinite':'none'}}>{fullLabel}</div>
                     <div style={{fontSize:13,opacity:.8,marginTop:4}}>{rentals} location{rentals!==1?'s':''} complétée{rentals!==1?'s':''}</div>
                   </div>
                 </div>
@@ -1646,7 +1656,7 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
                     {nextMin && <div style={{fontSize:11,opacity:.7,marginTop:6}}>{nextMin - rentals} location{(nextMin-rentals)!==1?'s':''} pour atteindre {nextLabel}</div>}
                   </div>
                 ) : (
-                  <div style={{fontSize:14,fontWeight:800,opacity:.95}}>🏆 Rang maximum — Diamant III !</div>
+                  <div style={{fontSize:14,fontWeight:800,background:'linear-gradient(90deg,#FFD700,#FFF8DC,#D4AF37)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>👑 Félicitations, vous faites partie des légendes de Cercle !</div>
                 )}
               </div>
 
@@ -1655,25 +1665,26 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
                 <div style={{background:'#f8f7ff',borderRadius:16,padding:'16px 18px',border:'1.5px solid #f0eeff'}}>
                   <div style={{fontSize:11,color:'#9ca3af',fontWeight:600,marginBottom:4}}>Commission actuelle</div>
                   <div style={{fontSize:26,fontWeight:900,color:gc}}>{Math.round(grade.feeRate*100)}%</div>
-                  <div style={{fontSize:11,color:'#9ca3af',marginTop:2}}>au lieu de 10%</div>
+                  <div style={{fontSize:11,color:'#9ca3af',marginTop:2}}>au lieu de 12%</div>
                 </div>
                 <div style={{background:'#f0fdf4',borderRadius:16,padding:'16px 18px',border:'1.5px solid #d1fae5'}}>
                   <div style={{fontSize:11,color:'#9ca3af',fontWeight:600,marginBottom:4}}>Économie sur les frais</div>
-                  <div style={{fontSize:26,fontWeight:900,color:'#10b981'}}>{Math.round((0.10 - grade.feeRate)*100)}%</div>
+                  <div style={{fontSize:26,fontWeight:900,color:'#10b981'}}>{Math.round((0.12 - grade.feeRate)*100)}%</div>
                   <div style={{fontSize:11,color:'#9ca3af',marginTop:2}}>par rapport au taux de base</div>
                 </div>
               </div>
 
               {/* Perks */}
               <div style={{marginBottom:24}}>
-                <div style={{fontSize:15,fontWeight:800,color:'#1a1a2e',marginBottom:12}}>Avantages inclus</div>
+                <div style={{fontSize:15,fontWeight:800,color:isFondateur?'#D4AF37':'#1a1a2e',marginBottom:12}}>{isFondateur?'👑 Récompenses exclusives':'Avantages inclus'}</div>
                 <div style={{display:'flex',flexDirection:'column',gap:8}}>
-                  {grade.perks.map(p=>(
-                    <div key={p} style={{display:'flex',alignItems:'center',gap:12,padding:'12px 16px',background:'#fff',border:'1.5px solid #f0eeff',borderRadius:14,fontSize:14,color:'#1a1a2e',fontWeight:500}}>
-                      <div style={{width:24,height:24,borderRadius:8,background:gcLight,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-                        <span style={{fontSize:12,color:gc,fontWeight:900}}>✓</span>
+                  {grade.perks.map((p,pi)=>(
+                    <div key={p} style={{display:'flex',alignItems:'center',gap:12,padding:'14px 16px',background:isFondateur?`linear-gradient(135deg,#0d0d00,#1a1500)`:'#fff',border:isFondateur?'1.5px solid #D4AF3766':'1.5px solid #f0eeff',borderRadius:14,fontSize:13,color:isFondateur?'#FFF8DC':'#1a1a2e',fontWeight:500,position:'relative',overflow:'hidden',animation:isFondateur?`fadeSlideUp 0.4s ease both`:'none',animationDelay:isFondateur?`${pi*0.08}s`:'0s'}}>
+                      {isFondateur&&<div style={{position:'absolute',inset:0,background:'linear-gradient(105deg,transparent 40%,rgba(212,175,55,0.1) 50%,transparent 60%)',backgroundSize:'200% 100%',animation:'shimmerCard 3s linear infinite',pointerEvents:'none'}}/>}
+                      <div style={{width:28,height:28,borderRadius:8,background:isFondateur?'linear-gradient(135deg,#D4AF37,#FFD700)':gcLight,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,boxShadow:isFondateur?'0 2px 8px rgba(212,175,55,0.5)':'none'}}>
+                        <span style={{fontSize:isFondateur?14:12,color:isFondateur?'#0a0a0a':gc,fontWeight:900}}>{isFondateur?'★':'✓'}</span>
                       </div>
-                      {p}
+                      <span style={{position:'relative',zIndex:1}}>{p}</span>
                     </div>
                   ))}
                 </div>
@@ -1682,8 +1693,8 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
               {/* Parcours — grille de cartes */}
               <div>
                 <div style={{fontSize:15,fontWeight:800,color:'#1a1a2e',marginBottom:16}}>Tous les rangs</div>
-                <div style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:10}}>
-                  {GRADES.map((g,gi)=>{
+                <div style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:10,marginBottom:10}}>
+                  {GRADES.slice(0,5).map((g,gi)=>{
                     const gColor = GC[g.id]||'#6C63FF';
                     const isCurrentGrade = g.id===grade.id;
                     const isUnlocked = rentals >= g.min;
@@ -1732,6 +1743,32 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
                     );
                   })}
                 </div>
+                {/* ── Fondateur Cercle — carte pleine largeur ── */}
+                {(()=>{
+                  const fg = GRADES[5];
+                  const isCurrentGrade = fg.id===grade.id;
+                  const isUnlocked = rentals >= fg.min;
+                  return (
+                    <div style={{borderRadius:20,overflow:'hidden',position:'relative',animation:'scaleIn 0.4s cubic-bezier(0.34,1.56,0.64,1) 0.42s both',border:isCurrentGrade?'2px solid #FFD700':'2px solid #D4AF3766',background:isUnlocked?'linear-gradient(135deg,#0a0a0a 0%,#1a1200 50%,#0a0a0a 100%)':'#f9fafb',boxShadow:isCurrentGrade?'0 8px 40px rgba(212,175,55,0.5)':'0 1px 6px rgba(0,0,0,0.08)',animation:isCurrentGrade?'fondateurBorder 2.5s ease-in-out infinite':'scaleIn 0.4s cubic-bezier(0.34,1.56,0.64,1) 0.42s both',filter:isUnlocked?'none':'grayscale(.7)',opacity:isUnlocked?1:.55}}>
+                      {isUnlocked&&<div style={{position:'absolute',inset:0,background:'linear-gradient(105deg,transparent 35%,rgba(212,175,55,0.15) 50%,transparent 65%)',backgroundSize:'200% 100%',animation:'shimmerCard 2.5s linear infinite',pointerEvents:'none'}}/>}
+                      <div style={{padding:'18px 20px',display:'flex',alignItems:'center',gap:16,position:'relative',zIndex:1}}>
+                        <div style={{fontSize:40,filter:isUnlocked?'drop-shadow(0 0 10px #FFD700)':'none',flexShrink:0}}>{fg.icon}</div>
+                        <div style={{flex:1}}>
+                          <div style={{fontSize:15,fontWeight:900,marginBottom:3,background:isUnlocked?'linear-gradient(90deg,#FFD700,#FFF8DC,#D4AF37)':'none',WebkitBackgroundClip:isUnlocked?'text':'unset',WebkitTextFillColor:isUnlocked?'transparent':'#9ca3af',backgroundSize:'200% auto',animation:isUnlocked?'shimmerCard 2s linear infinite':'none'}}>{fg.name}</div>
+                          <div style={{fontSize:11,color:isUnlocked?'rgba(255,248,220,0.7)':'#9ca3af'}}>Commission {Math.round(fg.feeRate*100)}% · Dès {fg.min.toLocaleString()} locations</div>
+                        </div>
+                        <div style={{textAlign:'right',flexShrink:0}}>
+                          {isCurrentGrade
+                            ? <span style={{fontSize:10,fontWeight:800,color:'#0a0a0a',background:'linear-gradient(90deg,#FFD700,#D4AF37)',padding:'4px 10px',borderRadius:20,letterSpacing:'.04em'}}>EN COURS</span>
+                            : isUnlocked
+                              ? <span style={{fontSize:10,fontWeight:700,color:'#FFD700',background:'rgba(212,175,55,0.15)',padding:'4px 10px',borderRadius:20,border:'1px solid #D4AF3766'}}>✓ Atteint</span>
+                              : <span style={{fontSize:10,fontWeight:600,color:'#9ca3af',background:'#f3f4f6',padding:'4px 10px',borderRadius:20}}>🔒 {fg.min.toLocaleString()}</span>
+                          }
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
 
             </div>
@@ -3092,7 +3129,7 @@ function Shop({owner,items,onClose,onOpen,state,dispatch,onAuthRequired}){
   return <div className="ov">
     <div className="dh"><button className="mx" onClick={onClose} style={{position:"static"}}><I.X/></button><span style={{fontWeight:600}}>Boutique</span></div>
     <div className="shop-hd">
-      <div className="shop-av" style={{border:`3px solid ${grade.id==="legende"?"#06B6D4":grade.id==="gardien"?"#7C3AED":grade.id==="pilier"?"#F59E0B":grade.id==="habitant"?"#3b82f6":"var(--bd)"}`}}>{owner.avatarUrl?<img src={owner.avatarUrl} style={{width:"100%",height:"100%",borderRadius:"50%",objectFit:"cover"}} alt=""/>:owner.avatar}</div>
+      <div className="shop-av" style={{border:`3px solid ${grade.id==="fondateur"?"#D4AF37":grade.id==="legende"?"#06B6D4":grade.id==="gardien"?"#7C3AED":grade.id==="pilier"?"#F59E0B":grade.id==="habitant"?"#3b82f6":"var(--bd)"}}`}}>{owner.avatarUrl?<img src={owner.avatarUrl} style={{width:"100%",height:"100%",borderRadius:"50%",objectFit:"cover"}} alt=""/>:owner.avatar}</div>
       <h2 style={{fontFamily:"var(--fd)",fontSize:20}}>{owner.name}</h2>
       <div style={{display:"flex",gap:8,justifyContent:"center",marginTop:6,fontSize:12,color:"var(--g)"}}>
         <span>{grade.icon} {grade.name}</span><span>·</span><span>★ {owner.rating}</span><span>·</span><span>{owner.rentals} locations</span><span>·</span><span>Depuis {owner.since}</span>
