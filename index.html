@@ -3379,7 +3379,7 @@ function App(){
     </header>}
 
     {page==="home"&&<main className="page-tr">
-      {mode!=='pro'&&!q&&cat==='all'&&<div style={{background:dark?"linear-gradient(135deg,#1a1a2e 0%,#16213e 60%,#0f3460 100%)":"linear-gradient(160deg,#6C63FF 0%,#7c5ce7 28%,#5a7fff 62%,#4ECDC4 100%)",backgroundAttachment:"fixed",padding:"56px 28px 0",textAlign:"center",borderRadius:"0 0 48px 48px",marginBottom:0,position:"relative",overflow:"hidden"}}>
+      {mode!=='pro'&&!q&&cat==='all'&&<div style={{background:dark?"linear-gradient(135deg,#1a1a2e 0%,#16213e 60%,#0f3460 100%)":"linear-gradient(160deg,#6C63FF 0%,#7c5ce7 28%,#5a7fff 62%,#4ECDC4 100%)",backgroundAttachment:"fixed",padding:"56px 28px 0",textAlign:"center",borderRadius:0,marginBottom:0,position:"relative",overflow:"hidden"}}>
         <div style={{display:"inline-flex",alignItems:"center",gap:6,background:"rgba(255,255,255,.15)",backdropFilter:"blur(8px)",border:"1px solid rgba(255,255,255,.25)",color:"#fff",padding:"5px 16px",borderRadius:24,fontSize:11,fontWeight:700,letterSpacing:".06em",marginBottom:14}}>🚀 NOUVELLE PLATEFORME · 2 500+ articles à louer</div>
         <h1 style={{fontFamily:"var(--fd)",fontSize:"clamp(28px,5vw,48px)",fontWeight:800,background:"linear-gradient(270deg,#fff,#f0f0ff,#fff)",backgroundSize:"400% 400%",animation:"gradShift 4s ease infinite",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",letterSpacing:"-.03em",marginBottom:10,lineHeight:1.1}}>Louez, partagez,<br/>économisez</h1>
         <p style={{color:"rgba(255,255,255,.85)",fontSize:15,maxWidth:550,margin:"0 auto 22px",lineHeight:1.6,animation:"fadeSlideUp 0.6s 0.2s ease both"}}>Accédez à des milliers d'objets à louer entre particuliers et professionnels. Une solution économique, écologique et pratique pour tous vos besoins.</p>
@@ -3393,15 +3393,6 @@ function App(){
       </div>}
       {mode==='pro'&&<div className="pro-banner"><h2 style={{fontFamily:"var(--fd)",fontSize:22,marginBottom:4}}>🏢 Espace Professionnel</h2><p style={{fontSize:13,opacity:.8}}>Matériel pro certifié · Grandes quantités · Livraison chantier · Facturation entreprise</p></div>}
       {q&&<div style={{padding:"6px 28px 0",fontSize:12,color:"var(--g)"}}>{filtered.length} résultat{filtered.length!==1?"s":""} pour <strong>"{q}"</strong>{lq&&<> à <strong>{lq}</strong></>}<button className="cl" style={{marginLeft:6}} onClick={()=>{setQ("");setLq("")}}>✕</button></div>}
-      {!q&&mode!=='pro'&&cat==='all'&&<div style={{padding:"36px 28px 0",maxWidth:1520,margin:"0 auto"}}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-end",marginBottom:0}}>
-          <div>
-            <h2 style={{fontFamily:"var(--fd)",fontSize:24,fontWeight:800,letterSpacing:"-.02em",color:"var(--dk)",marginBottom:4}}>Découvrez nos annonces</h2>
-            <p style={{fontSize:13,color:"var(--g)",lineHeight:1.5}}>{all.length} articles disponibles · Livraison ou remise en main propre possible</p>
-          </div>
-          <button className="cl" style={{color:"var(--p)",fontSize:13,fontWeight:700,flexShrink:0}}>Voir tout →</button>
-        </div>
-      </div>}
       {!q&&mode==='pro'&&<div style={{padding:"36px 28px 0",maxWidth:1520,margin:"0 auto"}}>
         <h2 style={{fontFamily:"var(--fd)",fontSize:24,fontWeight:800,letterSpacing:"-.02em",color:"var(--dk)",marginBottom:4}}>Matériel professionnel</h2>
         <p style={{fontSize:13,color:"var(--g)"}}>{filtered.length} équipements certifiés disponibles</p>
