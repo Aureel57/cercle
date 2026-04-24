@@ -1015,6 +1015,8 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
   const [editMode, setEditMode] = React.useState(false);
   const [gradeBarWidth, setGradeBarWidth] = React.useState(0);
   const [activeTooltipGrade, setActiveTooltipGrade] = React.useState(null);
+  const [demoRentals, setDemoRentals] = React.useState(47);
+  const [gradeHeroWidth, setGradeHeroWidth] = React.useState(0);
   const [qrItem, setQrItem] = React.useState(null);
   const [profileData, setProfileData] = React.useState({
     name: userName,
@@ -1028,8 +1030,13 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
   React.useEffect(() => {
     if (tab === 'grade') {
       setGradeBarWidth(0);
-      const r = (state && state.user && state.user.rentals) || 0;
-      const tid = setTimeout(() => setGradeBarWidth(getDivision(r).prog), 80);
+      setGradeHeroWidth(0);
+      const r = demoRentals;
+      const tid = setTimeout(() => {
+        setGradeBarWidth(getDivision(r).prog);
+        const _g = getGrade(r), _nx = getNextGrade(r);
+        setGradeHeroWidth(_nx ? Math.min(100, Math.round(((r-_g.min)/(_nx.min-_g.min))*100)) : 100);
+      }, 80);
       return () => clearTimeout(tid);
     }
   }, [tab]);
@@ -1621,7 +1628,7 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
 
         {/* ── Grade ── */}
         {tab === 'grade' && (() => {
-          const rentals = user.rentals || 0;
+          const rentals = demoRentals;
           const grade = getGrade(rentals);
           const next = getNextGrade(rentals);
           const {div, nextDiv, prog: divProg} = getDivision(rentals);
@@ -1636,6 +1643,50 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
           const divDone = rentals - div.min;
           return (
             <div style={{maxWidth:560,margin:'0 auto'}}>
+
+              {/* ── Héro de progression vers le prochain grade ── */}
+              {(()=>{
+                const remaining = next ? next.min - rentals : 0;
+                return (
+                  <div style={{borderRadius:20,marginBottom:16,padding:'20px 20px 16px',background:isFondateur?'linear-gradient(135deg,#0a0a0a,#1a1200)':`linear-gradient(135deg,${gc}16,${gc}08)`,border:`1.5px solid ${isFondateur?'#D4AF3766':gc+'40'}`,position:'relative',overflow:'hidden',boxSizing:'border-box'}}>
+                    <div style={{fontSize:11,fontWeight:700,color:isFondateur?'#D4AF37':gc,letterSpacing:'.08em',textTransform:'uppercase',marginBottom:12}}>Progression vers le prochain grade</div>
+                    <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:14}}>
+                      <span style={{fontSize:30,filter:isFondateur?'drop-shadow(0 0 8px #FFD700)':'none'}}>{grade.icon}</span>
+                      <div>
+                        <div style={{fontSize:17,fontWeight:800,color:isFondateur?'#D4AF37':gc}}>{grade.name}</div>
+                        {!isFondateur&&<div style={{fontSize:12,color:'#6b7280',marginTop:1}}>{rentals} / {next.min} locations</div>}
+                      </div>
+                      {!isFondateur&&(
+                        <div style={{marginLeft:'auto',textAlign:'right'}}>
+                          <div style={{fontSize:24,fontWeight:900,color:gc,lineHeight:1}}>{remaining}</div>
+                          <div style={{fontSize:10,color:'#9ca3af',marginTop:2}}>restantes</div>
+                        </div>
+                      )}
+                    </div>
+                    {!isFondateur?(
+                      <>
+                        <div style={{height:10,borderRadius:5,background:gc+'22',overflow:'hidden',marginBottom:8}}>
+                          <div style={{height:'100%',borderRadius:5,background:`linear-gradient(90deg,${gc},${gc}bb)`,width:`${gradeHeroWidth}%`,transition:'width 0.6s ease',boxShadow:`0 0 8px ${gc}55`}}/>
+                        </div>
+                        <div style={{fontSize:12,color:'#6b7280'}}>
+                          <strong style={{color:gc}}>{remaining}</strong> location{remaining!==1?'s':''} restantes pour atteindre <strong style={{color:gc}}>{next.name}</strong>
+                        </div>
+                      </>
+                    ):(
+                      <div style={{fontSize:15,fontWeight:800,background:'linear-gradient(90deg,#FFD700,#FFF8DC,#D4AF37)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>Vous avez atteint le sommet 👑</div>
+                    )}
+                    <button onClick={()=>{
+                      const nr=demoRentals+1;
+                      setDemoRentals(nr);
+                      const _g=getGrade(nr),_nx=getNextGrade(nr);
+                      setGradeHeroWidth(_nx?Math.min(100,Math.round(((nr-_g.min)/(_nx.min-_g.min))*100)):100);
+                      setGradeBarWidth(getDivision(nr).prog);
+                    }} style={{marginTop:12,padding:'5px 13px',borderRadius:8,border:`1px solid ${gc}55`,background:gc+'18',color:gc,fontSize:11,fontWeight:700,cursor:'pointer',display:'inline-flex',alignItems:'center',gap:4}}>
+                      + 1 location <span style={{opacity:.5,fontSize:9,fontWeight:500}}>démo</span>
+                    </button>
+                  </div>
+                );
+              })()}
 
               {/* Hero */}
               <div style={{borderRadius:22,marginBottom:20,background:isFondateur?'linear-gradient(135deg,#0a0a0a 0%,#1a1200 40%,#2a1f00 60%,#0a0a0a 100%)':`linear-gradient(135deg,${gc},${gc}bb)`,padding:'28px 24px',color:'#fff',position:'relative',overflow:'hidden',animation:isFondateur?'fondateurBorder 2.5s ease-in-out infinite':'glowPulse 3s ease-in-out infinite',border:isFondateur?'2px solid #D4AF37':'none',boxSizing:'border-box'}}>
@@ -1761,12 +1812,16 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
                             </div>
                             <div style={{fontSize:11,fontWeight:700,color:isCurrentGrade?'rgba(255,255,255,0.85)':isUnlocked?'#374151':'#c0c0c0',marginBottom:8}}>{Math.round(g.feeRate*100)}% comm.</div>
                             <div>
-                              {isCurrentGrade
-                                ? <span style={{fontSize:9,fontWeight:800,color:gColor,background:'rgba(255,255,255,0.9)',padding:'3px 8px',borderRadius:20,letterSpacing:'.04em'}}>EN COURS</span>
-                                : isUnlocked
-                                  ? <span style={{fontSize:9,fontWeight:700,color:'#10b981',background:'#f0fdf4',padding:'3px 7px',borderRadius:20,border:'1px solid #d1fae5'}}>✓ Atteint</span>
-                                  : <span style={{fontSize:9,fontWeight:600,color:'#9ca3af',background:'#f3f4f6',padding:'3px 7px',borderRadius:20}}>🔒 {g.min.toLocaleString()}</span>
-                              }
+                              {isCurrentGrade?(
+                                <div>
+                                  <span style={{fontSize:9,fontWeight:800,color:gColor,background:'rgba(255,255,255,0.9)',padding:'3px 8px',borderRadius:20,letterSpacing:'.04em'}}>EN COURS</span>
+                                  {(()=>{const _nx=getNextGrade(rentals);const _pct=_nx?Math.min(100,Math.round(((rentals-g.min)/(_nx.min-g.min))*100)):100;return(<div style={{height:3,borderRadius:2,background:gColor+'30',overflow:'hidden',marginTop:5}}><div style={{height:'100%',borderRadius:2,background:gColor,width:`${_pct}%`,transition:'width 0.6s ease'}}/></div>);})()}
+                                </div>
+                              ):isUnlocked?(
+                                <span style={{fontSize:9,fontWeight:700,color:'#10b981',background:'#f0fdf4',padding:'3px 7px',borderRadius:20,border:'1px solid #d1fae5'}}>✓ Atteint</span>
+                              ):(
+                                <span style={{fontSize:9,fontWeight:600,color:'#9ca3af',background:'#f3f4f6',padding:'3px 7px',borderRadius:20}}>🔒 {(g.min-rentals).toLocaleString()}</span>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -1814,7 +1869,7 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
                               ? <span style={{fontSize:10,fontWeight:800,color:'#0a0a0a',background:'linear-gradient(90deg,#FFD700,#D4AF37)',padding:'4px 10px',borderRadius:20,letterSpacing:'.04em'}}>EN COURS</span>
                               : isUnlocked
                                 ? <span style={{fontSize:10,fontWeight:700,color:'#FFD700',background:'rgba(212,175,55,0.15)',padding:'4px 10px',borderRadius:20,border:'1px solid #D4AF3766'}}>✓ Atteint</span>
-                                : <span style={{fontSize:10,fontWeight:600,color:'#9ca3af',background:'#f3f4f6',padding:'4px 10px',borderRadius:20}}>🔒 {fg.min.toLocaleString()}</span>
+                                : <span style={{fontSize:10,fontWeight:600,color:'#9ca3af',background:'#f3f4f6',padding:'4px 10px',borderRadius:20}}>🔒 {(fg.min-rentals).toLocaleString()} rest.</span>
                             }
                           </div>
                         </div>
