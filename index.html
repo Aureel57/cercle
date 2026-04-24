@@ -1014,6 +1014,7 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
   const [tab, setTab] = React.useState(initTab || 'annonces');
   const [editMode, setEditMode] = React.useState(false);
   const [gradeBarWidth, setGradeBarWidth] = React.useState(0);
+  const [demoRentals, setDemoRentals] = React.useState(null);
   const [activeTooltipGrade, setActiveTooltipGrade] = React.useState(null);
   const [qrItem, setQrItem] = React.useState(null);
   const [profileData, setProfileData] = React.useState({
@@ -1028,11 +1029,11 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
   React.useEffect(() => {
     if (tab === 'grade') {
       setGradeBarWidth(0);
-      const r = (state && state.user && state.user.rentals) || 0;
+      const r = demoRentals !== null ? demoRentals : ((state && state.user && state.user.rentals) || 0);
       const tid = setTimeout(() => setGradeBarWidth(getDivision(r).prog), 80);
       return () => clearTimeout(tid);
     }
-  }, [tab]);
+  }, [tab, demoRentals]);
 
   const myOwnedItems = (state.items?.filter(i => i.owner?.id === user.id) || []);
   const listings = [...myOwnedItems, ...(state.userItems || [])];
@@ -1621,7 +1622,7 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
 
         {/* ── Grade ── */}
         {tab === 'grade' && (() => {
-          const rentals = user.rentals || 0;
+          const rentals = demoRentals !== null ? demoRentals : (user.rentals || 0);
           const grade = getGrade(rentals);
           const next = getNextGrade(rentals);
           const {div, nextDiv, prog: divProg} = getDivision(rentals);
@@ -1638,7 +1639,7 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
             <div style={{maxWidth:560,margin:'0 auto'}}>
 
               {/* Hero */}
-              <div style={{borderRadius:22,marginBottom:20,background:isFondateur?'linear-gradient(135deg,#0a0a0a 0%,#1a1200 40%,#2a1f00 60%,#0a0a0a 100%)':`linear-gradient(135deg,${gc},${gc}bb)`,padding:'28px 24px',color:'#fff',position:'relative',overflow:'hidden',animation:isFondateur?'fondateurBorder 2.5s ease-in-out infinite':'glowPulse 3s ease-in-out infinite',border:isFondateur?'2px solid #D4AF37':'none',boxSizing:'border-box'}}>
+              <div style={{borderRadius:16,margin:'0 0 20px 0',background:isFondateur?'linear-gradient(135deg,#0a0a0a 0%,#1a1200 40%,#2a1f00 60%,#0a0a0a 100%)':'var(--w)',padding:'20px',color:isFondateur?'#fff':'var(--dk)',position:'relative',overflow:'hidden',animation:isFondateur?'fondateurBorder 2.5s ease-in-out infinite':'none',border:isFondateur?'2px solid #D4AF37':'1.5px solid rgba(0,0,0,0.08)',boxShadow:isFondateur?'none':'0 2px 12px rgba(0,0,0,0.10)',boxSizing:'border-box'}}>
                 {isFondateur&&<div style={{position:'absolute',inset:0,background:'linear-gradient(105deg,transparent 40%,rgba(212,175,55,0.18) 50%,transparent 60%)',backgroundSize:'200% 100%',animation:'shimmerCard 2.5s linear infinite',pointerEvents:'none'}}/>}
                 <div style={{position:'absolute',top:-16,right:-16,fontSize:130,opacity:isFondateur?.15:.1,lineHeight:1,pointerEvents:'none'}}>{grade.icon}</div>
                 <div style={{fontSize:11,fontWeight:700,letterSpacing:'.1em',textTransform:'uppercase',opacity:.75,marginBottom:8}}>Votre rang actuel</div>
@@ -1656,7 +1657,7 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
                     const isThis = d.label===div.label;
                     const isPast = grade.divs.indexOf(d) < grade.divs.findIndex(x=>x.label===div.label);
                     return (
-                      <div key={d.label} style={{flex:1,textAlign:'center',padding:'6px 4px',borderRadius:10,background:isThis?'rgba(255,255,255,0.3)':isPast?'rgba(255,255,255,0.15)':'rgba(255,255,255,0.08)',border:`1.5px solid ${isThis?'rgba(255,255,255,0.7)':'rgba(255,255,255,0.2)'}`,transition:'all .2s'}}>
+                      <div key={d.label} style={{flex:1,textAlign:'center',padding:'6px 4px',borderRadius:10,background:isFondateur?(isThis?'rgba(255,255,255,0.3)':isPast?'rgba(255,255,255,0.15)':'rgba(255,255,255,0.08)'):(isThis?gc+'22':isPast?gc+'11':'rgba(0,0,0,0.04)'),border:`1.5px solid ${isFondateur?(isThis?'rgba(255,255,255,0.7)':'rgba(255,255,255,0.2)'):(isThis?gc:'rgba(0,0,0,0.10)')}`,transition:'all .2s'}}>
                         <div style={{fontSize:11,fontWeight:700,opacity:isThis?1:.6}}>{grade.name} {d.label}</div>
                         <div style={{fontSize:9,opacity:.6,marginTop:1}}>{isPast?'✓ Atteint':isThis?'En cours':'Bloqué'}</div>
                       </div>
@@ -1671,14 +1672,15 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
                       <span>Vers <strong>{nextLabel}</strong></span>
                       <span style={{fontWeight:700}}>{divDone}{divTotal?`/${divTotal}`:''} loc.</span>
                     </div>
-                    <div style={{height:8,borderRadius:4,background:'rgba(255,255,255,0.2)',overflow:'hidden'}}>
-                      <div style={{height:'100%',borderRadius:4,background:'#fff',width:`${gradeBarWidth}%`,transition:'width 0.8s ease'}}/>
+                    <div style={{height:8,borderRadius:4,background:isFondateur?'rgba(255,255,255,0.2)':'rgba(0,0,0,0.10)',overflow:'hidden'}}>
+                      <div style={{height:'100%',borderRadius:4,background:isFondateur?'#fff':'var(--p)',width:`${gradeBarWidth}%`,transition:'width 0.8s ease'}}/>
                     </div>
-                    {nextMin && <div style={{fontSize:11,opacity:.7,marginTop:6}}>{nextMin - rentals} location{(nextMin-rentals)!==1?'s':''} pour atteindre {nextLabel}</div>}
+                    {nextMin && <div style={{fontSize:11,color:'var(--dk)',opacity:.7,marginTop:6}}>{nextMin - rentals} location{(nextMin-rentals)!==1?'s':''} pour atteindre {nextLabel}</div>}
                   </div>
                 ) : (
                   <div style={{fontSize:14,fontWeight:800,background:'linear-gradient(90deg,#FFD700,#FFF8DC,#D4AF37)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>👑 Félicitations, vous faites partie des légendes de Cercle !</div>
                 )}
+                <button onClick={()=>setDemoRentals(r=>r!==null?r+1:(user.rentals||0)+1)} style={{marginTop:14,padding:'8px 16px',borderRadius:10,border:'none',background:'var(--p)',color:'#fff',fontWeight:700,fontSize:12,cursor:'pointer',display:'block',width:'100%'}}>+ 1 location (démo)</button>
               </div>
 
               {/* Stats */}
