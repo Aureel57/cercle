@@ -56,6 +56,11 @@ body{background:#F4F3FF}
 .reveal{opacity:0;transform:translateY(24px);transition:opacity .6s ease,transform .6s ease}
 .reveal.visible{opacity:1;transform:translateY(0)}
 
+/* Grade card tooltip */
+.grade-card-wrap{position:relative;cursor:pointer;}
+.grade-card-wrap::after{content:'';position:absolute;bottom:100%;left:0;right:0;height:10px;}
+.grade-tooltip{position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%) translateY(4px);opacity:0;pointer-events:none;transition:opacity .18s ease,transform .18s ease;z-index:100;border-radius:12px;padding:12px 14px;width:max-content;max-width:190px;background:#fff;}
+.grade-card-wrap:hover .grade-tooltip,.grade-card-wrap.tip-open .grade-tooltip{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto;}
 /* Respect des préférences d'accessibilité */
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:0.01ms!important;animation-iteration-count:1!important;transition-duration:0.01ms!important}}
 </style>
@@ -242,18 +247,6 @@ body,html,#root{font-family:var(--f);color:var(--tx);background:var(--bg);-webki
 .all-grade:nth-child(5){animation-delay:0.5s}
 .all-grade:nth-child(6){animation-delay:0.6s}
 .all-grade.current{border-color:var(--dk);background:var(--bg);transform:scale(1.08)}.all-grade .ag-icon{font-size:24px;display:block;margin-bottom:4px}.all-grade .ag-name{font-weight:700;display:block}.all-grade .ag-range{color:var(--g);font-size:9px}
-@keyframes tooltipIn{from{opacity:0;transform:translateX(-50%) translateY(6px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
-.grade-tt{position:absolute;bottom:calc(100% + 10px);left:50%;transform:translateX(-50%);min-width:168px;width:max-content;max-width:210px;background:var(--w);border:1.5px solid var(--bd);border-radius:13px;padding:11px 13px 12px;z-index:60;pointer-events:none;box-shadow:var(--shm);animation:tooltipIn .18s ease}
-.grade-tt.fondateur{background:linear-gradient(155deg,#0d0d0d 0%,#1c1500 100%);border-color:#D4AF37;box-shadow:0 8px 32px rgba(212,175,55,0.32)}
-.grade-tt-arrow{position:absolute;bottom:-5px;left:50%;transform:translateX(-50%) rotate(45deg);width:8px;height:8px;border-right:1.5px solid var(--bd);border-bottom:1.5px solid var(--bd);background:var(--w)}
-.grade-tt.fondateur .grade-tt-arrow{border-color:#D4AF3780;background:#1c1500}
-.grade-tt-title{display:flex;align-items:center;gap:7px;margin-bottom:8px;padding-bottom:7px;border-bottom:1px solid var(--bd)}
-.grade-tt.fondateur .grade-tt-title{border-bottom-color:#D4AF3740}
-.grade-tt-name{font-size:11px;font-weight:800;letter-spacing:-.01em}
-.grade-tt-perk{display:flex;align-items:flex-start;gap:6px;font-size:10.5px;line-height:1.4;color:var(--tx);margin-bottom:3px}
-.grade-tt-perk:last-child{margin-bottom:0}
-.grade-tt-check{flex-shrink:0;font-size:10px;margin-top:1px}
-.grade-tt.fondateur .grade-tt-perk{color:#e8c96a}
 /* Profile tab animations */
 .prof-listing-card:hover{transform:scale(1.02)!important;box-shadow:0 8px 28px rgba(0,0,0,0.13)!important}
 .prof-fav-card:hover{transform:scale(1.02)!important;box-shadow:0 8px 28px rgba(0,0,0,0.11)!important}
@@ -967,21 +960,13 @@ function Detail({item,onClose,state,dispatch,setPage,setConvId,setShowShop,setPr
 
 /* ========== GRADE SYSTEM ========== */
 const GRADES = [
-  { id:"voisin",   name:"Voisin",   icon:"🤝", min:0,     max:49,    feeRate:0.12, divs:[{label:"I",min:0,max:16},{label:"II",min:17,max:32},{label:"III",min:33,max:49}],           perks:["Commission 12%","Accès à toutes les catégories","Messagerie standard"] },
-  { id:"habitant", name:"Habitant", icon:"🏠", min:50,    max:499,   feeRate:0.11, divs:[{label:"I",min:50,max:199},{label:"II",min:200,max:349},{label:"III",min:350,max:499}],       perks:["Commission 11%","Badge Habitant sur le profil","1 annonce mise en avant / mois","Priorité légère dans les résultats"] },
-  { id:"pilier",   name:"Pilier",   icon:"🏛️", min:500,   max:1999,  feeRate:0.09, divs:[{label:"I",min:500,max:999},{label:"II",min:1000,max:1499},{label:"III",min:1500,max:1999}],  perks:["Commission 9%","Badge Pilier doré","3 annonces mises en avant / mois","Apparition boostée dans la recherche","Statistiques avancées sur ses annonces"] },
-  { id:"gardien",  name:"Gardien",  icon:"🛡️", min:2000,  max:4999,  feeRate:0.07, divs:[{label:"I",min:2000,max:2999},{label:"II",min:3000,max:3999},{label:"III",min:4000,max:4999}],perks:["Commission 7%","Badge Gardien premium","6 annonces mises en avant / mois","Boost automatique des nouvelles annonces","Insigne premium visible","Accès aux fonctionnalités bêta"] },
-  { id:"legende",  name:"Légende",  icon:"🌟", min:5000,  max:14999, feeRate:0.05, divs:[{label:"I",min:5000,max:7999},{label:"II",min:8000,max:11999},{label:"III",min:12000,max:14999}],perks:["Commission 5%","Badge Légende ultra-rare","12 annonces mises en avant / mois","Visibilité maximale dans les résultats","Accès aux événements exclusifs Cercle"] },
-  { id:"fondateur",name:"Fondateur Cercle",icon:"👑",min:15000,max:Infinity,feeRate:0.03,divs:[{label:"I",min:15000,max:17999},{label:"II",min:18000,max:21999},{label:"III",min:22000,max:Infinity}],perks:["🏅 Ambassadeur officiel Cercle — représente la plateforme lors d'événements","📊 Parts symboliques dans l'entreprise — participation aux décisions stratégiques","🎟️ 5 à 10 annonces sans aucune commission — pour toujours","🏢 Visite privée et rencontre exclusive avec l'équipe fondatrice","🏆 Trophée physique exclusif envoyé à domicile","⭐ Badge Fondateur doré permanent sur le profil"] },
+  { id:"voisin",   name:"Voisin",   icon:"🤝", min:0,     max:49,    feeRate:0.12, divs:[{label:"I",min:0,max:16},{label:"II",min:17,max:32},{label:"III",min:33,max:49}],           perks:["Commission 12%","Accès à toutes les catégories","Messagerie standard"],           avantages:["Commission 12%","Accès à la plateforme","Support standard"] },
+  { id:"habitant", name:"Habitant", icon:"🏠", min:50,    max:499,   feeRate:0.11, divs:[{label:"I",min:50,max:199},{label:"II",min:200,max:349},{label:"III",min:350,max:499}],       perks:["Commission 11%","Badge Habitant sur le profil","1 annonce mise en avant / mois","Priorité légère dans les résultats"],       avantages:["Commission 11%","Badge Habitant sur le profil","Priorité support"] },
+  { id:"pilier",   name:"Pilier",   icon:"🏛️", min:500,   max:1999,  feeRate:0.09, divs:[{label:"I",min:500,max:999},{label:"II",min:1000,max:1499},{label:"III",min:1500,max:1999}],  perks:["Commission 9%","Badge Pilier doré","3 annonces mises en avant / mois","Apparition boostée dans la recherche","Statistiques avancées sur ses annonces"],  avantages:["Commission 9%","Mise en avant des annonces","Support prioritaire"] },
+  { id:"gardien",  name:"Gardien",  icon:"🛡️", min:2000,  max:4999,  feeRate:0.07, divs:[{label:"I",min:2000,max:2999},{label:"II",min:3000,max:3999},{label:"III",min:4000,max:4999}],perks:["Commission 7%","Badge Gardien premium","6 annonces mises en avant / mois","Boost automatique des nouvelles annonces","Insigne premium visible","Accès aux fonctionnalités bêta"], avantages:["Commission 7%","Annonces boostées","Accès bêta nouvelles fonctionnalités"] },
+  { id:"legende",  name:"Légende",  icon:"🌟", min:5000,  max:14999, feeRate:0.05, divs:[{label:"I",min:5000,max:7999},{label:"II",min:8000,max:11999},{label:"III",min:12000,max:14999}],perks:["Commission 5%","Badge Légende ultra-rare","12 annonces mises en avant / mois","Visibilité maximale dans les résultats","Accès aux événements exclusifs Cercle"], avantages:["Commission 5%","Support dédié","Badge Légende exclusif","Accès VIP événements Cercle"] },
+  { id:"fondateur",name:"Fondateur Cercle",icon:"👑",min:15000,max:Infinity,feeRate:0.03,divs:[{label:"I",min:15000,max:17999},{label:"II",min:18000,max:21999},{label:"III",min:22000,max:Infinity}],perks:["🏅 Ambassadeur officiel Cercle — représente la plateforme lors d'événements","📊 Parts symboliques dans l'entreprise — participation aux décisions stratégiques","🎟️ 5 à 10 annonces sans aucune commission — pour toujours","🏢 Visite privée et rencontre exclusive avec l'équipe fondatrice","🏆 Trophée physique exclusif envoyé à domicile","⭐ Badge Fondateur doré permanent sur le profil"], avantages:["Commission 3%","Ambassadeur officiel","Parts dans l'entreprise","5-10 annonces sans commission","Visite privée des bureaux","Trophée physique exclusif","Badge doré permanent"] },
 ];
-const TOOLTIP_PERKS = {
-  voisin:   ["Commission 12%","Accès complet à la plateforme","Support standard"],
-  habitant: ["Commission 11%","Badge Habitant sur le profil","Priorité support"],
-  pilier:   ["Commission 9%","Annonces mises en avant","Support prioritaire"],
-  gardien:  ["Commission 7%","Annonces boostées","Accès bêta nouvelles fonctionnalités"],
-  legende:  ["Commission 5%","Support dédié","Badge Légende exclusif","Accès VIP événements Cercle"],
-  fondateur:["Commission 3%","Ambassadeur officiel Cercle","Parts dans l'entreprise","5-10 annonces sans commission","Visite privée des bureaux","Trophée physique exclusif","Badge doré permanent"],
-};
 function getGrade(rentals) { return GRADES.find(g => rentals >= g.min && rentals <= g.max) || GRADES[0]; }
 function getNextGrade(rentals) { const i = GRADES.findIndex(g => rentals >= g.min && rentals <= g.max); return i < GRADES.length - 1 ? GRADES[i + 1] : null; }
 function getDivision(rentals) {
@@ -1014,8 +999,8 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
   const [tab, setTab] = React.useState(initTab || 'annonces');
   const [editMode, setEditMode] = React.useState(false);
   const [gradeBarWidth, setGradeBarWidth] = React.useState(0);
-  const [activeTooltipGrade, setActiveTooltipGrade] = React.useState(null);
   const [qrItem, setQrItem] = React.useState(null);
+  const [gradeTooltip, setGradeTooltip] = React.useState(null);
   const [profileData, setProfileData] = React.useState({
     name: userName,
     email: user.email || 'noah@cercle.fr',
@@ -1713,20 +1698,15 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
 
               {/* Parcours — grille de cartes */}
               <div>
-                <div style={{fontSize:15,fontWeight:800,color:'var(--dk)',marginBottom:16}}>Tous les rangs</div>
+                <div style={{fontSize:15,fontWeight:800,color:'#1a1a2e',marginBottom:16}}>Tous les rangs</div>
                 <div style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:10,marginBottom:10}}>
                   {GRADES.slice(0,5).map((g,gi)=>{
                     const gColor = GC[g.id]||'#6C63FF';
                     const isCurrentGrade = g.id===grade.id;
                     const isUnlocked = rentals >= g.min;
-                    const isFondateur = g.id==='fondateur';
-                    const isActive = activeTooltipGrade===g.id;
+                    const tipOpen = gradeTooltip===g.id;
                     return (
-                      <div key={g.id} style={{position:'relative'}}
-                        onMouseEnter={()=>setActiveTooltipGrade(g.id)}
-                        onMouseLeave={()=>setActiveTooltipGrade(null)}
-                        onClick={()=>setActiveTooltipGrade(isActive?null:g.id)}
-                      >
+                      <div key={g.id} className={tipOpen?'grade-card-wrap tip-open':'grade-card-wrap'} style={{zIndex:tipOpen?10:1}} onClick={()=>setGradeTooltip(tipOpen?null:g.id)}>
                         <div style={{
                           borderRadius:16,overflow:'hidden',
                           animation:'scaleIn 0.4s cubic-bezier(0.34,1.56,0.64,1) both', animationDelay:`${gi*0.07}s`,
@@ -1734,12 +1714,10 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
                           background:isCurrentGrade
                             ?`linear-gradient(160deg,${gColor},${gColor}cc)`
                             :isUnlocked?`linear-gradient(160deg,${gColor}22,${gColor}08)`:'#f9fafb',
-                          boxShadow:isCurrentGrade?`0 6px 20px ${gColor}45`:isActive?`0 4px 16px ${gColor}30`:'0 1px 4px rgba(0,0,0,0.06)',
+                          boxShadow:isCurrentGrade?`0 6px 20px ${gColor}45`:'0 1px 4px rgba(0,0,0,0.06)',
                           transition:'all .25s',
                           filter:isUnlocked?'none':'grayscale(.65)',
-                          opacity:isUnlocked?1:.6,
-                          cursor:'pointer',
-                          transform:isActive&&!isCurrentGrade?'translateY(-2px)':'none',
+                          opacity:isUnlocked?1:.6
                         }}>
                           <div style={{padding:'14px 8px 16px',textAlign:'center'}}>
                             <div style={{fontSize:28,marginBottom:8,lineHeight:1}}>{g.icon}</div>
@@ -1770,21 +1748,15 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
                             </div>
                           </div>
                         </div>
-                        {isActive&&(
-                          <div className={`grade-tt${isFondateur?' fondateur':''}`}>
-                            <div className="grade-tt-title">
-                              <span style={{fontSize:16,lineHeight:1}}>{g.icon}</span>
-                              <span className="grade-tt-name" style={{color:isFondateur?'#D4AF37':gColor}}>{g.name}</span>
+                        <div className="grade-tooltip" style={{border:`2px solid ${gColor}`,boxShadow:`0 8px 24px ${gColor}33`}}>
+                          <div style={{fontWeight:800,color:gColor,marginBottom:6,fontSize:11,letterSpacing:'.02em'}}>{g.icon} {g.name}</div>
+                          {g.avantages.map((a,ai)=>(
+                            <div key={ai} style={{fontSize:10,color:'#374151',marginBottom:3,display:'flex',gap:5,alignItems:'flex-start'}}>
+                              <span style={{color:gColor,fontWeight:800,flexShrink:0}}>✓</span>
+                              <span style={{lineHeight:1.4}}>{a}</span>
                             </div>
-                            {(TOOLTIP_PERKS[g.id]||g.perks).map((p,pi)=>(
-                              <div key={pi} className="grade-tt-perk">
-                                <span className="grade-tt-check" style={{color:isFondateur?'#D4AF37':gColor}}>✓</span>
-                                <span>{p}</span>
-                              </div>
-                            ))}
-                            <div className="grade-tt-arrow"/>
-                          </div>
-                        )}
+                          ))}
+                        </div>
                       </div>
                     );
                   })}
@@ -1794,14 +1766,10 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
                   const fg = GRADES[5];
                   const isCurrentGrade = fg.id===grade.id;
                   const isUnlocked = rentals >= fg.min;
-                  const isFgActive = activeTooltipGrade===fg.id;
+                  const fTipOpen = gradeTooltip==='fondateur';
                   return (
-                    <div style={{position:'relative',cursor:'pointer'}}
-                      onMouseEnter={()=>setActiveTooltipGrade(fg.id)}
-                      onMouseLeave={()=>setActiveTooltipGrade(null)}
-                      onClick={()=>setActiveTooltipGrade(isFgActive?null:fg.id)}
-                    >
-                      <div style={{borderRadius:20,overflow:'hidden',position:'relative',border:isCurrentGrade?'2px solid #FFD700':'2px solid #D4AF3766',background:isUnlocked?'linear-gradient(135deg,#0a0a0a 0%,#1a1200 50%,#0a0a0a 100%)':'#f9fafb',boxShadow:isCurrentGrade?'0 8px 40px rgba(212,175,55,0.5)':isFgActive?'0 6px 24px rgba(212,175,55,0.25)':'0 1px 6px rgba(0,0,0,0.08)',animation:isCurrentGrade?'fondateurBorder 2.5s ease-in-out infinite':'scaleIn 0.4s cubic-bezier(0.34,1.56,0.64,1) 0.42s both',filter:isUnlocked?'none':'grayscale(.7)',opacity:isUnlocked?1:.55,transition:'box-shadow .25s'}}>
+                    <div>
+                      <div onClick={()=>setGradeTooltip(fTipOpen?null:'fondateur')} style={{borderRadius:20,overflow:'hidden',position:'relative',cursor:'pointer',border:isCurrentGrade?'2px solid #FFD700':'2px solid #D4AF3766',background:isUnlocked?'linear-gradient(135deg,#0a0a0a 0%,#1a1200 50%,#0a0a0a 100%)':'#f9fafb',boxShadow:isCurrentGrade?'0 8px 40px rgba(212,175,55,0.5)':'0 1px 6px rgba(0,0,0,0.08)',animation:isCurrentGrade?'fondateurBorder 2.5s ease-in-out infinite':'scaleIn 0.4s cubic-bezier(0.34,1.56,0.64,1) 0.42s both',filter:isUnlocked?'none':'grayscale(.7)',opacity:isUnlocked?1:.55}}>
                         {isUnlocked&&<div style={{position:'absolute',inset:0,background:'linear-gradient(105deg,transparent 35%,rgba(212,175,55,0.15) 50%,transparent 65%)',backgroundSize:'200% 100%',animation:'shimmerCard 2.5s linear infinite',pointerEvents:'none'}}/>}
                         <div style={{padding:'18px 20px',display:'flex',alignItems:'center',gap:16,position:'relative',zIndex:1}}>
                           <div style={{fontSize:40,filter:isUnlocked?'drop-shadow(0 0 10px #FFD700)':'none',flexShrink:0}}>{fg.icon}</div>
@@ -1809,7 +1777,8 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
                             <div style={{fontSize:15,fontWeight:900,marginBottom:3,background:isUnlocked?'linear-gradient(90deg,#FFD700,#FFF8DC,#D4AF37)':'none',WebkitBackgroundClip:isUnlocked?'text':'unset',WebkitTextFillColor:isUnlocked?'transparent':'#9ca3af',backgroundSize:'200% auto',animation:isUnlocked?'shimmerCard 2s linear infinite':'none'}}>{fg.name}</div>
                             <div style={{fontSize:11,color:isUnlocked?'rgba(255,248,220,0.7)':'#9ca3af'}}>Commission {Math.round(fg.feeRate*100)}% · Dès {fg.min.toLocaleString()} locations</div>
                           </div>
-                          <div style={{textAlign:'right',flexShrink:0}}>
+                          <div style={{display:'flex',alignItems:'center',gap:8,flexShrink:0}}>
+                            <span style={{fontSize:10,color:isUnlocked?'rgba(255,248,220,0.5)':'#c0c0c0'}}>Voir avantages {fTipOpen?'▲':'▼'}</span>
                             {isCurrentGrade
                               ? <span style={{fontSize:10,fontWeight:800,color:'#0a0a0a',background:'linear-gradient(90deg,#FFD700,#D4AF37)',padding:'4px 10px',borderRadius:20,letterSpacing:'.04em'}}>EN COURS</span>
                               : isUnlocked
@@ -1819,19 +1788,18 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
                           </div>
                         </div>
                       </div>
-                      {isFgActive&&(
-                        <div className="grade-tt fondateur" style={{left:'auto',right:0,transform:'none',maxWidth:280,width:'auto',minWidth:220}}>
-                          <div className="grade-tt-title">
-                            <span style={{fontSize:16,lineHeight:1}}>{fg.icon}</span>
-                            <span className="grade-tt-name" style={{color:'#D4AF37'}}>{fg.name}</span>
+                      {fTipOpen&&(
+                        <div style={{marginTop:8,borderRadius:16,padding:'16px 18px',background:'linear-gradient(135deg,#0a0a0a,#1a1200)',border:'1.5px solid #D4AF3766',boxShadow:'0 8px 32px rgba(212,175,55,0.25)',animation:'fadeSlideUp 0.2s ease both',position:'relative',overflow:'hidden'}}>
+                          <div style={{position:'absolute',inset:0,background:'linear-gradient(105deg,transparent 35%,rgba(212,175,55,0.08) 50%,transparent 65%)',backgroundSize:'200% 100%',animation:'shimmerCard 3s linear infinite',pointerEvents:'none'}}/>
+                          <div style={{fontWeight:800,color:'#FFD700',marginBottom:10,fontSize:12,position:'relative',zIndex:1}}>👑 Avantages exclusifs Fondateur</div>
+                          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'6px 16px',position:'relative',zIndex:1}}>
+                            {fg.avantages.map((a,ai)=>(
+                              <div key={ai} style={{display:'flex',gap:8,alignItems:'flex-start',fontSize:11,color:'#FFF8DC'}}>
+                                <span style={{color:'#FFD700',fontWeight:800,flexShrink:0,marginTop:1}}>★</span>
+                                <span style={{lineHeight:1.4}}>{a}</span>
+                              </div>
+                            ))}
                           </div>
-                          {(TOOLTIP_PERKS[fg.id]||fg.perks).map((p,pi)=>(
-                            <div key={pi} className="grade-tt-perk">
-                              <span className="grade-tt-check" style={{color:'#D4AF37'}}>✓</span>
-                              <span>{p}</span>
-                            </div>
-                          ))}
-                          <div className="grade-tt-arrow" style={{left:'auto',right:20,transform:'translateX(0) rotate(45deg)'}}/>
                         </div>
                       )}
                     </div>
