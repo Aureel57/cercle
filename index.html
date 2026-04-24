@@ -12,6 +12,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap');
 *{margin:0;padding:0;box-sizing:border-box}
@@ -226,7 +227,10 @@ body,html,#root{font-family:var(--f);color:var(--tx);background:var(--bg);-webki
 .grade-progress{margin-top:14px}
 .grade-progress-bar{height:6px;border-radius:3px;background:var(--bd);overflow:hidden;margin:6px 0}
 .grade-progress-fill{height:100%;border-radius:3px;transition:width 0.8s cubic-bezier(0.34,1.56,0.64,1);will-change:width}
-.grade-progress-fill.voisin{background:linear-gradient(90deg,#6b7280,#9ca3af)}.grade-progress-fill.habitant{background:linear-gradient(90deg,#3b82f6,#60a5fa)}.grade-progress-fill.pilier{background:linear-gradient(90deg,#F59E0B,#FCD34D)}.grade-progress-fill.gardien{background:linear-gradient(90deg,#7C3AED,#A78BFA)}.grade-progress-fill.legende{background:linear-gradient(90deg,#06B6D4,#67E8F9)}
+.grade-progress-fill.voisin{background:linear-gradient(90deg,#6b7280,#9ca3af)}.grade-progress-fill.habitant{background:linear-gradient(90deg,#3b82f6,#60a5fa)}.grade-progress-fill.pilier{background:linear-gradient(90deg,#F59E0B,#FCD34D)}.grade-progress-fill.gardien{background:linear-gradient(90deg,#7C3AED,#A78BFA)}.grade-progress-fill.legende{background:linear-gradient(90deg,#06B6D4,#67E8F9)}.grade-progress-fill.fondateur{background:linear-gradient(90deg,#1a1a1a,#B8860B,#FFD700,#B8860B,#1a1a1a);background-size:300% auto;animation:shimmerGold 2s linear infinite}
+@keyframes shimmerGold{0%{background-position:0% center}100%{background-position:300% center}}
+@keyframes fondateurBorder{0%,100%{border-color:#D4AF37;box-shadow:0 0 18px rgba(212,175,55,0.5)}50%{border-color:#FFD700;box-shadow:0 0 36px rgba(255,215,0,0.7)}}
+@keyframes shimmerCard{0%{background-position:-200% center}100%{background-position:200% center}}
 .savings-card{border:1px solid var(--bd);border-radius:var(--rl);padding:20px;margin-bottom:20px;background:linear-gradient(135deg,#F0FDF4,#ECFDF5);display:flex;align-items:center;gap:16px}
 .savings-amount{font-family:var(--fd);font-size:28px;font-weight:700;color:var(--acc)}
 .all-grades{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:14px}
@@ -236,14 +240,15 @@ body,html,#root{font-family:var(--f);color:var(--tx);background:var(--bg);-webki
 .all-grade:nth-child(3){animation-delay:0.3s}
 .all-grade:nth-child(4){animation-delay:0.4s}
 .all-grade:nth-child(5){animation-delay:0.5s}
+.all-grade:nth-child(6){animation-delay:0.6s}
 .all-grade.current{border-color:var(--dk);background:var(--bg);transform:scale(1.08)}.all-grade .ag-icon{font-size:24px;display:block;margin-bottom:4px}.all-grade .ag-name{font-weight:700;display:block}.all-grade .ag-range{color:var(--g);font-size:9px}
 @keyframes tooltipIn{from{opacity:0;transform:translateX(-50%) translateY(6px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
 .grade-tt{position:absolute;bottom:calc(100% + 10px);left:50%;transform:translateX(-50%);min-width:168px;width:max-content;max-width:210px;background:var(--w);border:1.5px solid var(--bd);border-radius:13px;padding:11px 13px 12px;z-index:60;pointer-events:none;box-shadow:var(--shm);animation:tooltipIn .18s ease}
-.grade-tt.fondateur{background:linear-gradient(155deg,#0d0d0d 0%,#1c1500 100%);border-color:#c9a227;box-shadow:0 8px 32px rgba(201,162,39,0.32)}
+.grade-tt.fondateur{background:linear-gradient(155deg,#0d0d0d 0%,#1c1500 100%);border-color:#D4AF37;box-shadow:0 8px 32px rgba(212,175,55,0.32)}
 .grade-tt-arrow{position:absolute;bottom:-5px;left:50%;transform:translateX(-50%) rotate(45deg);width:8px;height:8px;border-right:1.5px solid var(--bd);border-bottom:1.5px solid var(--bd);background:var(--w)}
-.grade-tt.fondateur .grade-tt-arrow{border-color:#c9a22780;background:#1c1500}
+.grade-tt.fondateur .grade-tt-arrow{border-color:#D4AF3780;background:#1c1500}
 .grade-tt-title{display:flex;align-items:center;gap:7px;margin-bottom:8px;padding-bottom:7px;border-bottom:1px solid var(--bd)}
-.grade-tt.fondateur .grade-tt-title{border-bottom-color:#c9a22740}
+.grade-tt.fondateur .grade-tt-title{border-bottom-color:#D4AF3740}
 .grade-tt-name{font-size:11px;font-weight:800;letter-spacing:-.01em}
 .grade-tt-perk{display:flex;align-items:flex-start;gap:6px;font-size:10.5px;line-height:1.4;color:var(--tx);margin-bottom:3px}
 .grade-tt-perk:last-child{margin-bottom:0}
@@ -347,6 +352,17 @@ html.dark,html.dark body,html.dark #root{background:#0f0f13 !important;color:#f1
 .dark .ct.on{border-bottom-color:rgba(255,255,255,.9)}
 /* Dark mode — filter button */
 .dark .fb{background:var(--w);color:var(--dk);border-color:var(--bd)}
+/* Photo upload */
+.photo-drop{border:2px dashed var(--p);border-radius:14px;padding:28px 16px;text-align:center;background:rgba(108,99,255,0.04);cursor:pointer;transition:all 0.2s}
+.photo-drop:hover,.photo-drop.drag{border-style:solid;box-shadow:0 4px 16px rgba(108,99,255,0.15);background:rgba(108,99,255,0.08)}
+.photo-thumbs{display:grid;grid-template-columns:repeat(auto-fill,80px);gap:8px;margin-top:12px}
+.photo-thumb{position:relative;width:80px;height:80px}
+.photo-thumb img{width:80px;height:80px;object-fit:cover;border-radius:10px;display:block}
+.photo-thumb-del{position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;background:#e85d4a;color:#fff;border:none;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,0.2)}
+.avatar-edit-wrap{position:relative;cursor:pointer;display:inline-flex;border-radius:50%}
+.avatar-edit-badge{position:absolute;bottom:4px;right:4px;width:26px;height:26px;border-radius:50%;background:var(--p);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.2);z-index:3}
+.dark .photo-drop{background:rgba(108,99,255,0.08);border-color:rgba(124,116,255,0.5)}
+.dark .photo-drop:hover,.dark .photo-drop.drag{background:rgba(108,99,255,0.16)}
 /* Bottom nav */
 .bnav{display:none;position:fixed;bottom:0;left:0;right:0;background:rgba(255,255,255,.95);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-top:1px solid rgba(0,0,0,.08);z-index:90;padding:8px 0 max(8px,env(safe-area-inset-bottom));box-shadow:0 -4px 16px rgba(0,0,0,.08)}
 .dark .bnav{background:rgba(21,21,21,.96);border-top:1px solid rgba(255,255,255,.08)}
@@ -423,8 +439,8 @@ html.dark,html.dark body,html.dark #root{background:#0f0f13 !important;color:#f1
 .pro-hdr .sb{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.1)}.pro-hdr .sb .ss{color:rgba(255,255,255,.7)}
 .pro-hdr .nr .nb{color:rgba(255,255,255,.8);border-color:rgba(255,255,255,.1)}.pro-hdr .nr .nb:hover{background:rgba(255,255,255,.08)}
 .pro-hdr .pb{border-color:rgba(255,255,255,.15)}.pro-hdr .mode-sw{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.08)}
-.pro-badge{position:absolute;top:10px;left:10px;background:linear-gradient(135deg,#2563EB,#1D4ED8);color:#fff;padding:4px 10px;border-radius:8px;font-size:9px;font-weight:700;z-index:2;letter-spacing:.04em}
-.pro-card{border:1.5px solid rgba(37,99,235,.15);border-radius:var(--rl)}.pro-card:hover{border-color:#2563EB}
+.pro-badge{position:absolute;top:10px;left:10px;background:linear-gradient(135deg,#F59E0B,#D97706);color:#fff;padding:4px 10px;border-radius:8px;font-size:9px;font-weight:700;z-index:2;letter-spacing:.04em;box-shadow:0 2px 8px rgba(217,119,6,.35)}
+.pro-card{border:1.5px solid rgba(108,99,255,.2);border-radius:var(--rl)}.pro-card:hover{border-color:#6C63FF;box-shadow:0 0 0 2px rgba(108,99,255,.1)}
 .pro-banner{background:linear-gradient(135deg,#0F172A,#1E293B);color:#fff;padding:28px;text-align:center;border-radius:0 0 var(--rl) var(--rl);margin-bottom:12px}
 /* Animations */
 @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
@@ -559,6 +575,13 @@ html.dark,html.dark body,html.dark #root{background:#0f0f13 !important;color:#f1
 .detail-map{border-radius:12px;overflow:hidden;border:1px solid var(--bd);margin-top:8px}
 /* Dashboard charts */
 .dboard-chart{background:var(--w);border:1px solid var(--bd);border-radius:var(--rl);padding:20px;margin-bottom:0}
+/* PRO badge on avatar */
+.pro-avatar-badge{position:absolute;bottom:-4px;right:-4px;background:linear-gradient(135deg,#F59E0B,#D97706);color:#fff;font-size:9px;font-weight:800;padding:3px 7px;border-radius:20px;border:2px solid #fff;letter-spacing:.05em;box-shadow:0 2px 8px rgba(217,119,6,.4);z-index:3}
+/* Auth PRO card amber */
+.auth-pro-card-active{border-color:#D97706!important;background:#FFFBEB!important}
+.auth-pro-tag{background:#FEF3C7;color:#92400E;font-size:9px;padding:2px 7px;border-radius:5px;font-weight:600}
+/* Gestion Pro */
+.gestion-tab-active{border-bottom:2.5px solid #D97706!important;color:#D97706!important}
 `;
 
 /* ========== COMPONENTS ========== */
@@ -634,26 +657,30 @@ function AuthModal({onClose,dispatch,mode:im}){
         <div style={{textAlign:"center",fontSize:36,marginBottom:10}}>🎉</div>
         <p style={{textAlign:"center",fontSize:13,color:"var(--g)",marginBottom:20}}>Quel type de compte souhaitez-vous créer ?</p>
         <div style={{display:"flex",flexDirection:"column",gap:10}}>
-          <div onClick={()=>setAcctType("perso")} style={{border:`2px solid ${acctType==="perso"?"var(--p)":"var(--bd)"}`,borderRadius:14,padding:18,cursor:"pointer",transition:"all .2s",background:acctType==="perso"?"#FEF2F2":"var(--w)"}}>
+          <div onClick={()=>setAcctType("perso")} style={{border:`2px solid ${acctType==="perso"?"var(--p)":"var(--bd)"}`,borderRadius:14,padding:18,cursor:"pointer",transition:"all .2s",background:acctType==="perso"?"#F5F3FF":"var(--w)",boxShadow:acctType==="perso"?"0 4px 20px rgba(108,99,255,0.15)":"none"}}>
             <div style={{display:"flex",alignItems:"center",gap:12}}>
-              <span style={{fontSize:32}}>👤</span>
+              <div style={{width:48,height:48,borderRadius:12,background:acctType==="perso"?"linear-gradient(135deg,#6C63FF,#8b5cf6)":"#f3f4f6",display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,transition:"all .2s",flexShrink:0}}>👤</div>
               <div style={{flex:1}}>
                 <div style={{fontWeight:700,fontSize:15}}>Particulier</div>
-                <div style={{fontSize:12,color:"var(--g)",lineHeight:1.4,marginTop:2}}>Louez et proposez des objets entre particuliers. Inscription rapide.</div>
+                <div style={{fontSize:12,color:"var(--g)",lineHeight:1.4,marginTop:2}}>Louez et proposez des objets entre particuliers. Inscription gratuite et rapide.</div>
               </div>
-              {acctType==="perso"&&<span style={{color:"var(--p)",fontSize:18}}>✓</span>}
+              {acctType==="perso"&&<span style={{color:"var(--p)",fontSize:18,fontWeight:700}}>✓</span>}
             </div>
+            <div style={{display:"flex",gap:6,marginTop:10,flexWrap:"wrap"}}>{["🏷️ Annonces","❤️ Favoris","💬 Messages","🏅 Grades","⭐ Avis"].map(t=><span key={t} style={{fontSize:9,padding:"2px 8px",borderRadius:5,background:"#EDE9FE",color:"#5B21B6",fontWeight:600}}>{t}</span>)}</div>
           </div>
-          <div onClick={()=>setAcctType("pro")} style={{border:`2px solid ${acctType==="pro"?"#2563EB":"var(--bd)"}`,borderRadius:14,padding:18,cursor:"pointer",transition:"all .2s",background:acctType==="pro"?"#EFF6FF":"var(--w)"}}>
+          <div onClick={()=>setAcctType("pro")} style={{border:`2px solid ${acctType==="pro"?"#D97706":"var(--bd)"}`,borderRadius:14,padding:18,cursor:"pointer",transition:"all .2s",background:acctType==="pro"?"#FFFBEB":"var(--w)",boxShadow:acctType==="pro"?"0 4px 20px rgba(217,119,6,0.15)":"none"}}>
             <div style={{display:"flex",alignItems:"center",gap:12}}>
-              <span style={{fontSize:32}}>🏢</span>
+              <div style={{width:48,height:48,borderRadius:12,background:acctType==="pro"?"linear-gradient(135deg,#F59E0B,#D97706)":"#f3f4f6",display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,transition:"all .2s",flexShrink:0}}>⭐</div>
               <div style={{flex:1}}>
-                <div style={{fontWeight:700,fontSize:15}}>Professionnel</div>
-                <div style={{fontSize:12,color:"var(--g)",lineHeight:1.4,marginTop:2}}>Pour les entreprises et loueurs pro. Espace dédié, facturation, volumes.</div>
+                <div style={{display:"flex",alignItems:"center",gap:7}}>
+                  <div style={{fontWeight:700,fontSize:15}}>Professionnel</div>
+                  <span style={{background:"linear-gradient(135deg,#F59E0B,#D97706)",color:"#fff",fontSize:9,fontWeight:800,padding:"2px 7px",borderRadius:20,letterSpacing:".04em"}}>PRO</span>
+                </div>
+                <div style={{fontSize:12,color:"var(--g)",lineHeight:1.4,marginTop:2}}>Pour les entreprises et loueurs pro. Espace dédié, facturation, calendrier.</div>
               </div>
-              {acctType==="pro"&&<span style={{color:"#2563EB",fontSize:18}}>✓</span>}
+              {acctType==="pro"&&<span style={{color:"#D97706",fontSize:18,fontWeight:700}}>✓</span>}
             </div>
-            <div style={{display:"flex",gap:6,marginTop:8,flexWrap:"wrap"}}>{["Factures","Flotte","Dashboard","Visibilité Pro"].map(t=><span key={t} style={{fontSize:9,padding:"2px 7px",borderRadius:5,background:"#DBEAFE",color:"#1E40AF",fontWeight:600}}>{t}</span>)}</div>
+            <div style={{display:"flex",gap:6,marginTop:10,flexWrap:"wrap"}}>{["🧾 Factures PDF","🏗️ Mon parc","📊 Dashboard Pro","📅 Calendrier","💛 Visibilité prioritaire"].map(t=><span key={t} style={{fontSize:9,padding:"2px 8px",borderRadius:5,background:"#FEF3C7",color:"#92400E",fontWeight:600}}>{t}</span>)}</div>
           </div>
         </div>
         <button className="bp" style={{width:"100%",marginTop:16}} onClick={()=>setStep(1)}>Continuer →</button>
@@ -733,6 +760,37 @@ function Onboarding({onClose}){
   </div>
 }
 
+/* ===== QR CODE MODAL ===== */
+function QRModal({item,onClose}){
+  const qrRef=useRef(null);
+  const baseUrl=window.location.href.split('?')[0];
+  const url=`${baseUrl}?annonce=${item.id}&action=confirm`;
+  useEffect(()=>{
+    if(qrRef.current&&window.QRCode){
+      qrRef.current.innerHTML='';
+      new QRCode(qrRef.current,{text:url,width:200,height:200,colorDark:"#6C63FF",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.H});
+    }
+  },[]);
+  const download=()=>{
+    const canvas=qrRef.current?.querySelector('canvas');
+    if(canvas){const a=document.createElement('a');a.download=`qrcode-${item.title.replace(/\s+/g,'-')}.png`;a.href=canvas.toDataURL('image/png');a.click();}
+  };
+  return <div className="bk" onClick={onClose}>
+    <div className="md" onClick={e=>e.stopPropagation()} style={{maxWidth:420,textAlign:'center'}}>
+      <div className="mh"><button className="mx" onClick={onClose}><I.X/></button><h2>📱 QR Code anti-litige</h2></div>
+      <div className="mb" style={{display:'flex',flexDirection:'column',alignItems:'center',gap:16}}>
+        <div style={{fontSize:15,fontWeight:700,color:'var(--dk)',maxWidth:280,lineHeight:1.4}}>{item.title}</div>
+        <div ref={qrRef} style={{width:200,height:200,display:'flex',alignItems:'center',justifyContent:'center'}}/>
+        <div style={{fontSize:13,color:'var(--tx)',lineHeight:1.65,textAlign:'left',background:'#fef9c3',borderRadius:12,padding:'14px 16px',border:'1px solid #fde68a',margin:0,width:'100%'}}>
+          📌 Collez ce QR code sur votre objet. Lors de la remise, le locataire devra scanner ce code pour confirmer qu'il a bien reçu l'objet. Au retour, vous devrez scanner ce code pour confirmer la récupération. Cela protège les deux parties en cas de litige.
+        </div>
+        <button className="bp" style={{width:'100%'}} onClick={download}>⬇️ Télécharger le QR code</button>
+        <button className="bs" style={{width:'100%'}} onClick={onClose}>Fermer</button>
+      </div>
+    </div>
+  </div>
+}
+
 /* ===== MINI CALENDAR ===== */
 function MiniCal({value,onChange,label,minDate}){
   const d=value?new Date(value):new Date();
@@ -779,7 +837,7 @@ function Detail({item,onClose,state,dispatch,setPage,setConvId,setShowShop,setPr
   const[showVerifModal,setShowVerifModal]=useState(false);
   const userRentals=(state.user?.rentals||0)+state.bookings.filter(b=>b.userId===state.user?.id).length;
   const userGrade=getGrade(userRentals);
-  const ins=Math.floor(item.price*days*.08),fee=Math.floor(item.price*days*userGrade.feeRate),feeBase=Math.floor(item.price*days*0.10),feeSaved=feeBase-fee,tot=item.price*days+ins+fee;
+  const ins=Math.floor(item.price*days*.08),fee=Math.floor(item.price*days*userGrade.feeRate),feeBase=Math.floor(item.price*days*0.12),feeSaved=feeBase-fee,tot=item.price*days+ins+fee;
   useEffect(()=>{if(sd&&ed){const d=Math.max(1,Math.round((new Date(ed)-new Date(sd))/864e5));setDays(d)}},[sd,ed]);
   const VEHICLE_CATS=["vehicles","vehicle","voiture","moto","transport"];
   const needsDrivingLicense=VEHICLE_CATS.includes((item.cat||"").toLowerCase());
@@ -909,12 +967,12 @@ function Detail({item,onClose,state,dispatch,setPage,setConvId,setShowShop,setPr
 
 /* ========== GRADE SYSTEM ========== */
 const GRADES = [
-  { id:"voisin",   name:"Voisin",   icon:"🤝", min:0,    max:49,   feeRate:0.10, divs:[{label:"I",min:0,max:9},{label:"II",min:10,max:24},{label:"III",min:25,max:49}],        perks:["Commission 10%","Accès à toutes les catégories","Messagerie standard"] },
-  { id:"habitant", name:"Habitant", icon:"🏠", min:50,   max:199,  feeRate:0.09, divs:[{label:"I",min:50,max:89},{label:"II",min:90,max:139},{label:"III",min:140,max:199}],   perks:["Commission 9%","Badge Habitant sur le profil","1 annonce mise en avant / mois","Priorité légère dans les résultats"] },
-  { id:"pilier",   name:"Pilier",   icon:"🏛️", min:200,  max:849,  feeRate:0.07, divs:[{label:"I",min:200,max:349},{label:"II",min:350,max:549},{label:"III",min:550,max:849}], perks:["Commission 7%","Badge Pilier doré","3 annonces mises en avant / mois","Apparition boostée dans la recherche","Statistiques avancées sur ses annonces"] },
-  { id:"gardien",  name:"Gardien",  icon:"🛡️", min:850,  max:5774, feeRate:0.05, divs:[{label:"I",min:850,max:1299},{label:"II",min:1300,max:1999},{label:"III",min:2000,max:5774}], perks:["Commission 5%","Badge Gardien premium","6 annonces mises en avant / mois","Boost automatique des nouvelles annonces","Insigne premium visible","Accès aux fonctionnalités bêta"] },
-  { id:"legende",  name:"Légende",  icon:"👑", min:5775, max:14999, feeRate:0.03, divs:[{label:"I",min:5775,max:6999},{label:"II",min:7000,max:8999},{label:"III",min:9000,max:14999}], perks:["Commission 3%","Badge Légende ultra-rare","12 annonces mises en avant / mois","Visibilité maximale dans les résultats","Accès aux événements exclusifs Cercle","Légende III : toutes les annonces mises en avant","Légende III : Récompense exclusive secrète 🎁"] },
-  { id:"fondateur", name:"Fondateur Cercle", icon:"🏆", min:15000, max:Infinity, feeRate:0.03, divs:[{label:"I",min:15000,max:Infinity}], perks:["Commission 3%","Ambassadeur officiel Cercle","Parts dans l'entreprise","5-10 annonces sans commission","Visite privée des bureaux","Trophée physique exclusif","Badge doré permanent"] },
+  { id:"voisin",   name:"Voisin",   icon:"🤝", min:0,     max:49,    feeRate:0.12, divs:[{label:"I",min:0,max:16},{label:"II",min:17,max:32},{label:"III",min:33,max:49}],           perks:["Commission 12%","Accès à toutes les catégories","Messagerie standard"] },
+  { id:"habitant", name:"Habitant", icon:"🏠", min:50,    max:499,   feeRate:0.11, divs:[{label:"I",min:50,max:199},{label:"II",min:200,max:349},{label:"III",min:350,max:499}],       perks:["Commission 11%","Badge Habitant sur le profil","1 annonce mise en avant / mois","Priorité légère dans les résultats"] },
+  { id:"pilier",   name:"Pilier",   icon:"🏛️", min:500,   max:1999,  feeRate:0.09, divs:[{label:"I",min:500,max:999},{label:"II",min:1000,max:1499},{label:"III",min:1500,max:1999}],  perks:["Commission 9%","Badge Pilier doré","3 annonces mises en avant / mois","Apparition boostée dans la recherche","Statistiques avancées sur ses annonces"] },
+  { id:"gardien",  name:"Gardien",  icon:"🛡️", min:2000,  max:4999,  feeRate:0.07, divs:[{label:"I",min:2000,max:2999},{label:"II",min:3000,max:3999},{label:"III",min:4000,max:4999}],perks:["Commission 7%","Badge Gardien premium","6 annonces mises en avant / mois","Boost automatique des nouvelles annonces","Insigne premium visible","Accès aux fonctionnalités bêta"] },
+  { id:"legende",  name:"Légende",  icon:"🌟", min:5000,  max:14999, feeRate:0.05, divs:[{label:"I",min:5000,max:7999},{label:"II",min:8000,max:11999},{label:"III",min:12000,max:14999}],perks:["Commission 5%","Badge Légende ultra-rare","12 annonces mises en avant / mois","Visibilité maximale dans les résultats","Accès aux événements exclusifs Cercle"] },
+  { id:"fondateur",name:"Fondateur Cercle",icon:"👑",min:15000,max:Infinity,feeRate:0.03,divs:[{label:"I",min:15000,max:17999},{label:"II",min:18000,max:21999},{label:"III",min:22000,max:Infinity}],perks:["🏅 Ambassadeur officiel Cercle — représente la plateforme lors d'événements","📊 Parts symboliques dans l'entreprise — participation aux décisions stratégiques","🎟️ 5 à 10 annonces sans aucune commission — pour toujours","🏢 Visite privée et rencontre exclusive avec l'équipe fondatrice","🏆 Trophée physique exclusif envoyé à domicile","⭐ Badge Fondateur doré permanent sur le profil"] },
 ];
 const TOOLTIP_PERKS = {
   voisin:   ["Commission 12%","Accès complet à la plateforme","Support standard"],
@@ -944,10 +1002,20 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
   const userName = user.name || 'Noah M.';
   const userAvatar = user.avatar || null;
 
+  const avatarInputRef = React.useRef(null);
+  const handleAvatarChange = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => dispatch({type:"SET_AVATAR", avatar: ev.target.result, url: ev.target.result});
+    reader.readAsDataURL(file);
+  };
+
   const [tab, setTab] = React.useState(initTab || 'annonces');
   const [editMode, setEditMode] = React.useState(false);
   const [gradeBarWidth, setGradeBarWidth] = React.useState(0);
   const [activeTooltipGrade, setActiveTooltipGrade] = React.useState(null);
+  const [qrItem, setQrItem] = React.useState(null);
   const [profileData, setProfileData] = React.useState({
     name: userName,
     email: user.email || 'noah@cercle.fr',
@@ -966,10 +1034,15 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
     }
   }, [tab]);
 
-  const listings = (state && state.items && state.items.filter(i => i.owner === user.id)) || [];
+  const myOwnedItems = (state.items?.filter(i => i.owner?.id === user.id) || []);
+  const listings = [...myOwnedItems, ...(state.userItems || [])];
   const allItems = [...(state.items||[]), ...(state.proItems||[]), ...(state.userItems||[])];
   const favItems = allItems.filter(i => state.favorites && state.favorites.has(i.id));
   const favs = state.favorites || new Set();
+  const isUserPro = user.isPro;
+  const myProItems = listings.filter(i => i.isPro);
+  const heroGrade = getGrade(user.rentals || 0);
+  const isHeroFondateur = heroGrade.id === 'fondateur';
 
   const mockListings = [
     { id: 101, title: 'Perceuse Bosch Pro', price: 12, rating: 4.95, reviews: 87, img: '🔧' },
@@ -995,11 +1068,21 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
     { id: 5, author: 'Pierre M.', initials: 'PM', date: 'Déc. 2023', rating: 5, text: 'Location sans prise de tête. Propriétaire réactif et responsable. Matériel bien entretenu. Parfait !', color: '#06b6d4' },
   ];
 
+  const proParc = [
+    {id:'eq1',title:'Nacelle élévatrice 12m',cat:'tools',price:120,status:'available',rentals:34,icon:'🏗️'},
+    {id:'eq2',title:'Mini-pelle 1.5T',cat:'tools',price:180,status:'rented',rentals:28,icon:'⛏️'},
+    {id:'eq3',title:'Groupe électrogène 5kVA',cat:'tools',price:45,status:'available',rentals:67,icon:'⚡'},
+    {id:'eq4',title:'Échafaudage complet 10m',cat:'tools',price:65,status:'maintenance',rentals:19,icon:'🔧'},
+    {id:'eq5',title:'Flotte 10 vélos élec.',cat:'vehicles',price:150,status:'available',rentals:52,icon:'🚴'},
+    {id:'eq6',title:'Sono complète 2000W',cat:'events',price:80,status:'rented',rentals:41,icon:'🎵'},
+  ];
   const tabs = [
     { id: 'annonces', label: 'Annonces', icon: '🏷️', count: displayListings.length || 0 },
+    ...(isUserPro ? [{ id: 'parc', label: 'Mon Parc', icon: '🏗️', count: myProItems.length }] : []),
     { id: 'reservations', label: 'Réservations', icon: '📅', count: mockReservations.length },
     { id: 'avis', label: 'Avis', icon: '⭐', count: mockReviews.length },
     { id: 'favoris', label: 'Favoris', icon: '❤️', count: favItems.length },
+    ...(user.isPro ? [{ id: 'parc', label: 'Mon Parc', icon: '🏗️', count: proParc.length }] : []),
     { id: 'grade', label: 'Mon Grade', icon: '🏅', count: null },
     { id: 'parametres', label: 'Paramètres', icon: '⚙️', count: null },
   ];
@@ -1317,11 +1400,18 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
         <div style={{position:'relative'}}>
           <div style={S.heroInner}>
             <div style={S.avatarWrap}>
-              <div style={{borderRadius:'50%',background:'rgba(255,255,255,0.35)',padding:3,flexShrink:0,position:'relative',display:'inline-flex'}}>
-                <div style={S.avatar}>
-                  {userAvatar ? <img src={userAvatar} style={{width:'100%',height:'100%',borderRadius:'50%',objectFit:'cover'}} /> : '👤'}
-                  <div style={S.verifiedBadge}>✓</div>
+              <div style={{borderRadius:'50%',background:isHeroFondateur?'linear-gradient(135deg,#D4AF37,#FFD700,#B8860B)':'rgba(255,255,255,0.35)',padding:3,flexShrink:0,position:'relative',display:'inline-flex',boxShadow:isHeroFondateur?'0 0 20px rgba(212,175,55,0.8)':'none',animation:isHeroFondateur?'fondateurBorder 2.5s ease-in-out infinite':'none'}}>
+                <input ref={avatarInputRef} type="file" accept="image/*" capture="user" style={{display:'none'}} onChange={handleAvatarChange}/>
+                <div className="avatar-edit-wrap" onClick={()=>avatarInputRef.current&&avatarInputRef.current.click()} title="Changer la photo de profil">
+                  <div style={S.avatar}>
+                    {user.avatarUrl
+                      ? <img src={user.avatarUrl} style={{width:'100%',height:'100%',borderRadius:'50%',objectFit:'cover'}} alt="avatar"/>
+                      : (userAvatar || '👤')}
+                    <div style={S.verifiedBadge}>{isHeroFondateur?'👑':'✓'}</div>
+                  </div>
+                  <div className="avatar-edit-badge">📷</div>
                 </div>
+                {user.isPro && <div className="pro-avatar-badge">PRO</div>}
               </div>
               <div style={S.heroActions}>
                 <button onClick={() => setTab('parametres')} style={S.btnEdit}>✏️ Modifier</button>
@@ -1334,6 +1424,7 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
             <div style={S.subInfo}>
               <span style={S.pillGreen}>✓ Identité vérifiée</span>
               <span style={S.pillPurple}>🏅 Super hôte</span>
+              {isHeroFondateur && <span style={{...S.pill,background:'linear-gradient(90deg,#D4AF37,#FFD700)',color:'#0a0a0a',fontWeight:800,boxShadow:'0 2px 10px rgba(212,175,55,0.5)'}}>👑 Fondateur Cercle</span>}
               <span style={S.pill}>📍 Paris</span>
               <span style={S.pill}>🗓️ Membre depuis 2024</span>
             </div>
@@ -1394,9 +1485,43 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
                   <p style={S.listingTitle}>{l.title}</p>
                   <p style={S.listingPrice}>{l.price}€<span style={{fontWeight:400,fontSize:11,color:'var(--g)'}}>/jour</span></p>
                   <div style={S.listingRating}>⭐ {l.rating || '4.8'} <span>· {l.reviews || 0} avis</span></div>
+                  <button onClick={e=>{e.stopPropagation();setQrItem(l);}} style={{marginTop:8,width:'100%',padding:'6px 0',border:'1.5px solid #d1c9ff',borderRadius:10,background:'#f5f3ff',color:'#6C63FF',fontSize:11,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:4}}>📱 QR Code</button>
                 </div>
               </div>
             ))}
+          </div>
+        )}
+        {qrItem&&<QRModal item={qrItem} onClose={()=>setQrItem(null)}/>}
+
+        {/* ── Mon Parc (Pro only) ── */}
+        {tab === 'parc' && (
+          <div>
+            <p style={{fontSize:13,color:'var(--g)',margin:'0 0 16px',fontWeight:500}}>{myProItems.length} équipement{myProItems.length!==1?'s':''} dans votre parc professionnel</p>
+            {myProItems.length === 0 ? (
+              <div style={{textAlign:'center',padding:'48px 20px',color:'#9ca3af'}}>
+                <div style={{fontSize:44,marginBottom:12}}>🏗️</div>
+                <p style={{fontWeight:700,color:'#374151',fontSize:15,marginBottom:4}}>Aucun équipement Pro</p>
+                <p style={{fontSize:13}}>Publiez une annonce en mode Professionnel pour l'ajouter ici.</p>
+              </div>
+            ) : (
+              <div style={S.listingGrid}>
+                {myProItems.map((l, i) => (
+                  <div key={l.id} className="prof-listing-card" style={{...S.card,border:'2px solid #2563EB22',animation:'fadeSlideUp 0.4s cubic-bezier(0.34,1.56,0.64,1) both',animationDelay:`${i*0.07}s`}} onClick={() => { setSelected && setSelected(l); setPage && setPage('detail'); }}>
+                    <div style={{...S.listingImg,background:'linear-gradient(135deg,#dbeafe,#eff6ff)'}}>
+                      {l.images&&l.images[0]?<img src={l.images[0]} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}}/>:(l.img||'🏗️')}
+                    </div>
+                    <div style={S.listingBody}>
+                      <div style={{display:'flex',alignItems:'center',gap:4,marginBottom:4}}>
+                        <span style={{fontSize:9,fontWeight:700,color:'#2563EB',background:'#dbeafe',padding:'2px 6px',borderRadius:4}}>PRO</span>
+                      </div>
+                      <p style={S.listingTitle}>{l.title}</p>
+                      <p style={S.listingPrice}>{l.price}€<span style={{fontWeight:400,fontSize:11,color:'var(--g)'}}>/jour</span></p>
+                      <div style={S.listingRating}>⭐ {l.rating||'—'} <span>· {l.reviews||0} avis</span></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
@@ -1500,7 +1625,8 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
           const grade = getGrade(rentals);
           const next = getNextGrade(rentals);
           const {div, nextDiv, prog: divProg} = getDivision(rentals);
-          const GC = { voisin:'#6b7280', habitant:'#3b82f6', pilier:'#F59E0B', gardien:'#7C3AED', legende:'#06B6D4', fondateur:'#c9a227' };
+          const GC = { voisin:'#6b7280', habitant:'#3b82f6', pilier:'#F59E0B', gardien:'#7C3AED', legende:'#06B6D4', fondateur:'#D4AF37' };
+          const isFondateur = grade.id === 'fondateur';
           const gc = GC[grade.id] || '#6C63FF';
           const gcLight = gc + '20';
           const fullLabel = `${grade.name} ${div.label}`;
@@ -1512,13 +1638,14 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
             <div style={{maxWidth:560,margin:'0 auto'}}>
 
               {/* Hero */}
-              <div style={{borderRadius:22,marginBottom:20,background:`linear-gradient(135deg,${gc},${gc}bb)`,padding:'28px 24px',color:'#fff',position:'relative',overflow:'hidden',animation:'glowPulse 3s ease-in-out infinite'}}>
-                <div style={{position:'absolute',top:-16,right:-16,fontSize:130,opacity:.1,lineHeight:1,pointerEvents:'none'}}>{grade.icon}</div>
+              <div style={{borderRadius:22,marginBottom:20,background:isFondateur?'linear-gradient(135deg,#0a0a0a 0%,#1a1200 40%,#2a1f00 60%,#0a0a0a 100%)':`linear-gradient(135deg,${gc},${gc}bb)`,padding:'28px 24px',color:'#fff',position:'relative',overflow:'hidden',animation:isFondateur?'fondateurBorder 2.5s ease-in-out infinite':'glowPulse 3s ease-in-out infinite',border:isFondateur?'2px solid #D4AF37':'none',boxSizing:'border-box'}}>
+                {isFondateur&&<div style={{position:'absolute',inset:0,background:'linear-gradient(105deg,transparent 40%,rgba(212,175,55,0.18) 50%,transparent 60%)',backgroundSize:'200% 100%',animation:'shimmerCard 2.5s linear infinite',pointerEvents:'none'}}/>}
+                <div style={{position:'absolute',top:-16,right:-16,fontSize:130,opacity:isFondateur?.15:.1,lineHeight:1,pointerEvents:'none'}}>{grade.icon}</div>
                 <div style={{fontSize:11,fontWeight:700,letterSpacing:'.1em',textTransform:'uppercase',opacity:.75,marginBottom:8}}>Votre rang actuel</div>
                 <div style={{display:'flex',alignItems:'center',gap:14,marginBottom:20}}>
-                  <span style={{fontSize:48}}>{grade.icon}</span>
+                  <span style={{fontSize:48,filter:isFondateur?'drop-shadow(0 0 12px #FFD700)':'none'}}>{grade.icon}</span>
                   <div>
-                    <div style={{fontSize:32,fontWeight:900,lineHeight:1.1,letterSpacing:'-.02em'}}>{fullLabel}</div>
+                    <div style={{fontSize:isFondateur?26:32,fontWeight:900,lineHeight:1.1,letterSpacing:'-.02em',background:isFondateur?'linear-gradient(90deg,#FFD700,#FFF8DC,#D4AF37,#FFD700)':'none',backgroundSize:isFondateur?'200% auto':'auto',WebkitBackgroundClip:isFondateur?'text':'unset',WebkitTextFillColor:isFondateur?'transparent':'inherit',animation:isFondateur?'shimmerCard 2s linear infinite':'none'}}>{fullLabel}</div>
                     <div style={{fontSize:13,opacity:.8,marginTop:4}}>{rentals} location{rentals!==1?'s':''} complétée{rentals!==1?'s':''}</div>
                   </div>
                 </div>
@@ -1550,7 +1677,7 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
                     {nextMin && <div style={{fontSize:11,opacity:.7,marginTop:6}}>{nextMin - rentals} location{(nextMin-rentals)!==1?'s':''} pour atteindre {nextLabel}</div>}
                   </div>
                 ) : (
-                  <div style={{fontSize:14,fontWeight:800,opacity:.95}}>🏆 Rang maximum — Diamant III !</div>
+                  <div style={{fontSize:14,fontWeight:800,background:'linear-gradient(90deg,#FFD700,#FFF8DC,#D4AF37)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>👑 Félicitations, vous faites partie des légendes de Cercle !</div>
                 )}
               </div>
 
@@ -1559,25 +1686,26 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
                 <div style={{background:'#f8f7ff',borderRadius:16,padding:'16px 18px',border:'1.5px solid #f0eeff'}}>
                   <div style={{fontSize:11,color:'#9ca3af',fontWeight:600,marginBottom:4}}>Commission actuelle</div>
                   <div style={{fontSize:26,fontWeight:900,color:gc}}>{Math.round(grade.feeRate*100)}%</div>
-                  <div style={{fontSize:11,color:'#9ca3af',marginTop:2}}>au lieu de 10%</div>
+                  <div style={{fontSize:11,color:'#9ca3af',marginTop:2}}>au lieu de 12%</div>
                 </div>
                 <div style={{background:'#f0fdf4',borderRadius:16,padding:'16px 18px',border:'1.5px solid #d1fae5'}}>
                   <div style={{fontSize:11,color:'#9ca3af',fontWeight:600,marginBottom:4}}>Économie sur les frais</div>
-                  <div style={{fontSize:26,fontWeight:900,color:'#10b981'}}>{Math.round((0.10 - grade.feeRate)*100)}%</div>
+                  <div style={{fontSize:26,fontWeight:900,color:'#10b981'}}>{Math.round((0.12 - grade.feeRate)*100)}%</div>
                   <div style={{fontSize:11,color:'#9ca3af',marginTop:2}}>par rapport au taux de base</div>
                 </div>
               </div>
 
               {/* Perks */}
               <div style={{marginBottom:24}}>
-                <div style={{fontSize:15,fontWeight:800,color:'#1a1a2e',marginBottom:12}}>Avantages inclus</div>
+                <div style={{fontSize:15,fontWeight:800,color:isFondateur?'#D4AF37':'#1a1a2e',marginBottom:12}}>{isFondateur?'👑 Récompenses exclusives':'Avantages inclus'}</div>
                 <div style={{display:'flex',flexDirection:'column',gap:8}}>
-                  {grade.perks.map(p=>(
-                    <div key={p} style={{display:'flex',alignItems:'center',gap:12,padding:'12px 16px',background:'#fff',border:'1.5px solid #f0eeff',borderRadius:14,fontSize:14,color:'#1a1a2e',fontWeight:500}}>
-                      <div style={{width:24,height:24,borderRadius:8,background:gcLight,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-                        <span style={{fontSize:12,color:gc,fontWeight:900}}>✓</span>
+                  {grade.perks.map((p,pi)=>(
+                    <div key={p} style={{display:'flex',alignItems:'center',gap:12,padding:'14px 16px',background:isFondateur?`linear-gradient(135deg,#0d0d00,#1a1500)`:'#fff',border:isFondateur?'1.5px solid #D4AF3766':'1.5px solid #f0eeff',borderRadius:14,fontSize:13,color:isFondateur?'#FFF8DC':'#1a1a2e',fontWeight:500,position:'relative',overflow:'hidden',animation:isFondateur?`fadeSlideUp 0.4s ease both`:'none',animationDelay:isFondateur?`${pi*0.08}s`:'0s'}}>
+                      {isFondateur&&<div style={{position:'absolute',inset:0,background:'linear-gradient(105deg,transparent 40%,rgba(212,175,55,0.1) 50%,transparent 60%)',backgroundSize:'200% 100%',animation:'shimmerCard 3s linear infinite',pointerEvents:'none'}}/>}
+                      <div style={{width:28,height:28,borderRadius:8,background:isFondateur?'linear-gradient(135deg,#D4AF37,#FFD700)':gcLight,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,boxShadow:isFondateur?'0 2px 8px rgba(212,175,55,0.5)':'none'}}>
+                        <span style={{fontSize:isFondateur?14:12,color:isFondateur?'#0a0a0a':gc,fontWeight:900}}>{isFondateur?'★':'✓'}</span>
                       </div>
-                      {p}
+                      <span style={{position:'relative',zIndex:1}}>{p}</span>
                     </div>
                   ))}
                 </div>
@@ -1586,8 +1714,8 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
               {/* Parcours — grille de cartes */}
               <div>
                 <div style={{fontSize:15,fontWeight:800,color:'var(--dk)',marginBottom:16}}>Tous les rangs</div>
-                <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(88px,1fr))',gap:10}}>
-                  {GRADES.map((g,gi)=>{
+                <div style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:10,marginBottom:10}}>
+                  {GRADES.slice(0,5).map((g,gi)=>{
                     const gColor = GC[g.id]||'#6C63FF';
                     const isCurrentGrade = g.id===grade.id;
                     const isUnlocked = rentals >= g.min;
@@ -1646,11 +1774,11 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
                           <div className={`grade-tt${isFondateur?' fondateur':''}`}>
                             <div className="grade-tt-title">
                               <span style={{fontSize:16,lineHeight:1}}>{g.icon}</span>
-                              <span className="grade-tt-name" style={{color:isFondateur?'#c9a227':gColor}}>{g.name}</span>
+                              <span className="grade-tt-name" style={{color:isFondateur?'#D4AF37':gColor}}>{g.name}</span>
                             </div>
                             {(TOOLTIP_PERKS[g.id]||g.perks).map((p,pi)=>(
                               <div key={pi} className="grade-tt-perk">
-                                <span className="grade-tt-check" style={{color:isFondateur?'#c9a227':gColor}}>✓</span>
+                                <span className="grade-tt-check" style={{color:isFondateur?'#D4AF37':gColor}}>✓</span>
                                 <span>{p}</span>
                               </div>
                             ))}
@@ -1661,11 +1789,97 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
                     );
                   })}
                 </div>
+                {/* ── Fondateur Cercle — carte pleine largeur ── */}
+                {(()=>{
+                  const fg = GRADES[5];
+                  const isCurrentGrade = fg.id===grade.id;
+                  const isUnlocked = rentals >= fg.min;
+                  const isFgActive = activeTooltipGrade===fg.id;
+                  return (
+                    <div style={{position:'relative',cursor:'pointer'}}
+                      onMouseEnter={()=>setActiveTooltipGrade(fg.id)}
+                      onMouseLeave={()=>setActiveTooltipGrade(null)}
+                      onClick={()=>setActiveTooltipGrade(isFgActive?null:fg.id)}
+                    >
+                      <div style={{borderRadius:20,overflow:'hidden',position:'relative',border:isCurrentGrade?'2px solid #FFD700':'2px solid #D4AF3766',background:isUnlocked?'linear-gradient(135deg,#0a0a0a 0%,#1a1200 50%,#0a0a0a 100%)':'#f9fafb',boxShadow:isCurrentGrade?'0 8px 40px rgba(212,175,55,0.5)':isFgActive?'0 6px 24px rgba(212,175,55,0.25)':'0 1px 6px rgba(0,0,0,0.08)',animation:isCurrentGrade?'fondateurBorder 2.5s ease-in-out infinite':'scaleIn 0.4s cubic-bezier(0.34,1.56,0.64,1) 0.42s both',filter:isUnlocked?'none':'grayscale(.7)',opacity:isUnlocked?1:.55,transition:'box-shadow .25s'}}>
+                        {isUnlocked&&<div style={{position:'absolute',inset:0,background:'linear-gradient(105deg,transparent 35%,rgba(212,175,55,0.15) 50%,transparent 65%)',backgroundSize:'200% 100%',animation:'shimmerCard 2.5s linear infinite',pointerEvents:'none'}}/>}
+                        <div style={{padding:'18px 20px',display:'flex',alignItems:'center',gap:16,position:'relative',zIndex:1}}>
+                          <div style={{fontSize:40,filter:isUnlocked?'drop-shadow(0 0 10px #FFD700)':'none',flexShrink:0}}>{fg.icon}</div>
+                          <div style={{flex:1}}>
+                            <div style={{fontSize:15,fontWeight:900,marginBottom:3,background:isUnlocked?'linear-gradient(90deg,#FFD700,#FFF8DC,#D4AF37)':'none',WebkitBackgroundClip:isUnlocked?'text':'unset',WebkitTextFillColor:isUnlocked?'transparent':'#9ca3af',backgroundSize:'200% auto',animation:isUnlocked?'shimmerCard 2s linear infinite':'none'}}>{fg.name}</div>
+                            <div style={{fontSize:11,color:isUnlocked?'rgba(255,248,220,0.7)':'#9ca3af'}}>Commission {Math.round(fg.feeRate*100)}% · Dès {fg.min.toLocaleString()} locations</div>
+                          </div>
+                          <div style={{textAlign:'right',flexShrink:0}}>
+                            {isCurrentGrade
+                              ? <span style={{fontSize:10,fontWeight:800,color:'#0a0a0a',background:'linear-gradient(90deg,#FFD700,#D4AF37)',padding:'4px 10px',borderRadius:20,letterSpacing:'.04em'}}>EN COURS</span>
+                              : isUnlocked
+                                ? <span style={{fontSize:10,fontWeight:700,color:'#FFD700',background:'rgba(212,175,55,0.15)',padding:'4px 10px',borderRadius:20,border:'1px solid #D4AF3766'}}>✓ Atteint</span>
+                                : <span style={{fontSize:10,fontWeight:600,color:'#9ca3af',background:'#f3f4f6',padding:'4px 10px',borderRadius:20}}>🔒 {fg.min.toLocaleString()}</span>
+                            }
+                          </div>
+                        </div>
+                      </div>
+                      {isFgActive&&(
+                        <div className="grade-tt fondateur" style={{left:'auto',right:0,transform:'none',maxWidth:280,width:'auto',minWidth:220}}>
+                          <div className="grade-tt-title">
+                            <span style={{fontSize:16,lineHeight:1}}>{fg.icon}</span>
+                            <span className="grade-tt-name" style={{color:'#D4AF37'}}>{fg.name}</span>
+                          </div>
+                          {(TOOLTIP_PERKS[fg.id]||fg.perks).map((p,pi)=>(
+                            <div key={pi} className="grade-tt-perk">
+                              <span className="grade-tt-check" style={{color:'#D4AF37'}}>✓</span>
+                              <span>{p}</span>
+                            </div>
+                          ))}
+                          <div className="grade-tt-arrow" style={{left:'auto',right:20,transform:'translateX(0) rotate(45deg)'}}/>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
 
             </div>
           );
         })()}
+
+        {/* ── Mon Parc (Pro) ── */}
+        {tab === 'parc' && user.isPro && (
+          <div>
+            <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:18}}>
+              <div style={{background:'linear-gradient(135deg,#F59E0B,#D97706)',borderRadius:12,padding:'8px 14px',color:'#fff',fontSize:12,fontWeight:700}}>⭐ Parc PRO · {proParc.length} équipements</div>
+              <div style={{flex:1}}/>
+              <div style={{fontSize:12,color:'rgba(255,255,255,0.7)'}}>
+                {proParc.filter(e=>e.status==='available').length} dispo · {proParc.filter(e=>e.status==='rented').length} loués
+              </div>
+            </div>
+            <div style={{display:'flex',flexDirection:'column',gap:10}}>
+              {proParc.map((eq,i)=>{
+                const statusLabel = eq.status==='available'?'Disponible':eq.status==='rented'?'En location':'Maintenance';
+                const statusColor = eq.status==='available'?'#059669':eq.status==='rented'?'#D97706':'#6b7280';
+                const statusBg = eq.status==='available'?'#d1fae5':eq.status==='rented'?'#FEF3C7':'#f3f4f6';
+                return (
+                  <div key={eq.id} style={{background:'rgba(255,255,255,0.95)',borderRadius:16,padding:'14px 16px',display:'flex',gap:14,alignItems:'center',animation:`fadeSlideUp 0.4s ${i*0.06}s both`,boxShadow:'0 2px 12px rgba(0,0,0,0.06)',border:'1px solid rgba(108,99,255,0.08)'}}>
+                    <div style={{width:50,height:50,borderRadius:14,background:'linear-gradient(135deg,#FEF3C7,#FDE68A)',fontSize:26,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>{eq.icon}</div>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{fontSize:14,fontWeight:700,color:'#111827',marginBottom:3}}>{eq.title}</div>
+                      <div style={{fontSize:11,color:'#6b7280'}}>{eq.rentals} locations · {eq.price}€/j</div>
+                    </div>
+                    <div style={{display:'flex',flexDirection:'column',alignItems:'flex-end',gap:5}}>
+                      <span style={{background:statusBg,color:statusColor,borderRadius:20,padding:'4px 10px',fontSize:10,fontWeight:700}}>{statusLabel}</span>
+                      <div style={{fontSize:13,fontWeight:800,color:'#D97706'}}>{eq.price}€<span style={{fontWeight:400,fontSize:10,color:'#9ca3af'}}>/j</span></div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <div style={{marginTop:16,background:'rgba(255,255,255,0.15)',borderRadius:16,padding:'16px',textAlign:'center'}}>
+              <div style={{fontSize:12,color:'rgba(255,255,255,0.8)',marginBottom:8}}>CA estimé parc</div>
+              <div style={{fontSize:28,fontWeight:800,color:'#fff'}}>{proParc.reduce((s,e)=>s+e.price*e.rentals,0).toLocaleString()}€</div>
+              <div style={{fontSize:11,color:'rgba(255,255,255,0.6)',marginTop:2}}>cumulé depuis l'activation Pro</div>
+            </div>
+          </div>
+        )}
 
         {/* ── Paramètres ── */}
         {tab === 'parametres' && (
@@ -1737,6 +1951,35 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
               </div>
             </div>
 
+            {user.isPro && (
+              <div style={{...S.settingsSection,animation:'fadeSlideUp 0.4s cubic-bezier(0.34,1.56,0.64,1) both',animationDelay:'0.12s'}}>
+                <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:12}}>
+                  <p style={{...S.sectionTitle,margin:0}}>Informations Pro</p>
+                  <span style={{background:'linear-gradient(135deg,#F59E0B,#D97706)',color:'#fff',fontSize:9,fontWeight:800,padding:'3px 8px',borderRadius:20,letterSpacing:'.04em'}}>PRO</span>
+                </div>
+                <div style={S.fieldCard}>
+                  {[
+                    {label:'Entreprise', key:'company', val:user.company||''},
+                    {label:'N° SIRET', key:'siret', val:user.siret||''},
+                    {label:'N° TVA', key:'tva', val:user.tva||''},
+                    {label:'Téléphone pro', key:'phone', val:user.phone||''},
+                  ].map((f,i,arr)=>(
+                    <div key={f.key} style={{...S.fieldRow,borderBottom:i<arr.length-1?'1px solid #f9fafb':'none'}}>
+                      <span style={S.fieldLabel}>{f.label}</span>
+                      <input defaultValue={f.val} style={S.fieldInput} placeholder={f.val||'—'} readOnly/>
+                    </div>
+                  ))}
+                  <div style={{...S.fieldRow,borderBottom:'none'}}>
+                    <span style={S.fieldLabel}>Site web</span>
+                    <input defaultValue={user.website||''} style={S.fieldInput} placeholder="https://monentreprise.fr" readOnly/>
+                  </div>
+                </div>
+                <div style={{marginTop:10,padding:'10px 14px',background:'#FFFBEB',borderRadius:12,border:'1px solid #FDE68A',fontSize:12,color:'#92400E',display:'flex',alignItems:'center',gap:8}}>
+                  <span>⭐</span> Compte Pro actif — accès Dashboard, Gestion, Facturation PDF
+                </div>
+              </div>
+            )}
+
             <div style={{...S.settingsSection,animation:'fadeSlideUp 0.4s cubic-bezier(0.34,1.56,0.64,1) both',animationDelay:'0.16s'}}>
               <p style={S.sectionTitle}>Notifications</p>
               <div style={S.toggleCard}>
@@ -1790,8 +2033,28 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
 
 function CreateListing({state,dispatch,setPage,mode}){
   const[f,setF]=useState({title:"",cat:"tools",price:"",location:state.user?.location||"Paris 11e",condition:"Comme neuf",description:"",deposit:""});
+  const[photos,setPhotos]=useState([]);
+  const[drag,setDrag]=useState(false);
+  const fileRef=useRef(null);
+  const camRef=useRef(null);
   const u=(k,v)=>setF(p=>({...p,[k]:v}));
-  const go=()=>{if(!f.title||!f.price)return;dispatch({type:"ADD_ITEM",payload:{...f,price:+f.price,deposit:+f.deposit||+f.price*3,images:[mkImg(f.cat,99,0),mkImg(f.cat,99,1),mkImg(f.cat,99,2)]}});setPage("profile")};
+
+  const addPhotos=(files)=>{
+    const remaining=5-photos.length;
+    Array.from(files).slice(0,remaining).forEach(file=>{
+      const reader=new FileReader();
+      reader.onload=ev=>setPhotos(p=>[...p,ev.target.result]);
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const go=()=>{
+    if(!f.title||!f.price)return;
+    const imgs=photos.length>0?photos:[mkImg(f.cat,99,0),mkImg(f.cat,99,1),mkImg(f.cat,99,2)];
+    dispatch({type:"ADD_ITEM",payload:{...f,price:+f.price,deposit:+f.deposit||+f.price*3,photos,images:imgs,isPro:!!state.user?.isPro}});
+    setPage("profile");
+  };
+
   return <div style={{maxWidth:540,margin:"0 auto",padding:28}}>
     <button className="cl" style={{marginBottom:14,display:"flex",alignItems:"center",gap:5}} onClick={()=>setPage("profile")}><I.Back/> Retour</button>
     <h1 style={{fontFamily:"var(--fd)",fontSize:22,marginBottom:18}}>Créer une annonce</h1>
@@ -1804,7 +2067,34 @@ function CreateListing({state,dispatch,setPage,mode}){
     <div className="fg"><label>État</label><select value={f.condition} onChange={e=>u("condition",e.target.value)}><option>Comme neuf</option><option>Très bon état</option><option>Bon état</option></select></div>
     <div className="fg"><label>Ville</label><input value={f.location} onChange={e=>u("location",e.target.value)}/></div>
     <div className="fg"><label>Description</label><textarea value={f.description} onChange={e=>u("description",e.target.value)} placeholder="Décrivez votre objet..." rows={3}/></div>
-    <div style={{padding:16,background:"var(--bgw)",borderRadius:10,marginBottom:16,textAlign:"center"}}><span style={{fontSize:28}}>📸</span><p style={{fontSize:11,color:"var(--g)",marginTop:4}}>Photos = placeholders provisoires</p></div>
+
+    <div className="fg">
+      <label>Photos {photos.length>0&&`(${photos.length}/5)`}</label>
+      <input ref={fileRef} type="file" accept="image/*" multiple style={{display:"none"}} onChange={e=>{addPhotos(e.target.files);e.target.value=""}}/>
+      <input ref={camRef} type="file" accept="image/*" capture="environment" style={{display:"none"}} onChange={e=>{addPhotos(e.target.files);e.target.value=""}}/>
+
+      {photos.length<5&&<div
+        className={"photo-drop"+(drag?" drag":"")}
+        onDrop={e=>{e.preventDefault();setDrag(false);addPhotos(e.dataTransfer.files)}}
+        onDragOver={e=>{e.preventDefault();setDrag(true)}}
+        onDragLeave={()=>setDrag(false)}
+        onClick={()=>fileRef.current&&fileRef.current.click()}
+      >
+        <span style={{fontSize:28}}>🖼️</span>
+        <p style={{fontSize:13,fontWeight:600,color:"var(--p)",margin:"8px 0 4px"}}>Glissez vos photos ici ou cliquez pour sélectionner</p>
+        <p style={{fontSize:11,color:"var(--g)"}}>JPEG, PNG · max 5 photos</p>
+        <button className="bs" style={{marginTop:10,fontSize:12,padding:"6px 14px",display:"inline-flex",alignItems:"center",gap:5}} onClick={e=>{e.stopPropagation();camRef.current&&camRef.current.click()}}>📷 Prendre une photo</button>
+      </div>}
+
+      {photos.length>0&&<div className="photo-thumbs">
+        {photos.map((src,i)=><div key={i} className="photo-thumb">
+          <img src={src} alt=""/>
+          <button className="photo-thumb-del" onClick={()=>setPhotos(p=>p.filter((_,j)=>j!==i))}>✕</button>
+        </div>)}
+        {photos.length<5&&<div style={{width:80,height:80,border:"2px dashed var(--bd)",borderRadius:10,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",fontSize:24,color:"var(--g)"}} onClick={()=>fileRef.current&&fileRef.current.click()}>+</div>}
+      </div>}
+    </div>
+
     <button className="bp" style={{width:"100%"}} onClick={go}>Publier l'annonce</button>
   </div>
 }
@@ -2091,8 +2381,258 @@ function NotifCenter({state,dispatch,setPage}){
 }
 
 /* ===== DASHBOARD ===== */
+/* ========== GESTION PRO ========== */
+function GestionPro({state,dispatch,setPage}){
+  const u=state.user;
+  const [gTab,setGTab]=useState('demandes');
+  const [calMonth,setCalMonth]=useState(new Date().getMonth());
+  const [calYear,setCalYear]=useState(new Date().getFullYear());
+  const [requests,setRequests]=useState([
+    {id:'r1',item:'Nacelle élévatrice 12m',renter:'Martin Dupuis',dates:'5–8 Mai 2026',days:3,price:360,status:'pending',avatar:'👷'},
+    {id:'r2',item:'Groupe électrogène 5kVA',renter:'Sophie Lefebvre',dates:'12–13 Mai 2026',days:2,price:90,status:'pending',avatar:'👩‍🔧'},
+    {id:'r3',item:'Échafaudage complet 10m',renter:'Pascal Moreau',dates:'20–25 Mai 2026',days:5,price:325,status:'pending',avatar:'👨'},
+    {id:'r4',item:'Bétonnière 350L',renter:'Julie Renard',dates:'3–4 Juin 2026',days:2,price:80,status:'accepted',avatar:'👩'},
+    {id:'r5',item:'Compacteur de sol',renter:'Thierry Blanc',dates:'10 Juin 2026',days:1,price:85,status:'refused',avatar:'👨‍🦳'},
+  ]);
+  const invoices=[
+    {id:'F-2026-041',client:'Martin Construction',date:'15 Avr. 2026',amount:720,status:'paid',items:['Nacelle 12m × 3j','Groupe 5kVA × 2j']},
+    {id:'F-2026-038',client:'EventPro Lyon',date:'8 Avr. 2026',amount:1200,status:'paid',items:['Sono 2000W × 3j','Barnum 6×12m × 2j']},
+    {id:'F-2026-035',client:'BTP Méditerranée',date:'2 Avr. 2026',amount:540,status:'pending',items:['Mini-pelle 1.5T × 3j']},
+    {id:'F-2026-031',client:'Cyclez Paris',date:'25 Mar. 2026',amount:1500,status:'paid',items:['Flotte 10 vélos élec. × 10j']},
+  ];
+  const monthNames=['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+  const bookedDays=new Set([5,6,7,8,12,13,20,21,22,23,24,25]);
+  const todayD=new Date().getDate();
+  const isCurrentMonth=calMonth===new Date().getMonth()&&calYear===new Date().getFullYear();
+  const firstDay=new Date(calYear,calMonth,1).getDay();
+  const firstMon=(firstDay===0?6:firstDay-1);
+  const daysInMonth=new Date(calYear,calMonth+1,0).getDate();
+  const accept=id=>setRequests(r=>r.map(x=>x.id===id?{...x,status:'accepted'}:x));
+  const refuse=id=>setRequests(r=>r.map(x=>x.id===id?{...x,status:'refused'}:x));
+  const pending=requests.filter(r=>r.status==='pending');
+  const accepted=requests.filter(r=>r.status==='accepted');
+  const refused=requests.filter(r=>r.status==='refused');
+
+  const genInvoicePDF=async(inv)=>{
+    if(!window.jspdf){alert('jsPDF non disponible');return;}
+    const now=new Date().toLocaleDateString('fr-FR');
+    const wrapper=document.createElement('div');
+    wrapper.style.cssText='position:absolute;left:-9999px;top:0;width:794px;background:#fff;font-family:DM Sans,system-ui,sans-serif;';
+    wrapper.innerHTML=`<div style="width:794px;padding:0;font-family:DM Sans,system-ui,sans-serif;">
+      <div style="background:linear-gradient(135deg,#F59E0B,#D97706);padding:40px;color:white;">
+        <div style="font-size:10px;letter-spacing:2px;opacity:.7;margin-bottom:8px;">FACTURE PRO — CERCLE</div>
+        <div style="font-size:28px;font-weight:800;">${inv.id}</div>
+        <div style="font-size:14px;opacity:.85;margin-top:6px;">${u.company||u.name} · SIRET ${u.siret||'N/A'}</div>
+      </div>
+      <div style="padding:32px 40px;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:28px;">
+          <div><div style="font-size:11px;color:#9ca3af;margin-bottom:4px;">FACTURÉ À</div><div style="font-size:16px;font-weight:700;">${inv.client}</div></div>
+          <div style="text-align:right"><div style="font-size:11px;color:#9ca3af;margin-bottom:4px;">DATE</div><div style="font-size:14px;font-weight:600;">${inv.date}</div></div>
+        </div>
+        <table style="width:100%;border-collapse:collapse;margin-bottom:24px;">
+          <thead><tr style="background:#f9fafb;"><th style="padding:10px 16px;text-align:left;font-size:11px;color:#6b7280;font-weight:600;">DÉSIGNATION</th><th style="padding:10px 16px;text-align:right;font-size:11px;color:#6b7280;font-weight:600;">MONTANT HT</th></tr></thead>
+          <tbody>${inv.items.map(it=>`<tr style="border-bottom:1px solid #f3f4f6;"><td style="padding:14px 16px;font-size:13px;">${it}</td><td style="padding:14px 16px;font-size:13px;font-weight:600;text-align:right;">${Math.round(inv.amount/inv.items.length)}€</td></tr>`).join('')}</tbody>
+        </table>
+        <div style="background:#fffbeb;border-left:4px solid #F59E0B;padding:16px 20px;border-radius:8px;display:flex;justify-content:space-between;align-items:center;">
+          <div style="font-size:13px;color:#6b7280;">Total TTC (TVA 20%)</div>
+          <div style="font-size:24px;font-weight:800;color:#D97706;">${Math.round(inv.amount*1.2)}€</div>
+        </div>
+        <div style="margin-top:32px;font-size:10px;color:#d1d5db;border-top:1px solid #f3f4f6;padding-top:16px;text-align:center;">Facture générée le ${now} · Cercle Pro — cercle.app</div>
+      </div></div>`;
+    document.body.appendChild(wrapper);
+    try{
+      const canvas=await window.html2canvas(wrapper.firstElementChild,{scale:2,useCORS:true,backgroundColor:'#fff',logging:false});
+      const{jsPDF}=window.jspdf;
+      const doc=new jsPDF({orientation:'portrait',unit:'px',format:'a4',hotfixes:['px_scaling']});
+      const pw=doc.internal.pageSize.getWidth();const ph=doc.internal.pageSize.getHeight();
+      const iw=pw;const ih=canvas.height*pw/canvas.width;
+      doc.addImage(canvas.toDataURL('image/png'),'PNG',0,0,iw,Math.min(ih,ph));
+      doc.save(`${inv.id}.pdf`);
+    }catch(e){alert('Erreur export PDF');}
+    finally{document.body.removeChild(wrapper);}
+  };
+
+  const card={background:'var(--w)',borderRadius:18,boxShadow:'0 2px 20px rgba(0,0,0,0.07)',overflow:'hidden'};
+  const tabSt=active=>({padding:'10px 16px',fontSize:13,fontWeight:600,border:'none',background:'none',borderBottom:active?'2.5px solid #D97706':'2.5px solid transparent',color:active?'#D97706':'var(--g)',cursor:'pointer',transition:'all .2s'});
+
+  return <div style={{minHeight:'100vh',background:'linear-gradient(160deg,#92400E 0%,#B45309 30%,#D97706 65%,#F59E0B 100%)',backgroundAttachment:'fixed',paddingBottom:90,animation:'fadeSlideUp 0.4s both'}}>
+    {/* Header */}
+    <div style={{padding:'52px 20px 28px',position:'relative'}}>
+      <div style={{position:'absolute',inset:0,backgroundImage:'radial-gradient(circle,rgba(255,255,255,0.1) 1px,transparent 1px)',backgroundSize:'22px 22px',pointerEvents:'none'}}/>
+      <div style={{position:'relative',maxWidth:860,margin:'0 auto'}}>
+        <button onClick={()=>setPage('home')} style={{display:'inline-flex',alignItems:'center',gap:6,background:'rgba(255,255,255,0.15)',border:'1px solid rgba(255,255,255,0.3)',borderRadius:20,padding:'6px 14px',color:'white',fontSize:13,fontWeight:600,marginBottom:20,cursor:'pointer',backdropFilter:'blur(8px)'}}><I.Back/> Retour</button>
+        <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:8}}>
+          <div style={{background:'rgba(255,255,255,0.2)',borderRadius:12,padding:'5px 12px',fontSize:11,fontWeight:800,color:'#fff',letterSpacing:1}}>⭐ PRO</div>
+        </div>
+        <h1 style={{fontSize:28,fontWeight:800,color:'white',margin:0,letterSpacing:-0.5,lineHeight:1.1}}>Gestion Pro</h1>
+        <p style={{fontSize:13,color:'rgba(255,255,255,0.7)',margin:'8px 0 0'}}>{u.company||u.name} · {pending.length} demande{pending.length!==1?'s':''} en attente</p>
+      </div>
+    </div>
+
+    {/* Stats rapides */}
+    <div style={{maxWidth:860,margin:'0 auto',padding:'0 14px 14px'}}>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:10}}>
+        {[{icon:'📋',val:pending.length,label:'En attente',col:'#D97706',bg:'#FEF3C7'},{icon:'✅',val:accepted.length,label:'Acceptées',col:'#059669',bg:'#d1fae5'},{icon:'🧾',val:invoices.filter(i=>i.status==='paid').length,label:'Factures payées',col:'#6C63FF',bg:'#ede9fe'}].map((k,i)=>(
+          <div key={i} style={{...card,padding:'14px 12px'}}>
+            <div style={{width:36,height:36,borderRadius:10,background:k.bg,fontSize:18,display:'flex',alignItems:'center',justifyContent:'center',marginBottom:8}}>{k.icon}</div>
+            <div style={{fontSize:22,fontWeight:800,color:'var(--dk)',lineHeight:1}}>{k.val}</div>
+            <div style={{fontSize:11,color:'var(--g)',marginTop:3}}>{k.label}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    {/* Tabs */}
+    <div style={{maxWidth:860,margin:'0 auto',padding:'0 14px 12px'}}>
+      <div style={{...card,padding:'0 4px'}}>
+        <div style={{display:'flex',overflowX:'auto'}}>
+          {[{id:'demandes',label:'Demandes',icon:'📋'},{id:'calendrier',label:'Calendrier',icon:'📅'},{id:'facturation',label:'Facturation',icon:'🧾'}].map(t=>(
+            <button key={t.id} onClick={()=>setGTab(t.id)} style={tabSt(gTab===t.id)}>
+              {t.icon} {t.label}
+              {t.id==='demandes'&&pending.length>0&&<span style={{marginLeft:5,background:'#D97706',color:'#fff',borderRadius:'50%',width:16,height:16,display:'inline-flex',alignItems:'center',justifyContent:'center',fontSize:9,fontWeight:700}}>{pending.length}</span>}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+
+    <div style={{maxWidth:860,margin:'0 auto',padding:'0 14px',display:'flex',flexDirection:'column',gap:12}}>
+
+      {/* ── DEMANDES ── */}
+      {gTab==='demandes'&&<>
+        {pending.length>0&&<div style={card}>
+          <div style={{padding:'14px 18px',borderBottom:'1px solid var(--bd)',display:'flex',alignItems:'center',gap:8}}>
+            <div style={{fontSize:14,fontWeight:700,color:'var(--dk)'}}>En attente</div>
+            <span style={{background:'#FEF3C7',color:'#D97706',borderRadius:20,padding:'2px 8px',fontSize:11,fontWeight:700}}>{pending.length}</span>
+          </div>
+          {pending.map((r,i)=>(
+            <div key={r.id} style={{padding:'16px 18px',borderBottom:i<pending.length-1?'1px solid var(--bd)':'none',display:'flex',gap:14,alignItems:'flex-start',animation:`fadeSlideUp 0.35s ${i*0.06}s both`}}>
+              <div style={{width:44,height:44,borderRadius:12,background:'#FEF3C7',fontSize:24,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>{r.avatar}</div>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontSize:14,fontWeight:700,color:'var(--dk)',marginBottom:2}}>{r.item}</div>
+                <div style={{fontSize:12,color:'var(--g)',marginBottom:3}}>👤 {r.renter} · 📅 {r.dates}</div>
+                <div style={{fontSize:13,fontWeight:700,color:'#D97706'}}>{r.price}€ <span style={{fontWeight:400,fontSize:11,color:'var(--g)'}}>({r.days}j × {Math.round(r.price/r.days)}€/j)</span></div>
+              </div>
+              <div style={{display:'flex',flexDirection:'column',gap:6,flexShrink:0}}>
+                <button onClick={()=>accept(r.id)} style={{padding:'8px 14px',background:'#10b981',color:'#fff',border:'none',borderRadius:9,fontSize:12,fontWeight:700,cursor:'pointer',transition:'opacity .15s'}} onMouseEnter={e=>e.currentTarget.style.opacity='.8'} onMouseLeave={e=>e.currentTarget.style.opacity='1'}>✓ Accepter</button>
+                <button onClick={()=>refuse(r.id)} style={{padding:'8px 14px',background:'#f3f4f6',color:'#6b7280',border:'none',borderRadius:9,fontSize:12,fontWeight:600,cursor:'pointer',transition:'opacity .15s'}} onMouseEnter={e=>e.currentTarget.style.opacity='.7'} onMouseLeave={e=>e.currentTarget.style.opacity='1'}>✕ Refuser</button>
+              </div>
+            </div>
+          ))}
+        </div>}
+        {accepted.length>0&&<div style={card}>
+          <div style={{padding:'14px 18px',borderBottom:'1px solid var(--bd)',display:'flex',alignItems:'center',gap:8}}>
+            <div style={{fontSize:13,fontWeight:700,color:'var(--dk)'}}>Confirmées</div>
+            <span style={{background:'#d1fae5',color:'#059669',borderRadius:20,padding:'2px 8px',fontSize:11,fontWeight:700}}>{accepted.length}</span>
+          </div>
+          {accepted.map((r,i)=>(
+            <div key={r.id} style={{padding:'14px 18px',borderBottom:i<accepted.length-1?'1px solid var(--bd)':'none',display:'flex',gap:12,alignItems:'center'}}>
+              <div style={{width:38,height:38,borderRadius:10,background:'#d1fae5',fontSize:22,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>{r.avatar}</div>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontSize:13,fontWeight:600,color:'var(--dk)'}}>{r.item}</div>
+                <div style={{fontSize:11,color:'var(--g)'}}>{r.renter} · {r.dates}</div>
+              </div>
+              <span style={{background:'#d1fae5',color:'#059669',borderRadius:20,padding:'4px 10px',fontSize:11,fontWeight:700,flexShrink:0}}>✓ Confirmée</span>
+            </div>
+          ))}
+        </div>}
+        {pending.length===0&&accepted.length===0&&<div style={{...card,padding:'40px',textAlign:'center'}}>
+          <div style={{fontSize:36,marginBottom:8}}>📋</div>
+          <div style={{fontSize:14,fontWeight:600,color:'var(--dk)',marginBottom:4}}>Aucune demande en attente</div>
+          <div style={{fontSize:12,color:'var(--g)'}}>Les nouvelles réservations apparaîtront ici</div>
+        </div>}
+        {refused.length>0&&<div style={{...card,opacity:.7}}>
+          <div style={{padding:'12px 18px',borderBottom:'1px solid var(--bd)',display:'flex',alignItems:'center',gap:8}}>
+            <div style={{fontSize:12,fontWeight:700,color:'var(--dk)'}}>Refusées</div>
+            <span style={{background:'#fee2e2',color:'#dc2626',borderRadius:20,padding:'2px 8px',fontSize:10,fontWeight:700}}>{refused.length}</span>
+          </div>
+          {refused.map((r,i)=>(
+            <div key={r.id} style={{padding:'11px 18px',borderBottom:i<refused.length-1?'1px solid var(--bd)':'none',display:'flex',gap:10,alignItems:'center'}}>
+              <div style={{fontSize:18}}>{r.avatar}</div>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontSize:12,fontWeight:600,color:'var(--dk)',textDecoration:'line-through'}}>{r.item}</div>
+                <div style={{fontSize:11,color:'var(--g)'}}>{r.renter}</div>
+              </div>
+              <span style={{background:'#fee2e2',color:'#dc2626',borderRadius:20,padding:'3px 9px',fontSize:10,fontWeight:700,flexShrink:0}}>Refusée</span>
+            </div>
+          ))}
+        </div>}
+      </>}
+
+      {/* ── CALENDRIER ── */}
+      {gTab==='calendrier'&&<div style={card}>
+        <div style={{padding:'14px 18px',borderBottom:'1px solid var(--bd)',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+          <button onClick={()=>{let m=calMonth-1,y=calYear;if(m<0){m=11;y--;}setCalMonth(m);setCalYear(y);}} style={{padding:'6px 12px',background:'var(--bg)',border:'none',borderRadius:9,cursor:'pointer',fontSize:14,fontWeight:600}}>‹</button>
+          <div style={{fontSize:14,fontWeight:700,color:'var(--dk)'}}>{monthNames[calMonth]} {calYear}</div>
+          <button onClick={()=>{let m=calMonth+1,y=calYear;if(m>11){m=0;y++;}setCalMonth(m);setCalYear(y);}} style={{padding:'6px 12px',background:'var(--bg)',border:'none',borderRadius:9,cursor:'pointer',fontSize:14,fontWeight:600}}>›</button>
+        </div>
+        <div style={{padding:'16px 18px'}}>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(7,1fr)',gap:4,marginBottom:8}}>
+            {['L','M','M','J','V','S','D'].map((d,i)=>(
+              <div key={i} style={{textAlign:'center',fontSize:10,fontWeight:700,color:'var(--g)',padding:'4px 0'}}>{d}</div>
+            ))}
+          </div>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(7,1fr)',gap:4}}>
+            {Array.from({length:firstMon}).map((_,i)=><div key={'e'+i}/>)}
+            {Array.from({length:daysInMonth}).map((_,i)=>{
+              const day=i+1;
+              const isBooked=bookedDays.has(day);
+              const isToday=isCurrentMonth&&day===todayD;
+              return <div key={day} style={{height:36,display:'flex',alignItems:'center',justifyContent:'center',borderRadius:9,fontSize:12,fontWeight:isToday?800:500,background:isBooked?'#FDE68A':isToday?'#D97706':'var(--bg)',color:isBooked?'#92400E':isToday?'#fff':'var(--dk)',border:isToday?'2px solid #D97706':'1px solid transparent',cursor:'pointer',transition:'all .15s'}} onMouseEnter={e=>{if(!isBooked&&!isToday)e.currentTarget.style.background='#FEF3C7';}} onMouseLeave={e=>{if(!isBooked&&!isToday)e.currentTarget.style.background='var(--bg)'}}>{day}</div>;
+            })}
+          </div>
+          <div style={{display:'flex',gap:14,marginTop:14,paddingTop:12,borderTop:'1px solid var(--bd)'}}>
+            {[['#FDE68A','#92400E','Réservé'],['#D97706','#fff','Aujourd\'hui'],['var(--bg)','var(--dk)','Disponible']].map(([bg,col,lbl])=>(
+              <div key={lbl} style={{display:'flex',alignItems:'center',gap:5,fontSize:11,color:'var(--g)'}}>
+                <div style={{width:12,height:12,background:bg,borderRadius:3,border:'1px solid var(--bd)'}}/>
+                {lbl}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>}
+
+      {/* ── FACTURATION ── */}
+      {gTab==='facturation'&&<>
+        <div style={card}>
+          <div style={{padding:'14px 18px',borderBottom:'1px solid var(--bd)',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+            <div style={{fontSize:14,fontWeight:700,color:'var(--dk)'}}>Factures</div>
+            <div style={{fontSize:12,fontWeight:700,color:'#D97706'}}>CA : {invoices.reduce((s,i)=>s+i.amount,0).toLocaleString()}€ HT</div>
+          </div>
+          {invoices.map((inv,i)=>(
+            <div key={inv.id} style={{padding:'14px 18px',borderBottom:i<invoices.length-1?'1px solid var(--bd)':'none',display:'flex',gap:12,alignItems:'center',animation:`fadeSlideUp 0.35s ${i*0.06}s both`}}>
+              <div style={{width:40,height:40,borderRadius:10,background:inv.status==='paid'?'#d1fae5':'#FEF3C7',fontSize:20,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>{inv.status==='paid'?'✅':'🕐'}</div>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:2}}>
+                  <div style={{fontSize:13,fontWeight:700,color:'var(--dk)'}}>{inv.id}</div>
+                  <span style={{fontSize:9,fontWeight:700,padding:'2px 7px',borderRadius:20,background:inv.status==='paid'?'#d1fae5':'#FEF3C7',color:inv.status==='paid'?'#059669':'#D97706'}}>{inv.status==='paid'?'Payée':'En attente'}</span>
+                </div>
+                <div style={{fontSize:11,color:'var(--g)'}}>{inv.client} · {inv.date}</div>
+                <div style={{fontSize:10,color:'var(--g)',marginTop:1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{inv.items.join(', ')}</div>
+              </div>
+              <div style={{display:'flex',flexDirection:'column',alignItems:'flex-end',gap:5,flexShrink:0}}>
+                <div style={{fontSize:15,fontWeight:800,color:'var(--dk)'}}>{inv.amount}€</div>
+                <button onClick={()=>genInvoicePDF(inv)} style={{padding:'5px 10px',background:'#FFFBEB',color:'#D97706',border:'1px solid #FDE68A',borderRadius:7,fontSize:11,fontWeight:600,cursor:'pointer',display:'flex',alignItems:'center',gap:4,transition:'opacity .15s'}} onMouseEnter={e=>e.currentTarget.style.opacity='.7'} onMouseLeave={e=>e.currentTarget.style.opacity='1'}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{width:10,height:10}}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  PDF
+                </button>
+              </div>
+            </div>
+          ))}
+          <div style={{padding:'12px 18px',background:'#FFFBEB',borderTop:'1px solid #FDE68A',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+            <div style={{fontSize:12,color:'#92400E',fontWeight:500}}>Total TTC (TVA 20%)</div>
+            <div style={{fontSize:16,fontWeight:800,color:'#D97706'}}>{Math.round(invoices.reduce((s,i)=>s+i.amount,0)*1.2).toLocaleString()}€</div>
+          </div>
+        </div>
+      </>}
+
+    </div>
+  </div>;
+}
+
 function Dashboard({state,dispatch,setPage}){
   const u=state.user;
+  const[qrItem,setQrItem]=useState(null);
   const myItems=[...state.items.filter(i=>i.owner.id===u.id),...state.userItems];
   const myBookAsOwner=state.bookings.filter(b=>b.ownerId===u.id);
   const revenue=myBookAsOwner.filter(b=>b.status==="confirmed").reduce((s,b)=>s+b.total,0);
@@ -2369,6 +2909,29 @@ function Dashboard({state,dispatch,setPage}){
 
     <div style={{maxWidth:860,margin:"0 auto",padding:"0 14px",display:"flex",flexDirection:"column",gap:14}}>
 
+      {/* ── PRO EXTRA KPIs ── */}
+      {u.isPro&&<div style={{...card,padding:'16px 18px',background:'linear-gradient(135deg,#FFFBEB,#FEF3C7)',border:'1.5px solid #FDE68A'}}>
+        <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:14}}>
+          <span style={{background:'linear-gradient(135deg,#F59E0B,#D97706)',color:'#fff',fontSize:10,fontWeight:800,padding:'3px 10px',borderRadius:20,letterSpacing:'.04em'}}>⭐ PRO</span>
+          <div style={{fontSize:13,fontWeight:700,color:'#92400E'}}>Indicateurs Professionnels</div>
+        </div>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:10}}>
+          {[
+            {icon:'💛',val:monthlyVals[curMonth]+'€',label:'CA mensuel',sub:months[curMonth],col:'#D97706'},
+            {icon:'🔄',val:myBookAsOwner.filter(b=>b.status==='confirmed').length,label:'Locations actives',sub:'confirmées',col:'#059669'},
+            {icon:'📊',val:myItems.length>0?Math.min(100,Math.round(myBookAsOwner.filter(b=>b.status==='confirmed').length/Math.max(myItems.length,1)*100))+'%':'—',label:"Taux d'occupation",sub:'du parc',col:'#6C63FF'},
+            {icon:'⭐',val:myItems.length>0?(myItems.reduce((s,i)=>s+i.rating,0)/myItems.length).toFixed(1):'4.9',label:'Note moyenne',sub:'locataires',col:'#D97706'},
+          ].map((k,i)=>(
+            <div key={i} style={{textAlign:'center',padding:'10px 6px',background:'rgba(255,255,255,0.6)',borderRadius:12}}>
+              <div style={{fontSize:20,marginBottom:4}}>{k.icon}</div>
+              <div style={{fontSize:18,fontWeight:800,color:k.col,lineHeight:1,letterSpacing:-.5}}>{k.val}</div>
+              <div style={{fontSize:10,fontWeight:600,color:'#92400E',marginTop:3}}>{k.label}</div>
+              <div style={{fontSize:9,color:'#B45309',marginTop:1}}>{k.sub}</div>
+            </div>
+          ))}
+        </div>
+      </div>}
+
       {/* ── KPIs ── */}
       <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:12}}>
         {kpis.map((k,i)=>(
@@ -2480,15 +3043,19 @@ function Dashboard({state,dispatch,setPage}){
                     <div style={{fontSize:13,fontWeight:600,color:"var(--dk)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{it.title}</div>
                     <div style={{fontSize:11,color:"var(--g)",marginTop:1}}>{it.price}€/j · {it.cat}</div>
                   </div>
-                  <button onClick={()=>dispatch({type:"TOGGLE_AVAIL",id:it.id})} style={{flexShrink:0,fontSize:11,fontWeight:700,padding:"5px 11px",borderRadius:20,border:"none",cursor:"pointer",
-                    background:it.available?"#d1fae5":"#f3f4f6",color:it.available?"#065f46":"#6b7280"}}>
-                    {it.available?"✓ Dispo":"Indispo"}
-                  </button>
+                  <div style={{display:"flex",flexDirection:"column",gap:4,flexShrink:0}}>
+                    <button onClick={()=>dispatch({type:"TOGGLE_AVAIL",id:it.id})} style={{fontSize:11,fontWeight:700,padding:"5px 11px",borderRadius:20,border:"none",cursor:"pointer",
+                      background:it.available?"#d1fae5":"#f3f4f6",color:it.available?"#065f46":"#6b7280"}}>
+                      {it.available?"✓ Dispo":"Indispo"}
+                    </button>
+                    <button onClick={()=>setQrItem(it)} style={{fontSize:10,fontWeight:700,padding:"4px 8px",borderRadius:20,border:"1.5px solid #d1c9ff",background:"#f5f3ff",color:"#6C63FF",cursor:"pointer"}}>📱 QR</button>
+                  </div>
                 </div>
               ))}
             </div>
         }
       </div>
+      {qrItem&&<QRModal item={qrItem} onClose={()=>setQrItem(null)}/>}
 
     </div>
   </div>
@@ -2630,7 +3197,7 @@ function Shop({owner,items,onClose,onOpen,state,dispatch,onAuthRequired}){
   return <div className="ov">
     <div className="dh"><button className="mx" onClick={onClose} style={{position:"static"}}><I.X/></button><span style={{fontWeight:600}}>Boutique</span></div>
     <div className="shop-hd">
-      <div className="shop-av" style={{border:`3px solid ${grade.id==="legende"?"#06B6D4":grade.id==="gardien"?"#7C3AED":grade.id==="pilier"?"#F59E0B":grade.id==="habitant"?"#3b82f6":"var(--bd)"}`}}>{owner.avatarUrl?<img src={owner.avatarUrl} style={{width:"100%",height:"100%",borderRadius:"50%",objectFit:"cover"}} alt=""/>:owner.avatar}</div>
+      <div className="shop-av" style={{border:`3px solid ${grade.id==="fondateur"?"#D4AF37":grade.id==="legende"?"#06B6D4":grade.id==="gardien"?"#7C3AED":grade.id==="pilier"?"#F59E0B":grade.id==="habitant"?"#3b82f6":"var(--bd)"}}`}}>{owner.avatarUrl?<img src={owner.avatarUrl} style={{width:"100%",height:"100%",borderRadius:"50%",objectFit:"cover"}} alt=""/>:owner.avatar}</div>
       <h2 style={{fontFamily:"var(--fd)",fontSize:20}}>{owner.name}</h2>
       <div style={{display:"flex",gap:8,justifyContent:"center",marginTop:6,fontSize:12,color:"var(--g)"}}>
         <span>{grade.icon} {grade.name}</span><span>·</span><span>★ {owner.rating}</span><span>·</span><span>{owner.rentals} locations</span><span>·</span><span>Depuis {owner.since}</span>
@@ -2694,6 +3261,47 @@ function BadgesPage({state,setPage}){
 }
 
 
+/* ===== CONFIRMATION REMISE/RETOUR ===== */
+function ConfirmDeliveryPage({annonceId, allItems, onBack}){
+  const item=allItems.find(i=>String(i.id)===String(annonceId));
+  const[confirmed,setConfirmed]=useState(null);
+  const[ts,setTs]=useState('');
+  const confirm=(type)=>{
+    const now=new Date().toLocaleString('fr-FR',{weekday:'long',year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    setConfirmed(type);setTs(now);
+  };
+  if(confirmed){return(
+    <div style={{maxWidth:480,margin:'0 auto',padding:'60px 28px',textAlign:'center',minHeight:'100vh',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center'}}>
+      <div style={{fontSize:72,marginBottom:16}}>✅</div>
+      <h2 style={{fontFamily:'var(--fd)',fontSize:22,marginBottom:8}}>Confirmation enregistrée</h2>
+      <p style={{fontSize:14,color:'var(--g)',lineHeight:1.6,marginBottom:16}}>
+        {confirmed==='received'?"Vous avez confirmé avoir <strong>reçu</strong> l'objet.":"Vous avez confirmé avoir <strong>récupéré</strong> l'objet."}
+      </p>
+      <div style={{background:'#f0fdf4',border:'1px solid #bbf7d0',borderRadius:12,padding:'14px 20px',fontSize:13,color:'#166534',marginBottom:24,width:'100%'}}>
+        🕐 Horodatage : <strong>{ts}</strong>
+      </div>
+      <p style={{fontSize:12,color:'var(--gl)'}}>Cette confirmation peut servir de preuve en cas de litige.</p>
+      <button className="bs" style={{marginTop:20}} onClick={onBack}>← Retour à l'accueil</button>
+    </div>
+  );}
+  return(
+    <div style={{maxWidth:480,margin:'0 auto',padding:'60px 28px',textAlign:'center',minHeight:'100vh',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center'}}>
+      <div style={{fontSize:52,marginBottom:16}}>📦</div>
+      <h2 style={{fontFamily:'var(--fd)',fontSize:22,marginBottom:6}}>{item?item.title:'Annonce #'+annonceId}</h2>
+      <p style={{fontSize:14,color:'var(--g)',marginBottom:28,lineHeight:1.6}}>Confirmez la remise ou le retour de cet objet pour protéger les deux parties.</p>
+      <div style={{display:'flex',flexDirection:'column',gap:12,width:'100%'}}>
+        <button className="bp" style={{width:'100%',padding:'16px',fontSize:15}} onClick={()=>confirm('received')}>
+          ✅ Je confirme avoir reçu l'objet
+        </button>
+        <button className="bs" style={{width:'100%',padding:'16px',fontSize:15}} onClick={()=>confirm('returned')}>
+          ✅ Je confirme avoir récupéré l'objet
+        </button>
+      </div>
+      <button className="cl" style={{marginTop:20}} onClick={onBack}>← Retour</button>
+    </div>
+  );
+}
+
 /* ========== MAIN APP ========== */
 function App(){
   // Persist login
@@ -2713,10 +3321,12 @@ function App(){
   const[toasts,setToasts]=useState([]);
   const addToast=(text,type='i')=>{const id=uid();setToasts(t=>[...t,{id,text,type}]);setTimeout(()=>setToasts(t=>t.filter(x=>x.id!==id)),3500)};
   const[showOnboarding,setShowOnboarding]=useState(()=>{try{return!localStorage.getItem('cercle_ob')}catch{return true}});
+  const[confirmPage,setConfirmPage]=useState(()=>{try{const p=new URLSearchParams(window.location.search);const a=p.get('annonce'),ac=p.get('action');return(a&&ac==='confirm')?{annonce:a}:null}catch{return null}});
   const[cid,setCid]=useState(null);
   const[dark,setDark]=useState(false);
   useEffect(()=>{document.documentElement.classList.toggle('dark',dark);document.body.style.background=dark?'#0f0f13':''},[dark]);
   const[mode,setMode]=useState('perso'); // 'perso' or 'pro'
+  const[listingTab,setListingTab]=useState('particuliers'); // 'particuliers' or 'professionnels'
   const[showChat,setShowChat]=useState(false);
   const[showGallery,setShowGallery]=useState(null);
   const[showShop,setShowShop]=useState(null);
@@ -2727,9 +3337,9 @@ function App(){
   const[lang,setLang]=useState('fr');
   const[filters,setFilters]=useState({priceMin:0,priceMax:500,condition:"Tous",options:[],sort:"pertinence",filterCat:"all",minRating:0});
 
-  const allPerso=useMemo(()=>[...state.items,...state.userItems].filter(i=>!i.isPro),[state.items,state.userItems]);
-  const allPro=useMemo(()=>[...state.proItems,...state.userItems.filter(i=>i.isPro)],[state.proItems,state.userItems]);
-  const all=mode==='pro'?allPro:allPerso;
+  const allPerso=useMemo(()=>[...state.items,...state.userItems].filter(i=>!i.isPro&&!i.owner?.isPro),[state.items,state.userItems]);
+  const allPro=useMemo(()=>[...state.proItems,...state.userItems.filter(i=>i.isPro||i.owner?.isPro)],[state.proItems,state.userItems]);
+  const all=mode==='pro'?allPro:(listingTab==='professionnels'?allPro:allPerso);
   const unread=state.notifications.filter(n=>!n.read).length;
 
   const filtered=useMemo(()=>{
@@ -2768,10 +3378,12 @@ function App(){
 
   const home=()=>{setInfoPage(null);setPage("home");setQ("");setLq("");setCat("all");setSel(null)};
 
+  if(confirmPage){const allIt=[...state.items,...state.proItems,...state.userItems];return <Ctx.Provider value={{dark,setDark,lang,setLang}}><div className={(dark?"dark":"")}><style>{css}</style><ConfirmDeliveryPage annonceId={confirmPage.annonce} allItems={allIt} onBack={()=>setConfirmPage(null)}/></div></Ctx.Provider>;}
+
   return <Ctx.Provider value={{dark,setDark,lang,setLang}}><div className={(dark?"dark":"")}><style>{css}</style>
     {/* Splash Screen */}
     {splash&&<div className="splash" style={{opacity:1,transition:"opacity .5s"}}><div className="splash-logo" style={{background:'rgba(255,255,255,0.2)',backdropFilter:'blur(12px)',border:'2px solid rgba(255,255,255,0.4)',borderRadius:24,padding:'18px 22px',display:'flex',alignItems:'center',justifyContent:'center'}}><svg viewBox="0 0 220 160" width="110" height="80" xmlns="http://www.w3.org/2000/svg"><circle cx="75" cy="80" r="50" fill="none" stroke="white" strokeWidth="4"/><circle cx="115" cy="80" r="50" fill="none" stroke="white" strokeWidth="4"/><path d="M95 38 A50 50 0 0 1 95 122 A50 50 0 0 1 95 38Z" fill="white" opacity=".25"/></svg></div><h2 style={{fontFamily:'Georgia,serif',fontWeight:400,letterSpacing:3,fontSize:28}}>Cercle</h2><p>Location entre particuliers & pros</p></div>}
-    {page!=="messages"&&page!=="notifs"&&page!=="dashboard"&&page!=="referral"&&page!=="verify"&&page!=="dispute"&&page!=="wallet"&&page!=="badges"&&<header className={"hdr"+(mode==="pro"?" pro-hdr":"")}><div className="hi">
+    {page!=="messages"&&page!=="notifs"&&page!=="dashboard"&&page!=="gestion"&&page!=="referral"&&page!=="verify"&&page!=="dispute"&&page!=="wallet"&&page!=="badges"&&<header className={"hdr"+(mode==="pro"?" pro-hdr":"")}><div className="hi">
       <a className="logo" onClick={home} style={{textDecoration:'none'}}><svg viewBox="0 0 400 200" width="180" height="64" xmlns="http://www.w3.org/2000/svg"><circle cx="75" cy="100" r="50" fill="none" stroke={mode==='pro'?"#2563EB":"#6C63FF"} strokeWidth="10"/><circle cx="115" cy="100" r="50" fill="none" stroke={mode==='pro'?"#2563EB":"#6C63FF"} strokeWidth="10"/><path d="M95 58 A50 50 0 0 1 95 142 A50 50 0 0 1 95 58Z" fill={mode==='pro'?"#2563EB":"#6C63FF"} opacity=".35"/><text x="268" y="115" textAnchor="middle" fontFamily="Georgia,serif" fontSize="54" fontWeight="800" fill={mode==='pro'?"#2563EB":"#6C63FF"} letterSpacing="2">{mode==='pro'?'Cercle Pro':'Cercle'}</text></svg></a>
       <div className="mode-sw">
         <button className={"mode-btn"+(mode==='perso'?' on':'')} onClick={()=>setMode('perso')}>👤 Particulier</button>
@@ -2786,6 +3398,7 @@ function App(){
           {menu&&<div className="dd" onClick={e=>e.stopPropagation()}>
             {state.user?<><div className="di b" onClick={()=>{setProfTab("annonces");setPage("profile");setMenu(false)}}>👤 Mon profil</div><div className="di" onClick={()=>{setPage("messages");setMenu(false);dispatch({type:"READ_N"})}}>💬 Messages{unread>0&&<span style={{background:"var(--p)",color:"#fff",borderRadius:8,padding:"1px 6px",fontSize:10,fontWeight:700,marginLeft:4}}>{unread}</span>}</div><div className="di" onClick={()=>{setPage("create");setMenu(false)}}>➕ Proposer</div>
               <div className="di" onClick={()=>{setPage("dashboard");setMenu(false)}}>📊 Dashboard</div>
+              {state.user?.isPro&&<div className="di" onClick={()=>{setPage("gestion");setMenu(false)}} style={{color:'#D97706',fontWeight:700}}>⭐ Gestion Pro</div>}
               <div className="di" onClick={()=>{setPage("notifs");setMenu(false);dispatch({type:"READ_N"})}}>🔔 Notifications{unread>0&&<span style={{background:"var(--p)",color:"#fff",borderRadius:8,padding:"1px 6px",fontSize:10,fontWeight:700}}>{unread}</span>}</div>
               <div className="di" onClick={()=>{setDark(!dark);setMenu(false)}}>{dark?"☀️ Mode clair":"🌙 Mode sombre"}</div>
               <div className="dsp"/><div className="di" onClick={()=>{dispatch({type:"LOGOUT"});setMenu(false);home()}}>🚪 Déconnexion</div></>:
@@ -2832,8 +3445,20 @@ function App(){
       {!q&&cat==="all"&&state.user&&<div className="reco"><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}><h3 style={{fontFamily:"var(--fd)",fontSize:20,fontWeight:700,letterSpacing:"-.01em"}}>{mode==="pro"?"Sélection Pro":"Recommandé pour vous"}</h3><button className="cl" style={{color:"var(--p)"}}>Voir tout →</button></div>
         <div className="reco-sc">{all.sort(()=>Math.random()-.5).slice(0,8).map(i=><div key={i.id} className="reco-c" onClick={()=>setSel(i)}><img className="reco-ci" src={i.images[0]} alt=""/><div style={{padding:"4px 8px 8px"}}><div style={{fontSize:12,fontWeight:600,marginTop:4,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{i.title}</div><div style={{fontSize:12,fontWeight:700,color:"var(--p)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{i.price}€<span style={{fontWeight:400,color:"var(--g)"}}>/j</span></div></div></div>)}</div>
       </div>}
+      {mode!=='pro'&&<div style={{padding:"16px 28px 0",maxWidth:1520,margin:"0 auto"}}>
+        <div style={{display:"flex",gap:4,background:"var(--bg)",borderRadius:28,padding:3,border:"1px solid var(--bd)",width:"fit-content"}}>
+          <button onClick={()=>setListingTab('particuliers')} style={{padding:"8px 18px",borderRadius:24,border:"none",fontSize:12,fontWeight:700,cursor:"pointer",transition:"all .2s",
+            background:listingTab==='particuliers'?"var(--w)":"transparent",
+            color:listingTab==='particuliers'?"var(--dk)":"var(--g)",
+            boxShadow:listingTab==='particuliers'?"var(--sh)":"none"}}>👤 Particuliers</button>
+          <button onClick={()=>setListingTab('professionnels')} style={{padding:"8px 18px",borderRadius:24,border:"none",fontSize:12,fontWeight:700,cursor:"pointer",transition:"all .2s",
+            background:listingTab==='professionnels'?"linear-gradient(135deg,#1E3A5F,#2563EB)":"transparent",
+            color:listingTab==='professionnels'?"#fff":"var(--g)",
+            boxShadow:listingTab==='professionnels'?"0 2px 8px rgba(37,99,235,.25)":"none"}}>🏢 Professionnels</button>
+        </div>
+      </div>}
       {filtered.length===0?<div className="empty"><span>🔍</span><h2>Aucun résultat trouvé</h2><p style={{maxWidth:320,margin:"6px auto 16px",lineHeight:1.5}}>Essayez d'élargir votre recherche ou de modifier vos filtres.</p><button className="bs" onClick={()=>{setQ("");setCat("all")}}>Réinitialiser la recherche</button></div>:
-      <div className="grid" style={{paddingTop:20}}>{filtered.map(i=><Card key={i.id} item={i} onOpen={setSel} favs={state.favorites} dispatch={dispatch} onAuthRequired={state.user?null:()=>setShowA("login")}/>)}</div>}
+      <div className="grid" style={{paddingTop:16}}>{filtered.map(i=><Card key={i.id} item={i} onOpen={setSel} favs={state.favorites} dispatch={dispatch} onAuthRequired={state.user?null:()=>setShowA("login")}/>)}</div>}
     </main>}
 
     {page==="profile"&&state.user&&<Profile state={state} dispatch={dispatch} setPage={setPage} setSelected={setSel} initTab={profTab}/>}
@@ -2887,6 +3512,8 @@ function App(){
     {page==="map"&&<MapPage items={filtered} onOpen={setSel} favs={state.favorites} dispatch={dispatch} mode={mode}/>}
     {page==="notifs"&&state.user&&<NotifCenter state={state} dispatch={dispatch} setPage={setPage}/>}
     {page==="dashboard"&&state.user&&<Dashboard state={state} dispatch={dispatch} setPage={setPage}/>}
+    {page==="gestion"&&state.user&&state.user.isPro&&<GestionPro state={state} dispatch={dispatch} setPage={setPage}/>}
+    {page==="gestion"&&state.user&&!state.user.isPro&&<div className="empty" style={{paddingTop:100}}><span>⭐</span><h2>Réservé aux Pro</h2><p>Créez un compte professionnel pour accéder à la Gestion Pro.</p><button className="bp" style={{marginTop:14}} onClick={()=>setShowA("register")}>Passer en Pro</button></div>}
     {page==="referral"&&state.user&&<ReferralPage state={state} dispatch={dispatch} setPage={setPage}/>}
     {page==="verify"&&state.user&&<VerifyId state={state} dispatch={dispatch} setPage={setPage}/>}
     {page==="dispute"&&state.user&&<DisputePage state={state} dispatch={dispatch} setPage={setPage}/>}
@@ -2905,6 +3532,7 @@ function App(){
       <button className={"bn"+(page==="map"?" on":"")} onClick={()=>setPage("map")}><I.MapPin/><span>Carte</span></button>
       {state.user&&<button className={"bn"+(page==="messages"?" on":"")} onClick={()=>setPage("messages")}><I.Msg/><span>Messages</span></button>}
       {state.user&&<button className={"bn"+(page==="notifs"?" on":"")} onClick={()=>{setPage("notifs");dispatch({type:"READ_N"})}}><I.Bell/>{unread>0&&<span className="bnd"/>}<span>Notifs</span></button>}
+      {state.user?.isPro&&<button className={"bn"+(page==="gestion"?" on":"")} onClick={()=>setPage("gestion")} style={{color:page==="gestion"?"#D97706":undefined}}><span style={{fontSize:18}}>⭐</span><span>Gestion</span></button>}
       <button className={"bn"+((page==="profile"||page==="dashboard")?" on":"")} onClick={()=>state.user?(setProfTab("annonces"),setPage("profile")):setShowA("login")}><I.Prof/><span>Profil</span></button>
     </div></nav>
   </div></Ctx.Provider>
