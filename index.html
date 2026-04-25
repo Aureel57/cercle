@@ -1628,39 +1628,6 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
           return (
             <div style={{maxWidth:560,margin:'0 auto'}}>
 
-              {/* ── Progression hero card ── */}
-              <div style={{borderRadius:20,marginBottom:16,padding:'20px',background:isFondateur?'linear-gradient(135deg,#0a0a0a,#1a1200)':`linear-gradient(135deg,${gc}16,${gc}08)`,border:`1.5px solid ${isFondateur?'#D4AF3766':gc+'40'}`,position:'relative',overflow:'hidden',boxSizing:'border-box'}}>
-                <div style={{fontSize:11,fontWeight:700,color:isFondateur?'#D4AF37':gc,letterSpacing:'.08em',textTransform:'uppercase',marginBottom:12}}>Progression vers le prochain grade</div>
-                <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:14}}>
-                  <span style={{fontSize:30,filter:isFondateur?'drop-shadow(0 0 8px #FFD700)':'none'}}>{currentGrade.icon}</span>
-                  <div>
-                    <div style={{fontSize:17,fontWeight:800,color:isFondateur?'#D4AF37':gc}}>{currentGrade.name}</div>
-                    {nextGrade&&<div style={{fontSize:12,color:'#6b7280',marginTop:1}}>{rentals} / {nextGrade.min} locations</div>}
-                  </div>
-                  {nextGrade&&(
-                    <div style={{marginLeft:'auto',textAlign:'right'}}>
-                      <div style={{fontSize:24,fontWeight:900,color:gc,lineHeight:1}}>{nextGrade.min-rentals}</div>
-                      <div style={{fontSize:10,color:'#9ca3af',marginTop:2}}>restantes</div>
-                    </div>
-                  )}
-                </div>
-                {nextGrade?(
-                  <>
-                    <div style={{height:10,borderRadius:5,background:gc+'22',overflow:'hidden',marginBottom:8}}>
-                      <div style={{height:'100%',borderRadius:5,background:`linear-gradient(90deg,${gc},${gc}bb)`,width:progressPct+'%',transition:'width 0.6s ease',boxShadow:`0 0 8px ${gc}55`}}/>
-                    </div>
-                    <div style={{fontSize:12,color:'#6b7280'}}>
-                      <strong style={{color:gc}}>{nextGrade.min-rentals}</strong> location{nextGrade.min-rentals!==1?'s':''} restantes pour atteindre <strong style={{color:gc}}>{nextGrade.name}</strong>
-                    </div>
-                  </>
-                ):(
-                  <div style={{fontSize:15,fontWeight:800,background:'linear-gradient(90deg,#FFD700,#FFF8DC,#D4AF37)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>Vous avez atteint le sommet 👑</div>
-                )}
-                <button onClick={()=>setDemoRentals(r=>r+1)} style={{marginTop:12,padding:'5px 13px',borderRadius:8,border:`1px solid ${gc}55`,background:gc+'18',color:gc,fontSize:11,fontWeight:700,cursor:'pointer',display:'inline-flex',alignItems:'center',gap:4}}>
-                  + 1 location <span style={{opacity:.5,fontSize:9,fontWeight:500}}>démo</span>
-                </button>
-              </div>
-
               {/* Hero */}
               <div style={{borderRadius:22,marginBottom:20,background:isFondateur?'linear-gradient(135deg,#0a0a0a 0%,#1a1200 40%,#2a1f00 60%,#0a0a0a 100%)':`linear-gradient(135deg,${gc},${gc}bb)`,padding:'28px 24px',color:'#fff',position:'relative',overflow:'hidden',animation:isFondateur?'fondateurBorder 2.5s ease-in-out infinite':'glowPulse 3s ease-in-out infinite',border:isFondateur?'2px solid #D4AF37':'none',boxSizing:'border-box'}}>
                 {isFondateur&&<div style={{position:'absolute',inset:0,background:'linear-gradient(105deg,transparent 40%,rgba(212,175,55,0.18) 50%,transparent 60%)',backgroundSize:'200% 100%',animation:'shimmerCard 2.5s linear infinite',pointerEvents:'none'}}/>}
@@ -1845,6 +1812,25 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
                   );
                 })()}
               </div>
+
+              {/* ── Demo progress card ── */}
+              {(()=>{
+                return (
+                  <div style={{background:'var(--w)',borderRadius:16,padding:20,margin:'16px 0 0',boxShadow:'0 2px 12px rgba(0,0,0,0.10)'}}>
+                    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:8}}>
+                      <span style={{color:'var(--dk)',fontWeight:700,fontSize:16}}>{currentGrade.icon} {currentGrade.name}</span>
+                      <span style={{color:'var(--dk)',fontSize:13}}>{rentals} / {nextGrade ? nextGrade.min : '∞'} loc.</span>
+                    </div>
+                    <div style={{background:'rgba(0,0,0,0.10)',borderRadius:99,height:10,overflow:'hidden'}}>
+                      <div style={{background:'var(--p)',height:'100%',borderRadius:99,transition:'width 0.6s ease',width:progressPct+'%'}}/>
+                    </div>
+                    {nextGrade
+                      ? <div style={{color:'var(--dk)',fontSize:13,marginTop:8}}>{nextGrade.min - rentals} locations restantes pour atteindre <b>{nextGrade.name}</b></div>
+                      : <div style={{color:'#d4af37',fontSize:13,marginTop:8}}>👑 Vous avez atteint le sommet</div>}
+                    <button onClick={()=>setDemoRentals(r=>r+1)} style={{background:'var(--p)',color:'#fff',border:'none',borderRadius:8,padding:'6px 14px',cursor:'pointer',marginTop:12,fontSize:13}}>+ 1 location (démo)</button>
+                  </div>
+                );
+              })()}
 
             </div>
           );
@@ -2941,7 +2927,7 @@ function Dashboard({state,dispatch,setPage}){
             <div style={{fontSize:14,fontWeight:700,color:"var(--dk)"}}>Revenus & activité</div>
             <div style={{fontSize:11,color:"var(--g)",marginTop:2}}>{new Date().getFullYear()} · {hasReal?"données réelles":"données de démonstration"}</div>
             <div style={{display:"flex",gap:4,marginTop:8,flexWrap:"wrap"}}>
-              {[{m:"monthly",label:"Mensuel",icon:"📅"},{m:"count",label:"Locations",icon:"🔢"},{m:"revenue",label:"Cumul",icon:"📈"}].map(({m,label,icon})=>(
+              {[{m:"monthly",label:"Par mois",icon:"📅"},{m:"revenue",label:"Revenus/catégorie",icon:"💰"},{m:"count",label:"Locations/catégorie",icon:"📦"}].map(({m,label,icon})=>(
                 <button key={m} onClick={()=>toggleMetric(m)} style={{display:"flex",alignItems:"center",gap:4,padding:"3px 10px",borderRadius:20,border:"1.5px solid",fontSize:10,fontWeight:600,cursor:"pointer",transition:"all 0.2s ease",outline:"none",borderColor:chartMetrics.includes(m)?"#6C63FF":dark?"rgba(255,255,255,0.15)":"rgba(0,0,0,0.12)",background:chartMetrics.includes(m)?"#6C63FF":"transparent",color:chartMetrics.includes(m)?"#fff":dark?"#a0a0b8":"#6b7280"}}>
                   <span style={{fontSize:10}}>{icon}</span>{label}
                 </button>
