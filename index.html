@@ -1000,6 +1000,7 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
   const [editMode, setEditMode] = React.useState(false);
   const [gradeBarWidth, setGradeBarWidth] = React.useState(0);
   const [demoRentals, setDemoRentals] = React.useState(47);
+  const [demoAmount, setDemoAmount] = React.useState(15);
   const [qrItem, setQrItem] = React.useState(null);
   const [gradeTooltip, setGradeTooltip] = React.useState(null);
   const [profileData, setProfileData] = React.useState({
@@ -1827,7 +1828,12 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
                     {nextGrade
                       ? <div style={{color:'var(--dk)',fontSize:13,marginTop:8}}>{nextGrade.min - rentals} locations restantes pour atteindre <b>{nextGrade.name}</b></div>
                       : <div style={{color:'#d4af37',fontSize:13,marginTop:8}}>👑 Vous avez atteint le sommet</div>}
-                    <button onClick={()=>setDemoRentals(r=>r+1)} style={{background:'var(--p)',color:'#fff',border:'none',borderRadius:8,padding:'6px 14px',cursor:'pointer',marginTop:12,fontSize:13}}>+ 1 location (démo)</button>
+                    <div style={{display:'flex',alignItems:'center',gap:8,marginTop:12}}>
+                      <input type="number" value={demoAmount} onChange={e=>setDemoAmount(Number(e.target.value))} style={{width:80,border:'1.5px solid var(--bd)',borderRadius:8,padding:'6px 8px',fontSize:13,color:'var(--dk)',background:'var(--w)',outline:'none'}} min={0}/>
+                      <span style={{color:'var(--dk)',fontSize:13}}>€</span>
+                      <button onClick={()=>{if(demoAmount>=10)setDemoRentals(r=>r+1);}} style={{background:'var(--p)',color:'#fff',border:'none',borderRadius:8,padding:'6px 14px',cursor:'pointer',fontSize:13}}>+ 1 location (démo)</button>
+                    </div>
+                    {demoAmount<10&&<div style={{color:'#ef4444',fontSize:12,marginTop:6}}>Montant minimum 10 € pour comptabiliser une location</div>}
                   </div>
                 );
               })()}
