@@ -1001,6 +1001,7 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
   const [gradeBarWidth, setGradeBarWidth] = React.useState(0);
   const [qrItem, setQrItem] = React.useState(null);
   const [gradeTooltip, setGradeTooltip] = React.useState(null);
+  const [demoRentals, setDemoRentals] = React.useState(47);
   const [profileData, setProfileData] = React.useState({
     name: userName,
     email: user.email || 'noah@cercle.fr',
@@ -1695,6 +1696,31 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
                   ))}
                 </div>
               </div>
+
+              {/* Demo progress card */}
+              {(()=>{
+                const currentGradeIdx = GRADES.reduce((acc, g, i) => demoRentals >= (g.threshold ?? g.min ?? 0) ? i : acc, 0);
+                const currentGrade = GRADES[currentGradeIdx];
+                const nextGrade = GRADES[currentGradeIdx + 1];
+                const fromMin = currentGrade.threshold ?? currentGrade.min ?? 0;
+                const toMin = nextGrade ? (nextGrade.threshold ?? nextGrade.min) : fromMin + 1;
+                const progressPct = nextGrade ? Math.min(100, ((demoRentals - fromMin) / (toMin - fromMin)) * 100) : 100;
+                return (
+                  <div style={{background:'var(--w)',borderRadius:16,padding:20,margin:'0 0 16px',boxShadow:'0 2px 12px rgba(0,0,0,0.10)'}}>
+                    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:8}}>
+                      <span style={{color:'var(--dk)',fontWeight:700,fontSize:16}}>{currentGrade.icon} {currentGrade.name}</span>
+                      <span style={{color:'var(--dk)',fontSize:13}}>{demoRentals} / {nextGrade ? (nextGrade.threshold??nextGrade.min) : '∞'} loc.</span>
+                    </div>
+                    <div style={{background:'rgba(0,0,0,0.10)',borderRadius:99,height:10,overflow:'hidden'}}>
+                      <div style={{background:'var(--p)',height:'100%',borderRadius:99,transition:'width 0.6s ease',width:progressPct+'%'}}/>
+                    </div>
+                    {nextGrade
+                      ? <div style={{color:'var(--dk)',fontSize:13,marginTop:8}}>{(nextGrade.threshold??nextGrade.min)-demoRentals} locations restantes pour atteindre <b>{nextGrade.name}</b></div>
+                      : <div style={{color:'#d4af37',fontSize:13,marginTop:8}}>👑 Vous avez atteint le sommet</div>}
+                    <button onClick={()=>setDemoRentals(r=>r+1)} style={{background:'var(--p)',color:'#fff',border:'none',borderRadius:8,padding:'6px 14px',cursor:'pointer',marginTop:12,fontSize:13}}>+ 1 location (démo)</button>
+                  </div>
+                );
+              })()}
 
               {/* Parcours — grille de cartes */}
               <div>
@@ -2623,11 +2649,39 @@ function Dashboard({state,dispatch,setPage}){
   const barRef=useRef(null);const pieRef=useRef(null);
   const barInst=useRef(null);const pieInst=useRef(null);
   const [chartType,setChartType]=useState("bar");
+  const [chartMetric,setChartMetric]=useState('monthly');
+  const CATEGORY_DATA=[
+    {cat:'Outils', revenue:320, count:8},
+    {cat:'Véhicules', revenue:890, count:5},
+    {cat:'Photo/Vidéo', revenue:540, count:12},
+    {cat:'Gaming', revenue:210, count:9},
+    {cat:'Camping', revenue:180, count:6},
+    {cat:'Événementiel', revenue:670, count:14},
+  ];
   const {dark}=useContext(Ctx);
   const chartColors=["#6C63FF","#4ECDC4","#FF6B6B","#FFD93D","#6BCB77","#4D96FF","#C77DFF","#FF9F1C"];
   useEffect(()=>{
     if(!window.Chart||!barRef.current)return;
     if(barInst.current)barInst.current.destroy();
+    if(chartMetric!=='monthly'){
+      const isCatRev=chartMetric==='category_revenue';
+      const labels=CATEGORY_DATA.map(d=>d.cat);
+      const data=CATEGORY_DATA.map(d=>isCatRev?d.revenue:d.count);
+      barInst.current=new window.Chart(barRef.current,{
+        type:'bar',
+        data:{labels,datasets:[{label:isCatRev?'Revenus (€)':'Nb locations',data,backgroundColor:chartColors,borderRadius:8,borderSkipped:false}]},
+        options:{
+          responsive:true,maintainAspectRatio:false,
+          animation:{duration:600,easing:"easeOutQuart"},
+          plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>isCatRev?"  "+c.raw+"€":"  "+c.raw+" loc."}}},
+          scales:{
+            x:{grid:{display:false},ticks:{font:{size:9},color:"#9ca3af"},border:{display:false}},
+            y:{grid:{color:"rgba(0,0,0,0.04)"},ticks:{callback:v=>isCatRev?(v===0?"":v+"€"):v,font:{size:9},color:"#9ca3af",maxTicksLimit:5},border:{display:false}}
+          }
+        }
+      });
+      return()=>{if(barInst.current)barInst.current.destroy()};
+    }
     const isLine=chartType==="line";
     const tooltipBg=dark?"rgba(30,27,75,0.97)":"rgba(255,255,255,0.98)";
     const tooltipTitle=dark?"#c4b5fd":"#6C63FF";
@@ -2696,7 +2750,7 @@ function Dashboard({state,dispatch,setPage}){
       }
     });
     return()=>{if(barInst.current)barInst.current.destroy()};
-  },[JSON.stringify(monthlyVals),chartType,dark]);
+  },[JSON.stringify(monthlyVals),chartType,chartMetric,dark]);
   useEffect(()=>{
     if(!window.Chart||!pieRef.current||catData.length===0)return;
     if(pieInst.current)pieInst.current.destroy();
@@ -2916,34 +2970,51 @@ function Dashboard({state,dispatch,setPage}){
 
       {/* ── Revenue chart ── */}
       <div style={{...card,padding:"18px 16px"}}>
+        {/* Metric selector */}
+        <div style={{display:"flex",gap:6,marginBottom:14,flexWrap:"wrap"}}>
+          {[{m:"monthly",label:"Par mois",icon:"📅"},{m:"category_revenue",label:"Revenus/catégorie",icon:"💰"},{m:"category_count",label:"Locations/catégorie",icon:"📦"}].map(({m,label,icon})=>(
+            <button key={m} onClick={()=>setChartMetric(m)} style={{display:"flex",alignItems:"center",gap:5,padding:"5px 12px",borderRadius:20,border:"1.5px solid",fontSize:11,fontWeight:600,cursor:"pointer",transition:"all 0.2s ease",outline:"none",borderColor:chartMetric===m?"#6C63FF":dark?"rgba(255,255,255,0.15)":"rgba(0,0,0,0.12)",background:chartMetric===m?"#6C63FF":"transparent",color:chartMetric===m?"#fff":dark?"#a0a0b8":"#6b7280"}}>
+              <span>{icon}</span>{label}
+            </button>
+          ))}
+        </div>
         <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:16}}>
           <div>
-            <div style={{fontSize:14,fontWeight:700,color:"var(--dk)"}}>Revenus mensuels</div>
-            <div style={{fontSize:11,color:"var(--g)",marginTop:2}}>{new Date().getFullYear()} · {hasReal?"données réelles":"données de démonstration"}</div>
-            <div style={{display:"flex",gap:4,marginTop:8}}>
+            <div style={{fontSize:14,fontWeight:700,color:"var(--dk)"}}>
+              {chartMetric==="monthly"?"Revenus mensuels":chartMetric==="category_revenue"?"Revenus par catégorie":"Locations par catégorie"}
+            </div>
+            <div style={{fontSize:11,color:"var(--g)",marginTop:2}}>
+              {chartMetric==="monthly"?`${new Date().getFullYear()} · ${hasReal?"données réelles":"données de démonstration"}`:"Données de démonstration"}
+            </div>
+            {chartMetric==="monthly"&&<div style={{display:"flex",gap:4,marginTop:8}}>
               {[{t:"bar",label:"Barres",icon:"▬"},{t:"line",label:"Courbe",icon:"〜"}].map(({t,label,icon})=>(
                 <button key={t} onClick={()=>setChartType(t)} style={{display:"flex",alignItems:"center",gap:4,padding:"3px 10px",borderRadius:20,border:"1.5px solid",fontSize:10,fontWeight:600,cursor:"pointer",transition:"all 0.2s ease",outline:"none",borderColor:chartType===t?"#6C63FF":dark?"rgba(255,255,255,0.15)":"rgba(0,0,0,0.12)",background:chartType===t?"#6C63FF":"transparent",color:chartType===t?"#fff":dark?"#a0a0b8":"#6b7280"}}>
                   <span style={{fontSize:11}}>{icon}</span>{label}
                 </button>
               ))}
-            </div>
+            </div>}
           </div>
           <div style={{textAlign:"right"}}>
-            <div style={{fontSize:18,fontWeight:800,color:"#6C63FF",letterSpacing:-0.5}}>{monthlyVals[curMonth]}€</div>
-            <div style={{fontSize:10,color:"var(--g)"}}>ce mois</div>
+            {chartMetric==="monthly"
+              ? <><div style={{fontSize:18,fontWeight:800,color:"#6C63FF",letterSpacing:-0.5}}>{monthlyVals[curMonth]}€</div><div style={{fontSize:10,color:"var(--g)"}}>ce mois</div></>
+              : <><div style={{fontSize:18,fontWeight:800,color:"#6C63FF",letterSpacing:-0.5}}>{chartMetric==="category_revenue"?CATEGORY_DATA.reduce((s,d)=>s+d.revenue,0)+"€":CATEGORY_DATA.reduce((s,d)=>s+d.count,0)}</div><div style={{fontSize:10,color:"var(--g)"}}>total</div></>
+            }
           </div>
         </div>
         {window.Chart
           ? <div style={{height:170,position:"relative"}}><canvas ref={barRef}/></div>
           : <div style={{height:170,display:"flex",alignItems:"flex-end",gap:3,padding:"8px 0 0"}}>
-              {monthlyVals.map((v,i)=>(
-                <div key={i} title={months[i]+": "+v+"€"} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:2,cursor:"pointer"}}>
-                  <div style={{width:"100%",borderRadius:"4px 4px 0 0",transition:"height .5s ease",
-                    background:i===curMonth?"#6C63FF":i<curMonth?"rgba(108,99,255,0.4)":"rgba(108,99,255,0.12)",
-                    height:Math.max(3,Math.round(v/maxVal*140))}}/>
-                  <div style={{fontSize:7,color:i===curMonth?"#6C63FF":"#9ca3af",fontWeight:i===curMonth?700:400}}>{months[i].slice(0,1)}</div>
-                </div>
-              ))}
+              {(chartMetric==="monthly"?monthlyVals.map((v,i)=>({v,label:months[i].slice(0,1),active:i===curMonth,past:i<curMonth})):CATEGORY_DATA.map((d,i)=>({v:chartMetric==="category_revenue"?d.revenue:d.count,label:d.cat.slice(0,3),active:false,past:true}))).map(({v,label,active,past},i)=>{
+                const maxV=chartMetric==="monthly"?maxVal:Math.max(...CATEGORY_DATA.map(d=>chartMetric==="category_revenue"?d.revenue:d.count),1);
+                return (
+                  <div key={i} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:2,cursor:"pointer"}}>
+                    <div style={{width:"100%",borderRadius:"4px 4px 0 0",transition:"height .5s ease",
+                      background:active?"#6C63FF":past?"rgba(108,99,255,0.4)":"rgba(108,99,255,0.12)",
+                      height:Math.max(3,Math.round(v/maxV*140))}}/>
+                    <div style={{fontSize:7,color:active?"#6C63FF":"#9ca3af",fontWeight:active?700:400}}>{label}</div>
+                  </div>
+                );
+              })}
             </div>
         }
       </div>
