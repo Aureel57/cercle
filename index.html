@@ -76,7 +76,7 @@ const Ctx=createContext();
 const LANGS={fr:"Français",en:"English",es:"Español"};
 
 /* ========== DATA ========== */
-const CATS=[{id:"all",label:"Tout",icon:"✨"},{id:"tools",label:"Bricolage",icon:"🔧"},{id:"electronics",label:"Électronique",icon:"📷"},{id:"vehicles",label:"Véhicules",icon:"🚗"},{id:"sports",label:"Sport",icon:"🏄"},{id:"garden",label:"Jardin",icon:"🌿"},{id:"events",label:"Événementiel",icon:"🎉"},{id:"music",label:"Musique",icon:"🎸"},{id:"gaming",label:"Gaming",icon:"🎮"},{id:"baby",label:"Bébé",icon:"👶"},{id:"fashion",label:"Mode",icon:"👗"},{id:"camping",label:"Camping",icon:"⛺"},{id:"kitchen",label:"Cuisine",icon:"🍳"},{id:"photo",label:"Photo",icon:"🎬"},{id:"diy",label:"Créatif",icon:"🎨"}];
+const CATS=[{id:"all",label:"Tout",icon:"✨"},{id:"tools",label:"Bricolage",icon:"🔧"},{id:"electronics",label:"Électronique",icon:"📷"},{id:"vehicles",label:"Véhicules",icon:"🚗"},{id:"sports",label:"Sport",icon:"🏄"},{id:"garden",label:"Jardin",icon:"🌿"},{id:"events",label:"Événementiel",icon:"🎉"},{id:"music",label:"Musique",icon:"🎸"},{id:"gaming",label:"Gaming",icon:"🎮"},{id:"baby",label:"Bébé",icon:"👶"},{id:"fashion",label:"Mode",icon:"👗"},{id:"camping",label:"Camping",icon:"⛺"},{id:"kitchen",label:"Cuisine",icon:"🍳"},{id:"photo",label:"Photo",icon:"🎬"},{id:"diy",label:"Créatif",icon:"🎨"},{id:"furniture",label:"Mobilier",icon:"🛋️"}];
 const CC={tools:["#F59E0B","#D97706"],electronics:["#3B82F6","#2563EB"],vehicles:["#10B981","#059669"],sports:["#06B6D4","#0891B2"],garden:["#22C55E","#16A34A"],events:["#F43F5E","#E11D48"],music:["#8B5CF6","#7C3AED"],gaming:["#EC4899","#DB2777"],baby:["#F9A8D4","#F472B6"],fashion:["#A78BFA","#8B5CF6"],camping:["#84CC16","#65A30D"],kitchen:["#FB923C","#F97316"],photo:["#64748B","#475569"],diy:["#F472B6","#E879F9"]};
 const CE={tools:"🔧",electronics:"📱",vehicles:"🚲",sports:"🏄",garden:"🌱",events:"🎉",music:"🎸",gaming:"🎮",baby:"🧸",fashion:"👗",camping:"⛺",kitchen:"🍳",photo:"📷",diy:"🎨"};
 const CATS_FR={tools:'Bricolage',electronics:'Électronique',vehicles:'Véhicules',sports:'Sport',garden:'Jardin',events:'Événementiel',music:'Musique',gaming:'Gaming',baby:'Bébé',fashion:'Mode',camping:'Camping',kitchen:'Cuisine',photo:'Photo',diy:'Créatif',furniture:'Mobilier'};
@@ -86,12 +86,12 @@ const LOCS=["Paris 11e","Lyon 3e","Marseille 6e","Bordeaux","Nantes","Toulouse",
 const LL={"Paris 11e":[48.859,2.381],"Lyon 3e":[45.753,4.851],"Marseille 6e":[43.289,5.381],Bordeaux:[44.837,-.579],Nantes:[47.218,-1.553],Toulouse:[43.604,1.444],Lille:[50.629,3.057],Strasbourg:[48.573,7.752],Montpellier:[43.61,3.876],Nice:[43.71,7.262],Rennes:[48.117,-1.677],Grenoble:[45.188,5.724]};
 const DESCS=["En excellent état, entretenu régulièrement. Idéal pour vos projets du week-end.","Peu utilisé, comme neuf. Livré avec tous les accessoires.","Matériel professionnel en parfait état. Nettoyé après chaque location.","Utilisé quelques fois. Mode d'emploi et accessoires inclus.","Investissement récent rentabilisé en location. Assurance incluse.","Fiable et testé avant chaque location. Je réponds rapidement !"];
 const RAW=[{t:"Perceuse visseuse Bosch Pro",c:"tools",p:12},{t:"Ponceuse orbitale Makita",c:"tools",p:15},{t:"Échelle télescopique 5m",c:"tools",p:8},{t:"Nettoyeur haute pression Kärcher",c:"tools",p:20},{t:"Drone DJI Mini 3 Pro",c:"electronics",p:35},{t:"Console PS5 + 2 manettes",c:"electronics",p:18},{t:"Vidéoprojecteur 4K portable",c:"electronics",p:25},{t:"Enceinte JBL PartyBox 310",c:"electronics",p:22},{t:"Camionnette Renault Master",c:"vehicles",p:55},{t:"Vélo électrique Moustache",c:"vehicles",p:18},{t:"Trottinette électrique Xiaomi",c:"vehicles",p:10},{t:"Remorque porte-vélos",c:"vehicles",p:25},{t:"Paddle gonflable + pagaie",c:"sports",p:20},{t:"Ski Rossignol + chaussures 42",c:"sports",p:22},{t:"VTT Decathlon Rockrider",c:"sports",p:14},{t:"Kayak biplace gonflable",c:"sports",p:28},{t:"Tondeuse robot Husqvarna",c:"garden",p:16},{t:"Taille-haie Stihl",c:"garden",p:14},{t:"Motoculteur 5CV",c:"garden",p:30},{t:"Machine à barbe à papa",c:"events",p:25},{t:"Lot 50 chaises pliantes",c:"events",p:40},{t:"Tonnelle 3x6m + LED",c:"events",p:35},{t:"Guitare acoustique Martin",c:"music",p:15},{t:"Platines DJ Pioneer",c:"music",p:30},{t:"Piano numérique Yamaha",c:"music",p:20},{t:"Casque VR Meta Quest 3",c:"gaming",p:22},{t:"Volant Logitech G29",c:"gaming",p:18},{t:"Poussette Yoyo Babyzen",c:"baby",p:12},{t:"Siège auto Cybex",c:"baby",p:8},{t:"Tente 4 places Quechua",c:"camping",p:15},{t:"Glacière électrique 40L",c:"camping",p:10},{t:"Robot pâtissier KitchenAid",c:"kitchen",p:18},{t:"Raclette & fondue 8 pers.",c:"kitchen",p:10},{t:"Canon EOS R6 + 24-70mm",c:"photo",p:45},{t:"Stabilisateur DJI RS3",c:"photo",p:25},{t:"Robe Sézane T.38",c:"fashion",p:15},{t:"Costume Hugo Boss M",c:"fashion",p:20},{t:"Machine à coudre Singer",c:"diy",p:12},{t:"Imprimante 3D Creality",c:"diy",p:18},{t:"Caméra GoPro Hero 11",c:"electronics",p:28},{t:"Trépied professionnel Manfrotto",c:"photo",p:18},{t:"Téléobjectif Canon 70-200mm",c:"photo",p:35},{t:"VTT électrique Specialized",c:"vehicles",p:32},{t:"Hammock et système de suspension",c:"camping",p:12},{t:"Barbecue gaz Weber Genesis",c:"garden",p:38},{t:"Étagères industrielles en metal",c:"furniture",p:45},{t:"Table basse vintage design",c:"furniture",p:28}];
-const USERS=[{id:"u1",name:"Léa Martin",email:"lea@email.com",avatar:"👩‍🦰",verified:true,since:2022,bio:"Passionnée de partage !",location:"Paris 11e",rating:4.9,rentals:87,responseTime:"~15 min"},{id:"u2",name:"Maxime Dupont",email:"max@email.com",avatar:"👨‍🦱",verified:true,since:2021,bio:"Je loue ce que je n'utilise pas.",location:"Lyon 3e",rating:4.95,rentals:142,responseTime:"~30 min"},{id:"u3",name:"Chloé Bernard",email:"chloe@email.com",avatar:"👩",verified:true,since:2023,bio:"Maman de 2 enfants.",location:"Bordeaux",rating:4.8,rentals:34,responseTime:"~1h"},{id:"u4",name:"Antoine Moreau",email:"antoine@email.com",avatar:"👨",verified:false,since:2024,bio:"Nouveau sur Cercle !",location:"Nantes",rating:4.7,rentals:12,responseTime:"~2h"},{id:"u5",name:"Sarah Petit",email:"sarah@email.com",avatar:"👩‍🦱",verified:true,since:2020,bio:"Membre fidèle.",location:"Marseille 6e",rating:4.98,rentals:256,responseTime:"~10 min"},{id:"u6",name:"Hugo Lambert",email:"hugo@email.com",avatar:"👨‍🦳",verified:true,since:2021,bio:"J'adore rendre service.",location:"Toulouse",rating:4.85,rentals:98,responseTime:"~45 min"}];
+const USERS=[{id:"u1",name:"Léa Martin",email:"lea@email.com",password:"demo123",avatar:"👩‍🦰",verified:true,since:2022,bio:"Passionnée de partage !",location:"Paris 11e",rating:4.9,rentals:87,responseTime:"~15 min"},{id:"u2",name:"Maxime Dupont",email:"max@email.com",password:"demo123",avatar:"👨‍🦱",verified:true,since:2021,bio:"Je loue ce que je n'utilise pas.",location:"Lyon 3e",rating:4.95,rentals:142,responseTime:"~30 min"},{id:"u3",name:"Chloé Bernard",email:"chloe@email.com",password:"demo123",avatar:"👩",verified:true,since:2023,bio:"Maman de 2 enfants.",location:"Bordeaux",rating:4.8,rentals:34,responseTime:"~1h"},{id:"u4",name:"Antoine Moreau",email:"antoine@email.com",password:"demo123",avatar:"👨",verified:false,since:2024,bio:"Nouveau sur Cercle !",location:"Nantes",rating:4.7,rentals:12,responseTime:"~2h"},{id:"u5",name:"Sarah Petit",email:"sarah@email.com",password:"demo123",avatar:"👩‍🦱",verified:true,since:2020,bio:"Membre fidèle.",location:"Marseille 6e",rating:4.98,rentals:256,responseTime:"~10 min"},{id:"u6",name:"Hugo Lambert",email:"hugo@email.com",password:"demo123",avatar:"👨‍🦳",verified:true,since:2021,bio:"J'adore rendre service.",location:"Toulouse",rating:4.85,rentals:98,responseTime:"~45 min"}];
 const buildItems=()=>RAW.map((r,i)=>({id:i+1,title:r.t,cat:r.c,price:r.p,images:[mkImg(r.c,i+1,0),mkImg(r.c,i+1,1),mkImg(r.c,i+1,2)],location:LOCS[i%LOCS.length],rating:+(4.4+Math.random()*.59).toFixed(2),reviews:Math.floor(5+Math.random()*95),owner:USERS[i%USERS.length],description:DESCS[i%DESCS.length],deposit:Math.floor(r.p*3+Math.random()*100),condition:["Comme neuf","Très bon état","Bon état"][i%3],createdAt:"2025",available:true,lat:(LL[LOCS[i%LOCS.length]]||[48.86,2.35])[0]+(.01*Math.random()-.005),lng:(LL[LOCS[i%LOCS.length]]||[48.86,2.35])[1]+(.01*Math.random()-.005)}));
 const uid=()=>"_"+Math.random().toString(36).slice(2,8);
 const ds=d=>new Date(d).toLocaleDateString("fr-FR",{day:"numeric",month:"short"});
 
-const PRO_USERS=[{id:"p1",name:"Loxam Express",email:"contact@loxam.fr",avatar:"🏗️",verified:true,since:2019,bio:"N°1 de la location de matériel en France.",location:"Paris 11e",rating:4.92,rentals:1240,responseTime:"~5 min",isPro:true,company:"Loxam"},{id:"p2",name:"Kiloutou",email:"pro@kiloutou.fr",avatar:"🔶",verified:true,since:2020,bio:"Location de matériel BTP et événementiel.",location:"Lyon 3e",rating:4.88,rentals:890,responseTime:"~10 min",isPro:true,company:"Kiloutou"},{id:"p3",name:"Cyclez Pro",email:"pro@cyclez.fr",avatar:"🚴",verified:true,since:2022,bio:"Flottes de vélos et trottinettes pour entreprises.",location:"Bordeaux",rating:4.95,rentals:456,responseTime:"~15 min",isPro:true,company:"Cyclez"},{id:"p4",name:"EventPro Location",email:"pro@eventpro.fr",avatar:"🎪",verified:true,since:2021,bio:"Matériel événementiel haut de gamme.",location:"Marseille 6e",rating:4.90,rentals:678,responseTime:"~8 min",isPro:true,company:"EventPro"}];
+const PRO_USERS=[{id:"p1",name:"Loxam Express",email:"contact@loxam.fr",password:"demo123",avatar:"🏗️",verified:true,since:2019,bio:"N°1 de la location de matériel en France.",location:"Paris 11e",rating:4.92,rentals:1240,responseTime:"~5 min",isPro:true,company:"Loxam"},{id:"p2",name:"Kiloutou",email:"pro@kiloutou.fr",password:"demo123",avatar:"🔶",verified:true,since:2020,bio:"Location de matériel BTP et événementiel.",location:"Lyon 3e",rating:4.88,rentals:890,responseTime:"~10 min",isPro:true,company:"Kiloutou"},{id:"p3",name:"Cyclez Pro",email:"pro@cyclez.fr",password:"demo123",avatar:"🚴",verified:true,since:2022,bio:"Flottes de vélos et trottinettes pour entreprises.",location:"Bordeaux",rating:4.95,rentals:456,responseTime:"~15 min",isPro:true,company:"Cyclez"},{id:"p4",name:"EventPro Location",email:"pro@eventpro.fr",password:"demo123",avatar:"🎪",verified:true,since:2021,bio:"Matériel événementiel haut de gamme.",location:"Marseille 6e",rating:4.90,rentals:678,responseTime:"~8 min",isPro:true,company:"EventPro"}];
 const PRO_RAW=[{t:"Nacelle élévatrice 12m",c:"tools",p:120},{t:"Mini-pelle 1.5T",c:"tools",p:180},{t:"Groupe électrogène 5kVA",c:"tools",p:45},{t:"Échafaudage complet 10m",c:"tools",p:65},{t:"Compacteur de sol",c:"tools",p:85},{t:"Bétonnière 350L",c:"tools",p:40},{t:"Flotte 10 vélos élec.",c:"vehicles",p:150},{t:"Flotte 20 trottinettes",c:"vehicles",p:200},{t:"Camion benne 3.5T",c:"vehicles",p:95},{t:"Utilitaire frigorifique",c:"vehicles",p:110},{t:"Sono complète 2000W",c:"events",p:80},{t:"Structure alu 6x4m",c:"events",p:150},{t:"Pack éclairage LED pro",c:"events",p:60},{t:"Barnum 6x12m",c:"events",p:120},{t:"Canon R5 + optiques",c:"photo",p:95},{t:"Kit tournage complet",c:"photo",p:180}];
 const buildProItems=()=>PRO_RAW.map((r,i)=>({id:1000+i,title:r.t,cat:r.c,price:r.p,images:[mkImg(r.c,1000+i,0),mkImg(r.c,1000+i,1),mkImg(r.c,1000+i,2)],location:LOCS[(i+3)%LOCS.length],rating:+(4.7+Math.random()*.29).toFixed(2),reviews:Math.floor(20+Math.random()*200),owner:PRO_USERS[i%PRO_USERS.length],description:"Matériel professionnel certifié. Maintenance régulière. Livraison possible sur chantier/site.",deposit:Math.floor(r.p*5+Math.random()*200),condition:"Comme neuf",createdAt:"2025",available:true,isPro:true,lat:(LL[LOCS[(i+3)%LOCS.length]]||[48.86,2.35])[0]+(.01*Math.random()-.005),lng:(LL[LOCS[(i+3)%LOCS.length]]||[48.86,2.35])[1]+(.01*Math.random()-.005)}));
 
@@ -603,8 +603,9 @@ function AuthModal({onClose,dispatch,mode:im}){
   const u=(k,v)=>setF(p=>({...p,[k]:v}));
   const go=()=>{
     if(mode==="login"){if(!f.email||!f.password){setErr("Remplissez tous les champs");return}
-      const found=USERS.find(u=>u.email===f.email)||PRO_USERS.find(u=>u.email===f.email);
-      dispatch({type:"LOGIN",payload:found||{id:uid(),name:f.email.split("@")[0],email:f.email,avatar:"😊",verified:false,since:2026,bio:"",location:"Paris",rating:0,rentals:0,responseTime:"~1h"}});onClose()
+      const found=USERS.find(u=>u.email===f.email&&u.password===f.password)||PRO_USERS.find(u=>u.email===f.email&&u.password===f.password);
+      if(!found){setErr("Email ou mot de passe incorrect");return;}
+      dispatch({type:"LOGIN",payload:found});onClose()
     }else{
       if(step===0)return setStep(1);
       if(acctType==="perso"){if(!f.name||!f.email||!f.password){setErr("Remplissez tous les champs");return}
@@ -929,15 +930,15 @@ function Detail({item,onClose,state,dispatch,setPage,setConvId,setShowShop,setPr
               <div className="fg"><label>CVC</label><input value={cardCvc} onChange={e=>setCardCvc(e.target.value)} placeholder="123" maxLength={3} type="password"/></div>
             </div>
           </>}
-          {payMethod==="gpay"&&<button style={{width:"100%",padding:14,background:"#fff",border:"1.5px solid var(--bd)",borderRadius:10,display:"flex",alignItems:"center",justifyContent:"center",gap:8,cursor:"pointer",fontSize:14,fontWeight:600}} onClick={()=>{}}>
+          {payMethod==="gpay"&&<button style={{width:"100%",padding:14,background:"#fff",border:"1.5px solid var(--bd)",borderRadius:10,display:"flex",alignItems:"center",justifyContent:"center",gap:8,cursor:"pointer",fontSize:14,fontWeight:600}} onClick={book}>
             <svg width="40" height="18" viewBox="0 0 40 18"><path d="M19.22 8.69v4.97h-1.56V1.5h4.13a3.74 3.74 0 0 1 2.67 1.05 3.43 3.43 0 0 1 1.1 2.58 3.47 3.47 0 0 1-1.1 2.6 3.73 3.73 0 0 1-2.67 1.06h-2.57v-.1zm0-5.67v4.16h2.6a2.12 2.12 0 0 0 1.59-.64 2.13 2.13 0 0 0 .01-3.04 2.12 2.12 0 0 0-1.6-.64h-2.6v.16z" fill="#5F6368"/><path d="M28.18 5.59c1.15 0 2.06.31 2.73.93.67.62 1 1.47 1 2.55v5.16h-1.48v-1.16h-.07c-.65.96-1.5 1.43-2.57 1.43-.91 0-1.67-.27-2.28-.81a2.56 2.56 0 0 1-.93-2.01c0-.85.32-1.52.96-2.02.64-.5 1.5-.75 2.56-.75.91 0 1.66.17 2.24.5v-.35c0-.57-.22-1.05-.67-1.44a2.22 2.22 0 0 0-1.5-.59c-.87 0-1.56.37-2.07 1.1l-1.36-.86c.75-1.08 1.86-1.62 3.32-1.62v-.06zm-1.97 7.09c0 .43.18.79.55 1.07.37.29.8.43 1.28.43.7 0 1.32-.26 1.85-.79.53-.53.8-1.14.8-1.84-.47-.38-1.12-.57-1.96-.57-.61 0-1.12.15-1.53.45-.4.3-.6.66-.6 1.08l-.4.17z" fill="#5F6368"/><path d="M39.63 5.86l-5.15 11.84h-1.6l1.91-4.15-3.4-7.7h1.68l2.44 5.9h.03l2.38-5.9h1.6l.1.01z" fill="#5F6368"/><path d="M12.81 7.72a7.66 7.66 0 0 0-.1-1.27H6.55v2.4h3.51a3 3 0 0 1-1.3 1.97v1.64h2.11c1.24-1.14 1.95-2.82 1.95-4.74z" fill="#4285F4"/><path d="M6.55 12.36c1.76 0 3.24-.58 4.31-1.58l-2.11-1.64c-.58.39-1.33.62-2.2.62-1.7 0-3.13-1.14-3.64-2.68H.72v1.7A6.5 6.5 0 0 0 6.55 12.36z" fill="#34A853"/><path d="M2.91 7.08a3.9 3.9 0 0 1 0-2.5v-1.7H.72A6.5 6.5 0 0 0 0 5.83c0 1.05.25 2.05.72 2.94l2.19-1.7z" fill="#FBBC04"/><path d="M6.55 2.38c.96 0 1.81.33 2.49.97l1.87-1.87A6.26 6.26 0 0 0 6.55 0 6.5 6.5 0 0 0 .72 3.47l2.19 1.7c.5-1.53 1.94-2.68 3.64-2.68v-.11z" fill="#EA4335"/></svg>
             Payer avec Google Pay
           </button>}
-          {payMethod==="paypal"&&<button style={{width:"100%",padding:14,background:"#FFC439",border:"none",borderRadius:10,display:"flex",alignItems:"center",justifyContent:"center",gap:8,cursor:"pointer",fontSize:14,fontWeight:700,color:"#253B80"}} onClick={()=>{}}>
+          {payMethod==="paypal"&&<button style={{width:"100%",padding:14,background:"#FFC439",border:"none",borderRadius:10,display:"flex",alignItems:"center",justifyContent:"center",gap:8,cursor:"pointer",fontSize:14,fontWeight:700,color:"#253B80"}} onClick={book}>
             <svg width="20" height="22" viewBox="0 0 24 28" fill="#253B80"><path d="M20.4 6.4c.9-1 1.2-2.4 1-4C20 .8 18 0 15.4 0H5.8c-.5 0-1 .4-1 .9L1.4 24c0 .4.2.7.6.7h4.6l1.2-7.3v.2c.1-.5.5-.9 1-.9h2.2c4.3 0 7.6-1.7 8.6-6.7v-.4c-.1 0 .7-2.6.8-3.2z"/><path d="M9.7 6.8c.1-.3.3-.5.5-.7.2-.1.5-.2.7-.2h6.5c.8 0 1.5.1 2.1.2.2 0 .3.1.5.1.2.1.3.1.5.2.1 0 .1 0 .2.1.3.1.5.2.7.4.3-1.6 0-2.7-.9-3.7C19.3 1.9 17 1.2 14 1.2H6c-.5 0-.9.3-1 .8L1.6 25.1c0 .3.2.6.5.6h4.3l1.1-6.8L9.7 6.8z" fill="#179BD7"/></svg>
             Payer avec PayPal
           </button>}
-          {payMethod==="apple"&&<button style={{width:"100%",padding:14,background:"#000",border:"none",borderRadius:10,display:"flex",alignItems:"center",justifyContent:"center",gap:8,cursor:"pointer",fontSize:14,fontWeight:600,color:"#fff"}} onClick={()=>{}}>
+          {payMethod==="apple"&&<button style={{width:"100%",padding:14,background:"#000",border:"none",borderRadius:10,display:"flex",alignItems:"center",justifyContent:"center",gap:8,cursor:"pointer",fontSize:14,fontWeight:600,color:"#fff"}} onClick={book}>
             <svg width="16" height="18" viewBox="0 0 17 20" fill="white"><path d="M13.34 10.05c-.02-2.14 1.75-3.17 1.83-3.22-1-1.46-2.55-1.66-3.1-1.68-1.32-.13-2.57.77-3.24.77-.67 0-1.7-.75-2.8-.73A4.13 4.13 0 0 0 2.54 7.6c-1.49 2.58-.38 6.4 1.07 8.49.71 1.02 1.56 2.17 2.67 2.13 1.07-.04 1.47-.69 2.77-.69 1.29 0 1.66.69 2.78.67 1.15-.02 1.88-1.05 2.58-2.08.81-1.19 1.15-2.34 1.17-2.4-.03-.01-2.24-.86-2.26-3.41zM11.24 3.9c.59-.71.99-1.7.88-2.69-.85.03-1.88.57-2.49 1.27-.55.63-1.03 1.64-.9 2.6.95.08 1.92-.48 2.51-1.18z"/></svg>
             Payer avec Apple Pay
           </button>}
@@ -1065,10 +1066,9 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
   const tabs = [
     { id: 'annonces', label: 'Annonces', icon: '🏷️', count: displayListings.length || 0 },
     ...(isUserPro ? [{ id: 'parc', label: 'Mon Parc', icon: '🏗️', count: myProItems.length }] : []),
-    { id: 'reservations', label: 'Réservations', icon: '📅', count: mockReservations.length },
-    { id: 'avis', label: 'Avis', icon: '⭐', count: mockReviews.length },
+    { id: 'reservations', label: 'Réservations', icon: '📅', count: state.bookings.filter(b=>b.userId===user.id||b.ownerId===user.id).length },
+    { id: 'avis', label: 'Avis', icon: '⭐', count: state.reviews.length },
     { id: 'favoris', label: 'Favoris', icon: '❤️', count: favItems.length },
-    ...(user.isPro ? [{ id: 'parc', label: 'Mon Parc', icon: '🏗️', count: proParc.length }] : []),
     { id: 'grade', label: 'Mon Grade', icon: '🏅', count: null },
     { id: 'parametres', label: 'Paramètres', icon: '⚙️', count: null },
   ];
@@ -1512,24 +1512,29 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
         )}
 
         {/* ── Réservations ── */}
-        {tab === 'reservations' && (
-          <div>
-            <p style={{fontSize:13,color:'var(--g)',margin:'0 0 16px',fontWeight:500}}>3 réservations au total</p>
-            {mockReservations.map((r, i) => (
-              <div key={r.id} style={{...S.resCard, animation:'fadeSlideIn 0.4s cubic-bezier(0.34,1.56,0.64,1) both', animationDelay:`${i*0.07}s`}}>
-                <div style={S.resImgBox}>{r.img}</div>
+        {tab === 'reservations' && (()=>{
+          const userBookings=state.bookings.filter(b=>b.userId===user.id||b.ownerId===user.id);
+          const statusMap={confirmed:{label:'Confirmée',color:'#10b981',bg:'#d1fae5'},cancelled:{label:'Annulée',color:'#ef4444',bg:'#fee2e2'}};
+          return <div>
+            <p style={{fontSize:13,color:'var(--g)',margin:'0 0 16px',fontWeight:500}}>{userBookings.length} réservation{userBookings.length!==1?'s':''} au total</p>
+            {userBookings.length===0?<div style={{textAlign:'center',padding:'40px 0'}}><span style={{fontSize:40}}>📅</span><p style={{fontWeight:700,color:'#374151',fontSize:15,marginTop:12}}>Aucune réservation pour l'instant</p></div>:
+            userBookings.map((b, i) => {
+              const sm=statusMap[b.status]||{label:'En cours',color:'#3b82f6',bg:'#dbeafe'};
+              const other=b.userId===user.id?b.ownerName:b.ownerName;
+              return <div key={b.id} style={{...S.resCard, animation:'fadeSlideIn 0.4s cubic-bezier(0.34,1.56,0.64,1) both', animationDelay:`${i*0.07}s`}}>
+                <div style={S.resImgBox}>📦</div>
                 <div style={S.resInfo}>
-                  <p style={S.resTitle}>{r.item}</p>
-                  <p style={S.resMeta}>📅 {r.dates} · avec {r.renter}</p>
+                  <p style={S.resTitle}>{b.itemTitle}</p>
+                  <p style={S.resMeta}>📅 {b.startDate} – {b.endDate} · avec {other}</p>
                   <div style={S.resFooter}>
-                    <span className="prof-badge-pulse" style={{...S.resBadge(r.color, r.bg), animationDelay:`${i*0.1+0.3}s`}}>{r.status}</span>
-                    <span style={S.resPrice}>{r.price}</span>
+                    <span className="prof-badge-pulse" style={{...S.resBadge(sm.color,sm.bg),animationDelay:`${i*0.1+0.3}s`}}>{sm.label}</span>
+                    <span style={S.resPrice}>{b.total} €</span>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
+              </div>;
+            })}
+          </div>;
+        })()}
 
         {/* ── Avis ── */}
         {tab === 'avis' && (
@@ -1554,21 +1559,24 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
                 ))}
               </div>
             </div>
-            {mockReviews.map((r, i) => (
-              <div key={r.id} style={{...S.reviewCard, animation:'scaleIn 0.4s cubic-bezier(0.34,1.56,0.64,1) both', animationDelay:`${i*0.08}s`}}>
+            {state.reviews.length===0?<div style={{textAlign:'center',padding:'40px 0'}}><span style={{fontSize:40}}>⭐</span><p style={{fontWeight:700,color:'#374151',fontSize:15,marginTop:12}}>Aucun avis pour l'instant</p></div>:
+            (()=>{const colors=['#8b5cf6','#3b82f6','#10b981','#f59e0b','#06b6d4'];return state.reviews.map((r,i)=>{
+              const initials=(r.fromUserName||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+              const dateStr=r.createdAt?new Date(r.createdAt).toLocaleDateString('fr-FR',{month:'short',year:'numeric'}):'';
+              return <div key={r.id} style={{...S.reviewCard,animation:'scaleIn 0.4s cubic-bezier(0.34,1.56,0.64,1) both',animationDelay:`${i*0.08}s`}}>
                 <div style={S.reviewTop}>
-                  <div style={S.reviewAvatar(r.color)}>{r.initials}</div>
+                  <div style={S.reviewAvatar(colors[i%colors.length])}>{initials}</div>
                   <div style={{flex:1}}>
                     <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-                      <span style={S.reviewName}>{r.author}</span>
+                      <span style={S.reviewName}>{r.fromUserName}</span>
                       <span style={{fontSize:12,letterSpacing:1}}>{Array.from({length:r.rating}).map((_,si)=><span key={si} style={{color:'#f59e0b',display:'inline-block',animation:'scaleIn 0.3s cubic-bezier(0.34,1.56,0.64,1) both',animationDelay:`${i*0.08+si*0.06}s`}}>★</span>)}</span>
                     </div>
-                    <div style={S.reviewDate}>{r.date}</div>
+                    <div style={S.reviewDate}>{dateStr}</div>
                   </div>
                 </div>
                 <p style={S.reviewText}>"{r.text}"</p>
-              </div>
-            ))}
+              </div>;
+            });})()}
           </div>
         )}
 
@@ -1584,7 +1592,7 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
             ) : (
               <div style={S.listingGrid}>
                 {favItems.map((f, i) => (
-                  <div key={f.id} className="prof-fav-card" style={{...S.favCard, animation:'fadeSlideUp 0.4s cubic-bezier(0.34,1.56,0.64,1) both', animationDelay:`${i*0.07}s`, cursor:'pointer'}} onClick={()=>setSelected&&setSelected(f)}>
+                  <div key={f.id} className="prof-fav-card" style={{...S.favCard, animation:'fadeSlideUp 0.4s cubic-bezier(0.34,1.56,0.64,1) both', animationDelay:`${i*0.07}s`, cursor:'pointer'}} onClick={()=>{setSelected&&setSelected(f);setPage&&setPage('detail');}}>
                     <div style={{...S.favImg, fontSize:0}}>
                       <img src={f.images&&f.images[0]} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}}/>
                       <div style={{...S.favHeart, animation:'float 3s ease-in-out infinite', animationDelay:`${i*0.3}s`}}>❤️</div>
@@ -2020,8 +2028,8 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
               </div>
             </div>
 
-            <button style={{...S.savBtn,animation:'fadeSlideUp 0.4s cubic-bezier(0.34,1.56,0.64,1) both',animationDelay:'0.32s'}}>Sauvegarder les modifications</button>
-            <button style={{...S.logoutBtn,animation:'fadeSlideUp 0.4s cubic-bezier(0.34,1.56,0.64,1) both',animationDelay:'0.38s'}}>🚪 Se déconnecter</button>
+            <button style={{...S.savBtn,animation:'fadeSlideUp 0.4s cubic-bezier(0.34,1.56,0.64,1) both',animationDelay:'0.32s'}} onClick={()=>dispatch({type:"UPD_PROF",payload:{name:profileData.name,email:profileData.email,bio:profileData.bio,phone:profileData.phone}})}>Sauvegarder les modifications</button>
+            <button style={{...S.logoutBtn,animation:'fadeSlideUp 0.4s cubic-bezier(0.34,1.56,0.64,1) both',animationDelay:'0.38s'}} onClick={()=>{dispatch({type:"LOGOUT"});setPage('home');}}>🚪 Se déconnecter</button>
           </div>
         )}
 
@@ -3080,6 +3088,7 @@ function ReferralPage({state,dispatch,setPage}){
 /* ===== VERIFY ID ===== */
 function VerifyId({state,dispatch,setPage}){
   const[step,setStep]=useState(state.user?.verified?3:0);const[doc,setDoc]=useState("cni");
+  useEffect(()=>{if(step===1){const t=setTimeout(()=>setStep(2),1500);return()=>clearTimeout(t)}},[step]);
   return <div style={{maxWidth:500,margin:"0 auto",padding:28}}>
     <button className="cl" style={{marginBottom:14,display:"flex",alignItems:"center",gap:5}} onClick={()=>setPage("profile")}><I.Back/> Retour</button>
     <h1 style={{fontFamily:"var(--fd)",fontSize:22,marginBottom:16}}>🆔 Vérification d'identité</h1>
@@ -3090,7 +3099,7 @@ function VerifyId({state,dispatch,setPage}){
       <button className="bp" style={{width:"100%"}} onClick={()=>setStep(1)}>Envoyer le document</button></>:
     step===1?<div style={{textAlign:"center",padding:30}}><div style={{fontSize:40,animation:"spin 1s linear infinite"}}>⏳</div><style>{"@keyframes spin{to{transform:rotate(360deg)}}"}</style>
       <h2 style={{fontFamily:"var(--fd)",marginTop:12}}>Vérification en cours...</h2><p style={{fontSize:13,color:"var(--g)",marginTop:4}}>Cela prend quelques secondes</p>
-      {setTimeout(()=>setStep(2),1500)&&null}</div>:
+      </div>:
     step===2?<div style={{textAlign:"center",padding:30}}><span style={{fontSize:48}}>✅</span><h2 style={{fontFamily:"var(--fd)",marginTop:8}}>Document accepté !</h2>
       <button className="bp" style={{marginTop:14}} onClick={()=>{dispatch({type:"VERIFY_ID"});setStep(3)}}>Finaliser la vérification</button></div>:null}
   </div>
@@ -3264,7 +3273,7 @@ function ConfirmDeliveryPage({annonceId, allItems, onBack}){
       <div style={{fontSize:72,marginBottom:16}}>✅</div>
       <h2 style={{fontFamily:'var(--fd)',fontSize:22,marginBottom:8}}>Confirmation enregistrée</h2>
       <p style={{fontSize:14,color:'var(--g)',lineHeight:1.6,marginBottom:16}}>
-        {confirmed==='received'?"Vous avez confirmé avoir <strong>reçu</strong> l'objet.":"Vous avez confirmé avoir <strong>récupéré</strong> l'objet."}
+        {confirmed==='received'?<>Vous avez confirmé avoir <strong>reçu</strong> l'objet.</>:<>Vous avez confirmé avoir <strong>récupéré</strong> l'objet.</>}
       </p>
       <div style={{background:'#f0fdf4',border:'1px solid #bbf7d0',borderRadius:12,padding:'14px 20px',fontSize:13,color:'#166534',marginBottom:24,width:'100%'}}>
         🕐 Horodatage : <strong>{ts}</strong>
@@ -3350,7 +3359,7 @@ function App(){
 
   const search=(query,loc)=>{setQ(query);setLq(loc||"");setCat("all");setPage("home")};
   useEffect(()=>{if(state.notifications.length){const l=state.notifications[0];if(!l.read){const type=l.kind==="badge"?"s":l.kind==="wallet"?"s":l.kind==="referral"?"w":l.kind==="dispute"?"e":"b";addToast(l.text,type);setPushNotif(l);setTimeout(()=>setPushNotif(null),4000)}}},[state.notifications.length]);
-  useEffect(()=>{if(!state.user)return;const b=state.bookings.filter(x=>x.userId===state.user.id);if(b.length>=1&&!state.badges.includes("first_rental"))dispatch({type:"EARN_BADGE",badge:"first_rental"});if(b.length>=5&&!state.badges.includes("super_renter"))dispatch({type:"EARN_BADGE",badge:"super_renter"});const BADGE_KEY='cercle_badge_verifie_notified';if(state.user.verified&&!state.badges.includes("verified")&&!localStorage.getItem(BADGE_KEY)){dispatch({type:"EARN_BADGE",badge:"verified"});localStorage.setItem(BADGE_KEY,'1');}if(state.favorites.size>=10&&!state.badges.includes("collector"))dispatch({type:"EARN_BADGE",badge:"collector"});if(state.referrals.length>=1&&!state.badges.includes("ambassador"))dispatch({type:"EARN_BADGE",badge:"ambassador"});if(state.reviews.length>=1&&!state.badges.includes("reviewer"))dispatch({type:"EARN_BADGE",badge:"reviewer"});const gr=getGrade((state.user.rentals||0)+b.length);if(["gold","platinum","diamond"].includes(gr.id)&&!state.badges.includes("loyal"))dispatch({type:"EARN_BADGE",badge:"loyal"})},[state.bookings.length,state.favorites.size,state.referrals.length,state.reviews.length,state.user?.verified]);
+  useEffect(()=>{if(!state.user)return;const b=state.bookings.filter(x=>x.userId===state.user.id);if(b.length>=1&&!state.badges.includes("first_rental"))dispatch({type:"EARN_BADGE",badge:"first_rental"});if(b.length>=5&&!state.badges.includes("super_renter"))dispatch({type:"EARN_BADGE",badge:"super_renter"});const BADGE_KEY='cercle_badge_verifie_notified';if(state.user.verified&&!state.badges.includes("verified")&&!localStorage.getItem(BADGE_KEY)){dispatch({type:"EARN_BADGE",badge:"verified"});localStorage.setItem(BADGE_KEY,'1');}if(state.favorites.size>=10&&!state.badges.includes("collector"))dispatch({type:"EARN_BADGE",badge:"collector"});if(state.referrals.length>=1&&!state.badges.includes("ambassador"))dispatch({type:"EARN_BADGE",badge:"ambassador"});if(state.reviews.length>=1&&!state.badges.includes("reviewer"))dispatch({type:"EARN_BADGE",badge:"reviewer"});const gr=getGrade((state.user.rentals||0)+b.length);if(["pilier","gardien","legende","fondateur"].includes(gr.id)&&!state.badges.includes("loyal"))dispatch({type:"EARN_BADGE",badge:"loyal"})},[state.bookings.length,state.favorites.size,state.referrals.length,state.reviews.length,state.user?.verified]);
   // Load saved user on mount
   useEffect(()=>{try{const s=window.storage;if(s){s.get('cercle_user').then(r=>{if(r&&r.value){const u=JSON.parse(r.value);dispatch({type:'LOGIN',payload:u})}}).catch(()=>{}).finally(()=>setLoaded(true))}else setLoaded(true)}catch(e){setLoaded(true)}},[]);
   // Save user to storage on login/logout
@@ -3396,7 +3405,7 @@ function App(){
         </button>
       </div>
     </div>
-    {page==="home"&&<div className="cw"><div className="cts">{CATS.map(c=><div key={c.id} className={"ct"+(cat===c.id?" on":"")} onClick={()=>setCat(c.id)}><span className="cti">{c.icon}</span><span className="ctl">{c.label}</span></div>)}</div><button className="fb" onClick={()=>setShowF(true)}><I.Flt/> Filtres{Object.values(filters).filter(v=>v&&v!=="all"&&v!=="pertinence"&&v!==0&&v!==500).length>0&&<span style={{background:"var(--p)",color:"#fff",borderRadius:"50%",width:18,height:18,display:"inline-flex",alignItems:"center",justifyContent:"center",fontSize:10,fontWeight:700,marginLeft:4}}>{Object.values(filters).filter(v=>v&&v!=="all"&&v!=="pertinence"&&v!==0&&v!==500).length}</span>}</button></div>}
+    {page==="home"&&<div className="cw"><div className="cts">{CATS.map(c=><div key={c.id} className={"ct"+(cat===c.id?" on":"")} onClick={()=>{setCat(c.id);setFilters(f=>({...f,filterCat:'all'}));}}><span className="cti">{c.icon}</span><span className="ctl">{c.label}</span></div>)}</div><button className="fb" onClick={()=>setShowF(true)}><I.Flt/> Filtres{Object.values(filters).filter(v=>v&&v!=="all"&&v!=="pertinence"&&v!==0&&v!==500).length>0&&<span style={{background:"var(--p)",color:"#fff",borderRadius:"50%",width:18,height:18,display:"inline-flex",alignItems:"center",justifyContent:"center",fontSize:10,fontWeight:700,marginLeft:4}}>{Object.values(filters).filter(v=>v&&v!=="all"&&v!=="pertinence"&&v!==0&&v!==500).length}</span>}</button></div>}
     </header>}
 
     {page==="home"&&<main className="page-tr">
