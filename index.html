@@ -206,7 +206,7 @@ body,html,#root{font-family:var(--f);color:var(--tx);background:var(--bg);-webki
 /* Overlays & Modals */
 .ov{position:fixed;inset:0;z-index:200;background:var(--w);overflow-y:auto;animation:si .4s var(--ease)}@keyframes si{from{opacity:0;transform:translateY(100%)}to{opacity:1;transform:translateY(0)}}
 .bk{position:fixed;inset:0;background:rgba(0,0,0,.4);backdrop-filter:blur(6px);z-index:300;display:flex;align-items:center;justify-content:center}.md{background:var(--w);border-radius:var(--rl);width:92%;max-width:560px;max-height:88vh;overflow-y:auto;animation:mi .3s var(--ease);box-shadow:0 20px 60px rgba(0,0,0,.3);border:1px solid rgba(0,0,0,.04)}@keyframes mi{from{opacity:0;transform:scale(.94) translateY(20px)}to{opacity:1;transform:scale(1) translateY(0)}}
-.mh{display:flex;align-items:center;justify-content:center;padding:16px 20px;border-bottom:1px solid var(--bd);position:sticky;top:0;background:var(--w);z-index:2;position:relative;border-radius:var(--rl) var(--rl) 0 0}.mh h2{font-size:16px;font-weight:700;font-family:var(--fd);letter-spacing:-.02em}.mx{position:absolute;left:14px;background:none;border:none;padding:6px;border-radius:50%;display:flex;color:var(--dk);transition:background .15s}.mx:hover{background:var(--bg)}
+.mh{display:flex;align-items:center;justify-content:center;padding:16px 20px;border-bottom:1px solid var(--bd);position:sticky;top:0;background:var(--w);z-index:2;border-radius:var(--rl) var(--rl) 0 0}.mh h2{font-size:16px;font-weight:700;font-family:var(--fd);letter-spacing:-.02em}.mx{position:absolute;left:14px;background:none;border:none;padding:6px;border-radius:50%;display:flex;color:var(--dk);transition:background .15s}.mx:hover{background:var(--bg)}
 .mb{padding:20px 24px}.mf{display:flex;justify-content:space-between;align-items:center;padding:16px 24px;border-top:1px solid var(--bd);background:var(--bgw)}
 /* Form elements */
 .fg{margin-bottom:18px}.fg label{display:block;font-size:11px;font-weight:700;margin-bottom:7px;color:var(--dk);text-transform:uppercase;letter-spacing:.05em}.fg input,.fg textarea,.fg select{width:100%;padding:12px 16px;border:1.5px solid var(--bd);border-radius:14px;font-size:13px;outline:none;transition:all .25s var(--ease);background:var(--w)}.fg input:focus,.fg textarea:focus,.fg select:focus{border-color:var(--p);box-shadow:0 0 0 4px rgba(108,99,255,.08)}.fg textarea{resize:vertical;min-height:80px}
@@ -1030,6 +1030,9 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
   const myProItems = listings.filter(i => i.isPro);
   const heroGrade = getGrade(user.rentals || 0);
   const isHeroFondateur = heroGrade.id === 'fondateur';
+  const reviewCount = state.reviews.length;
+  const avgRating = reviewCount > 0 ? (state.reviews.reduce((s,r)=>s+r.rating,0)/reviewCount).toFixed(1) : '-';
+  const responseRate = '97%';
 
   const mockListings = [
     { id: 101, title: 'Perceuse Bosch Pro', price: 12, rating: 4.95, reviews: 87, img: '🔧' },
@@ -1408,8 +1411,8 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
             <h2 style={S.name}>{profileData.name}</h2>
 
             <div style={S.subInfo}>
-              <span style={S.pillGreen}>✓ Identité vérifiée</span>
-              <span style={S.pillPurple}>🏅 Super hôte</span>
+              {user.verified && <span style={S.pillGreen}>✓ Identité vérifiée</span>}
+              {(user.superHost || (state.reviews.length >= 10 && (state.reviews.reduce((s,r)=>s+r.rating,0)/state.reviews.length) >= 4.5)) && <span style={S.pillPurple}>🏅 Super hôte</span>}
               {isHeroFondateur && <span style={{...S.pill,background:'linear-gradient(90deg,#D4AF37,#FFD700)',color:'#0a0a0a',fontWeight:800,boxShadow:'0 2px 10px rgba(212,175,55,0.5)'}}>👑 Fondateur Cercle</span>}
               <span style={S.pill}>📍 Paris</span>
               <span style={S.pill}>🗓️ Membre depuis 2024</span>
@@ -1417,17 +1420,17 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
 
             <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:12}}>
               <StarRow n={5} />
-              <span style={{fontSize:15,fontWeight:800,color:'white'}}>4.9</span>
-              <span style={{fontSize:13,color:'rgba(255,255,255,0.6)'}}>· 12 avis</span>
+              <span style={{fontSize:15,fontWeight:800,color:'white'}}>{avgRating}</span>
+              <span style={{fontSize:13,color:'rgba(255,255,255,0.6)'}}>· {reviewCount} avis</span>
             </div>
 
             {profileData.bio && <p style={S.bio}>{profileData.bio}</p>}
 
             <div style={S.statsRow}>
               {[
-                {num: listings.length || 3, lbl: 'Annonces'},
-                {num: 12, lbl: 'Avis'},
-                {num: '97%', lbl: 'Réponses'},
+                {num: listings.length || 0, lbl: 'Annonces'},
+                {num: reviewCount, lbl: 'Avis'},
+                {num: responseRate, lbl: 'Réponses'},
               ].map(s => (
                 <div key={s.lbl} style={S.statCell}>
                   <strong style={S.statNum}>{s.num}</strong>
@@ -2124,14 +2127,14 @@ function Messages({state,dispatch,cid,setCid,setPage}){
 }
 
 function SearchM({onClose,onSearch,allItems,filters,setFilters}){
-  const[q,setQ]=useState("");const[w,setW]=useState("");const[af,setAf]=useState("what");
+  const[q,setQ]=useState("");const[w,setW]=useState("");const[af,setAf]=useState("what");const[searchDate,setSearchDate]=useState(filters?.searchDate||"");
   const sugg=useMemo(()=>!q||q.length<2?[]:allItems.filter(i=>i.title.toLowerCase().includes(q.toLowerCase())).slice(0,5),[q,allItems]);
   return <><div className="smbg" onClick={onClose}/><div className="sm"><div className="smin">
     <div className="smr">
       <div className={"smf"+(af==="what"?" on":"")} onClick={()=>setAf("what")} style={{position:"relative"}}><label>Quoi ?</label><input placeholder="Perceuse, drone…" value={q} onChange={e=>setQ(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"){onSearch(q,w);onClose()}}} autoFocus/>{sugg.length>0&&af==="what"&&<div className="ac">{sugg.map(s=><div key={s.id} className="aci" onClick={()=>{onSearch(s.title,"");onClose()}}><span>{CE[s.cat]||"📦"}</span>{s.title}<span style={{marginLeft:"auto",fontSize:10,color:"var(--g)"}}>{s.price}€/j</span></div>)}</div>}</div>
       <div className={"smf"+(af==="where"?" on":"")} onClick={()=>setAf("where")} style={{position:"relative"}}><label>Où ?</label><input placeholder="Ville…" value={w} onChange={e=>setW(e.target.value)}/>{af==="where"&&w&&<div className="ac">{LOCS.filter(l=>l.toLowerCase().includes(w.toLowerCase())).slice(0,5).map(l=><div key={l} className="aci" onClick={()=>setW(l)}>📍 {l}</div>)}</div>}</div>
-      <div className={"smf"+(af==="when"?" on":"")} onClick={()=>setAf("when")}><label>Quand ?</label><input type="date"/></div>
-      <button className="smgo" onClick={()=>{onSearch(q,w);onClose()}}><I.Search/> Chercher</button>
+      <div className={"smf"+(af==="when"?" on":"")} onClick={()=>setAf("when")}><label>Quand ?</label><input type="date" value={searchDate} onChange={e=>setSearchDate(e.target.value)}/></div>
+      <button className="smgo" onClick={()=>{setFilters&&setFilters(p=>({...p,searchDate}));onSearch(q,w);onClose()}}><I.Search/> Chercher</button>
     </div>
     {af==="what"&&!q&&<><div style={{margin:"10px 0"}}><div style={{display:"flex",justifyContent:"space-between",fontSize:10,fontWeight:700,marginBottom:4}}><span>Prix max</span><span>{filters?.priceMax||500}€/j</span></div><input type="range" className="range-sl" min="5" max="500" value={filters?.priceMax||500} onChange={e=>setFilters&&setFilters(p=>({...p,priceMax:+e.target.value}))}/></div><div className="smtg"><p>Populaires</p><div className="smtl">{["Perceuse","Drone","Vélo électrique","Vidéoprojecteur","Paddle","Enceinte","Appareil photo","Coudre"].map(t=><button key={t} className="smt" onClick={()=>{onSearch(t,"");onClose()}}>{t}</button>)}</div></div></>}
   </div></div></>
@@ -3333,7 +3336,7 @@ function App(){
   const[openSection,setOpenSection]=useState(null);
   const toggleSection=(name)=>setOpenSection(prev=>prev===name?null:name);
   const[lang,setLang]=useState('fr');
-  const[filters,setFilters]=useState({priceMin:0,priceMax:500,condition:"Tous",options:[],sort:"pertinence",filterCat:"all",minRating:0});
+  const[filters,setFilters]=useState({priceMin:0,priceMax:500,condition:"Tous",options:[],sort:"pertinence",filterCat:"all",minRating:0,searchDate:""});
 
   const allPerso=useMemo(()=>[...state.items,...state.userItems].filter(i=>!i.isPro&&!i.owner?.isPro),[state.items,state.userItems]);
   const allPro=useMemo(()=>[...state.proItems,...state.userItems.filter(i=>i.isPro||i.owner?.isPro)],[state.proItems,state.userItems]);
@@ -3344,6 +3347,7 @@ function App(){
     let r=all;
     if(cat!=="all")r=r.filter(i=>i.cat===cat);
     if(filters.filterCat&&filters.filterCat!=="all")r=r.filter(i=>i.cat===filters.filterCat);
+    if(filters.searchDate)r=r.filter(i=>i.available!==false);
     if(q){const s=q.toLowerCase();r=r.filter(i=>i.title.toLowerCase().includes(s)||i.cat.includes(s)||i.location.toLowerCase().includes(s))}
     if(lq){const s=lq.toLowerCase();r=r.filter(i=>i.location.toLowerCase().includes(s))}
     r=r.filter(i=>i.price>=filters.priceMin&&i.price<=filters.priceMax);
@@ -3371,8 +3375,6 @@ function App(){
   // Header scroll effect
   useEffect(()=>{const hdr=document.querySelector('.hdr');if(!hdr)return;const onScroll=()=>{if(window.scrollY>20){hdr.classList.add('scrolled')}else{hdr.classList.remove('scrolled')}};window.addEventListener('scroll',onScroll);return()=>window.removeEventListener('scroll',onScroll)},[]);
 
-  // Intersection Observer for reveal animations
-  useEffect(()=>{const obs=new IntersectionObserver((entries)=>{entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible');obs.unobserve(e.target)}})},{threshold:0.1});const revealEls=document.querySelectorAll('[data-reveal]');revealEls.forEach(el=>obs.observe(el));return()=>obs.disconnect()},[page]);
 
   const home=()=>{setInfoPage(null);setPage("home");setQ("");setLq("");setCat("all");setSel(null)};
 
@@ -3387,7 +3389,7 @@ function App(){
         <button className={"mode-btn"+(mode==='perso'?' on':'')} onClick={()=>setMode('perso')}>👤 Particulier</button>
         <button className={"mode-btn"+(mode==='pro'?' pro-on':'')} onClick={()=>setMode('pro')}>🏢 Professionnel</button>
       </div>
-      <div className="sb" onClick={()=>setShowS(true)}><div className="ss"><span style={{marginRight:4}}>🔍</span>{q||"Rechercher un objet..."}</div><div className="ss m">{lq||"Partout"}</div><div className="ss m">Quand ?</div><button className="sbb"><I.Search/></button></div>
+      <div className="sb" onClick={()=>setShowS(true)}><div className="ss"><span style={{marginRight:4}}>🔍</span>{q||"Rechercher un objet..."}</div><div className="ss m">{lq||"Partout"}</div><div className="ss m">{filters.searchDate||"Quand ?"}</div><button className="sbb"><I.Search/></button></div>
       <div className="nr">
         {state.user&&<button className="nb" onClick={()=>setPage("create")}><I.Plus/> Proposer</button>}
         {state.user&&<button className="nb" onClick={()=>{setPage("messages");dispatch({type:"READ_N"})}}><I.Msg/>{unread>0&&<span className="ndot"/>}</button>}
@@ -3429,7 +3431,7 @@ function App(){
             <h2 style={{fontFamily:"var(--fd)",fontSize:24,fontWeight:800,letterSpacing:"-.02em",color:"var(--dk)",marginBottom:4}}>Découvrez nos annonces</h2>
             <p style={{fontSize:13,color:"var(--g)",lineHeight:1.5}}>{all.length} articles disponibles · Livraison ou remise en main propre possible</p>
           </div>
-          <button className="cl" style={{color:"var(--p)",fontSize:13,fontWeight:700,flexShrink:0}}>Voir tout →</button>
+          <button className="cl" style={{color:"var(--p)",fontSize:13,fontWeight:700,flexShrink:0}} onClick={()=>window.scrollTo({top:document.querySelector('.grid')?.offsetTop||600,behavior:'smooth'})}>Voir tout →</button>
         </div>
       </div>}
       {!q&&mode==='pro'&&<div style={{padding:"36px 28px 0",maxWidth:1520,margin:"0 auto"}}>
@@ -3440,7 +3442,7 @@ function App(){
         <h2 style={{fontFamily:"var(--fd)",fontSize:24,fontWeight:800,letterSpacing:"-.02em",color:"var(--dk)",marginBottom:4}}>{CATS.find(c=>c.id===cat)?.icon} {CATS.find(c=>c.id===cat)?.label}</h2>
         <p style={{fontSize:13,color:"var(--g)"}}>{filtered.length} annonce{filtered.length!==1?"s":""} dans cette catégorie</p>
       </div>}
-      {!q&&cat==="all"&&state.user&&<div className="reco"><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}><h3 style={{fontFamily:"var(--fd)",fontSize:20,fontWeight:700,letterSpacing:"-.01em"}}>{mode==="pro"?"Sélection Pro":"Recommandé pour vous"}</h3><button className="cl" style={{color:"var(--p)"}}>Voir tout →</button></div>
+      {!q&&cat==="all"&&state.user&&<div className="reco"><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}><h3 style={{fontFamily:"var(--fd)",fontSize:20,fontWeight:700,letterSpacing:"-.01em"}}>{mode==="pro"?"Sélection Pro":"Recommandé pour vous"}</h3><button className="cl" style={{color:"var(--p)"}} onClick={()=>window.scrollTo({top:document.querySelector('.grid')?.offsetTop||600,behavior:'smooth'})}>Voir tout →</button></div>
         <div className="reco-sc">{all.sort(()=>Math.random()-.5).slice(0,8).map(i=><div key={i.id} className="reco-c" onClick={()=>setSel(i)}><img className="reco-ci" src={i.images[0]} alt=""/><div style={{padding:"4px 8px 8px"}}><div style={{fontSize:12,fontWeight:600,marginTop:4,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{i.title}</div><div style={{fontSize:12,fontWeight:700,color:"var(--p)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{i.price}€<span style={{fontWeight:400,color:"var(--g)"}}>/j</span></div></div></div>)}</div>
       </div>}
       {mode!=='pro'&&<div style={{padding:"16px 28px 0",maxWidth:1520,margin:"0 auto"}}>
