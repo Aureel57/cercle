@@ -130,6 +130,9 @@ function reducer(s,a){switch(a.type){
   case"EARN_BADGE":{if(s.badges.includes(a.badge))return s;const bd=ALL_BADGES.find(b=>b.id===a.badge);const bName=bd?bd.name:a.badge;const bIcon=bd?bd.icon:"🏅";return{...s,badges:[...s.badges,a.badge],notifications:[{id:uid(),text:`🎉 Félicitations ! Badge ${bIcon} "${bName}" débloqué ! Continuez comme ça !`,read:false,at:new Date(),kind:"badge"},...s.notifications]}};
   case"TOGGLE_AVAIL":{const toggle=i=>i.id===a.id?{...i,available:!i.available}:i;return{...s,items:s.items.map(toggle),userItems:s.userItems.map(toggle)}};
   case"SET_PROFILE_COMPLETION":{const pc={...s.profileCompletion,...a.payload};const n={id:uid(),text:`Profil complété : ${a.label||"étape"}`,read:false,at:new Date(),kind:"system"};return{...s,profileCompletion:pc,notifications:[n,...s.notifications]}};
+  case"REMOVE_ITEM":return{...s,items:s.items.filter(i=>i.id!==a.id),userItems:s.userItems.filter(i=>i.id!==a.id)};
+  case"EDIT_ITEM":return{...s,items:s.items.map(i=>i.id===a.item.id?a.item:i),userItems:s.userItems.map(i=>i.id===a.item.id?a.item:i)};
+  case"DEBIT_WALLET":return{...s,wallet:s.wallet-a.amount};
   default:return s}}
 
 /* ========== ICONS ========== */
@@ -829,6 +832,7 @@ function Detail({item,onClose,state,dispatch,setPage,setConvId,setShowShop,setPr
   const[days,setDays]=useState(3);const[sd,setSd]=useState("2026-03-12");const[ed,setEd]=useState("2026-03-14");const[durType,setDurType]=useState("jour");const[timeSlot,setTimeSlot]=useState("");const[booked,setBooked]=useState(false);const[showRF,setShowRF]=useState(false);const[rt,setRt]=useState("");const[rr,setRr]=useState(5);
   const[payStep,setPayStep]=useState(0);const[showBid,setShowBid]=useState(false);const[bidAmt,setBidAmt]=useState('');const[payMethod,setPayMethod]=useState("card");const[cardNum,setCardNum]=useState("");const[cardExp,setCardExp]=useState("");const[cardCvc,setCardCvc]=useState("");
   const[showVerifModal,setShowVerifModal]=useState(false);
+  const[walletErr,setWalletErr]=useState(false);
   const userRentals=(state.user?.rentals||0)+state.bookings.filter(b=>b.userId===state.user?.id).length;
   const userGrade=getGrade(userRentals);
   const ins=Math.floor(item.price*days*.08),fee=Math.floor(item.price*days*userGrade.feeRate),feeBase=Math.floor(item.price*days*0.12),feeSaved=feeBase-fee,tot=item.price*days+ins+fee;
@@ -920,9 +924,10 @@ function Detail({item,onClose,state,dispatch,setPage,setConvId,setShowShop,setPr
       </>:payStep===1?<>
         <div style={{padding:"14px 0"}}>
           <h3 style={{fontFamily:"var(--fd)",fontSize:15,fontWeight:600,marginBottom:10}}>🔒 Paiement sécurisé</h3>
-          <div style={{display:"flex",gap:6,marginBottom:14,flexWrap:"wrap"}}>{[["card","💳 Carte"],["gpay","Google Pay"],["apple","🍎 Apple Pay"],["paypal","🅿️ PayPal"]].map(([id,label])=>
-            <button key={id} className={"pill"+(payMethod===id?" on":"")} onClick={()=>setPayMethod(id)}>{label}</button>
+          <div style={{display:"flex",gap:6,marginBottom:14,flexWrap:"wrap"}}>{[["card","💳 Carte"],["gpay","Google Pay"],["apple","🍎 Apple Pay"],["paypal","🅿️ PayPal"],["wallet","💳 Solde Cercle ("+state.wallet+"€)"]].map(([id,label])=>
+            <button key={id} className={"pill"+(payMethod===id?" on":"")} onClick={()=>{setPayMethod(id);setWalletErr(false);}}>{label}</button>
           )}</div>
+          {walletErr&&<p style={{color:'#ef4444',fontSize:12,marginBottom:8,fontWeight:600}}>Solde insuffisant ({state.wallet}€ disponible)</p>}
           {payMethod==="card"&&<>
             <div className="fg"><label>Numéro de carte</label><input value={cardNum} onChange={e=>setCardNum(e.target.value.replace(/\D/g,"").replace(/(.{4})/g,"$1 ").trim())} placeholder="4242 4242 4242 4242" maxLength={19}/></div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
@@ -951,7 +956,7 @@ function Detail({item,onClose,state,dispatch,setPage,setConvId,setShowShop,setPr
             <div style={{fontSize:10,color:"var(--g)",marginTop:6}}>💡 La caution de {item.deposit} € est bloquée sur votre compte et restituée automatiquement sous 48h après retour de l'objet en bon état.</div>
           </div>
         </div>
-        <div style={{display:"flex",gap:8}}><button className="bs" style={{flex:1}} onClick={()=>setPayStep(0)}>← Retour</button><button className="bp" style={{flex:2}} onClick={book}>🔒 Confirmer le paiement</button></div>
+        <div style={{display:"flex",gap:8}}><button className="bs" style={{flex:1}} onClick={()=>setPayStep(0)}>← Retour</button><button className="bp" style={{flex:2}} onClick={()=>{if(payMethod==="wallet"){if(state.wallet>=tot){dispatch({type:"DEBIT_WALLET",amount:tot});book();}else setWalletErr(true);}else book();}}>🔒 Confirmer le paiement</button></div>
       </>:null}
       <button className="bs" style={{width:"100%",marginTop:8,display:"flex",alignItems:"center",justifyContent:"center",gap:6}} onClick={startConv} disabled={!state.user}><I.Msg/> Contacter {item.owner.name}</button>
       <div style={{display:"flex",alignItems:"center",gap:6,fontSize:10,color:"var(--g)",marginTop:12,paddingTop:10,borderTop:"1px solid var(--bd)"}}>🛡️ Paiement chiffré SSL · Fonds bloqués jusqu'au retour · Caution restituable</div>
@@ -983,7 +988,7 @@ function calcSavings(rentals, avgPrice) {
   return Math.floor(rentals * avgPrice * 3 * (base - current));
 }
 
-function Profile({state, dispatch, setPage, setSelected, initTab}) {
+function Profile({state, dispatch, setPage, setSelected, initTab, setEditItem}) {
   const user = (state && state.user) || {};
   const userName = user.name || 'Noah M.';
   const userAvatar = user.avatar || null;
@@ -1475,6 +1480,8 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
                   <p style={S.listingPrice}>{l.price}€<span style={{fontWeight:400,fontSize:11,color:'var(--g)'}}>/jour</span></p>
                   <div style={S.listingRating}>⭐ {l.rating || '4.8'} <span>· {l.reviews || 0} avis</span></div>
                   <button onClick={e=>{e.stopPropagation();setQrItem(l);}} style={{marginTop:8,width:'100%',padding:'6px 0',border:'1.5px solid #d1c9ff',borderRadius:10,background:'#f5f3ff',color:'#6C63FF',fontSize:11,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:4}}>📱 QR Code</button>
+                  <button onClick={e=>{e.stopPropagation();setEditItem&&setEditItem(l);setPage&&setPage('create');}} style={{marginTop:4,width:'100%',padding:'6px 0',border:'1.5px solid #d1fae5',borderRadius:10,background:'#f0fdf4',color:'#10b981',fontSize:11,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:4}}>✏️ Modifier</button>
+                  <button onClick={e=>{e.stopPropagation();if(window.confirm('Supprimer cette annonce ?'))dispatch({type:'REMOVE_ITEM',id:l.id});}} style={{marginTop:4,width:'100%',padding:'6px 0',border:'1.5px solid #fee2e2',borderRadius:10,background:'#fef2f2',color:'#ef4444',fontSize:11,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:4}}>🗑️ Supprimer</button>
                 </div>
               </div>
             ))}
@@ -1533,6 +1540,7 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
                     <span className="prof-badge-pulse" style={{...S.resBadge(sm.color,sm.bg),animationDelay:`${i*0.1+0.3}s`}}>{sm.label}</span>
                     <span style={S.resPrice}>{b.total} €</span>
                   </div>
+                  {b.status==="confirmed"&&<button onClick={e=>{e.stopPropagation();if(!window.confirm('Annuler cette réservation ?')) return;dispatch({type:'CANCEL_BOOK',id:b.id});}} style={{marginTop:8,width:'100%',padding:'6px 0',border:'1.5px solid #fee2e2',borderRadius:8,background:'#fef2f2',color:'#ef4444',fontSize:11,fontWeight:700,cursor:'pointer'}}>✕ Annuler la réservation</button>}
                 </div>
               </div>;
             })}
@@ -2041,8 +2049,8 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
   );
 }
 
-function CreateListing({state,dispatch,setPage,mode}){
-  const[f,setF]=useState({title:"",cat:"tools",price:"",location:state.user?.location||"Paris 11e",condition:"Comme neuf",description:"",deposit:""});
+function CreateListing({state,dispatch,setPage,mode,editItem,setEditItem}){
+  const[f,setF]=useState(editItem?{title:editItem.title,cat:editItem.cat,price:String(editItem.price),location:editItem.location,condition:editItem.condition,description:editItem.description||"",deposit:String(editItem.deposit||"")}:{title:"",cat:"tools",price:"",location:state.user?.location||"Paris 11e",condition:"Comme neuf",description:"",deposit:""});
   const[photos,setPhotos]=useState([]);
   const[drag,setDrag]=useState(false);
   const fileRef=useRef(null);
@@ -2061,13 +2069,18 @@ function CreateListing({state,dispatch,setPage,mode}){
   const go=()=>{
     if(!f.title||!f.price)return;
     const imgs=photos.length>0?photos:[mkImg(f.cat,99,0),mkImg(f.cat,99,1),mkImg(f.cat,99,2)];
-    dispatch({type:"ADD_ITEM",payload:{...f,price:+f.price,deposit:+f.deposit||+f.price*3,photos,images:imgs,isPro:!!state.user?.isPro}});
+    if(editItem){
+      dispatch({type:"EDIT_ITEM",item:{...editItem,...f,price:+f.price,deposit:+f.deposit||+f.price*3,images:photos.length>0?photos:editItem.images}});
+      setEditItem&&setEditItem(null);
+    } else {
+      dispatch({type:"ADD_ITEM",payload:{...f,price:+f.price,deposit:+f.deposit||+f.price*3,photos,images:imgs,isPro:!!state.user?.isPro}});
+    }
     setPage("profile");
   };
 
   return <div style={{maxWidth:540,margin:"0 auto",padding:28}}>
-    <button className="cl" style={{marginBottom:14,display:"flex",alignItems:"center",gap:5}} onClick={()=>setPage("profile")}><I.Back/> Retour</button>
-    <h1 style={{fontFamily:"var(--fd)",fontSize:22,marginBottom:18}}>Créer une annonce</h1>
+    <button className="cl" style={{marginBottom:14,display:"flex",alignItems:"center",gap:5}} onClick={()=>{setEditItem&&setEditItem(null);setPage("profile")}}><I.Back/> Retour</button>
+    <h1 style={{fontFamily:"var(--fd)",fontSize:22,marginBottom:18}}>{editItem?'Modifier l\'annonce':'Créer une annonce'}</h1>
     <div className="fg"><label>Titre *</label><input value={f.title} onChange={e=>u("title",e.target.value)} placeholder="Ex: Perceuse Bosch Pro"/></div>
     <div className="fg"><label>Catégorie</label><select value={f.cat} onChange={e=>u("cat",e.target.value)}>{CATS.filter(c=>c.id!=="all").map(c=><option key={c.id} value={c.id}>{c.icon} {c.label}</option>)}</select></div>
     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
@@ -3112,7 +3125,7 @@ function VerifyId({state,dispatch,setPage}){
 function DisputePage({state,dispatch,setPage}){
   const[reason,setReason]=useState("");const[bookId,setBookId]=useState("");const[desc,setDesc]=useState("");
   const myBook=state.bookings.filter(b=>b.userId===state.user?.id||b.ownerId===state.user?.id);
-  const submit=()=>{if(!reason||!bookId)return;dispatch({type:"DISPUTE",payload:{id:uid(),bookingId:bookId,reason,desc,status:"open",by:state.user.id,date:new Date()}});setReason("");setDesc("")};
+  const submit=()=>{if(!reason||!bookId)return;if(!window.confirm('Êtes-vous sûr de vouloir ouvrir ce litige ?')) return;dispatch({type:"DISPUTE",payload:{id:uid(),bookingId:bookId,reason,desc,status:"open",by:state.user.id,date:new Date()}});setReason("");setDesc("")};
   return <div style={{maxWidth:540,margin:"0 auto",padding:28}}>
     <button className="cl" style={{marginBottom:14,display:"flex",alignItems:"center",gap:5}} onClick={()=>setPage("profile")}><I.Back/> Retour</button>
     <h1 style={{fontFamily:"var(--fd)",fontSize:22,marginBottom:6}}>⚖️ Litiges</h1>
@@ -3337,6 +3350,8 @@ function App(){
   const toggleSection=(name)=>setOpenSection(prev=>prev===name?null:name);
   const[lang,setLang]=useState('fr');
   const[filters,setFilters]=useState({priceMin:0,priceMax:500,condition:"Tous",options:[],sort:"pertinence",filterCat:"all",minRating:0,searchDate:""});
+  const[openCol,setOpenCol]=useState(-1);
+  const[editItem,setEditItem]=useState(null);
 
   const allPerso=useMemo(()=>[...state.items,...state.userItems].filter(i=>!i.isPro&&!i.owner?.isPro),[state.items,state.userItems]);
   const allPro=useMemo(()=>[...state.proItems,...state.userItems.filter(i=>i.isPro||i.owner?.isPro)],[state.proItems,state.userItems]);
@@ -3372,11 +3387,14 @@ function App(){
   useEffect(()=>{if(state.user?.isPro)setMode('pro')},[state.user?.isPro]);
   useEffect(()=>{const t=setTimeout(()=>setSplash(false),1200);return()=>clearTimeout(t)},[]);
 
+  // Scroll to top on page change
+  useEffect(()=>{ window.scrollTo({top:0,behavior:'instant'}); }, [page]);
   // Header scroll effect
   useEffect(()=>{const hdr=document.querySelector('.hdr');if(!hdr)return;const onScroll=()=>{if(window.scrollY>20){hdr.classList.add('scrolled')}else{hdr.classList.remove('scrolled')}};window.addEventListener('scroll',onScroll);return()=>window.removeEventListener('scroll',onScroll)},[]);
 
 
   const home=()=>{setInfoPage(null);setPage("home");setQ("");setLq("");setCat("all");setSel(null)};
+  const reco=useMemo(()=>[...all].sort(()=>Math.random()-.5).slice(0,8),[all.length]);
 
   if(confirmPage){const allIt=[...state.items,...state.proItems,...state.userItems];return <Ctx.Provider value={{dark,setDark,lang,setLang}}><div className={(dark?"dark":"")}><style>{css}</style><ConfirmDeliveryPage annonceId={confirmPage.annonce} allItems={allIt} onBack={()=>setConfirmPage(null)}/></div></Ctx.Provider>;}
 
@@ -3443,7 +3461,7 @@ function App(){
         <p style={{fontSize:13,color:"var(--g)"}}>{filtered.length} annonce{filtered.length!==1?"s":""} dans cette catégorie</p>
       </div>}
       {!q&&cat==="all"&&state.user&&<div className="reco"><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}><h3 style={{fontFamily:"var(--fd)",fontSize:20,fontWeight:700,letterSpacing:"-.01em"}}>{mode==="pro"?"Sélection Pro":"Recommandé pour vous"}</h3><button className="cl" style={{color:"var(--p)"}} onClick={()=>window.scrollTo({top:document.querySelector('.grid')?.offsetTop||600,behavior:'smooth'})}>Voir tout →</button></div>
-        <div className="reco-sc">{all.sort(()=>Math.random()-.5).slice(0,8).map(i=><div key={i.id} className="reco-c" onClick={()=>setSel(i)}><img className="reco-ci" src={i.images[0]} alt=""/><div style={{padding:"4px 8px 8px"}}><div style={{fontSize:12,fontWeight:600,marginTop:4,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{i.title}</div><div style={{fontSize:12,fontWeight:700,color:"var(--p)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{i.price}€<span style={{fontWeight:400,color:"var(--g)"}}>/j</span></div></div></div>)}</div>
+        <div className="reco-sc">{reco.map(i=><div key={i.id} className="reco-c" onClick={()=>setSel(i)}><img className="reco-ci" src={i.images[0]} alt=""/><div style={{padding:"4px 8px 8px"}}><div style={{fontSize:12,fontWeight:600,marginTop:4,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{i.title}</div><div style={{fontSize:12,fontWeight:700,color:"var(--p)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{i.price}€<span style={{fontWeight:400,color:"var(--g)"}}>/j</span></div></div></div>)}</div>
       </div>}
       {mode!=='pro'&&<div style={{padding:"16px 28px 0",maxWidth:1520,margin:"0 auto"}}>
         <div style={{display:"flex",gap:4,background:"var(--bg)",borderRadius:28,padding:3,border:"1px solid var(--bd)",width:"fit-content"}}>
@@ -3461,9 +3479,9 @@ function App(){
       <div className="grid" style={{paddingTop:16}}>{filtered.map(i=><Card key={i.id} item={i} onOpen={setSel} favs={state.favorites} dispatch={dispatch} onAuthRequired={state.user?null:()=>setShowA("login")}/>)}</div>}
     </main>}
 
-    {page==="profile"&&state.user&&<Profile state={state} dispatch={dispatch} setPage={setPage} setSelected={setSel} initTab={profTab}/>}
+    {page==="profile"&&state.user&&<Profile state={state} dispatch={dispatch} setPage={setPage} setSelected={setSel} initTab={profTab} setEditItem={setEditItem}/>}
     {page==="messages"&&state.user&&<Messages state={state} dispatch={dispatch} cid={cid} setCid={setCid} setPage={setPage}/>}
-    {page==="create"&&state.user&&<CreateListing state={state} dispatch={dispatch} setPage={setPage} mode={mode}/>}
+    {page==="create"&&state.user&&<CreateListing state={state} dispatch={dispatch} setPage={setPage} mode={mode} editItem={editItem} setEditItem={setEditItem}/>}
     {(page==="create"||page==="profile"||page==="messages"||page==="dashboard"||page==="referral"||page==="verify"||page==="dispute"||page==="wallet"||page==="badges")&&!state.user&&<div className="empty" style={{paddingTop:100}}><span>🔒</span><h2>Connectez-vous</h2><p>Vous devez être connecté pour accéder à cette page.</p><button className="bp" style={{marginTop:14}} onClick={()=>setShowA("login")}>Se connecter</button></div>}
 
     {page==="home"&&<footer style={{background:"linear-gradient(160deg,#6C63FF 0%,#7c5ce7 35%,#5a7fff 65%,#4ECDC4 100%)",marginTop:0,paddingBottom:0}}>
@@ -3484,10 +3502,10 @@ function App(){
       </div>
       {/* Accordéons */}
       <div style={{maxWidth:1200,margin:"0 auto",padding:"0 24px",display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:32,borderTop:"1px solid rgba(255,255,255,0.15)",paddingTop:32}}>
-        {[{key:"assistance",label:"Assistance",links:[{t:"Centre d'aide",a:()=>setShowChat(true)},{t:"Guide de démarrage",a:()=>{setInfoPage("guide");window.scrollTo(0,0)}},{t:"Résoudre un litige",a:()=>{if(state.user)setPage("dispute");else setShowA("login")}},{t:"Sécurité paiements",a:()=>{setInfoPage("security");window.scrollTo(0,0)}},{t:"Nous contacter",a:()=>{setInfoPage("contact");window.scrollTo(0,0)}}]},{key:"communaute",label:"Communauté",links:[{t:"Blog Cercle",a:()=>{setInfoPage("blog");window.scrollTo(0,0)}},{t:"Forum d'entraide",a:()=>{setInfoPage("forum");window.scrollTo(0,0)}},{t:"Guides pratiques",a:()=>{setInfoPage("guides");window.scrollTo(0,0)}},{t:"Parrainage",a:()=>{if(state.user)setPage("referral");else setShowA("login")}},{t:"Impact environnemental",a:()=>{setInfoPage("impact");window.scrollTo(0,0)}},{t:"Témoignages",a:()=>{setInfoPage("temoignages");window.scrollTo(0,0)}}]},{key:"proprietaire",label:"Propriétaire",links:[{t:"Proposer un objet",a:()=>{if(state.user)setPage("create");else setShowA("login")}},{t:"Tableau de bord",a:()=>{if(state.user)setPage("dashboard");else setShowA("login")}},{t:"Conseils pour louer",a:()=>{setInfoPage("conseils");window.scrollTo(0,0)}},{t:"Maximiser ses revenus",a:()=>{setInfoPage("revenus");window.scrollTo(0,0)}},{t:"Bonnes photos",a:()=>{setInfoPage("photos");window.scrollTo(0,0)}},{t:"Super Proprio",a:()=>{setInfoPage("superproprio");window.scrollTo(0,0)}}]},{key:"cercle",label:"Cercle",links:[{t:"À propos",a:()=>{setInfoPage("about");window.scrollTo(0,0)}},{t:"Notre mission",a:()=>{setInfoPage("mission");window.scrollTo(0,0)}},{t:"Carrières",a:()=>{setInfoPage("careers");window.scrollTo(0,0)}},{t:"Espace presse",a:()=>{setInfoPage("press");window.scrollTo(0,0)}},{t:"Partenariats",a:()=>{setInfoPage("partners");window.scrollTo(0,0)}},{t:"Newsletter",a:()=>{setInfoPage("newsletter");window.scrollTo(0,0)}}]}].map(sec=>(
+        {[{key:"assistance",label:"Assistance",links:[{t:"Centre d'aide",a:()=>setShowChat(true)},{t:"Guide de démarrage",a:()=>{setInfoPage("guide");window.scrollTo(0,0)}},{t:"Résoudre un litige",a:()=>{if(state.user)setPage("dispute");else setShowA("login")}},{t:"Sécurité paiements",a:()=>{setInfoPage("security");window.scrollTo(0,0)}},{t:"Nous contacter",a:()=>{setInfoPage("contact");window.scrollTo(0,0)}}]},{key:"communaute",label:"Communauté",links:[{t:"Blog Cercle",a:()=>{setInfoPage("blog");window.scrollTo(0,0)}},{t:"Forum d'entraide",a:()=>{setInfoPage("forum");window.scrollTo(0,0)}},{t:"Guides pratiques",a:()=>{setInfoPage("guides");window.scrollTo(0,0)}},{t:"Parrainage",a:()=>{if(state.user)setPage("referral");else setShowA("login")}},{t:"Impact environnemental",a:()=>{setInfoPage("impact");window.scrollTo(0,0)}},{t:"Témoignages",a:()=>{setInfoPage("temoignages");window.scrollTo(0,0)}}]},{key:"proprietaire",label:"Propriétaire",links:[{t:"Proposer un objet",a:()=>{if(state.user)setPage("create");else setShowA("login")}},{t:"Tableau de bord",a:()=>{if(state.user)setPage("dashboard");else setShowA("login")}},{t:"Conseils pour louer",a:()=>{setInfoPage("conseils");window.scrollTo(0,0)}},{t:"Maximiser ses revenus",a:()=>{setInfoPage("revenus");window.scrollTo(0,0)}},{t:"Bonnes photos",a:()=>{setInfoPage("photos");window.scrollTo(0,0)}},{t:"Super Proprio",a:()=>{setInfoPage("superproprio");window.scrollTo(0,0)}}]},{key:"cercle",label:"Cercle",links:[{t:"À propos",a:()=>{setInfoPage("about");window.scrollTo(0,0)}},{t:"Notre mission",a:()=>{setInfoPage("mission");window.scrollTo(0,0)}},{t:"Carrières",a:()=>{setInfoPage("careers");window.scrollTo(0,0)}},{t:"Espace presse",a:()=>{setInfoPage("press");window.scrollTo(0,0)}},{t:"Partenariats",a:()=>{setInfoPage("partners");window.scrollTo(0,0)}},{t:"Newsletter",a:()=>{setInfoPage("newsletter");window.scrollTo(0,0)}}]}].map((sec,i)=>(
           <div key={sec.key}>
-            <div style={{fontWeight:700,fontSize:11,letterSpacing:"0.08em",textTransform:"uppercase",color:"rgba(255,255,255,0.6)",marginBottom:14}}>{sec.label}</div>
-            {sec.links.map(l=><div key={l.t} onClick={l.a} style={{fontSize:13,color:"rgba(255,255,255,0.85)",padding:"5px 0",cursor:"pointer",transition:"color .15s"}} onMouseEnter={e=>e.currentTarget.style.color="#fff"} onMouseLeave={e=>e.currentTarget.style.color="rgba(255,255,255,0.85)"}>{l.t}</div>)}
+            <div style={{fontWeight:700,fontSize:11,letterSpacing:"0.08em",textTransform:"uppercase",color:"rgba(255,255,255,0.6)",marginBottom:14,cursor:'pointer'}} onClick={()=>setOpenCol(i===openCol?-1:i)}>{sec.label}</div>
+            <div style={{display:window.innerWidth<640&&openCol!==i?'none':'block'}}>{sec.links.map(l=><div key={l.t} onClick={l.a} style={{fontSize:13,color:"rgba(255,255,255,0.85)",padding:"5px 0",cursor:"pointer",transition:"color .15s"}} onMouseEnter={e=>e.currentTarget.style.color="#fff"} onMouseLeave={e=>e.currentTarget.style.color="rgba(255,255,255,0.85)"}>{l.t}</div>)}</div>
           </div>
         ))}
       </div>
@@ -3519,10 +3537,11 @@ function App(){
     {page==="dispute"&&state.user&&<DisputePage state={state} dispatch={dispatch} setPage={setPage}/>}
     {page==="wallet"&&state.user&&<WalletPage state={state} dispatch={dispatch} setPage={setPage}/>}
     {page==="badges"&&state.user&&<BadgesPage state={state} setPage={setPage}/>}
+    {!["home","profile","messages","create","map","notifs","dashboard","gestion","referral","verify","dispute","wallet","badges","detail"].includes(page)&&<div style={{textAlign:'center',padding:80}}><div style={{fontSize:64}}>🔍</div><h2 style={{color:'var(--dk)'}}>Page introuvable</h2><p style={{color:'var(--g)'}}>Cette page n'existe pas.</p><button onClick={()=>setPage('home')} style={{background:'var(--p)',color:'#fff',border:'none',borderRadius:10,padding:'10px 24px',cursor:'pointer',marginTop:16}}>Retour à l'accueil</button></div>}
     {showShop&&<Shop owner={showShop} items={all} onClose={()=>setShowShop(null)} onOpen={i=>{setShowShop(null);setSel(i)}} state={state} dispatch={dispatch} onAuthRequired={()=>setShowA("login")}/>}
     {showGallery&&<Gallery images={showGallery.imgs} start={showGallery.idx||0} onClose={()=>setShowGallery(null)}/>}
     {/* Chatbot */}
-    {showChat?<Chatbot items={all} onOpen={i=>{setShowChat(false);setSel(i)}} onClose={()=>setShowChat(false)}/>:<button className="chatbot-btn" onClick={()=>setShowChat(true)}>🤖</button>}
+    {page!=="messages"&&sel===null&&(showChat?<Chatbot items={all} onOpen={i=>{setShowChat(false);setSel(i)}} onClose={()=>setShowChat(false)}/>:<button className="chatbot-btn" onClick={()=>setShowChat(true)}>🤖</button>)}
     {/* Push notification */}
     {pushNotif&&<div className="push"><span style={{fontSize:16}}>🔔</span><div style={{flex:1,fontSize:12}}><div style={{fontWeight:700}}>Cercle</div>{pushNotif.text}</div><button className="push-close" onClick={()=>setPushNotif(null)}>✕</button></div>}
     {menu&&<div style={{position:"fixed",inset:0,zIndex:99}} onClick={()=>setMenu(false)}/>}
