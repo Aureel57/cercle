@@ -613,7 +613,7 @@ function Card({item,onOpen,favs,dispatch,onAuthRequired}){return <div className=
 
 function AuthModal({onClose,dispatch,mode:im}){
   const[mode,setMode]=useState(im||"login");const[step,setStep]=useState(0);const[acctType,setAcctType]=useState("perso");
-  const[f,setF]=useState({name:"",email:"",password:"",location:"Paris 11e",bio:"",company:"",siret:"",sector:"",tva:"",phone:"",website:""});
+  const[f,setF]=useState({firstName:"",lastName:"",name:"",dob:"",email:"",password:"",phone:"",address:"",postalCode:"",city:"",bio:"",avatarUrl:"",company:"",siret:"",sector:"",tva:"",website:""});
   const[err,setErr]=useState("");const[loading,setLoading]=useState("");
   const u=(k,v)=>setF(p=>({...p,[k]:v}));
   const go=async()=>{
@@ -640,11 +640,12 @@ function AuthModal({onClose,dispatch,mode:im}){
     }else{
       if(step===0)return setStep(1);
       if(acctType==="perso"){
-        if(!f.name||!f.email||!f.password){setErr("Remplissez tous les champs");return}
+        if(!f.firstName||!f.lastName||!f.email||!f.password){setErr("Remplissez les champs obligatoires (*)");return}
         setLoading("email");
         try{
           const cred=await auth.createUserWithEmailAndPassword(f.email,f.password);
-          const userData={id:cred.user.uid,name:f.name,email:f.email,avatar:"😊",verified:false,since:2026,bio:f.bio,location:f.location,rating:0,rentals:0,responseTime:"~1h",isPro:false,wallet:0};
+          const fullName=`${f.firstName.trim()} ${f.lastName.trim()}`;
+          const userData={id:cred.user.uid,firstName:f.firstName.trim(),lastName:f.lastName.trim(),name:fullName,email:f.email,dob:f.dob,phone:f.phone,address:f.address,postalCode:f.postalCode,city:f.city,location:f.city||"France",avatar:f.avatarUrl||"😊",avatarUrl:f.avatarUrl||null,verified:false,since:2026,bio:f.bio,rating:0,rentals:0,responseTime:"~1h",isPro:false,wallet:0};
           await db.collection('users').doc(cred.user.uid).set(userData);
           dispatch({type:"LOGIN",payload:userData});
           setLoading("");onClose();
@@ -654,7 +655,7 @@ function AuthModal({onClose,dispatch,mode:im}){
         setLoading("email");
         try{
           const cred=await auth.createUserWithEmailAndPassword(f.email,f.password);
-          const userData={id:cred.user.uid,name:f.company,email:f.email,avatar:"🏢",verified:true,since:2026,bio:f.sector?`Secteur : ${f.sector}`:"Professionnel",location:f.location,rating:0,rentals:0,responseTime:"~15 min",isPro:true,company:f.company,siret:f.siret,tva:f.tva,phone:f.phone,website:f.website,sector:f.sector,wallet:0};
+          const userData={id:cred.user.uid,name:f.company,email:f.email,avatar:"🏢",verified:true,since:2026,bio:f.sector?`Secteur : ${f.sector}`:"Professionnel",city:f.city,location:f.city||"France",rating:0,rentals:0,responseTime:"~15 min",isPro:true,company:f.company,siret:f.siret,tva:f.tva,phone:f.phone,website:f.website,sector:f.sector,wallet:0};
           await db.collection('users').doc(cred.user.uid).set(userData);
           dispatch({type:"LOGIN",payload:userData});
           setLoading("");onClose();
@@ -753,13 +754,34 @@ function AuthModal({onClose,dispatch,mode:im}){
           </div>
           <div className="fg"><label>Email professionnel <span style={{color:"var(--p)"}}>*</span></label><input type="email" value={f.email} onChange={e=>u("email",e.target.value)} placeholder="contact@entreprise.fr"/></div>
           <div className="fg"><label>Mot de passe <span style={{color:"var(--p)"}}>*</span></label><input type="password" value={f.password} onChange={e=>u("password",e.target.value)} placeholder="••••••••"/></div>
-          <div className="fg"><label>Ville</label><select value={f.location} onChange={e=>u("location",e.target.value)}>{LOCS.map(l=><option key={l}>{l}</option>)}</select></div>
+          <div style={{display:"grid",gridTemplateColumns:"110px 1fr",gap:8}}>
+            <div className="fg"><label>Code postal</label><input type="text" value={f.postalCode} onChange={e=>u("postalCode",e.target.value.replace(/\D/g,"").slice(0,5))} placeholder="75001" maxLength="5"/></div>
+            <div className="fg"><label>Ville</label><input type="text" value={f.city} onChange={e=>u("city",e.target.value)} placeholder="Votre ville"/></div>
+          </div>
         </>:<>
-          {/* Particulier fields */}
-          <div className="fg"><label>Nom complet</label><input value={f.name} onChange={e=>u("name",e.target.value)} placeholder="Jean Dupont"/></div>
-          <div className="fg"><label>Email</label><input type="email" value={f.email} onChange={e=>u("email",e.target.value)} placeholder="jean@email.com"/></div>
-          <div className="fg"><label>Mot de passe</label><input type="password" value={f.password} onChange={e=>u("password",e.target.value)} placeholder="••••••••"/></div>
-          <div className="fg"><label>Ville</label><select value={f.location} onChange={e=>u("location",e.target.value)}>{LOCS.map(l=><option key={l}>{l}</option>)}</select></div>
+          {/* Particulier — formulaire complet */}
+          <div style={{textAlign:"center",marginBottom:16}}>
+            <div style={{width:76,height:76,borderRadius:"50%",margin:"0 auto 10px",background:"#EDE9FE",display:"flex",alignItems:"center",justifyContent:"center",overflow:"hidden",border:"2.5px solid #D8B4FE",flexShrink:0}}>
+              {f.avatarUrl?<img src={f.avatarUrl} style={{width:"100%",height:"100%",objectFit:"cover"}} alt=""/>:<span style={{fontSize:36}}>😊</span>}
+            </div>
+            <label style={{fontSize:12,color:"var(--p)",fontWeight:600,cursor:"pointer",display:"inline-flex",alignItems:"center",gap:5}}>
+              📷 Ajouter une photo de profil <span style={{color:"var(--gl)",fontWeight:400}}>(optionnel)</span>
+              <input type="file" accept="image/*" style={{display:"none"}} onChange={e=>{if(e.target.files[0]){const r=new FileReader();r.onload=ev=>u("avatarUrl",ev.target.result);r.readAsDataURL(e.target.files[0])}}}/>
+            </label>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+            <div className="fg"><label>Prénom <span style={{color:"var(--p)"}}>*</span></label><input value={f.firstName} onChange={e=>u("firstName",e.target.value)} placeholder="Jean"/></div>
+            <div className="fg"><label>Nom <span style={{color:"var(--p)"}}>*</span></label><input value={f.lastName} onChange={e=>u("lastName",e.target.value)} placeholder="Dupont"/></div>
+          </div>
+          <div className="fg"><label>Date de naissance</label><input type="date" value={f.dob} onChange={e=>u("dob",e.target.value)} max={new Date(new Date().setFullYear(new Date().getFullYear()-18)).toISOString().split("T")[0]}/></div>
+          <div className="fg"><label>Email <span style={{color:"var(--p)"}}>*</span></label><input type="email" value={f.email} onChange={e=>u("email",e.target.value)} placeholder="jean@email.com"/></div>
+          <div className="fg"><label>Mot de passe <span style={{color:"var(--p)"}}>*</span></label><input type="password" value={f.password} onChange={e=>u("password",e.target.value)} placeholder="••••••••" minLength="6"/></div>
+          <div className="fg"><label>Téléphone</label><input type="tel" value={f.phone} onChange={e=>u("phone",e.target.value)} placeholder="06 12 34 56 78"/></div>
+          <div className="fg"><label>Adresse (rue et numéro)</label><input value={f.address} onChange={e=>u("address",e.target.value)} placeholder="12 rue de la Paix"/></div>
+          <div style={{display:"grid",gridTemplateColumns:"110px 1fr",gap:8}}>
+            <div className="fg"><label>Code postal</label><input type="text" value={f.postalCode} onChange={e=>u("postalCode",e.target.value.replace(/\D/g,"").slice(0,5))} placeholder="75001" maxLength="5"/></div>
+            <div className="fg"><label>Ville</label><input type="text" value={f.city} onChange={e=>u("city",e.target.value)} placeholder="Votre ville ou village"/></div>
+          </div>
         </>}
         {err&&<p style={{color:"var(--p)",fontSize:12,marginBottom:8}}>{err}</p>}
         <button className="bp" style={{width:"100%",marginTop:6,marginBottom:10,background:acctType==="pro"?"#2563EB":undefined}} onClick={go}>{acctType==="pro"?"Créer mon compte Pro":"Créer mon compte"}</button>
