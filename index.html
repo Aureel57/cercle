@@ -122,7 +122,8 @@ const PRO_RAW=[{t:"Nacelle élévatrice 12m",c:"tools",p:120},{t:"Mini-pelle 1.5
 const buildProItems=()=>PRO_RAW.map((r,i)=>({id:1000+i,title:r.t,cat:r.c,price:r.p,images:[mkImg(r.c,1000+i,0),mkImg(r.c,1000+i,1),mkImg(r.c,1000+i,2)],location:LOCS[(i+3)%LOCS.length],rating:+(4.7+Math.random()*.29).toFixed(2),reviews:Math.floor(20+Math.random()*200),owner:PRO_USERS[i%PRO_USERS.length],description:"Matériel professionnel certifié. Maintenance régulière. Livraison possible sur chantier/site.",deposit:Math.floor(r.p*5+Math.random()*200),condition:"Comme neuf",createdAt:"2025",available:true,isPro:true,lat:(LL[LOCS[(i+3)%LOCS.length]]||[48.86,2.35])[0]+(.01*Math.random()-.005),lng:(LL[LOCS[(i+3)%LOCS.length]]||[48.86,2.35])[1]+(.01*Math.random()-.005)}));
 
 /* ========== REDUCER ========== */
-const init={user:null,items:buildItems(),proItems:buildProItems(),favorites:new Set(),bookings:[],messages:[],conversations:[],reviews:[],notifications:[],userItems:[],payments:[],referrals:[],disputes:[],wallet:0,badges:[],profileCompletion:{identity:false,phone:false,drivingLicense:false,bankAccount:false}};
+const _savedItems=(()=>{try{const d=localStorage.getItem('cercle_items');return d?JSON.parse(d):[];}catch(e){return[];}})();
+const init={user:null,items:buildItems(),proItems:buildProItems(),favorites:new Set(),bookings:[],messages:[],conversations:[],reviews:[],notifications:[],userItems:_savedItems,payments:[],referrals:[],disputes:[],wallet:0,badges:[],profileCompletion:{identity:false,phone:false,drivingLicense:false,bankAccount:false}};
 function reducer(s,a){switch(a.type){
   case"LOGIN":return{...s,user:{...a.payload,refCode:a.payload.refCode||uid().toUpperCase().slice(0,6)}};
   case"LOGOUT":return{...s,user:null};
@@ -145,7 +146,7 @@ function reducer(s,a){switch(a.type){
     return{...s,messages:[...s.messages,m],conversations:cs}}
   case"READ_N":return{...s,notifications:s.notifications.map(n=>({...n,read:true}))};
   case"REVIEW":{const r=a.payload;const items=s.items.map(i=>i.id===r.itemId?{...i,reviews:i.reviews+1,rating:+((i.rating*i.reviews+r.rating)/(i.reviews+1)).toFixed(2)}:i);return{...s,reviews:[...s.reviews,r],items}}
-  case"ADD_ITEM":{const it={...a.payload,id:s.items.length+s.userItems.length+s.proItems.length+100,owner:s.user,rating:0,reviews:0,createdAt:"2026",isPro:a.payload.isPro||false};return{...s,userItems:[...s.userItems,it],notifications:[{id:uid(),text:`"${it.title}" publiée !`,read:false,at:new Date()},...s.notifications]}}
+  case"ADD_ITEM":{const it={...a.payload,id:uid(),owner:s.user,rating:0,reviews:0,createdAt:new Date().toISOString(),isPro:a.payload.isPro||false};const newUserItems=[...s.userItems,it];try{localStorage.setItem('cercle_items',JSON.stringify(newUserItems));}catch(e){}if(window.db&&s.user){window.db.collection('items').doc(it.id).set(it).catch(console.error);}return{...s,userItems:newUserItems,notifications:[{id:uid(),text:`"${it.title}" publiée !`,read:false,at:new Date()},...s.notifications]}}
   case"READ_ONE":return{...s,notifications:s.notifications.map(n=>n.id===a.id?{...n,read:true}:n)};
   case"REFERRAL":{const n={id:uid(),text:`${a.name} a rejoint Cercle ! +5€`,read:false,at:new Date(),kind:"referral"};return{...s,referrals:[...s.referrals,{id:uid(),name:a.name,date:new Date(),bonus:5}],notifications:[n,...s.notifications]}}
   case"DISPUTE":return{...s,disputes:[...s.disputes,a.payload],notifications:[{id:uid(),text:"Litige ouvert",read:false,at:new Date(),kind:"dispute"},...s.notifications]};
@@ -622,11 +623,59 @@ function Card({item,onOpen,favs,dispatch,onAuthRequired}){return <div className=
   </div>
 </div>}
 
+function CGUModal({onClose}){
+  return <div className="bk" onClick={onClose}><div className="md" onClick={e=>e.stopPropagation()} style={{maxWidth:560}}>
+    <div className="mh"><button className="mx" onClick={onClose}><I.X/></button><h2>Conditions Générales d'Utilisation</h2></div>
+    <div className="mb" style={{overflowY:'auto',maxHeight:'65vh',fontSize:13,lineHeight:1.75,color:'var(--tx)'}}>
+      <p style={{color:'var(--g)',fontSize:11,marginBottom:16}}>Dernière mise à jour : 28 avril 2026</p>
+      <h3 style={{fontWeight:700,marginBottom:6,marginTop:16}}>1. Objet</h3>
+      <p>Cercle est une plateforme de mise en relation entre particuliers et professionnels pour la location d'objets. Les présentes CGU régissent l'utilisation du service accessible sur cercle.fr.</p>
+      <h3 style={{fontWeight:700,marginBottom:6,marginTop:16}}>2. Inscription et compte</h3>
+      <p>L'inscription est gratuite. L'utilisateur s'engage à fournir des informations exactes, sincères et à jour. Il est responsable de la confidentialité de ses identifiants. Cercle se réserve le droit de suspendre ou supprimer tout compte en cas de violation des présentes CGU, d'abus ou de comportement frauduleux.</p>
+      <h3 style={{fontWeight:700,marginBottom:6,marginTop:16}}>3. Annonces et locations</h3>
+      <p>Les annonces doivent décrire fidèlement les objets proposés. Sont interdits : les objets illégaux, dangereux, contrefaits ou soumis à réglementation spéciale. Le propriétaire fixe librement son prix journalier. Toute réservation acceptée constitue un engagement contractuel entre les deux parties.</p>
+      <h3 style={{fontWeight:700,marginBottom:6,marginTop:16}}>4. Paiements et commissions</h3>
+      <p>Cercle perçoit une commission sur chaque transaction selon le grade de l'utilisateur (de 3% pour les Fondateurs Cercle à 12% pour les Voisins). Les paiements sont sécurisés SSL. La caution est bloquée pendant la location et restituée sous 48h après confirmation de retour en bon état.</p>
+      <h3 style={{fontWeight:700,marginBottom:6,marginTop:16}}>5. Responsabilités</h3>
+      <p>Cercle est une plateforme d'intermédiation et n'est pas partie aux contrats de location. Une protection jusqu'à 2 000 € est incluse pour les objets loués via Cercle. En cas de litige, Cercle peut intervenir en médiateur sans obligation de résultat.</p>
+      <h3 style={{fontWeight:700,marginBottom:6,marginTop:16}}>6. Résiliation</h3>
+      <p>L'utilisateur peut supprimer son compte à tout moment depuis les paramètres. Cercle peut résilier un compte sans préavis en cas de violation grave des présentes CGU.</p>
+      <h3 style={{fontWeight:700,marginBottom:6,marginTop:16}}>7. Contact</h3>
+      <p>Pour toute question relative aux CGU : <a href="mailto:support@cercle.fr" style={{color:'var(--p)'}}>support@cercle.fr</a></p>
+      <button className="bp" style={{width:'100%',marginTop:24}} onClick={onClose}>J'ai lu et compris ✓</button>
+    </div>
+  </div></div>
+}
+
+function PrivacyModal({onClose}){
+  return <div className="bk" onClick={onClose}><div className="md" onClick={e=>e.stopPropagation()} style={{maxWidth:560}}>
+    <div className="mh"><button className="mx" onClick={onClose}><I.X/></button><h2>Politique de Confidentialité</h2></div>
+    <div className="mb" style={{overflowY:'auto',maxHeight:'65vh',fontSize:13,lineHeight:1.75,color:'var(--tx)'}}>
+      <p style={{color:'var(--g)',fontSize:11,marginBottom:16}}>Dernière mise à jour : 28 avril 2026 — Conforme RGPD</p>
+      <h3 style={{fontWeight:700,marginBottom:6,marginTop:16}}>1. Données collectées</h3>
+      <p>Nous collectons : prénom, nom, email, date de naissance, adresse postale, téléphone, photo de profil, historique des transactions et préférences de communication. Ces données sont nécessaires au fonctionnement du service.</p>
+      <h3 style={{fontWeight:700,marginBottom:6,marginTop:16}}>2. Utilisation des données</h3>
+      <p>Vos données sont utilisées exclusivement pour : gérer votre compte, traiter les transactions, vous envoyer des notifications liées à votre activité, et améliorer nos services. Elles ne sont jamais revendues à des tiers.</p>
+      <h3 style={{fontWeight:700,marginBottom:6,marginTop:16}}>3. Emails promotionnels</h3>
+      <p>Vous ne recevrez des emails promotionnels que si vous avez explicitement coché la case correspondante lors de l'inscription. Vous pouvez vous désabonner à tout moment via le lien de désinscription présent dans chaque email.</p>
+      <h3 style={{fontWeight:700,marginBottom:6,marginTop:16}}>4. Conservation des données</h3>
+      <p>Vos données sont conservées pendant toute la durée de votre compte actif, puis 3 ans après suppression du compte pour des raisons légales et comptables.</p>
+      <h3 style={{fontWeight:700,marginBottom:6,marginTop:16}}>5. Vos droits (RGPD)</h3>
+      <p>Conformément au Règlement Général sur la Protection des Données, vous disposez d'un droit d'accès, de rectification, d'effacement (droit à l'oubli), de portabilité, de limitation du traitement et d'opposition. Ces droits s'exercent auprès de notre DPO.</p>
+      <h3 style={{fontWeight:700,marginBottom:6,marginTop:16}}>6. Contact DPO</h3>
+      <p>Délégué à la Protection des Données : <a href="mailto:dpo@cercle.fr" style={{color:'var(--p)'}}>dpo@cercle.fr</a> — Délai de réponse : 30 jours maximum.</p>
+      <button className="bp" style={{width:'100%',marginTop:24}} onClick={onClose}>J'ai compris ✓</button>
+    </div>
+  </div></div>
+}
+
 function AuthModal({onClose,dispatch,mode:im}){
   const[mode,setMode]=useState(im||"login");const[step,setStep]=useState(0);const[acctType,setAcctType]=useState("perso");
-  const[f,setF]=useState({firstName:"",lastName:"",dob:"",email:"",password:"",city:"",address:"",postalCode:"",phone:"",bio:"",company:"",siret:"",sector:"",tva:"",website:""});
+  const[f,setF]=useState({firstName:"",lastName:"",dobDay:"",dobMonth:"",dobYear:"",email:"",password:"",city:"",address:"",postalCode:"",phone:"",bio:"",company:"",siret:"",sector:"",tva:"",website:""});
   const[avatarPreview,setAvatarPreview]=useState(null);
+  const[addrSugg,setAddrSugg]=useState([]);const addrTimer=React.useRef(null);
   const[cguOk,setCguOk]=useState(false);const[privacyOk,setPrivacyOk]=useState(false);const[marketingOk,setMarketingOk]=useState(false);
+  const[showCGU,setShowCGU]=useState(false);const[showPrivacy,setShowPrivacy]=useState(false);
   const[err,setErr]=useState("");const[loading,setLoading]=useState("");
   const u=(k,v)=>setF(p=>({...p,[k]:v}));
   const go=()=>{
@@ -638,7 +687,8 @@ function AuthModal({onClose,dispatch,mode:im}){
       if(step===0)return setStep(1);
       if(acctType==="perso"){if(!f.firstName||!f.lastName||!f.email||!f.password){setErr("Remplissez tous les champs obligatoires");return}
         if(!cguOk||!privacyOk){setErr("Veuillez accepter les CGU et la Politique de confidentialité");return}
-        dispatch({type:"LOGIN",payload:{id:uid(),name:`${f.firstName} ${f.lastName}`,email:f.email,avatar:"😊",verified:false,since:2026,bio:f.bio||"",location:f.city||"",city:f.city,address:f.address,postalCode:f.postalCode,phone:f.phone,dob:f.dob,marketingEmails:marketingOk,avatarUrl:avatarPreview||null,rating:0,rentals:0,responseTime:"~1h",isPro:false}});onClose()
+        const dob=f.dobDay&&f.dobMonth&&f.dobYear?`${f.dobDay}/${f.dobMonth}/${f.dobYear}`:"";
+        dispatch({type:"LOGIN",payload:{id:uid(),name:`${f.firstName} ${f.lastName}`,email:f.email,avatar:"😊",verified:false,since:2026,bio:f.bio||"",location:f.city||"",city:f.city,address:f.address,postalCode:f.postalCode,phone:f.phone,dob,marketingEmails:marketingOk,avatarUrl:avatarPreview||null,rating:0,rentals:0,responseTime:"~1h",isPro:false}});onClose()
       }else{if(!f.company||!f.siret||!f.email||!f.password){setErr("Remplissez les champs obligatoires");return}
         dispatch({type:"LOGIN",payload:{id:uid(),name:f.company,email:f.email,avatar:"🏢",verified:true,since:2026,bio:f.sector?`Secteur : ${f.sector}`:"Professionnel",location:f.location,rating:0,rentals:0,responseTime:"~15 min",isPro:true,company:f.company,siret:f.siret,tva:f.tva,phone:f.phone,website:f.website,sector:f.sector}});onClose()}
     }
@@ -752,7 +802,22 @@ function AuthModal({onClose,dispatch,mode:im}){
               <div className="auth-field"><label>Prénom <span style={{color:"var(--p)"}}>*</span></label><input value={f.firstName} onChange={e=>u("firstName",e.target.value)} placeholder="Jean"/></div>
               <div className="auth-field"><label>Nom <span style={{color:"var(--p)"}}>*</span></label><input value={f.lastName} onChange={e=>u("lastName",e.target.value)} placeholder="Dupont"/></div>
             </div>
-            <div className="auth-field"><label>Date de naissance</label><input type="date" value={f.dob} onChange={e=>u("dob",e.target.value)} max={new Date(new Date().setFullYear(new Date().getFullYear()-18)).toISOString().split("T")[0]}/></div>
+            <div className="auth-field"><label>Date de naissance</label>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 2fr 1fr',gap:8}}>
+                <select className="auth-sel" value={f.dobDay} onChange={e=>u('dobDay',e.target.value)} style={{padding:'11px 8px',border:'1.5px solid #e5e7eb',borderRadius:12,fontSize:14,background:'var(--w)',color:'var(--dk)',outline:'none'}}>
+                  <option value="">Jour</option>
+                  {Array.from({length:31},(_,i)=>i+1).map(d=><option key={d} value={String(d).padStart(2,'0')}>{String(d).padStart(2,'0')}</option>)}
+                </select>
+                <select className="auth-sel" value={f.dobMonth} onChange={e=>u('dobMonth',e.target.value)} style={{padding:'11px 8px',border:'1.5px solid #e5e7eb',borderRadius:12,fontSize:14,background:'var(--w)',color:'var(--dk)',outline:'none'}}>
+                  <option value="">Mois</option>
+                  {['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'].map((m,i)=><option key={i} value={String(i+1).padStart(2,'0')}>{m}</option>)}
+                </select>
+                <select className="auth-sel" value={f.dobYear} onChange={e=>u('dobYear',e.target.value)} style={{padding:'11px 8px',border:'1.5px solid #e5e7eb',borderRadius:12,fontSize:14,background:'var(--w)',color:'var(--dk)',outline:'none'}}>
+                  <option value="">Année</option>
+                  {Array.from({length:100},(_,i)=>new Date().getFullYear()-18-i).map(y=><option key={y} value={y}>{y}</option>)}
+                </select>
+              </div>
+            </div>
             {/* Accès */}
             <div className="auth-section"><span className="auth-section-label">Accès</span><hr/></div>
             <div className="auth-field"><label>Email <span style={{color:"var(--p)"}}>*</span></label><input type="email" value={f.email} onChange={e=>u("email",e.target.value)} placeholder="jean@email.com"/></div>
@@ -760,20 +825,30 @@ function AuthModal({onClose,dispatch,mode:im}){
             {/* Localisation */}
             <div className="auth-section"><span className="auth-section-label">Localisation</span><hr/></div>
             <div className="auth-field"><label>Téléphone</label><input type="tel" value={f.phone} onChange={e=>u("phone",e.target.value)} placeholder="06 12 34 56 78"/></div>
-            <div className="auth-field"><label>Adresse</label><input value={f.address} onChange={e=>u("address",e.target.value)} placeholder="12 rue des Lilas"/></div>
+            <div className="auth-field" style={{position:'relative'}}><label>Adresse</label>
+              <input value={f.address} onChange={e=>{u("address",e.target.value);clearTimeout(addrTimer.current);if(e.target.value.length>=3){addrTimer.current=setTimeout(()=>fetch(`https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(e.target.value)}&limit=5`).then(r=>r.json()).then(d=>setAddrSugg(d.features||[])).catch(()=>{}),400);}else setAddrSugg([]);}} placeholder="12 rue des Lilas"/>
+              {addrSugg.length>0&&<div style={{position:'absolute',top:'100%',left:0,right:0,background:'var(--w)',border:'1px solid #e5e7eb',borderRadius:10,boxShadow:'0 4px 16px rgba(0,0,0,.1)',zIndex:200,overflow:'hidden'}}>
+                {addrSugg.map((feat,i)=><div key={i} style={{padding:'10px 14px',cursor:'pointer',fontSize:13,borderBottom:'1px solid #f3f4f6'}} onMouseEnter={e=>e.currentTarget.style.background='#f5f3ff'} onMouseLeave={e=>e.currentTarget.style.background=''} onClick={()=>{u('address',feat.properties.name);u('postalCode',feat.properties.postcode||'');u('city',feat.properties.city||'');setAddrSugg([]);}}>
+                  <span style={{fontWeight:600}}>{feat.properties.name}</span> <span style={{color:'var(--g)',fontSize:12}}>{feat.properties.postcode} {feat.properties.city}</span>
+                </div>)}
+              </div>}
+            </div>
             <div className="auth-row">
               <div className="auth-field"><label>Code postal</label><input value={f.postalCode} onChange={e=>u("postalCode",e.target.value.replace(/\D/g,"").slice(0,5))} placeholder="75001" maxLength="5"/></div>
               <div className="auth-field"><label>Ville</label><input value={f.city} onChange={e=>u("city",e.target.value)} placeholder="Votre ville ou village"/></div>
             </div>
             {/* Consentements */}
             <div className="auth-section"><span className="auth-section-label">Consentements</span><hr/></div>
-            <label className="auth-check"><input type="checkbox" checked={cguOk} onChange={e=>setCguOk(e.target.checked)}/><span className="auth-check-box">{cguOk&&<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><polyline points="2,6 5,9 10,3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}</span><span className="auth-check-text">J'accepte les <button className="cl" onClick={e=>e.preventDefault()}>CGU</button> <span style={{color:"var(--p)"}}>*</span></span></label>
-            <label className="auth-check"><input type="checkbox" checked={privacyOk} onChange={e=>setPrivacyOk(e.target.checked)}/><span className="auth-check-box">{privacyOk&&<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><polyline points="2,6 5,9 10,3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}</span><span className="auth-check-text">J'accepte la <button className="cl" onClick={e=>e.preventDefault()}>Politique de confidentialité</button> <span style={{color:"var(--p)"}}>*</span></span></label>
+            <label className="auth-check"><input type="checkbox" checked={cguOk} onChange={e=>setCguOk(e.target.checked)}/><span className="auth-check-box">{cguOk&&<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><polyline points="2,6 5,9 10,3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}</span><span className="auth-check-text">J'accepte les <button className="cl" onClick={e=>{e.preventDefault();e.stopPropagation();setShowCGU(true)}}>CGU</button> <span style={{color:"var(--p)"}}>*</span></span></label>
+            <label className="auth-check"><input type="checkbox" checked={privacyOk} onChange={e=>setPrivacyOk(e.target.checked)}/><span className="auth-check-box">{privacyOk&&<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><polyline points="2,6 5,9 10,3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}</span><span className="auth-check-text">J'accepte la <button className="cl" onClick={e=>{e.preventDefault();e.stopPropagation();setShowPrivacy(true)}}>Politique de confidentialité</button> <span style={{color:"var(--p)"}}>*</span></span></label>
             <label className="auth-check"><input type="checkbox" checked={marketingOk} onChange={e=>setMarketingOk(e.target.checked)}/><span className="auth-check-box">{marketingOk&&<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><polyline points="2,6 5,9 10,3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}</span><span className="auth-check-text opt">J'accepte de recevoir des emails promotionnels de Cercle <span style={{fontSize:11,color:"var(--gl)"}}>(optionnel)</span></span></label>
           </div>
         </>}
         {err&&<p style={{color:"#ef4444",fontSize:12,marginBottom:8,padding:"6px 10px",background:"#fef2f2",borderRadius:8}}>{err}</p>}
+        {showCGU&&<CGUModal onClose={()=>setShowCGU(false)}/>}
+        {showPrivacy&&<PrivacyModal onClose={()=>setShowPrivacy(false)}/>}
         <button className="auth-submit" disabled={acctType==="perso"&&(!cguOk||!privacyOk)} style={{background:acctType==="pro"?"linear-gradient(135deg,#2563EB,#1d4ed8)":undefined}} onClick={go}>{acctType==="pro"?"Créer mon compte Pro 🏢":"Créer mon compte 🎉"}</button>
+        <p style={{textAlign:'center',fontSize:11,color:'var(--gl)',marginTop:8,lineHeight:1.5}}>🔒 Vos données sont protégées et ne seront jamais revendues.</p>
       </>}
     </div>
   </div></div>
