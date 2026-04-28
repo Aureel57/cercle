@@ -6,6 +6,15 @@
 <title>Cercle — Location entre voisins</title>
 <script src="https://unpkg.com/react@18.2.0/umd/react.development.js" crossorigin></script>
 <script src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.development.js" crossorigin></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script>
+const firebaseConfig={apiKey:"AIzaSyBF-EUZBgB9kUp16vhv0rzHO3QBp_GVM7c",authDomain:"cercle-92d7c.firebaseapp.com",projectId:"cercle-92d7c",storageBucket:"cercle-92d7c.firebasestorage.app",messagingSenderId:"691327151080",appId:"1:691327151080:web:de513d38f8c75a4801525d",measurementId:"G-YC0NHE315T"};
+const app=firebase.initializeApp(firebaseConfig);
+const auth=firebase.auth();
+const db=firebase.firestore();
+</script>
 <script src="https://unpkg.com/@babel/standalone@7.26.0/babel.min.js"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -96,7 +105,7 @@ const PRO_RAW=[{t:"Nacelle élévatrice 12m",c:"tools",p:120},{t:"Mini-pelle 1.5
 const buildProItems=()=>PRO_RAW.map((r,i)=>({id:1000+i,title:r.t,cat:r.c,price:r.p,images:[mkImg(r.c,1000+i,0),mkImg(r.c,1000+i,1),mkImg(r.c,1000+i,2)],location:LOCS[(i+3)%LOCS.length],rating:+(4.7+Math.random()*.29).toFixed(2),reviews:Math.floor(20+Math.random()*200),owner:PRO_USERS[i%PRO_USERS.length],description:"Matériel professionnel certifié. Maintenance régulière. Livraison possible sur chantier/site.",deposit:Math.floor(r.p*5+Math.random()*200),condition:"Comme neuf",createdAt:"2025",available:true,isPro:true,lat:(LL[LOCS[(i+3)%LOCS.length]]||[48.86,2.35])[0]+(.01*Math.random()-.005),lng:(LL[LOCS[(i+3)%LOCS.length]]||[48.86,2.35])[1]+(.01*Math.random()-.005)}));
 
 /* ========== REDUCER ========== */
-const init={user:null,items:buildItems(),proItems:buildProItems(),favorites:new Set(),bookings:[],messages:[],conversations:[],reviews:[],notifications:[],userItems:[],payments:[],referrals:[],disputes:[],wallet:0,badges:[],profileCompletion:{identity:false,phone:false,drivingLicense:false,bankAccount:false}};
+const init={user:null,items:buildItems(),proItems:buildProItems(),firestoreItems:[],favorites:new Set(),bookings:[],messages:[],conversations:[],reviews:[],notifications:[],userItems:[],payments:[],referrals:[],disputes:[],wallet:0,badges:[],profileCompletion:{identity:false,phone:false,drivingLicense:false,bankAccount:false}};
 function reducer(s,a){switch(a.type){
   case"LOGIN":return{...s,user:{...a.payload,refCode:a.payload.refCode||uid().toUpperCase().slice(0,6)}};
   case"LOGOUT":return{...s,user:null};
@@ -133,6 +142,9 @@ function reducer(s,a){switch(a.type){
   case"REMOVE_ITEM":return{...s,items:s.items.filter(i=>i.id!==a.id),userItems:s.userItems.filter(i=>i.id!==a.id)};
   case"EDIT_ITEM":return{...s,items:s.items.map(i=>i.id===a.item.id?a.item:i),userItems:s.userItems.map(i=>i.id===a.item.id?a.item:i)};
   case"DEBIT_WALLET":return{...s,wallet:s.wallet-a.amount};
+  case"SET_FS_ITEMS":return{...s,firestoreItems:a.payload};
+  case"SET_FS_BOOKINGS":return{...s,bookings:a.payload};
+  case"SET_WALLET":return{...s,wallet:a.amount||0};
   default:return s}}
 
 /* ========== ICONS ========== */
@@ -604,17 +616,50 @@ function AuthModal({onClose,dispatch,mode:im}){
   const[f,setF]=useState({name:"",email:"",password:"",location:"Paris 11e",bio:"",company:"",siret:"",sector:"",tva:"",phone:"",website:""});
   const[err,setErr]=useState("");const[loading,setLoading]=useState("");
   const u=(k,v)=>setF(p=>({...p,[k]:v}));
-  const go=()=>{
-    if(mode==="login"){if(!f.email||!f.password){setErr("Remplissez tous les champs");return}
-      const found=USERS.find(u=>u.email===f.email&&u.password===f.password)||PRO_USERS.find(u=>u.email===f.email&&u.password===f.password);
-      if(!found){setErr("Email ou mot de passe incorrect");return;}
-      dispatch({type:"LOGIN",payload:found});onClose()
+  const go=async()=>{
+    if(mode==="login"){
+      if(!f.email||!f.password){setErr("Remplissez tous les champs");return}
+      setLoading("email");
+      try{
+        const cred=await auth.signInWithEmailAndPassword(f.email,f.password);
+        const doc=await db.collection('users').doc(cred.user.uid).get();
+        if(doc.exists){
+          const ud=doc.data();
+          dispatch({type:"LOGIN",payload:{...ud,id:cred.user.uid}});
+          if(ud.wallet!=null)dispatch({type:"SET_WALLET",amount:ud.wallet});
+        }else{
+          const found=USERS.find(u=>u.email===f.email)||PRO_USERS.find(u=>u.email===f.email);
+          if(found)dispatch({type:"LOGIN",payload:found});
+        }
+        setLoading("");onClose();
+      }catch(e){
+        const found=USERS.find(u=>u.email===f.email&&u.password===f.password)||PRO_USERS.find(u=>u.email===f.email&&u.password===f.password);
+        if(found){dispatch({type:"LOGIN",payload:found});setLoading("");onClose();}
+        else{setErr("Email ou mot de passe incorrect");setLoading("");}
+      }
     }else{
       if(step===0)return setStep(1);
-      if(acctType==="perso"){if(!f.name||!f.email||!f.password){setErr("Remplissez tous les champs");return}
-        dispatch({type:"LOGIN",payload:{id:uid(),name:f.name,email:f.email,avatar:"😊",verified:false,since:2026,bio:f.bio,location:f.location,rating:0,rentals:0,responseTime:"~1h",isPro:false}});onClose()
-      }else{if(!f.company||!f.siret||!f.email||!f.password){setErr("Remplissez les champs obligatoires");return}
-        dispatch({type:"LOGIN",payload:{id:uid(),name:f.company,email:f.email,avatar:"🏢",verified:true,since:2026,bio:f.sector?`Secteur : ${f.sector}`:"Professionnel",location:f.location,rating:0,rentals:0,responseTime:"~15 min",isPro:true,company:f.company,siret:f.siret,tva:f.tva,phone:f.phone,website:f.website,sector:f.sector}});onClose()}
+      if(acctType==="perso"){
+        if(!f.name||!f.email||!f.password){setErr("Remplissez tous les champs");return}
+        setLoading("email");
+        try{
+          const cred=await auth.createUserWithEmailAndPassword(f.email,f.password);
+          const userData={id:cred.user.uid,name:f.name,email:f.email,avatar:"😊",verified:false,since:2026,bio:f.bio,location:f.location,rating:0,rentals:0,responseTime:"~1h",isPro:false,wallet:0};
+          await db.collection('users').doc(cred.user.uid).set(userData);
+          dispatch({type:"LOGIN",payload:userData});
+          setLoading("");onClose();
+        }catch(e){setErr(e.code==="auth/email-already-in-use"?"Cet email est déjà utilisé":e.message||"Erreur inscription");setLoading("");}
+      }else{
+        if(!f.company||!f.siret||!f.email||!f.password){setErr("Remplissez les champs obligatoires");return}
+        setLoading("email");
+        try{
+          const cred=await auth.createUserWithEmailAndPassword(f.email,f.password);
+          const userData={id:cred.user.uid,name:f.company,email:f.email,avatar:"🏢",verified:true,since:2026,bio:f.sector?`Secteur : ${f.sector}`:"Professionnel",location:f.location,rating:0,rentals:0,responseTime:"~15 min",isPro:true,company:f.company,siret:f.siret,tva:f.tva,phone:f.phone,website:f.website,sector:f.sector,wallet:0};
+          await db.collection('users').doc(cred.user.uid).set(userData);
+          dispatch({type:"LOGIN",payload:userData});
+          setLoading("");onClose();
+        }catch(e){setErr(e.code==="auth/email-already-in-use"?"Cet email est déjà utilisé":e.message||"Erreur inscription");setLoading("");}
+      }
     }
   };
   const socialLogin=(provider,name,avatar)=>{
@@ -841,9 +886,9 @@ function Detail({item,onClose,state,dispatch,setPage,setConvId,setShowShop,setPr
   const needsDrivingLicense=VEHICLE_CATS.includes((item.cat||"").toLowerCase());
   const pc=state.profileCompletion||{identity:false,phone:false,drivingLicense:false,bankAccount:false};
   const handleReserveClick=()=>{if(!state.user)return;if(needsDrivingLicense&&!pc.drivingLicense){setShowVerifModal(true);return;}setPayStep(1);};
-  const book=()=>{if(!state.user)return;dispatch({type:"BOOK",payload:{id:uid(),itemId:item.id,itemTitle:item.title,itemImg:item.images[0],ownerId:item.owner.id,ownerName:item.owner.name,userId:state.user.id,startDate:sd,endDate:ed,status:"confirmed",total:tot,deposit:item.deposit,days,createdAt:new Date(),payMethod}});setBooked(true);setPayStep(0)};
+  const book=()=>{if(!state.user)return;const bid=uid();const bPayload={id:bid,itemId:item.id,itemTitle:item.title,itemImg:item.images[0],ownerId:item.owner.id,ownerName:item.owner.name,userId:state.user.id,startDate:sd,endDate:ed,status:"confirmed",total:tot,deposit:item.deposit,days,createdAt:new Date(),payMethod};dispatch({type:"BOOK",payload:bPayload});if(auth.currentUser){db.collection('bookings').doc(bid).set({...bPayload,createdAt:firebase.firestore.FieldValue.serverTimestamp()}).catch(()=>{});}setBooked(true);setPayStep(0)};
   const startConv=()=>{if(!state.user)return;const cid=`c_${item.owner.id}_${state.user.id}_${item.id}`;dispatch({type:"MSG",payload:{id:uid(),cid,from:state.user.id,to:item.owner.id,itemId:item.id,text:`Bonjour ! "${item.title}" est-il disponible ?`,timestamp:new Date()}});onClose();setConvId(cid);setPage("messages")};
-  const submitRev=()=>{if(!state.user||!rt)return;dispatch({type:"REVIEW",payload:{id:uid(),itemId:item.id,fromUserId:state.user.id,fromUserName:state.user.name,fromUserAvatar:state.user.avatar,rating:rr,text:rt,createdAt:new Date()}});setShowRF(false);setRt("")};
+  const submitRev=()=>{if(!state.user||!rt)return;const rid=uid();const rPayload={id:rid,itemId:item.id,fromUserId:state.user.id,fromUserName:state.user.name,fromUserAvatar:state.user.avatar,rating:rr,text:rt,createdAt:new Date()};dispatch({type:"REVIEW",payload:rPayload});if(auth.currentUser){db.collection('reviews').doc(rid).set({...rPayload,createdAt:firebase.firestore.FieldValue.serverTimestamp()}).catch(()=>{});}setShowRF(false);setRt("")};
   const iRevs=state.reviews.filter(r=>r.itemId===item.id);
   return <div className="ov">
     {gal&&<Gallery images={gal.imgs} start={gal.idx||0} onClose={()=>setGal(null)}/>}
@@ -2039,8 +2084,8 @@ function Profile({state, dispatch, setPage, setSelected, initTab, setEditItem}) 
               </div>
             </div>
 
-            <button style={{...S.savBtn,animation:'fadeSlideUp 0.4s cubic-bezier(0.34,1.56,0.64,1) both',animationDelay:'0.32s'}} onClick={()=>dispatch({type:"UPD_PROF",payload:{name:profileData.name,email:profileData.email,bio:profileData.bio,phone:profileData.phone}})}>Sauvegarder les modifications</button>
-            <button style={{...S.logoutBtn,animation:'fadeSlideUp 0.4s cubic-bezier(0.34,1.56,0.64,1) both',animationDelay:'0.38s'}} onClick={()=>{dispatch({type:"LOGOUT"});setPage('home');}}>🚪 Se déconnecter</button>
+            <button style={{...S.savBtn,animation:'fadeSlideUp 0.4s cubic-bezier(0.34,1.56,0.64,1) both',animationDelay:'0.32s'}} onClick={()=>{dispatch({type:"UPD_PROF",payload:{name:profileData.name,email:profileData.email,bio:profileData.bio,phone:profileData.phone}});if(auth.currentUser){db.collection('users').doc(auth.currentUser.uid).update({name:profileData.name,bio:profileData.bio,phone:profileData.phone||''}).catch(()=>{});}}}>Sauvegarder les modifications</button>
+            <button style={{...S.logoutBtn,animation:'fadeSlideUp 0.4s cubic-bezier(0.34,1.56,0.64,1) both',animationDelay:'0.38s'}} onClick={()=>{auth.signOut().catch(()=>{});dispatch({type:"LOGOUT"});setPage('home');}}>🚪 Se déconnecter</button>
           </div>
         )}
 
@@ -2073,7 +2118,12 @@ function CreateListing({state,dispatch,setPage,mode,editItem,setEditItem}){
       dispatch({type:"EDIT_ITEM",item:{...editItem,...f,price:+f.price,deposit:+f.deposit||+f.price*3,images:photos.length>0?photos:editItem.images}});
       setEditItem&&setEditItem(null);
     } else {
-      dispatch({type:"ADD_ITEM",payload:{...f,price:+f.price,deposit:+f.deposit||+f.price*3,photos,images:imgs,isPro:!!state.user?.isPro}});
+      const newItm={...f,price:+f.price,deposit:+f.deposit||+f.price*3,photos,images:imgs,isPro:!!state.user?.isPro};
+      dispatch({type:"ADD_ITEM",payload:newItm});
+      if(auth.currentUser&&state.user){
+        const ref=db.collection('items').doc();
+        ref.set({...newItm,id:ref.id,owner:{id:state.user.id,name:state.user.name,avatar:state.user.avatar,rating:state.user.rating||0,verified:state.user.verified||false},rating:0,reviews:0,available:true,createdAt:firebase.firestore.FieldValue.serverTimestamp()}).catch(()=>{});
+      }
     }
     setPage("profile");
   };
@@ -3235,9 +3285,9 @@ function WalletPage({state,dispatch,setPage}){
     <div className="wallet-c">
       <div style={{fontSize:11,opacity:.7,marginBottom:4}}>Solde disponible</div>
       <div className="wallet-bal">{state.wallet} €</div>
-      <div style={{display:"flex",gap:8,marginTop:14}}>{[10,25,50,100].map(v=><button key={v} style={{flex:1,padding:"8px",background:"rgba(255,255,255,.15)",border:"1px solid rgba(255,255,255,.2)",borderRadius:8,color:"#fff",fontWeight:700,fontSize:13,cursor:"pointer"}} onClick={()=>dispatch({type:"ADD_WALLET",amount:v})}>+{v}€</button>)}</div>
+      <div style={{display:"flex",gap:8,marginTop:14}}>{[10,25,50,100].map(v=><button key={v} style={{flex:1,padding:"8px",background:"rgba(255,255,255,.15)",border:"1px solid rgba(255,255,255,.2)",borderRadius:8,color:"#fff",fontWeight:700,fontSize:13,cursor:"pointer"}} onClick={()=>{dispatch({type:"ADD_WALLET",amount:v});if(auth.currentUser){db.collection('users').doc(auth.currentUser.uid).update({wallet:firebase.firestore.FieldValue.increment(v)}).catch(()=>{});}}}>+{v}€</button>)}</div>
     </div>
-    <div className="fg"><label>Montant personnalisé</label><div style={{display:"flex",gap:6}}><input type="number" value={amount} onChange={e=>setAmount(e.target.value)} placeholder="Ex: 30"/><button className="bp" style={{fontSize:12,padding:"8px 16px",flexShrink:0}} onClick={()=>{if(+amount>0){dispatch({type:"ADD_WALLET",amount:+amount});setAmount("")}}}>Recharger</button></div></div>
+    <div className="fg"><label>Montant personnalisé</label><div style={{display:"flex",gap:6}}><input type="number" value={amount} onChange={e=>setAmount(e.target.value)} placeholder="Ex: 30"/><button className="bp" style={{fontSize:12,padding:"8px 16px",flexShrink:0}} onClick={()=>{if(+amount>0){dispatch({type:"ADD_WALLET",amount:+amount});if(auth.currentUser){db.collection('users').doc(auth.currentUser.uid).update({wallet:firebase.firestore.FieldValue.increment(+amount)}).catch(()=>{});}setAmount("")}}}>Recharger</button></div></div>
     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginTop:14}}>
       <div style={{padding:14,border:"1.5px solid var(--bd)",borderRadius:12,textAlign:"center"}}><div style={{fontSize:10,color:"var(--g)"}}>Crédits parrainage</div><div style={{fontFamily:"var(--fd)",fontSize:20,fontWeight:700,color:"var(--acc)"}}>{state.referrals.reduce((s,r)=>s+r.bonus,0)}€</div></div>
       <div style={{padding:14,border:"1.5px solid var(--bd)",borderRadius:12,textAlign:"center"}}><div style={{fontSize:10,color:"var(--g)"}}>Total rechargé</div><div style={{fontFamily:"var(--fd)",fontSize:20,fontWeight:700}}>{state.wallet}€</div></div>
@@ -3353,8 +3403,8 @@ function App(){
   const[openCol,setOpenCol]=useState(-1);
   const[editItem,setEditItem]=useState(null);
 
-  const allPerso=useMemo(()=>[...state.items,...state.userItems].filter(i=>!i.isPro&&!i.owner?.isPro),[state.items,state.userItems]);
-  const allPro=useMemo(()=>[...state.proItems,...state.userItems.filter(i=>i.isPro||i.owner?.isPro)],[state.proItems,state.userItems]);
+  const allPerso=useMemo(()=>[...state.items,...state.userItems,...state.firestoreItems].filter(i=>!i.isPro&&!i.owner?.isPro),[state.items,state.userItems,state.firestoreItems]);
+  const allPro=useMemo(()=>[...state.proItems,...state.userItems.filter(i=>i.isPro||i.owner?.isPro),...state.firestoreItems.filter(i=>i.isPro||i.owner?.isPro)],[state.proItems,state.userItems,state.firestoreItems]);
   const all=mode==='pro'?allPro:(listingTab==='professionnels'?allPro:allPerso);
   const unread=state.notifications.filter(n=>!n.read).length;
 
@@ -3379,10 +3429,36 @@ function App(){
   const search=(query,loc)=>{setQ(query);setLq(loc||"");setCat("all");setPage("home")};
   useEffect(()=>{if(state.notifications.length){const l=state.notifications[0];if(!l.read){const type=l.kind==="badge"?"s":l.kind==="wallet"?"s":l.kind==="referral"?"w":l.kind==="dispute"?"e":"b";addToast(l.text,type);setPushNotif(l);setTimeout(()=>setPushNotif(null),4000)}}},[state.notifications.length]);
   useEffect(()=>{if(!state.user)return;const b=state.bookings.filter(x=>x.userId===state.user.id);if(b.length>=1&&!state.badges.includes("first_rental"))dispatch({type:"EARN_BADGE",badge:"first_rental"});if(b.length>=5&&!state.badges.includes("super_renter"))dispatch({type:"EARN_BADGE",badge:"super_renter"});const BADGE_KEY='cercle_badge_verifie_notified';if(state.user.verified&&!state.badges.includes("verified")&&!localStorage.getItem(BADGE_KEY)){dispatch({type:"EARN_BADGE",badge:"verified"});localStorage.setItem(BADGE_KEY,'1');}if(state.favorites.size>=10&&!state.badges.includes("collector"))dispatch({type:"EARN_BADGE",badge:"collector"});if(state.referrals.length>=1&&!state.badges.includes("ambassador"))dispatch({type:"EARN_BADGE",badge:"ambassador"});if(state.reviews.length>=1&&!state.badges.includes("reviewer"))dispatch({type:"EARN_BADGE",badge:"reviewer"});const gr=getGrade((state.user.rentals||0)+b.length);if(["pilier","gardien","legende","fondateur"].includes(gr.id)&&!state.badges.includes("loyal"))dispatch({type:"EARN_BADGE",badge:"loyal"})},[state.bookings.length,state.favorites.size,state.referrals.length,state.reviews.length,state.user?.verified]);
-  // Load saved user on mount
-  useEffect(()=>{try{const s=window.storage;if(s){s.get('cercle_user').then(r=>{if(r&&r.value){const u=JSON.parse(r.value);dispatch({type:'LOGIN',payload:u})}}).catch(()=>{}).finally(()=>setLoaded(true))}else setLoaded(true)}catch(e){setLoaded(true)}},[]);
-  // Save user to storage on login/logout
-  useEffect(()=>{try{const s=window.storage;if(s){if(state.user)s.set('cercle_user',JSON.stringify(state.user)).catch(()=>{});else s.delete('cercle_user').catch(()=>{})}}catch(e){}},[state.user]);
+  // Restaurer la session via Firebase Auth
+  useEffect(()=>{
+    const unsub=auth.onAuthStateChanged(async fbUser=>{
+      if(fbUser){
+        try{
+          const doc=await db.collection('users').doc(fbUser.uid).get();
+          if(doc.exists){
+            const ud=doc.data();
+            dispatch({type:'LOGIN',payload:{...ud,id:fbUser.uid}});
+            if(ud.wallet!=null)dispatch({type:'SET_WALLET',amount:ud.wallet});
+          }
+        }catch(e){}
+      }
+      setLoaded(true);
+    });
+    return unsub;
+  },[]);
+  // Listeners temps réel Firestore (items + bookings utilisateur)
+  useEffect(()=>{
+    if(!state.user?.id)return;
+    const unsub1=db.collection('items').onSnapshot(snap=>{
+      const fsItems=snap.docs.map(d=>({...d.data(),id:d.id}));
+      dispatch({type:'SET_FS_ITEMS',payload:fsItems});
+    },()=>{});
+    const unsub2=db.collection('bookings').where('userId','==',state.user.id).onSnapshot(snap=>{
+      const fsBookings=snap.docs.map(d=>({...d.data(),id:d.id,createdAt:d.data().createdAt?.toDate?.()||new Date()}));
+      if(fsBookings.length>0)dispatch({type:'SET_FS_BOOKINGS',payload:fsBookings});
+    },()=>{});
+    return()=>{unsub1();unsub2();};
+  },[state.user?.id]);
   // Auto-switch mode when pro user logs in
   useEffect(()=>{if(state.user?.isPro)setMode('pro')},[state.user?.isPro]);
   useEffect(()=>{const t=setTimeout(()=>setSplash(false),1200);return()=>clearTimeout(t)},[]);
@@ -3419,7 +3495,7 @@ function App(){
               {state.user?.isPro&&<div className="di" onClick={()=>{setPage("gestion");setMenu(false)}} style={{color:'#D97706',fontWeight:700}}>⭐ Gestion Pro</div>}
               <div className="di" onClick={()=>{setPage("notifs");setMenu(false);dispatch({type:"READ_N"})}}>🔔 Notifications{unread>0&&<span style={{background:"var(--p)",color:"#fff",borderRadius:8,padding:"1px 6px",fontSize:10,fontWeight:700}}>{unread}</span>}</div>
               <div className="di" onClick={()=>{setDark(!dark);setMenu(false)}}>{dark?"☀️ Mode clair":"🌙 Mode sombre"}</div>
-              <div className="dsp"/><div className="di" onClick={()=>{dispatch({type:"LOGOUT"});setMenu(false);home()}}>🚪 Déconnexion</div></>:
+              <div className="dsp"/><div className="di" onClick={()=>{auth.signOut().catch(()=>{});dispatch({type:"LOGOUT"});setMenu(false);home()}}>🚪 Déconnexion</div></>:
             <><div className="di b" onClick={()=>{setShowA("login");setMenu(false)}}>Se connecter</div><div className="di" onClick={()=>{setShowA("register");setMenu(false)}}>S'inscrire</div></>}
           </div>}
         </button>
