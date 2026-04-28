@@ -701,7 +701,7 @@ function AuthModal({onClose,dispatch,mode:im}){
     },800);
   };
   const sBtn={width:"100%",display:"flex",alignItems:"center",justifyContent:"center",gap:10,padding:"11px 16px",borderRadius:10,fontSize:13,fontWeight:600,border:"1.5px solid var(--bd)",background:"var(--w)",color:"var(--dk)",marginBottom:8,transition:"all .15s",cursor:"pointer",position:"relative"};
-  return <div className="bk" onClick={onClose}><div className="md" onClick={e=>e.stopPropagation()} style={{maxWidth:440}}>
+  return <><div className="bk" onClick={onClose}><div className="md" onClick={e=>e.stopPropagation()} style={{maxWidth:440}}>
     <div className="mh"><button className="mx" onClick={onClose}><I.X/></button><h2>{mode==="login"?"Connexion":step===0?"Type de compte":"Inscription"}</h2></div>
     <div className="mb">
       {mode==="login"?<>
@@ -826,7 +826,7 @@ function AuthModal({onClose,dispatch,mode:im}){
             <div className="auth-section"><span className="auth-section-label">Localisation</span><hr/></div>
             <div className="auth-field"><label>Téléphone</label><input type="tel" value={f.phone} onChange={e=>u("phone",e.target.value)} placeholder="06 12 34 56 78"/></div>
             <div className="auth-field" style={{position:'relative'}}><label>Adresse <span style={{fontWeight:400,color:'var(--g)'}}>(numéro + rue)</span></label>
-              <input value={f.address} onChange={e=>{u("address",e.target.value);clearTimeout(addrTimer.current);if(e.target.value.length>=3){addrTimer.current=setTimeout(()=>fetch(`https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(e.target.value)}&limit=5`).then(r=>r.json()).then(d=>setAddrSugg(d.features||[])).catch(()=>{}),400);}else setAddrSugg([]);}} onBlur={()=>setTimeout(()=>setAddrSugg([]),200)} placeholder="Ex : 12 rue des Lilas"/>
+              <input value={f.address} onChange={e=>{u("address",e.target.value);clearTimeout(addrTimer.current);if(e.target.value.length>=3){addrTimer.current=setTimeout(()=>{const cityParam=f.city?`&city=${encodeURIComponent(f.city)}`:"";const pcParam=f.postalCode?`&postcode=${encodeURIComponent(f.postalCode)}`:"";fetch(`https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(e.target.value)}&limit=5&type=housenumber${pcParam||cityParam}`).then(r=>r.json()).then(d=>setAddrSugg(d.features||[])).catch(()=>{})},400);}else setAddrSugg([]);}} onBlur={()=>setTimeout(()=>setAddrSugg([]),200)} placeholder="Ex : 12 rue des Lilas"/>
               <span style={{fontSize:11,color:'var(--g)',marginTop:3,display:'block'}}>Suggestions optionnelles — vous pouvez taper librement</span>
               {addrSugg.length>0&&<div style={{position:'absolute',top:'calc(100% - 4px)',left:0,right:0,background:'var(--w)',border:'1px solid #e5e7eb',borderRadius:10,boxShadow:'0 4px 16px rgba(0,0,0,.1)',zIndex:200,overflow:'hidden'}}>
                 {addrSugg.map((feat,i)=><div key={i} style={{padding:'10px 14px',cursor:'pointer',fontSize:13,borderBottom:'1px solid #f3f4f6'}} onMouseEnter={e=>e.currentTarget.style.background='#f5f3ff'} onMouseLeave={e=>e.currentTarget.style.background=''} onClick={()=>{u('address',feat.properties.name);u('postalCode',feat.properties.postcode||'');u('city',feat.properties.city||'');setAddrSugg([]);}}>
@@ -840,19 +840,20 @@ function AuthModal({onClose,dispatch,mode:im}){
             </div>
             {/* Consentements */}
             <div className="auth-section"><span className="auth-section-label">Consentements</span><hr/></div>
-            <label className="auth-check"><input type="checkbox" checked={cguOk} onChange={e=>setCguOk(e.target.checked)}/><span className="auth-check-box">{cguOk&&<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><polyline points="2,6 5,9 10,3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}</span><span className="auth-check-text">J'accepte les <button className="cl" onClick={e=>{e.preventDefault();e.stopPropagation();setShowCGU(true)}}>CGU</button> <span style={{color:"var(--p)"}}>*</span></span></label>
-            <label className="auth-check"><input type="checkbox" checked={privacyOk} onChange={e=>setPrivacyOk(e.target.checked)}/><span className="auth-check-box">{privacyOk&&<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><polyline points="2,6 5,9 10,3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}</span><span className="auth-check-text">J'accepte la <button className="cl" onClick={e=>{e.preventDefault();e.stopPropagation();setShowPrivacy(true)}}>Politique de confidentialité</button> <span style={{color:"var(--p)"}}>*</span></span></label>
+            <label className="auth-check"><input type="checkbox" checked={cguOk} onChange={e=>setCguOk(e.target.checked)}/><span className="auth-check-box">{cguOk&&<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><polyline points="2,6 5,9 10,3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}</span><span className="auth-check-text">J'accepte les <button style={{background:"none",border:"none",padding:0,margin:0,color:"var(--p)",fontWeight:700,fontSize:13,textDecoration:"underline",cursor:"pointer",display:"inline"}} onClick={e=>{e.preventDefault();e.stopPropagation();setShowCGU(true)}}>CGU</button> <span style={{color:"var(--p)"}}>*</span></span></label>
+            <label className="auth-check"><input type="checkbox" checked={privacyOk} onChange={e=>setPrivacyOk(e.target.checked)}/><span className="auth-check-box">{privacyOk&&<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><polyline points="2,6 5,9 10,3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}</span><span className="auth-check-text">J'accepte la <button style={{background:"none",border:"none",padding:0,margin:0,color:"var(--p)",fontWeight:700,fontSize:13,textDecoration:"underline",cursor:"pointer",display:"inline"}} onClick={e=>{e.preventDefault();e.stopPropagation();setShowPrivacy(true)}}>Politique de confidentialité</button> <span style={{color:"var(--p)"}}>*</span></span></label>
             <label className="auth-check"><input type="checkbox" checked={marketingOk} onChange={e=>setMarketingOk(e.target.checked)}/><span className="auth-check-box">{marketingOk&&<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><polyline points="2,6 5,9 10,3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}</span><span className="auth-check-text opt">J'accepte de recevoir des emails promotionnels de Cercle <span style={{fontSize:11,color:"var(--gl)"}}>(optionnel)</span></span></label>
           </div>
         </>}
         {err&&<p style={{color:"#ef4444",fontSize:12,marginBottom:8,padding:"6px 10px",background:"#fef2f2",borderRadius:8}}>{err}</p>}
-        {showCGU&&<CGUModal onClose={()=>setShowCGU(false)}/>}
-        {showPrivacy&&<PrivacyModal onClose={()=>setShowPrivacy(false)}/>}
         <button className="auth-submit" disabled={acctType==="perso"&&(!cguOk||!privacyOk)} style={{background:acctType==="pro"?"linear-gradient(135deg,#2563EB,#1d4ed8)":undefined}} onClick={go}>{acctType==="pro"?"Créer mon compte Pro 🏢":"Créer mon compte 🎉"}</button>
         <p style={{textAlign:'center',fontSize:11,color:'var(--gl)',marginTop:8,lineHeight:1.5}}>🔒 Vos données sont protégées et ne seront jamais revendues.</p>
       </>}
     </div>
   </div></div>
+  {showCGU&&<CGUModal onClose={()=>setShowCGU(false)}/>}
+  {showPrivacy&&<PrivacyModal onClose={()=>setShowPrivacy(false)}/>}
+</>
 }
 
 
