@@ -89,6 +89,7 @@ body{background:#F4F3FF}
 .auth-submit{width:100%;padding:14px;border:none;border-radius:14px;background:linear-gradient(135deg,var(--p),#f87171);color:#fff;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 4px 20px rgba(108,99,255,.28);transition:opacity .2s,transform .1s;margin-top:6px}
 .auth-submit:disabled{opacity:.4;cursor:not-allowed;box-shadow:none}
 .auth-submit:not(:disabled):active{transform:scale(.98)}
+.auth-sel{padding:11px 14px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:14px;background:var(--w);color:var(--dk);transition:border-color .2s,box-shadow .2s;outline:none;width:100%}.auth-sel:focus{border-color:var(--p);box-shadow:0 0 0 3px rgba(108,99,255,.1)}
 </style>
 </head>
 <body>
@@ -622,12 +623,60 @@ function Card({item,onOpen,favs,dispatch,onAuthRequired}){return <div className=
   </div>
 </div>}
 
+function CGUModal({onClose}){
+  return <div className="bk" onClick={onClose}><div className="md" onClick={e=>e.stopPropagation()} style={{maxWidth:560,maxHeight:'80vh'}}>
+    <div className="mh"><button className="mx" onClick={onClose}><I.X/></button><h2>Conditions Générales d'Utilisation</h2></div>
+    <div className="mb" style={{overflowY:'auto',maxHeight:'60vh',fontSize:13,lineHeight:1.7,color:'var(--tx)'}}>
+      <p style={{color:'var(--g)',fontSize:11,marginBottom:16}}>Dernière mise à jour : 28 avril 2026</p>
+      <h3 style={{fontWeight:700,marginBottom:6,marginTop:16}}>1. Objet</h3>
+      <p>Cercle est une plateforme de mise en relation entre particuliers et professionnels pour la location d'objets. Les présentes CGU régissent l'utilisation du service.</p>
+      <h3 style={{fontWeight:700,marginBottom:6,marginTop:16}}>2. Inscription</h3>
+      <p>L'inscription est gratuite. L'utilisateur s'engage à fournir des informations exactes et à maintenir la confidentialité de ses identifiants. Cercle se réserve le droit de suspendre tout compte en cas d'abus.</p>
+      <h3 style={{fontWeight:700,marginBottom:6,marginTop:16}}>3. Annonces et locations</h3>
+      <p>Les annonces doivent être exactes et légales. Le propriétaire fixe librement son prix. Cercle perçoit une commission sur chaque transaction selon le grade de l'utilisateur (3% à 12%). Les locations engagent les deux parties.</p>
+      <h3 style={{fontWeight:700,marginBottom:6,marginTop:16}}>4. Paiements</h3>
+      <p>Les paiements sont sécurisés. La caution est bloquée pendant la durée de la location et restituée sous 48h après confirmation de retour. En cas de litige, Cercle peut intervenir en arbitre.</p>
+      <h3 style={{fontWeight:700,marginBottom:6,marginTop:16}}>5. Responsabilités</h3>
+      <p>Cercle est une plateforme d'intermédiation. La responsabilité des dommages incombe aux parties. Une protection jusqu'à 2 000 € est incluse pour les objets loués via Cercle.</p>
+      <h3 style={{fontWeight:700,marginBottom:6,marginTop:16}}>6. Résiliation</h3>
+      <p>L'utilisateur peut supprimer son compte à tout moment depuis les paramètres. Cercle peut résilier un compte en cas de violation des présentes CGU.</p>
+      <h3 style={{fontWeight:700,marginBottom:6,marginTop:16}}>7. Contact</h3>
+      <p>Pour toute question : <a href="mailto:support@cercle.fr" style={{color:'var(--p)'}}>support@cercle.fr</a></p>
+      <button className="bp" style={{width:'100%',marginTop:20}} onClick={onClose}>J'ai lu et compris</button>
+    </div>
+  </div></div>
+}
+
+function PrivacyModal({onClose}){
+  return <div className="bk" onClick={onClose}><div className="md" onClick={e=>e.stopPropagation()} style={{maxWidth:560,maxHeight:'80vh'}}>
+    <div className="mh"><button className="mx" onClick={onClose}><I.X/></button><h2>Politique de Confidentialité</h2></div>
+    <div className="mb" style={{overflowY:'auto',maxHeight:'60vh',fontSize:13,lineHeight:1.7,color:'var(--tx)'}}>
+      <p style={{color:'var(--g)',fontSize:11,marginBottom:16}}>Dernière mise à jour : 28 avril 2026 — Conforme RGPD</p>
+      <h3 style={{fontWeight:700,marginBottom:6,marginTop:16}}>1. Données collectées</h3>
+      <p>Nous collectons : nom, prénom, email, date de naissance, adresse, téléphone, photo de profil, historique des transactions, et préférences de communication.</p>
+      <h3 style={{fontWeight:700,marginBottom:6,marginTop:16}}>2. Utilisation des données</h3>
+      <p>Vos données sont utilisées pour : gérer votre compte, traiter les transactions, vous envoyer des notifications liées à votre activité, et améliorer nos services. Elles ne sont jamais revendues à des tiers.</p>
+      <h3 style={{fontWeight:700,marginBottom:6,marginTop:16}}>3. Emails promotionnels</h3>
+      <p>Vous ne recevrez des emails promotionnels que si vous avez explicitement coché la case correspondante lors de l'inscription. Vous pouvez vous désabonner à tout moment.</p>
+      <h3 style={{fontWeight:700,marginBottom:6,marginTop:16}}>4. Conservation</h3>
+      <p>Vos données sont conservées pendant toute la durée de votre compte, puis 3 ans après suppression pour des raisons légales.</p>
+      <h3 style={{fontWeight:700,marginBottom:6,marginTop:16}}>5. Vos droits (RGPD)</h3>
+      <p>Vous disposez d'un droit d'accès, de rectification, d'effacement, de portabilité et d'opposition. Exercez vos droits en contactant notre DPO.</p>
+      <h3 style={{fontWeight:700,marginBottom:6,marginTop:16}}>6. Contact DPO</h3>
+      <p><a href="mailto:dpo@cercle.fr" style={{color:'var(--p)'}}>dpo@cercle.fr</a> — Réponse sous 30 jours.</p>
+      <button className="bp" style={{width:'100%',marginTop:20}} onClick={onClose}>J'ai compris</button>
+    </div>
+  </div></div>
+}
+
 function AuthModal({onClose,dispatch,mode:im}){
   const[mode,setMode]=useState(im||"login");const[step,setStep]=useState(0);const[acctType,setAcctType]=useState("perso");
-  const[f,setF]=useState({firstName:"",lastName:"",dob:"",email:"",password:"",city:"",address:"",postalCode:"",phone:"",bio:"",company:"",siret:"",sector:"",tva:"",website:""});
+  const[f,setF]=useState({firstName:"",lastName:"",dob:"",dobDay:"",dobMonth:"",dobYear:"",email:"",password:"",city:"",address:"",postalCode:"",phone:"",bio:"",company:"",siret:"",sector:"",tva:"",website:""});
   const[avatarPreview,setAvatarPreview]=useState(null);
   const[cguOk,setCguOk]=useState(false);const[privacyOk,setPrivacyOk]=useState(false);const[marketingOk,setMarketingOk]=useState(false);
   const[err,setErr]=useState("");const[loading,setLoading]=useState("");
+  const[showCGU,setShowCGU]=useState(false);const[showPrivacy,setShowPrivacy]=useState(false);
+  const[addrSuggestions,setAddrSuggestions]=useState([]);const[showSugg,setShowSugg]=useState(false);const addrTimer=useRef(null);
   const u=(k,v)=>setF(p=>({...p,[k]:v}));
   const go=()=>{
     if(mode==="login"){if(!f.email||!f.password){setErr("Remplissez tous les champs");return}
@@ -638,7 +687,7 @@ function AuthModal({onClose,dispatch,mode:im}){
       if(step===0)return setStep(1);
       if(acctType==="perso"){if(!f.firstName||!f.lastName||!f.email||!f.password){setErr("Remplissez tous les champs obligatoires");return}
         if(!cguOk||!privacyOk){setErr("Veuillez accepter les CGU et la Politique de confidentialité");return}
-        dispatch({type:"LOGIN",payload:{id:uid(),name:`${f.firstName} ${f.lastName}`,email:f.email,avatar:"😊",verified:false,since:2026,bio:f.bio||"",location:f.city||"",city:f.city,address:f.address,postalCode:f.postalCode,phone:f.phone,dob:f.dob,marketingEmails:marketingOk,avatarUrl:avatarPreview||null,rating:0,rentals:0,responseTime:"~1h",isPro:false}});onClose()
+        dispatch({type:"LOGIN",payload:{id:uid(),name:`${f.firstName} ${f.lastName}`,email:f.email,avatar:"😊",verified:false,since:2026,bio:f.bio||"",location:f.city||"",city:f.city,address:f.address,postalCode:f.postalCode,phone:f.phone,dob:f.dobDay&&f.dobMonth&&f.dobYear?`${f.dobDay}/${f.dobMonth}/${f.dobYear}`:f.dob,marketingEmails:marketingOk,avatarUrl:avatarPreview||null,rating:0,rentals:0,responseTime:"~1h",isPro:false}});onClose()
       }else{if(!f.company||!f.siret||!f.email||!f.password){setErr("Remplissez les champs obligatoires");return}
         dispatch({type:"LOGIN",payload:{id:uid(),name:f.company,email:f.email,avatar:"🏢",verified:true,since:2026,bio:f.sector?`Secteur : ${f.sector}`:"Professionnel",location:f.location,rating:0,rentals:0,responseTime:"~15 min",isPro:true,company:f.company,siret:f.siret,tva:f.tva,phone:f.phone,website:f.website,sector:f.sector}});onClose()}
     }
@@ -651,7 +700,7 @@ function AuthModal({onClose,dispatch,mode:im}){
     },800);
   };
   const sBtn={width:"100%",display:"flex",alignItems:"center",justifyContent:"center",gap:10,padding:"11px 16px",borderRadius:10,fontSize:13,fontWeight:600,border:"1.5px solid var(--bd)",background:"var(--w)",color:"var(--dk)",marginBottom:8,transition:"all .15s",cursor:"pointer",position:"relative"};
-  return <div className="bk" onClick={onClose}><div className="md" onClick={e=>e.stopPropagation()} style={{maxWidth:440}}>
+  return <>{showCGU&&<CGUModal onClose={()=>setShowCGU(false)}/>}{showPrivacy&&<PrivacyModal onClose={()=>setShowPrivacy(false)}/>}<div className="bk" onClick={onClose}><div className="md" onClick={e=>e.stopPropagation()} style={{maxWidth:440}}>
     <div className="mh"><button className="mx" onClick={onClose}><I.X/></button><h2>{mode==="login"?"Connexion":step===0?"Type de compte":"Inscription"}</h2></div>
     <div className="mb">
       {mode==="login"?<>
@@ -752,7 +801,7 @@ function AuthModal({onClose,dispatch,mode:im}){
               <div className="auth-field"><label>Prénom <span style={{color:"var(--p)"}}>*</span></label><input value={f.firstName} onChange={e=>u("firstName",e.target.value)} placeholder="Jean"/></div>
               <div className="auth-field"><label>Nom <span style={{color:"var(--p)"}}>*</span></label><input value={f.lastName} onChange={e=>u("lastName",e.target.value)} placeholder="Dupont"/></div>
             </div>
-            <div className="auth-field"><label>Date de naissance</label><input type="date" value={f.dob} onChange={e=>u("dob",e.target.value)} max={new Date(new Date().setFullYear(new Date().getFullYear()-18)).toISOString().split("T")[0]}/></div>
+            <div className="auth-field"><label>Date de naissance</label><div style={{display:'grid',gridTemplateColumns:'1fr 2fr 1fr',gap:8}}><select className="auth-sel" value={f.dobDay} onChange={e=>u('dobDay',e.target.value)}><option value="">Jour</option>{Array.from({length:31},(_,i)=>i+1).map(d=><option key={d} value={String(d).padStart(2,'0')}>{String(d).padStart(2,'0')}</option>)}</select><select className="auth-sel" value={f.dobMonth} onChange={e=>u('dobMonth',e.target.value)}><option value="">Mois</option>{['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'].map((m,i)=><option key={i} value={String(i+1).padStart(2,'0')}>{m}</option>)}</select><select className="auth-sel" value={f.dobYear} onChange={e=>u('dobYear',e.target.value)}><option value="">Année</option>{Array.from({length:100},(_,i)=>new Date().getFullYear()-18-i).map(y=><option key={y} value={y}>{y}</option>)}</select></div></div>
             {/* Accès */}
             <div className="auth-section"><span className="auth-section-label">Accès</span><hr/></div>
             <div className="auth-field"><label>Email <span style={{color:"var(--p)"}}>*</span></label><input type="email" value={f.email} onChange={e=>u("email",e.target.value)} placeholder="jean@email.com"/></div>
@@ -760,23 +809,24 @@ function AuthModal({onClose,dispatch,mode:im}){
             {/* Localisation */}
             <div className="auth-section"><span className="auth-section-label">Localisation</span><hr/></div>
             <div className="auth-field"><label>Téléphone</label><input type="tel" value={f.phone} onChange={e=>u("phone",e.target.value)} placeholder="06 12 34 56 78"/></div>
-            <div className="auth-field"><label>Adresse</label><input value={f.address} onChange={e=>u("address",e.target.value)} placeholder="12 rue des Lilas"/></div>
+            <div className="auth-field" style={{position:"relative"}}><label>Adresse</label><input value={f.address} onChange={e=>{const val=e.target.value;u("address",val);if(addrTimer.current)clearTimeout(addrTimer.current);if(val.length>=3){addrTimer.current=setTimeout(()=>{fetch(`https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(val)}&limit=5&type=housenumber`).then(r=>r.json()).then(data=>{setAddrSuggestions(data.features||[]);setShowSugg(true)}).catch(()=>{})},400)}else{setAddrSuggestions([]);setShowSugg(false)}}} placeholder="12 rue des Lilas"/>{showSugg&&addrSuggestions.length>0&&<div style={{position:"absolute",top:"100%",left:0,right:0,background:"var(--w)",border:"1px solid #e5e7eb",borderRadius:10,boxShadow:"0 4px 16px rgba(0,0,0,.1)",zIndex:200,overflow:"hidden"}}>{addrSuggestions.map((feat,i)=><div key={i} style={{padding:"10px 14px",cursor:"pointer",fontSize:13,borderBottom:"1px solid #f3f4f6"}} onMouseEnter={e=>e.currentTarget.style.background="#f5f3ff"} onMouseLeave={e=>e.currentTarget.style.background=""} onClick={()=>{u("address",feat.properties.name);u("postalCode",feat.properties.postcode);u("city",feat.properties.city);setShowSugg(false);setAddrSuggestions([])}}>{feat.properties.label}</div>)}</div>}</div>
             <div className="auth-row">
               <div className="auth-field"><label>Code postal</label><input value={f.postalCode} onChange={e=>u("postalCode",e.target.value.replace(/\D/g,"").slice(0,5))} placeholder="75001" maxLength="5"/></div>
               <div className="auth-field"><label>Ville</label><input value={f.city} onChange={e=>u("city",e.target.value)} placeholder="Votre ville ou village"/></div>
             </div>
             {/* Consentements */}
             <div className="auth-section"><span className="auth-section-label">Consentements</span><hr/></div>
-            <label className="auth-check"><input type="checkbox" checked={cguOk} onChange={e=>setCguOk(e.target.checked)}/><span className="auth-check-box">{cguOk&&<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><polyline points="2,6 5,9 10,3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}</span><span className="auth-check-text">J'accepte les <button className="cl" onClick={e=>e.preventDefault()}>CGU</button> <span style={{color:"var(--p)"}}>*</span></span></label>
-            <label className="auth-check"><input type="checkbox" checked={privacyOk} onChange={e=>setPrivacyOk(e.target.checked)}/><span className="auth-check-box">{privacyOk&&<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><polyline points="2,6 5,9 10,3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}</span><span className="auth-check-text">J'accepte la <button className="cl" onClick={e=>e.preventDefault()}>Politique de confidentialité</button> <span style={{color:"var(--p)"}}>*</span></span></label>
+            <label className="auth-check"><input type="checkbox" checked={cguOk} onChange={e=>setCguOk(e.target.checked)}/><span className="auth-check-box">{cguOk&&<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><polyline points="2,6 5,9 10,3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}</span><span className="auth-check-text">J'accepte les <button className="cl" onClick={e=>{e.preventDefault();e.stopPropagation();setShowCGU(true)}}>CGU</button> <span style={{color:"var(--p)"}}>*</span></span></label>
+            <label className="auth-check"><input type="checkbox" checked={privacyOk} onChange={e=>setPrivacyOk(e.target.checked)}/><span className="auth-check-box">{privacyOk&&<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><polyline points="2,6 5,9 10,3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}</span><span className="auth-check-text">J'accepte la <button className="cl" onClick={e=>{e.preventDefault();e.stopPropagation();setShowPrivacy(true)}}>Politique de confidentialité</button> <span style={{color:"var(--p)"}}>*</span></span></label>
             <label className="auth-check"><input type="checkbox" checked={marketingOk} onChange={e=>setMarketingOk(e.target.checked)}/><span className="auth-check-box">{marketingOk&&<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><polyline points="2,6 5,9 10,3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}</span><span className="auth-check-text opt">J'accepte de recevoir des emails promotionnels de Cercle <span style={{fontSize:11,color:"var(--gl)"}}>(optionnel)</span></span></label>
           </div>
         </>}
         {err&&<p style={{color:"#ef4444",fontSize:12,marginBottom:8,padding:"6px 10px",background:"#fef2f2",borderRadius:8}}>{err}</p>}
         <button className="auth-submit" disabled={acctType==="perso"&&(!cguOk||!privacyOk)} style={{background:acctType==="pro"?"linear-gradient(135deg,#2563EB,#1d4ed8)":undefined}} onClick={go}>{acctType==="pro"?"Créer mon compte Pro 🏢":"Créer mon compte 🎉"}</button>
+        <p style={{textAlign:"center",fontSize:11,color:"var(--gl)",marginTop:8,lineHeight:1.5}}>🔒 Vos données sont protégées et ne seront jamais revendues.</p>
       </>}
     </div>
-  </div></div>
+  </div></div></>
 }
 
 
