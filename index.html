@@ -84,7 +84,7 @@ body{background:#F4F3FF}
 .auth-check-box{width:20px;height:20px;min-width:20px;border-radius:6px;border:2px solid #d1d5db;background:var(--w);display:flex;align-items:center;justify-content:center;transition:all .18s;margin-top:1px}
 .auth-check input:checked~.auth-check-box{background:var(--p);border-color:var(--p)}
 .auth-check-text{font-size:13px;line-height:1.5;color:var(--dk)}
-.auth-check-text a,.auth-check-text button.cl{color:var(--p)!important;text-decoration:underline;font-size:13px}
+.auth-check-text a,.auth-check-text button.cl{color:var(--p)!important;text-decoration:underline!important;font-size:13px!important;background:none!important;border:none!important;padding:0!important;margin:0!important;box-shadow:none!important;border-radius:0!important;font-weight:600!important;display:inline!important;cursor:pointer}
 .auth-check-text.opt{color:var(--g)}
 .auth-submit{width:100%;padding:14px;border:none;border-radius:14px;background:linear-gradient(135deg,var(--p),#f87171);color:#fff;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 4px 20px rgba(108,99,255,.28);transition:opacity .2s,transform .1s;margin-top:6px}
 .auth-submit:disabled{opacity:.4;cursor:not-allowed;box-shadow:none}
@@ -825,9 +825,10 @@ function AuthModal({onClose,dispatch,mode:im}){
             {/* Localisation */}
             <div className="auth-section"><span className="auth-section-label">Localisation</span><hr/></div>
             <div className="auth-field"><label>Téléphone</label><input type="tel" value={f.phone} onChange={e=>u("phone",e.target.value)} placeholder="06 12 34 56 78"/></div>
-            <div className="auth-field" style={{position:'relative'}}><label>Adresse</label>
-              <input value={f.address} onChange={e=>{u("address",e.target.value);clearTimeout(addrTimer.current);if(e.target.value.length>=3){addrTimer.current=setTimeout(()=>fetch(`https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(e.target.value)}&limit=5`).then(r=>r.json()).then(d=>setAddrSugg(d.features||[])).catch(()=>{}),400);}else setAddrSugg([]);}} placeholder="12 rue des Lilas"/>
-              {addrSugg.length>0&&<div style={{position:'absolute',top:'100%',left:0,right:0,background:'var(--w)',border:'1px solid #e5e7eb',borderRadius:10,boxShadow:'0 4px 16px rgba(0,0,0,.1)',zIndex:200,overflow:'hidden'}}>
+            <div className="auth-field" style={{position:'relative'}}><label>Adresse <span style={{fontWeight:400,color:'var(--g)'}}>(numéro + rue)</span></label>
+              <input value={f.address} onChange={e=>{u("address",e.target.value);clearTimeout(addrTimer.current);if(e.target.value.length>=3){addrTimer.current=setTimeout(()=>fetch(`https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(e.target.value)}&limit=5`).then(r=>r.json()).then(d=>setAddrSugg(d.features||[])).catch(()=>{}),400);}else setAddrSugg([]);}} onBlur={()=>setTimeout(()=>setAddrSugg([]),200)} placeholder="Ex : 12 rue des Lilas"/>
+              <span style={{fontSize:11,color:'var(--g)',marginTop:3,display:'block'}}>Suggestions optionnelles — vous pouvez taper librement</span>
+              {addrSugg.length>0&&<div style={{position:'absolute',top:'calc(100% - 4px)',left:0,right:0,background:'var(--w)',border:'1px solid #e5e7eb',borderRadius:10,boxShadow:'0 4px 16px rgba(0,0,0,.1)',zIndex:200,overflow:'hidden'}}>
                 {addrSugg.map((feat,i)=><div key={i} style={{padding:'10px 14px',cursor:'pointer',fontSize:13,borderBottom:'1px solid #f3f4f6'}} onMouseEnter={e=>e.currentTarget.style.background='#f5f3ff'} onMouseLeave={e=>e.currentTarget.style.background=''} onClick={()=>{u('address',feat.properties.name);u('postalCode',feat.properties.postcode||'');u('city',feat.properties.city||'');setAddrSugg([]);}}>
                   <span style={{fontWeight:600}}>{feat.properties.name}</span> <span style={{color:'var(--g)',fontSize:12}}>{feat.properties.postcode} {feat.properties.city}</span>
                 </div>)}
