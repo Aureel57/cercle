@@ -3741,7 +3741,7 @@ function Shop({owner,items,onClose,onOpen,state,dispatch,onAuthRequired}){
   const ownerItems=items.filter(i=>i.owner?.id===owner.id);
   const grade=getGrade(owner.rentals||0);
   return <div className="ov">
-    <div className="dh"><button className="mx" onClick={onClose} style={{position:"static"}}><I.X/></button><span style={{fontWeight:600}}>Boutique</span></div>
+    <div style={{position:"sticky",top:0,zIndex:10,display:"flex",alignItems:"center",padding:"12px 16px",background:"var(--w)",borderBottom:"1px solid var(--bd)"}}><button className="mx" onClick={onClose}><I.X/></button></div>
     <div className="shop-hd">
       <div className="shop-av" style={{border:`3px solid ${grade.id==="fondateur"?"#D4AF37":grade.id==="legende"?"#06B6D4":grade.id==="gardien"?"#7C3AED":grade.id==="pilier"?"#F59E0B":grade.id==="habitant"?"#3b82f6":"var(--bd)"}}`}}>{owner.avatarUrl?<img src={owner.avatarUrl} style={{width:"100%",height:"100%",borderRadius:"50%",objectFit:"cover"}} alt=""/>:owner.avatar}</div>
       <h2 style={{fontFamily:"var(--fd)",fontSize:20}}>{owner.name}</h2>
