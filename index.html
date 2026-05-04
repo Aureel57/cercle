@@ -1219,17 +1219,29 @@ function Detail({item,onClose,state,dispatch,setPage,setConvId,setShowShop,setPr
       </div>
 
       {/* ── Localisation ── */}
-      <div style={{marginBottom:24}}>
-        <h3 style={{fontSize:15,fontWeight:700,fontFamily:"var(--fd)",marginBottom:4}}>📍 Localisation</h3>
-        <p style={{fontSize:12,color:"var(--g)",marginBottom:12}}>Aux alentours de <strong>{item.location}</strong> · adresse exacte communiquée après réservation</p>
-        <div style={{borderRadius:16,overflow:"hidden",border:"1px solid var(--bd)",boxShadow:"var(--sh)"}}>
-          <iframe title="map"
-            src={`https://www.openstreetmap.org/export/embed.html?bbox=${((item.lng||2.35)-.015).toFixed(4)},${((item.lat||48.86)-.015).toFixed(4)},${((item.lng||2.35)+.015).toFixed(4)},${((item.lat||48.86)+.015).toFixed(4)}&layer=mapnik&marker=${(item.lat||48.86).toFixed(4)},${(item.lng||2.35).toFixed(4)}`}
-            style={{width:"100%",height:220,border:"none",display:"block"}}
-            loading="lazy"
-          />
-        </div>
-      </div>
+      {(()=>{
+        const lat=item.lat||LL[item.location]?.[0]||48.86;
+        const lng=item.lng||LL[item.location]?.[1]||2.35;
+        const bbox=`${(lng-.015).toFixed(4)},${(lat-.015).toFixed(4)},${(lng+.015).toFixed(4)},${(lat+.015).toFixed(4)}`;
+        const mapsUrl=`https://www.openstreetmap.org/?mlat=${lat.toFixed(4)}&mlon=${lng.toFixed(4)}#map=15/${lat.toFixed(4)}/${lng.toFixed(4)}`;
+        return <div style={{marginBottom:24}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+            <h3 style={{fontSize:15,fontWeight:700,fontFamily:"var(--fd)"}}>📍 Localisation</h3>
+            <a href={mapsUrl} target="_blank" rel="noopener noreferrer" style={{fontSize:11,color:"var(--p)",fontWeight:600,textDecoration:"none",display:"flex",alignItems:"center",gap:4}}>Ouvrir dans Maps ↗</a>
+          </div>
+          <p style={{fontSize:12,color:"var(--g)",marginBottom:10}}>Zone approximative · <strong>{item.location}</strong> · adresse exacte après réservation</p>
+          <div style={{borderRadius:16,overflow:"hidden",border:"1px solid var(--bd)",boxShadow:"var(--sh)",position:"relative"}}>
+            <iframe
+              title={`Carte ${item.location}`}
+              src={`https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${lat.toFixed(4)},${lng.toFixed(4)}`}
+              style={{width:"100%",height:240,border:"none",display:"block"}}
+              loading="lazy"
+            />
+            {/* Voile discret sur le bas pour masquer les contrôles OSM */}
+            <div style={{position:"absolute",bottom:0,left:0,right:0,height:32,background:"linear-gradient(to top,rgba(255,255,255,.7),transparent)",pointerEvents:"none"}}/>
+          </div>
+        </div>;
+      })()}
     </div>
     <div><div className="bc">
 
