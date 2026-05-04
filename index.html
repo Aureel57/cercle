@@ -293,7 +293,7 @@ body,html,#root{font-family:var(--f);color:var(--tx);background:var(--bg);-webki
 .dimgs .dimg2{border-radius:0 0 var(--rl) 0;overflow:hidden}
 .dimgs img{width:100%;height:100%;object-fit:cover;display:block;cursor:pointer;transition:filter .2s,transform .3s}
 .dimgs img:hover{filter:brightness(.93);transform:scale(1.02)}
-.dc{display:grid;grid-template-columns:1fr 380px;gap:40px;padding:28px;max-width:1520px;margin:0 auto}.bc{position:sticky;top:90px;height:fit-content;border:1px solid var(--bd);border-radius:var(--rl);padding:28px;box-shadow:0 4px 20px rgba(0,0,0,.08);background:var(--w)}.bcp{font-family:var(--fd);font-size:24px;font-weight:700;margin-bottom:4px;letter-spacing:-.02em}.bci{margin:12px 0}.bcr{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}.bcf{flex:1}.bcf label{display:block;font-size:10px;font-weight:700;margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em}.bcf input,.bcf select{width:100%;padding:10px 12px;border:1.5px solid var(--bd);border-radius:12px;font-size:13px;outline:none;transition:border .2s}.bcf input:focus{border-color:var(--dk)}
+.dc{display:grid;grid-template-columns:1fr 380px;gap:40px;padding:28px;max-width:1520px;margin:0 auto;align-items:start}.bc{position:sticky;top:90px;align-self:start;border:1px solid var(--bd);border-radius:var(--rl);padding:24px;box-shadow:0 8px 32px rgba(0,0,0,.10);background:var(--w)}.bcp{font-family:var(--fd);font-size:24px;font-weight:700;margin-bottom:4px;letter-spacing:-.02em}.bci{margin:12px 0}.bcr{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}.bcf{flex:1}.bcf label{display:block;font-size:10px;font-weight:700;margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em}.bcf input,.bcf select{width:100%;padding:10px 12px;border:1.5px solid var(--bd);border-radius:12px;font-size:13px;outline:none;transition:border .2s}.bcf input:focus{border-color:var(--dk)}
 .bcb{margin:14px 0;padding:14px 0;border-top:1px solid var(--bd)}.bcl{display:flex;justify-content:space-between;padding:4px 0;font-size:13px;color:var(--g)}.bcl.tot{font-weight:700;font-size:15px;color:var(--dk);padding:10px 0 0;margin-top:8px;border-top:1px solid var(--bd)}
 /* Profile */
 .prof{padding:28px;max-width:900px;margin:0 auto;animation:fadeSlideUp 0.6s ease}
@@ -1091,7 +1091,11 @@ function Detail({item,onClose,state,dispatch,setPage,setConvId,setShowShop,setPr
   const[showVerifModal,setShowVerifModal]=useState(false);
   const userRentals=(state.user?.rentals||0)+state.bookings.filter(b=>b.userId===state.user?.id).length;
   const userGrade=getGrade(userRentals);
-  const ins=Math.floor(item.price*days*.08),fee=Math.floor(item.price*days*userGrade.feeRate),feeBase=Math.floor(item.price*days*0.12),feeSaved=feeBase-fee,tot=item.price*days+ins+fee;
+  const base=item.price*days;
+  const fee=Math.round(base*userGrade.feeRate*100)/100;
+  const feeBase=Math.round(base*0.12*100)/100;
+  const feeSaved=Math.round((feeBase-fee)*100)/100;
+  const tot=Math.round((base+fee)*100)/100;
   useEffect(()=>{if(sd&&ed){const d=Math.max(1,Math.round((new Date(ed)-new Date(sd))/864e5));setDays(d)}},[sd,ed]);
   const VEHICLE_CATS=["vehicles","vehicle","voiture","moto","transport"];
   const needsDrivingLicense=VEHICLE_CATS.includes((item.cat||"").toLowerCase());
@@ -1228,33 +1232,86 @@ function Detail({item,onClose,state,dispatch,setPage,setConvId,setShowShop,setPr
       </div>
     </div>
     <div><div className="bc">
-      <div style={{marginBottom:16}}>
-        <div style={{display:"flex",alignItems:"baseline",gap:6,marginBottom:4}}>
-          <span style={{fontFamily:"var(--fd)",fontSize:28,fontWeight:800,letterSpacing:"-.02em"}}>{item.price} €</span>
-          <span style={{fontSize:13,color:"var(--g)",fontWeight:500}}>/ jour</span>
+
+      {/* ── Prix & note ── */}
+      <div style={{display:"flex",alignItems:"baseline",justifyContent:"space-between",marginBottom:16,paddingBottom:16,borderBottom:"1px solid var(--bd)"}}>
+        <div>
+          <span style={{fontFamily:"var(--fd)",fontSize:30,fontWeight:800,letterSpacing:"-.03em"}}>{item.price} €</span>
+          <span style={{fontSize:13,color:"var(--g)",fontWeight:500,marginLeft:4}}>/ jour</span>
         </div>
-        <div style={{display:"flex",alignItems:"center",gap:6,fontSize:12}}>
-          <span style={{color:"#f59e0b"}}>★</span><strong>{item.rating}</strong>
-          <span style={{color:"var(--gl)"}}>·</span>
-          <span style={{color:"var(--g)"}}>{item.reviews+iRevs.length} avis</span>
-          <span style={{color:"var(--gl)"}}>·</span>
-          <span style={{color:"var(--g)"}}>Caution {item.deposit} €</span>
+        <div style={{textAlign:"right"}}>
+          <div style={{fontSize:13,fontWeight:700}}><span style={{color:"#f59e0b"}}>★</span> {item.rating}</div>
+          <div style={{fontSize:11,color:"var(--g)"}}>{item.reviews+iRevs.length} avis</div>
         </div>
       </div>
-      {!showBid?<button className="cl" style={{fontSize:11,marginBottom:6,display:"flex",alignItems:"center",gap:4}} onClick={()=>setShowBid(true)}>🏷️ Proposer un prix</button>:
-      <div className="bid-bar"><span style={{fontSize:14}}>🏷️</span><input type="number" value={bidAmt} onChange={e=>setBidAmt(e.target.value)} placeholder="Votre prix/jour" style={{flex:1,border:"1.5px solid var(--bd)",borderRadius:8,padding:"6px 10px",fontSize:12}}/><button className="bp" style={{fontSize:11,padding:"6px 12px"}} onClick={()=>{if(+bidAmt>0){setShowBid(false);setBidAmt("")}}}>Envoyer</button></div>}
+
       {payStep===0?<>
-        <div style={{marginBottom:10}}>
-          <div style={{marginBottom:8}}><label style={{fontSize:11,fontWeight:700,display:"block",marginBottom:4}}>Durée</label><div className="ts">{[["heure","⏰ À l'heure"],["demi","☀️ Demi-journée"],["jour","📅 Journée"],["semaine","📆 Semaine"]].map(([id,l])=><button key={id} className={"ts-btn"+(durType===id?" on":"")} onClick={()=>setDurType(id)}>{l}</button>)}</div></div>
-          {(durType==="heure"||durType==="demi")&&<div style={{marginBottom:8}}><label style={{fontSize:11,fontWeight:700,display:"block",marginBottom:4}}>Créneau</label><div className="ts">{(durType==="heure"?["8h-9h","9h-10h","10h-11h","11h-12h","14h-15h","15h-16h","16h-17h","17h-18h"]:["Matin (8h-12h)","Après-midi (14h-18h)"]).map(s=><button key={s} className={"ts-btn"+(timeSlot===s?" on":"")} onClick={()=>setTimeSlot(s)}>{s}</button>)}</div></div>}
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:8}}>
+        {/* ── Sélecteur de durée ── */}
+        <div style={{marginBottom:12}}>
+          <div style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:".06em",color:"var(--g)",marginBottom:6}}>Type de location</div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
+            {[["jour","📅 Journée"],["semaine","📆 Semaine"],["demi","☀️ Demi-journée"],["heure","⏰ Heure"]].map(([id,l])=>
+              <button key={id} onClick={()=>setDurType(id)} style={{padding:"8px 4px",borderRadius:10,border:`1.5px solid ${durType===id?"var(--p)":"var(--bd)"}`,background:durType===id?"#f5f3ff":"var(--w)",color:durType===id?"var(--p)":"var(--dk)",fontSize:11,fontWeight:600,cursor:"pointer",transition:"all .15s"}}>{l}</button>
+            )}
+          </div>
+        </div>
+
+        {/* ── Créneaux horaires ── */}
+        {(durType==="heure"||durType==="demi")&&<div style={{marginBottom:12}}>
+          <div style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:".06em",color:"var(--g)",marginBottom:6}}>Créneau</div>
+          <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
+            {(durType==="heure"?["8h-9h","9h-10h","10h-11h","11h-12h","14h-15h","15h-16h","16h-17h","17h-18h"]:["Matin (8h-12h)","Après-midi (14h-18h)"]).map(s=>
+              <button key={s} onClick={()=>setTimeSlot(s)} style={{padding:"5px 10px",borderRadius:8,border:`1.5px solid ${timeSlot===s?"var(--p)":"var(--bd)"}`,background:timeSlot===s?"#f5f3ff":"var(--w)",color:timeSlot===s?"var(--p)":"var(--dk)",fontSize:11,fontWeight:600,cursor:"pointer"}}>{s}</button>
+            )}
+          </div>
+        </div>}
+
+        {/* ── Dates ── */}
+        <div style={{marginBottom:12}}>
+          <div style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:".06em",color:"var(--g)",marginBottom:6}}>Dates</div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
             <MiniCal value={sd} onChange={setSd} label="Début"/>
             <MiniCal value={ed} onChange={setEd} label="Fin" minDate={sd}/>
           </div>
-          <div className="bcf"><label>Retrait</label><select><option>📍 En main propre</option><option>🚚 Livraison (+10€)</option></select></div>
         </div>
-        <div className="bcb"><div className="bcl"><span>{item.price} € × {days}j</span><span>{item.price*days} €</span></div><div className="bcl"><span>Assurance</span><span>{ins} €</span></div><div className="bcl"><span>Frais ({Math.round(userGrade.feeRate*100)}%)</span><span>{fee} €</span></div>{state.user&&feeSaved>0&&<div className="bcl" style={{color:"var(--acc)",fontSize:11}}><span>{userGrade.icon} Réduction {userGrade.name}</span><span>-{feeSaved} €</span></div>}<div className="bcl tot"><span>Total</span><span>{tot} €</span></div><div className="bcl" style={{color:"var(--g)",fontSize:11}}><span>🔒 Caution bloquée</span><span>{item.deposit} €</span></div></div>
-        <button className="bp" style={{width:"100%",marginTop:12,background:booked?"var(--acc)":undefined}} onClick={()=>state.user?(booked?null:handleReserveClick()):null} disabled={booked||!state.user}>{!state.user?"Connectez-vous":booked?"✓ Réservé !":"Payer · "+tot+" €"}</button>
+
+        {/* ── Mode de retrait ── */}
+        <div style={{marginBottom:16}}>
+          <div style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:".06em",color:"var(--g)",marginBottom:6}}>Retrait</div>
+          <select style={{width:"100%",padding:"10px 12px",border:"1.5px solid var(--bd)",borderRadius:12,fontSize:13,background:"var(--w)",color:"var(--dk)",outline:"none"}}>
+            <option>📍 En main propre</option>
+            <option>🚚 Livraison (+10 €)</option>
+          </select>
+        </div>
+
+        {/* ── Récapitulatif prix ── */}
+        <div style={{background:"var(--bgw)",borderRadius:14,padding:"14px 16px",marginBottom:14,border:"1px solid var(--bd)"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"5px 0",fontSize:13}}>
+            <span style={{color:"var(--g)"}}>{item.price} € × {days} jour{days>1?"s":""}</span>
+            <span style={{fontWeight:600}}>{base.toFixed(2)} €</span>
+          </div>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"5px 0",fontSize:13}}>
+            <span style={{color:"var(--g)"}}>Frais de service ({(userGrade.feeRate*100).toFixed(0)}%)</span>
+            <span style={{fontWeight:600}}>{fee.toFixed(2)} €</span>
+          </div>
+          {state.user&&feeSaved>0&&<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"5px 0",fontSize:12,color:"#10b981"}}>
+            <span>{userGrade.icon} Réduction grade {userGrade.name}</span>
+            <span style={{fontWeight:700}}>−{feeSaved.toFixed(2)} €</span>
+          </div>}
+          <div style={{borderTop:"1px solid var(--bd)",marginTop:8,paddingTop:10,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <span style={{fontWeight:700,fontSize:15}}>Total</span>
+            <span style={{fontWeight:800,fontSize:17,fontFamily:"var(--fd)"}}>{tot.toFixed(2)} €</span>
+          </div>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",paddingTop:6,fontSize:11,color:"var(--g)"}}>
+            <span>🔒 Caution bloquée</span>
+            <span>{item.deposit} €</span>
+          </div>
+        </div>
+
+        <button className="bp" style={{width:"100%",padding:"14px",fontSize:15,letterSpacing:"-.01em",background:booked?"#10b981":undefined,boxShadow:booked?"0 4px 16px rgba(16,185,129,.3)":"0 4px 20px rgba(108,99,255,.3)"}} onClick={()=>state.user?(booked?null:handleReserveClick()):null} disabled={booked||!state.user}>
+          {!state.user?"🔐 Connectez-vous pour réserver":booked?"✓ Réservé !":"Réserver · "+tot.toFixed(2)+" €"}
+        </button>
+        {!state.user&&<p style={{textAlign:"center",fontSize:11,color:"var(--g)",marginTop:8}}>Pas encore de compte ? C'est gratuit.</p>}
       </>:payStep===1?<>
         <div style={{padding:"14px 0"}}>
           <h3 style={{fontFamily:"var(--fd)",fontSize:15,fontWeight:600,marginBottom:10}}>🔒 Paiement sécurisé</h3>
@@ -1280,13 +1337,14 @@ function Detail({item,onClose,state,dispatch,setPage,setConvId,setShowShop,setPr
             <svg width="16" height="18" viewBox="0 0 17 20" fill="white"><path d="M13.34 10.05c-.02-2.14 1.75-3.17 1.83-3.22-1-1.46-2.55-1.66-3.1-1.68-1.32-.13-2.57.77-3.24.77-.67 0-1.7-.75-2.8-.73A4.13 4.13 0 0 0 2.54 7.6c-1.49 2.58-.38 6.4 1.07 8.49.71 1.02 1.56 2.17 2.67 2.13 1.07-.04 1.47-.69 2.77-.69 1.29 0 1.66.69 2.78.67 1.15-.02 1.88-1.05 2.58-2.08.81-1.19 1.15-2.34 1.17-2.4-.03-.01-2.24-.86-2.26-3.41zM11.24 3.9c.59-.71.99-1.7.88-2.69-.85.03-1.88.57-2.49 1.27-.55.63-1.03 1.64-.9 2.6.95.08 1.92-.48 2.51-1.18z"/></svg>
             Payer avec Apple Pay
           </button>}
-          <div style={{background:"var(--bgw)",borderRadius:10,padding:12,marginTop:10,fontSize:12}}>
-            <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}><span>Location</span><strong>{tot} €</strong></div>
-            <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}><span>🔒 Caution (bloquée)</span><strong>{item.deposit} €</strong></div>
-            <div style={{borderTop:"1px solid var(--bd)",paddingTop:6,marginTop:6,display:"flex",justifyContent:"space-between",fontWeight:700}}>
-              <span>Prélevé maintenant</span><span>{tot+item.deposit} €</span>
+          <div style={{background:"var(--bgw)",borderRadius:12,padding:14,marginTop:10,fontSize:13,border:"1px solid var(--bd)"}}>
+            <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}><span style={{color:"var(--g)"}}>Location ({days}j)</span><strong>{base.toFixed(2)} €</strong></div>
+            <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}><span style={{color:"var(--g)"}}>Frais ({(userGrade.feeRate*100).toFixed(0)}%)</span><strong>{fee.toFixed(2)} €</strong></div>
+            <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}><span style={{color:"var(--g)"}}>🔒 Caution (bloquée)</span><strong>{item.deposit} €</strong></div>
+            <div style={{borderTop:"1px solid var(--bd)",paddingTop:8,marginTop:8,display:"flex",justifyContent:"space-between",fontWeight:700,fontSize:15}}>
+              <span>Prélevé maintenant</span><span>{(tot+item.deposit).toFixed(2)} €</span>
             </div>
-            <div style={{fontSize:10,color:"var(--g)",marginTop:6}}>💡 La caution de {item.deposit} € est bloquée sur votre compte et restituée automatiquement sous 48h après retour de l'objet en bon état.</div>
+            <div style={{fontSize:10,color:"var(--g)",marginTop:8,lineHeight:1.5}}>💡 La caution de {item.deposit} € est bloquée et restituée automatiquement sous 48h après retour en bon état.</div>
           </div>
         </div>
         <div style={{display:"flex",gap:8}}><button className="bs" style={{flex:1}} onClick={()=>setPayStep(0)}>← Retour</button><button className="bp" style={{flex:2}} onClick={book}>🔒 Confirmer le paiement</button></div>
