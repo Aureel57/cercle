@@ -1123,53 +1123,124 @@ function Detail({item,onClose,state,dispatch,setPage,setConvId,setShowShop,setPr
         {item.images.length>3&&<div style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.45)",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontWeight:700,fontSize:15}}>+{item.images.length-3} photos</div>}
       </div>}
     </div>
-    <div className="dc"><div>
-      <h1 style={{fontFamily:"var(--fd)",fontSize:24,fontWeight:600,marginBottom:4}}>{item.title}</h1>
-      <div style={{fontSize:12,color:"var(--g)",marginBottom:3}}>📍 {item.location}</div>
-      <div style={{display:"flex",alignItems:"center",gap:6,fontSize:13,fontWeight:500,marginBottom:16,flexWrap:"wrap"}}><span style={{display:"flex",alignItems:"center",gap:2}}><I.Star/> {item.rating}</span><span style={{color:"var(--gl)"}}>·</span><span style={{textDecoration:"underline"}}>{item.reviews+iRevs.length} avis</span><span style={{color:"var(--gl)"}}>·</span><span style={{color:"var(--acc)",fontWeight:600}}>{item.condition}</span></div>
-      <div style={{display:"flex",alignItems:"center",gap:11,padding:"18px 0",borderTop:"1px solid var(--bd)",borderBottom:"1px solid var(--bd)"}}>
-        <div style={{width:42,height:42,borderRadius:"50%",background:"var(--bgw)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,position:"relative"}}>{item.owner.avatar}{item.owner.verified&&<div style={{position:"absolute",bottom:-2,right:-2,background:"var(--acc)",color:"#fff",width:15,height:15,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:8,border:"2px solid #fff"}}>✓</div>}</div>
-        <div><div style={{fontSize:14,fontWeight:600,cursor:"pointer",textDecoration:"underline"}} onClick={()=>{onClose();setShowShop&&setShowShop(item.owner)}}>Proposé par {item.owner.name}</div><div style={{fontSize:11,color:"var(--g)"}}>Depuis {item.owner.since} · {item.owner.rentals} locations · ★{item.owner.rating}</div></div>
+    <div className="dc"><div style={{minWidth:0}}>
+
+      {/* ── Titre + badges ── */}
+      <div style={{marginBottom:20}}>
+        <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:10}}>
+          <span style={{fontSize:10,fontWeight:700,letterSpacing:".06em",textTransform:"uppercase",padding:"4px 10px",borderRadius:8,background:"rgba(108,99,255,.1)",color:"var(--p)"}}>{CATS_FR[item.cat]||item.cat}</span>
+          <span style={{fontSize:10,fontWeight:700,padding:"4px 10px",borderRadius:8,background:item.condition==="Comme neuf"?"#d1fae5":item.condition==="Très bon état"?"#dbeafe":"#fef9c3",color:item.condition==="Comme neuf"?"#065f46":item.condition==="Très bon état"?"#1e40af":"#713f12"}}>{item.condition}</span>
+          {item.available!==false?<span style={{fontSize:10,fontWeight:700,padding:"4px 10px",borderRadius:8,background:"#d1fae5",color:"#065f46"}}>✅ Disponible</span>:<span style={{fontSize:10,fontWeight:700,padding:"4px 10px",borderRadius:8,background:"#fee2e2",color:"#991b1b"}}>❌ Indisponible</span>}
+        </div>
+        <h1 style={{fontFamily:"var(--fd)",fontSize:26,fontWeight:700,lineHeight:1.2,marginBottom:8,letterSpacing:"-.02em"}}>{item.title}</h1>
+        <div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
+          <div style={{display:"flex",alignItems:"center",gap:4,fontWeight:700,fontSize:13}}><span style={{color:"#f59e0b",fontSize:14}}>★</span>{item.rating}</div>
+          <span style={{color:"var(--gl)"}}>·</span>
+          <span style={{fontSize:13,textDecoration:"underline",cursor:"pointer",fontWeight:500}}>{item.reviews+iRevs.length} avis</span>
+          <span style={{color:"var(--gl)"}}>·</span>
+          <span style={{fontSize:13,color:"var(--g)",display:"flex",alignItems:"center",gap:3}}>📍 {item.location}</span>
+        </div>
       </div>
-      <div style={{padding:"18px 0",borderBottom:"1px solid var(--bd)",display:"flex",flexDirection:"column",gap:14}}>
-        {[item.owner.verified&&["✅","Identité vérifiée",item.owner.name+" a vérifié son identité."],["💬","Messagerie sécurisée","Échangez via notre chat intégré."],["🔄","Annulation flexible","Gratuite jusqu'à 24h avant."]].filter(Boolean).map(([ic,t,p],i)=><div key={i} style={{display:"flex",gap:11}}><span style={{fontSize:18}}>{ic}</span><div><div style={{fontSize:13,fontWeight:600}}>{t}</div><div style={{fontSize:12,color:"var(--g)",lineHeight:1.4}}>{p}</div></div></div>)}
+
+      {/* ── Propriétaire ── */}
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"20px 0",borderTop:"1px solid var(--bd)",borderBottom:"1px solid var(--bd)",marginBottom:24}}>
+        <div style={{display:"flex",alignItems:"center",gap:14}}>
+          <div style={{position:"relative",flexShrink:0}}>
+            <div style={{width:52,height:52,borderRadius:"50%",background:"linear-gradient(135deg,var(--bg),var(--bgw))",display:"flex",alignItems:"center",justifyContent:"center",fontSize:28,border:"2px solid var(--bd)"}}>{item.owner.avatar}</div>
+            {item.owner.verified&&<div style={{position:"absolute",bottom:-2,right:-2,width:18,height:18,borderRadius:"50%",background:"#10b981",border:"2px solid var(--w)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:9,color:"#fff",fontWeight:700}}>✓</div>}
+          </div>
+          <div>
+            <div style={{fontSize:11,color:"var(--g)",fontWeight:600,textTransform:"uppercase",letterSpacing:".04em",marginBottom:2}}>Proposé par</div>
+            <div style={{fontSize:15,fontWeight:700,cursor:"pointer"}} onClick={()=>{onClose();setShowShop&&setShowShop(item.owner)}}>{item.owner.name}</div>
+            <div style={{fontSize:11,color:"var(--g)",marginTop:1}}>Membre depuis {item.owner.since} · {item.owner.rentals} locations · ⏱ {item.owner.responseTime}</div>
+          </div>
+        </div>
+        <div style={{textAlign:"right",flexShrink:0}}>
+          <div style={{fontSize:18,fontWeight:700,color:"#f59e0b"}}>★ {item.owner.rating}</div>
+          <div style={{fontSize:10,color:"var(--g)"}}>Note propriétaire</div>
+        </div>
       </div>
-      <div style={{padding:"18px 0",borderBottom:"1px solid var(--bd)",fontSize:14,lineHeight:1.6}}>{item.description}</div>
-      <div style={{padding:"18px 0",borderBottom:"1px solid var(--bd)"}}>
-        <h3 style={{fontSize:16,fontWeight:600,fontFamily:"var(--fd)",marginBottom:10}}>Détails</h3>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>{[["📦","État : "+item.condition],["💰","Caution : "+item.deposit+" €"],["📍",item.location],["🚚","Livraison possible"],["📅","Publié : "+item.createdAt],["⏱️","Min. 1 jour"]].map(([ic,t],i)=><div key={i} style={{display:"flex",alignItems:"center",gap:8,fontSize:12,padding:"5px 0"}}><span>{ic}</span>{t}</div>)}</div>
+
+      {/* ── Garanties ── */}
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:24}}>
+        {[item.owner.verified&&{ic:"🪪",t:"Identité vérifiée",p:"Propriétaire vérifié par Cercle"},
+          {ic:"💬",t:"Messagerie sécurisée",p:"Chat intégré et sécurisé"},
+          {ic:"🔄",t:"Annulation flexible",p:"Gratuite jusqu'à 24h avant"},
+          {ic:"🛡️",t:"Caution sécurisée",p:"Restituée sous 48h après retour"}
+        ].filter(Boolean).map((g,i)=><div key={i} style={{display:"flex",gap:10,padding:14,background:"var(--bgw)",borderRadius:14,border:"1px solid var(--bd)"}}>
+          <span style={{fontSize:20,flexShrink:0,lineHeight:1}}>{g.ic}</span>
+          <div><div style={{fontSize:12,fontWeight:700,marginBottom:2}}>{g.t}</div><div style={{fontSize:11,color:"var(--g)",lineHeight:1.4}}>{g.p}</div></div>
+        </div>)}
       </div>
-      <div style={{padding:"18px 0"}}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}><h3 style={{fontSize:16,fontFamily:"var(--fd)",fontWeight:600}}><I.Star/> {item.rating} · {item.reviews+iRevs.length} avis</h3>{state.user&&<button className="bs" style={{fontSize:11,padding:"6px 12px"}} onClick={()=>setShowRF(!showRF)}>Laisser un avis</button>}</div>
-        {showRF&&<div style={{padding:14,background:"var(--bgw)",borderRadius:10,marginBottom:14}}>
-          <div className="fg"><label>Note</label><div style={{display:"flex",gap:3}}>{[1,2,3,4,5].map(n=><button key={n} style={{background:"none",border:"none",fontSize:20,color:n<=rr?"var(--p)":"var(--bd)"}} onClick={()=>setRr(n)}>★</button>)}</div></div>
-          <div className="fg"><label>Votre avis</label><textarea value={rt} onChange={e=>setRt(e.target.value)} placeholder="Partagez votre expérience..."/></div>
-          <button className="bp" style={{fontSize:12,padding:"7px 16px"}} onClick={submitRev}>Publier</button>
+
+      {/* ── Description ── */}
+      <div style={{marginBottom:24,paddingBottom:24,borderBottom:"1px solid var(--bd)"}}>
+        <h3 style={{fontSize:15,fontWeight:700,fontFamily:"var(--fd)",marginBottom:10}}>Description</h3>
+        <p style={{fontSize:14,lineHeight:1.7,color:"var(--tx)"}}>{item.description}</p>
+      </div>
+
+      {/* ── Caractéristiques ── */}
+      <div style={{marginBottom:24,paddingBottom:24,borderBottom:"1px solid var(--bd)"}}>
+        <h3 style={{fontSize:15,fontWeight:700,fontFamily:"var(--fd)",marginBottom:14}}>Caractéristiques</h3>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+          {[["📦","État",item.condition],["💰","Caution",item.deposit+" €"],["📍","Lieu",item.location],["🚚","Livraison","Disponible sur demande"],["📅","Publié","2025"],["⏱️","Durée min.","1 jour"]].map(([ic,l,v],i)=>
+            <div key={i} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 14px",background:"var(--bgw)",borderRadius:12,border:"1px solid var(--bd)"}}>
+              <span style={{fontSize:18}}>{ic}</span>
+              <div><div style={{fontSize:10,fontWeight:600,color:"var(--g)",textTransform:"uppercase",letterSpacing:".04em"}}>{l}</div><div style={{fontSize:13,fontWeight:600}}>{v}</div></div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ── Avis ── */}
+      <div style={{marginBottom:24,paddingBottom:24,borderBottom:"1px solid var(--bd)"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+          <h3 style={{fontSize:15,fontWeight:700,fontFamily:"var(--fd)"}}>⭐ {item.rating} · {item.reviews+iRevs.length} avis</h3>
+          {state.user&&<button className="bs" style={{fontSize:11,padding:"6px 14px"}} onClick={()=>setShowRF(!showRF)}>Laisser un avis</button>}
+        </div>
+        {showRF&&<div style={{padding:16,background:"var(--bgw)",borderRadius:14,border:"1px solid var(--bd)",marginBottom:16}}>
+          <div style={{display:"flex",gap:4,marginBottom:12}}>{[1,2,3,4,5].map(n=><button key={n} style={{background:"none",border:"none",fontSize:26,color:n<=rr?"#f59e0b":"var(--bd)",cursor:"pointer",padding:"0 2px"}} onClick={()=>setRr(n)}>★</button>)}</div>
+          <textarea value={rt} onChange={e=>setRt(e.target.value)} placeholder="Partagez votre expérience..." style={{width:"100%",padding:"10px 14px",border:"1.5px solid var(--bd)",borderRadius:12,fontSize:13,resize:"vertical",minHeight:80,fontFamily:"var(--f)",outline:"none"}}/>
+          <button className="bp" style={{marginTop:10,fontSize:12,padding:"8px 18px"}} onClick={submitRev}>Publier l'avis</button>
         </div>}
-        {iRevs.map(r=><div key={r.id} className="rev"><div className="revh"><div className="reva">{r.fromUserAvatar}</div><div><div className="revn">{r.fromUserName}</div><div className="revd">{ds(r.createdAt)}</div></div></div><div className="revs">{"★".repeat(r.rating)}{"☆".repeat(5-r.rating)}</div><div className="revt">{r.text}</div></div>)}
+        {iRevs.length===0&&<p style={{fontSize:13,color:"var(--g)"}}>Aucun avis pour l'instant. Soyez le premier !</p>}
+        {iRevs.map(r=><div key={r.id} style={{padding:"14px 0",borderBottom:"1px solid var(--bd)"}}>
+          <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:6}}>
+            <div style={{width:34,height:34,borderRadius:"50%",background:"var(--bgw)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>{r.fromUserAvatar}</div>
+            <div><div style={{fontSize:13,fontWeight:600}}>{r.fromUserName}</div><div style={{fontSize:10,color:"var(--gl)"}}>{ds(r.createdAt)}</div></div>
+            <div style={{marginLeft:"auto",color:"#f59e0b",fontSize:13}}>{"★".repeat(r.rating)}{"☆".repeat(5-r.rating)}</div>
+          </div>
+          <p style={{fontSize:13,lineHeight:1.6,color:"var(--tx)"}}>{r.text}</p>
+        </div>)}
       </div>
-      {/* Rental History */}
-      <div style={{padding:"18px 0",borderBottom:"1px solid var(--bd)"}}>
-        <h3 style={{fontSize:16,fontFamily:"var(--fd)",fontWeight:600,marginBottom:10}}>🔄 Historique de location</h3>
-        {state.bookings.filter(b=>b.itemId===item.id).length===0?<p style={{fontSize:12,color:"var(--g)"}}>Aucune location enregistrée pour cet objet.</p>:
-        state.bookings.filter(b=>b.itemId===item.id).slice(0,5).map(b=><div key={b.id} className="hist-item"><span style={{fontSize:16}}>{b.status==="confirmed"?"✅":"❌"}</span><div style={{flex:1}}><div style={{fontWeight:600}}>{b.ownerName||"Locataire"}</div><div style={{color:"var(--g)"}}>📅 {b.startDate} → {b.endDate} · {b.days}j · {b.total}€</div></div><span style={{fontSize:11,padding:"2px 8px",borderRadius:6,background:b.status==="confirmed"?"#ECFDF5":"#FEF2F2",color:b.status==="confirmed"?"var(--acc)":"var(--p)",fontWeight:600}}>{b.status==="confirmed"?"Confirmé":"Annulé"}</span></div>)}
-      </div>
-      {/* Localisation */}
-      <div style={{padding:"18px 0"}}>
-        <h3 style={{fontSize:16,fontFamily:"var(--fd)",fontWeight:600,marginBottom:4}}>📍 Localisation</h3>
-        <p style={{fontSize:12,color:"var(--g)",marginBottom:8}}>Aux alentours de <strong>{item.location}</strong> · adresse exacte après réservation</p>
-        <div className="detail-map">
+
+      {/* ── Localisation ── */}
+      <div style={{marginBottom:24}}>
+        <h3 style={{fontSize:15,fontWeight:700,fontFamily:"var(--fd)",marginBottom:4}}>📍 Localisation</h3>
+        <p style={{fontSize:12,color:"var(--g)",marginBottom:12}}>Aux alentours de <strong>{item.location}</strong> · adresse exacte communiquée après réservation</p>
+        <div style={{borderRadius:16,overflow:"hidden",border:"1px solid var(--bd)",boxShadow:"var(--sh)"}}>
           <iframe title="map"
             src={`https://www.openstreetmap.org/export/embed.html?bbox=${((item.lng||2.35)-.015).toFixed(4)},${((item.lat||48.86)-.015).toFixed(4)},${((item.lng||2.35)+.015).toFixed(4)},${((item.lat||48.86)+.015).toFixed(4)}&layer=mapnik&marker=${(item.lat||48.86).toFixed(4)},${(item.lng||2.35).toFixed(4)}`}
-            style={{width:"100%",height:200,border:"none",display:"block"}}
+            style={{width:"100%",height:220,border:"none",display:"block"}}
             loading="lazy"
           />
         </div>
       </div>
     </div>
     <div><div className="bc">
-      <div className="bcp">{item.price} € <span>/ jour</span></div>
-      <div style={{fontSize:11,color:"var(--g)",marginBottom:2}}>Caution {item.deposit} € · bloquée puis restituée</div>
+      <div style={{marginBottom:16}}>
+        <div style={{display:"flex",alignItems:"baseline",gap:6,marginBottom:4}}>
+          <span style={{fontFamily:"var(--fd)",fontSize:28,fontWeight:800,letterSpacing:"-.02em"}}>{item.price} €</span>
+          <span style={{fontSize:13,color:"var(--g)",fontWeight:500}}>/ jour</span>
+        </div>
+        <div style={{display:"flex",alignItems:"center",gap:6,fontSize:12}}>
+          <span style={{color:"#f59e0b"}}>★</span><strong>{item.rating}</strong>
+          <span style={{color:"var(--gl)"}}>·</span>
+          <span style={{color:"var(--g)"}}>{item.reviews+iRevs.length} avis</span>
+          <span style={{color:"var(--gl)"}}>·</span>
+          <span style={{color:"var(--g)"}}>Caution {item.deposit} €</span>
+        </div>
+      </div>
       {!showBid?<button className="cl" style={{fontSize:11,marginBottom:6,display:"flex",alignItems:"center",gap:4}} onClick={()=>setShowBid(true)}>🏷️ Proposer un prix</button>:
       <div className="bid-bar"><span style={{fontSize:14}}>🏷️</span><input type="number" value={bidAmt} onChange={e=>setBidAmt(e.target.value)} placeholder="Votre prix/jour" style={{flex:1,border:"1.5px solid var(--bd)",borderRadius:8,padding:"6px 10px",fontSize:12}}/><button className="bp" style={{fontSize:11,padding:"6px 12px"}} onClick={()=>{if(+bidAmt>0){setShowBid(false);setBidAmt("")}}}>Envoyer</button></div>}
       {payStep===0?<>
