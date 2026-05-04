@@ -13,6 +13,40 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<!-- Firebase SDK compat (Auth + Firestore) -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script>
+// ⚠️  REMPLACEZ ces valeurs par votre config Firebase Console
+// https://console.firebase.google.com → Paramètres du projet → Vos applications
+var FIREBASE_CONFIG = {
+  apiKey:            "VOTRE_API_KEY",
+  authDomain:        "votre-projet.firebaseapp.com",
+  projectId:         "votre-projet-id",
+  storageBucket:     "votre-projet.appspot.com",
+  messagingSenderId: "VOTRE_SENDER_ID",
+  appId:             "VOTRE_APP_ID"
+};
+try {
+  if (FIREBASE_CONFIG.apiKey && FIREBASE_CONFIG.apiKey !== "VOTRE_API_KEY") {
+    firebase.initializeApp(FIREBASE_CONFIG);
+    window.auth = firebase.auth();
+    window.db   = firebase.firestore();
+    // Activer la persistance Firestore hors-ligne
+    window.db.enablePersistence().catch(function(){});
+    console.log('[Cercle] Firebase initialisé');
+  } else {
+    window.auth = null;
+    window.db   = null;
+    console.log('[Cercle] Mode localStorage (Firebase non configuré)');
+  }
+} catch(e) {
+  window.auth = null;
+  window.db   = null;
+  console.warn('[Cercle] Firebase error:', e.message);
+}
+</script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap');
 *{margin:0;padding:0;box-sizing:border-box}
@@ -122,8 +156,16 @@ const PRO_RAW=[{t:"Nacelle élévatrice 12m",c:"tools",p:120},{t:"Mini-pelle 1.5
 const buildProItems=()=>PRO_RAW.map((r,i)=>({id:1000+i,title:r.t,cat:r.c,price:r.p,images:[mkImg(r.c,1000+i,0),mkImg(r.c,1000+i,1),mkImg(r.c,1000+i,2)],location:LOCS[(i+3)%LOCS.length],rating:+(4.7+Math.random()*.29).toFixed(2),reviews:Math.floor(20+Math.random()*200),owner:PRO_USERS[i%PRO_USERS.length],description:"Matériel professionnel certifié. Maintenance régulière. Livraison possible sur chantier/site.",deposit:Math.floor(r.p*5+Math.random()*200),condition:"Comme neuf",createdAt:"2025",available:true,isPro:true,lat:(LL[LOCS[(i+3)%LOCS.length]]||[48.86,2.35])[0]+(.01*Math.random()-.005),lng:(LL[LOCS[(i+3)%LOCS.length]]||[48.86,2.35])[1]+(.01*Math.random()-.005)}));
 
 /* ========== REDUCER ========== */
-const _savedItems=(()=>{try{const d=localStorage.getItem('cercle_items');return d?JSON.parse(d):[];}catch(e){return[];}})();
-const init={user:null,items:buildItems(),proItems:buildProItems(),favorites:new Set(),bookings:[],messages:[],conversations:[],reviews:[],notifications:[],userItems:_savedItems,payments:[],referrals:[],disputes:[],wallet:0,badges:[],profileCompletion:{identity:false,phone:false,drivingLicense:false,bankAccount:false}};
+// Helpers de persistence localStorage
+const _ls=(key,def)=>{try{const d=localStorage.getItem(key);return d?JSON.parse(d):def;}catch(e){return def;}};
+const _savedItems    = _ls('cercle_items',[]);
+const _savedBookings = _ls('cercle_bookings',[]);
+const _savedPayments = _ls('cercle_payments',[]);
+const _savedReviews  = _ls('cercle_reviews',[]);
+const _savedBadges   = _ls('cercle_badges',[]);
+const _savedWallet   = _ls('cercle_wallet',0);
+const _savedFavs     = (()=>{try{const d=localStorage.getItem('cercle_favs');return d?new Set(JSON.parse(d)):new Set();}catch(e){return new Set();}})();
+const init={user:null,items:buildItems(),proItems:buildProItems(),favorites:_savedFavs,bookings:_savedBookings,messages:[],conversations:[],reviews:_savedReviews,notifications:[],userItems:_savedItems,payments:_savedPayments,referrals:[],disputes:[],wallet:_savedWallet,badges:_savedBadges,profileCompletion:{identity:false,phone:false,drivingLicense:false,bankAccount:false}};
 function reducer(s,a){switch(a.type){
   case"LOGIN":return{...s,user:{...a.payload,refCode:a.payload.refCode||uid().toUpperCase().slice(0,6)}};
   case"LOGOUT":return{...s,user:null};
@@ -3580,8 +3622,20 @@ function App(){
       try{const s=window.storage;if(s){s.get('cercle_user').then(r=>{if(r&&r.value)dispatch({type:'LOGIN',payload:JSON.parse(r.value)})}).catch(()=>{}).finally(()=>setLoaded(true))}else setLoaded(true);}catch(e){setLoaded(true);}
     }
   },[]);
-  // Save user to storage on login/logout
-  useEffect(()=>{try{const s=window.storage;if(s){if(state.user)s.set('cercle_user',JSON.stringify(state.user)).catch(()=>{});else s.delete('cercle_user').catch(()=>{})}}catch(e){}},[state.user]);
+  // Save user to storage on login/logout — uniquement APRÈS que la session est restaurée
+  useEffect(()=>{
+    if(!loaded)return; // évite de supprimer l'utilisateur sauvegardé avant la restauration async
+    try{const s=window.storage;if(s){if(state.user)s.set('cercle_user',JSON.stringify(state.user)).catch(()=>{});else s.delete('cercle_user').catch(()=>{})}}catch(e){}
+    // Sync Firestore si Firebase est actif
+    if(state.user&&window.db){window.db.collection('users').doc(state.user.id).set(state.user,{merge:true}).catch(()=>{});}
+  },[state.user,loaded]);
+  // Persister bookings, favoris, wallet, badges, etc.
+  useEffect(()=>{if(!loaded)return;try{localStorage.setItem('cercle_bookings',JSON.stringify(state.bookings));}catch(e){}},[state.bookings,loaded]);
+  useEffect(()=>{if(!loaded)return;try{localStorage.setItem('cercle_payments',JSON.stringify(state.payments));}catch(e){}},[state.payments,loaded]);
+  useEffect(()=>{if(!loaded)return;try{localStorage.setItem('cercle_reviews',JSON.stringify(state.reviews));}catch(e){}},[state.reviews,loaded]);
+  useEffect(()=>{if(!loaded)return;try{localStorage.setItem('cercle_badges',JSON.stringify(state.badges));}catch(e){}},[state.badges,loaded]);
+  useEffect(()=>{if(!loaded)return;try{localStorage.setItem('cercle_wallet',JSON.stringify(state.wallet));}catch(e){}},[state.wallet,loaded]);
+  useEffect(()=>{if(!loaded)return;try{localStorage.setItem('cercle_favs',JSON.stringify([...state.favorites]));}catch(e){}},[state.favorites,loaded]);
   // Auto-switch mode when pro user logs in
   useEffect(()=>{if(state.user?.isPro)setMode('pro')},[state.user?.isPro]);
   useEffect(()=>{const t=setTimeout(()=>setSplash(false),1200);return()=>clearTimeout(t)},[]);
@@ -3615,7 +3669,7 @@ function App(){
               {state.user?.isPro&&<div className="di" onClick={()=>{setPage("gestion");setMenu(false)}} style={{color:'#D97706',fontWeight:700}}>⭐ Gestion Pro</div>}
               <div className="di" onClick={()=>{setPage("notifs");setMenu(false);dispatch({type:"READ_N"})}}>🔔 Notifications{unread>0&&<span style={{background:"var(--p)",color:"#fff",borderRadius:8,padding:"1px 6px",fontSize:10,fontWeight:700}}>{unread}</span>}</div>
               <div className="di" onClick={()=>{setDark(!dark);setMenu(false)}}>{dark?"☀️ Mode clair":"🌙 Mode sombre"}</div>
-              <div className="dsp"/><div className="di" onClick={()=>{dispatch({type:"LOGOUT"});setMenu(false);home()}}>🚪 Déconnexion</div></>:
+              <div className="dsp"/><div className="di" onClick={()=>{if(window.auth)window.auth.signOut().catch(()=>{});dispatch({type:"LOGOUT"});setMenu(false);home()}}>🚪 Déconnexion</div></>:
             <><div className="di b" onClick={()=>{setShowA("login");setMenu(false)}}>Se connecter</div><div className="di" onClick={()=>{setShowA("register");setMenu(false)}}>S'inscrire</div></>}
           </div>}
         </button>
