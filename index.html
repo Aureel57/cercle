@@ -1802,7 +1802,7 @@ function Profile({state, dispatch, setPage, setSelected, initTab, onEditItem}) {
 
     // Settings
     settingsSection: { marginBottom: 24 },
-    sectionTitle: { fontSize: 11, fontWeight: 700, color: 'var(--g)', textTransform: 'uppercase', letterSpacing: 0.8, margin: '0 0 10px' },
+    sectionTitle: { fontSize: 11, fontWeight: 700, color: 'var(--dk)', textTransform: 'uppercase', letterSpacing: 0.8, margin: '0 0 10px', opacity:0.6 },
     fieldCard: {
       background: 'var(--w)', borderRadius: 14, border: '1px solid var(--bd)',
       boxShadow: '0 1px 4px rgba(0,0,0,0.04)', overflow: 'hidden',
@@ -1811,10 +1811,10 @@ function Profile({state, dispatch, setPage, setSelected, initTab, onEditItem}) {
       padding: '14px 16px', borderBottom: '1px solid var(--bd)',
       display: 'flex', flexDirection: 'column', gap: 2,
     },
-    fieldLabel: { fontSize: 11, color: 'var(--g)', fontWeight: 600 },
+    fieldLabel: { fontSize: 11, color: 'var(--g)', fontWeight: 700, textTransform:'uppercase', letterSpacing:'.04em' },
     fieldInput: {
       border: 'none', outline: 'none', fontSize: 14, color: 'var(--dk)',
-      background: 'transparent', padding: 0, width: '100%', fontFamily: 'inherit',
+      background: 'transparent', padding: 0, width: '100%', fontFamily: 'inherit', fontWeight: 500,
     },
     toggleCard: {
       background: 'var(--w)', borderRadius: 14, border: '1px solid var(--bd)',
@@ -2423,7 +2423,7 @@ function Profile({state, dispatch, setPage, setSelected, initTab, onEditItem}) {
               return (
                 <div style={{marginBottom:24,animation:'fadeSlideUp 0.4s cubic-bezier(0.34,1.56,0.64,1) both',animationDelay:'0s'}}>
                   <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:10}}>
-                    <p style={{fontSize:15,fontWeight:700,color:'#111827',fontFamily:'DM Sans,system-ui,sans-serif'}}>Complétion du profil</p>
+                    <p style={{fontSize:15,fontWeight:700,color:'var(--dk)',fontFamily:'DM Sans,system-ui,sans-serif'}}>Complétion du profil</p>
                     <span style={{fontSize:13,fontWeight:600,color:'#6C63FF'}}>{doneCount}/{steps.length}</span>
                   </div>
                   <div style={{height:8,background:'#ede9fe',borderRadius:99,marginBottom:16,overflow:'hidden'}}>
@@ -2431,11 +2431,11 @@ function Profile({state, dispatch, setPage, setSelected, initTab, onEditItem}) {
                   </div>
                   <div style={{display:'flex',flexDirection:'column',gap:10}}>
                     {steps.map(step=>(
-                      <div key={step.key} style={{display:'flex',alignItems:'center',gap:12,padding:'14px 16px',background:'#fff',borderRadius:14,border:pc[step.key]?'1.5px solid #10b981':'1.5px solid #f3f4f6',boxShadow:'0 1px 4px rgba(0,0,0,.05)'}}>
-                        <div style={{width:42,height:42,borderRadius:12,background:pc[step.key]?'#d1fae5':'#f5f3ff',display:'flex',alignItems:'center',justifyContent:'center',fontSize:22,flexShrink:0}}>{pc[step.key]?'✅':step.icon}</div>
+                      <div key={step.key} style={{display:'flex',alignItems:'center',gap:12,padding:'14px 16px',background:'var(--w)',borderRadius:14,border:pc[step.key]?'1.5px solid #10b981':'1.5px solid var(--bd)',boxShadow:'0 1px 4px rgba(0,0,0,.05)'}}>
+                        <div style={{width:42,height:42,borderRadius:12,background:pc[step.key]?'#d1fae5':'var(--bgw)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:22,flexShrink:0}}>{pc[step.key]?'✅':step.icon}</div>
                         <div style={{flex:1,minWidth:0}}>
-                          <div style={{fontSize:14,fontWeight:600,color:'#111827'}}>{step.label}</div>
-                          <div style={{fontSize:12,color:'#6b7280',marginTop:1}}>{step.desc}</div>
+                          <div style={{fontSize:14,fontWeight:600,color:'var(--dk)'}}>{step.label}</div>
+                          <div style={{fontSize:12,color:'var(--g)',marginTop:1}}>{step.desc}</div>
                         </div>
                         {pc[step.key]
                           ?<span style={{fontSize:12,fontWeight:600,color:'#10b981',flexShrink:0}}>Complété ✓</span>
@@ -2534,7 +2534,7 @@ function Profile({state, dispatch, setPage, setSelected, initTab, onEditItem}) {
                     alignItems:'center', justifyContent:'space-between',
                     borderBottom: i<arr.length-1 ? '1px solid #f9fafb' : 'none'
                   }}>
-                    <span style={{fontSize:14,color:'#111827'}}>{item.icon} {item.label}</span>
+                    <span style={{fontSize:14,color:'var(--dk)'}}>{item.icon} {item.label}</span>
                     <span style={{fontSize:13,color:'#10b981',fontWeight:600}}>{item.value}</span>
                   </div>
                 ))}
