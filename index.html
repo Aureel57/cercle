@@ -3740,20 +3740,49 @@ function Chatbot({items,onOpen,onClose}){
 function Shop({owner,items,onClose,onOpen,state,dispatch,onAuthRequired}){
   const ownerItems=items.filter(i=>i.owner?.id===owner.id);
   const grade=getGrade(owner.rentals||0);
-  return <div className="ov">
-    <div style={{position:"sticky",top:0,zIndex:10,display:"flex",alignItems:"center",padding:"12px 16px",background:"var(--w)",borderBottom:"1px solid var(--bd)"}}><button className="mx" onClick={onClose}><I.X/></button></div>
-    <div className="shop-hd">
-      <div className="shop-av" style={{border:`3px solid ${grade.id==="fondateur"?"#D4AF37":grade.id==="legende"?"#06B6D4":grade.id==="gardien"?"#7C3AED":grade.id==="pilier"?"#F59E0B":grade.id==="habitant"?"#3b82f6":"var(--bd)"}}`}}>{owner.avatarUrl?<img src={owner.avatarUrl} style={{width:"100%",height:"100%",borderRadius:"50%",objectFit:"cover"}} alt=""/>:owner.avatar}</div>
-      <h2 style={{fontFamily:"var(--fd)",fontSize:20}}>{owner.name}</h2>
-      <div style={{display:"flex",gap:8,justifyContent:"center",marginTop:6,fontSize:12,color:"var(--g)"}}>
-        <span>{grade.icon} {grade.name}</span><span>·</span><span>★ {owner.rating}</span><span>·</span><span>{owner.rentals} locations</span><span>·</span><span>Depuis {owner.since}</span>
-      </div>
-      {owner.verified&&<span className="badge-g" style={{background:"#ECFDF5",color:"var(--acc)",margin:"8px auto 0"}}>✓ Vérifié</span>}
-      <p style={{fontSize:12,color:"var(--g)",marginTop:6}}>{owner.bio}</p>
+  const gradeColor=grade.id==="fondateur"?"#D4AF37":grade.id==="legende"?"#06B6D4":grade.id==="gardien"?"#7C3AED":grade.id==="pilier"?"#F59E0B":grade.id==="habitant"?"#3b82f6":"#6C63FF";
+  const isFollowing=state.following?.some(f=>f.id===owner.id);
+  const avgRating=owner.rating||0;
+  return <div className="ov" style={{background:"var(--bg)"}}>
+    {/* Header sticky */}
+    <div style={{position:"sticky",top:0,zIndex:20,display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 16px",background:"rgba(255,255,255,0.92)",backdropFilter:"blur(12px)",borderBottom:"1px solid var(--bd)"}}>
+      <button className="mx" onClick={onClose}><I.X/></button>
+      {state.user&&state.user.id!==owner.id&&<button onClick={()=>dispatch({type:isFollowing?"UNFOLLOW":"FOLLOW",userId:owner.id,userName:owner.name,userAvatar:owner.avatar,userSince:owner.since})} style={{padding:"7px 18px",borderRadius:20,border:`1.5px solid ${isFollowing?"#e5e7eb":"var(--p)"}`,background:isFollowing?"var(--bg)":"var(--p)",color:isFollowing?"var(--g)":"#fff",fontSize:12,fontWeight:700,cursor:"pointer",transition:"all .15s"}}>{isFollowing?"✓ Abonné":"+ Suivre"}</button>}
     </div>
-    <div style={{padding:20}}>
-      <h3 style={{fontFamily:"var(--fd)",fontSize:16,marginBottom:12}}>{ownerItems.length} annonces</h3>
-      <div className="grid" style={{padding:0}}>{ownerItems.map(i=><Card key={i.id} item={i} onOpen={onOpen} favs={state.favorites} dispatch={dispatch} onAuthRequired={state.user?null:onAuthRequired}/>)}</div>
+
+    {/* Hero */}
+    <div style={{background:`linear-gradient(145deg, ${gradeColor}22 0%, #f5f3ff 100%)`,padding:"32px 20px 24px",textAlign:"center",borderBottom:"1px solid var(--bd)"}}>
+      <div style={{position:"relative",display:"inline-block",marginBottom:14}}>
+        <div style={{width:88,height:88,borderRadius:"50%",border:`3px solid ${gradeColor}`,overflow:"hidden",display:"flex",alignItems:"center",justifyContent:"center",fontSize:42,background:"#fff",boxShadow:`0 0 0 4px ${gradeColor}22`}}>
+          {owner.avatarUrl?<img src={owner.avatarUrl} style={{width:"100%",height:"100%",objectFit:"cover"}} alt=""/>:owner.avatar||"👤"}
+        </div>
+        {owner.verified&&<div style={{position:"absolute",bottom:2,right:2,width:22,height:22,borderRadius:"50%",background:"#10b981",border:"2px solid #fff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,color:"#fff",fontWeight:700}}>✓</div>}
+      </div>
+      <h2 style={{fontFamily:"var(--fd)",fontSize:22,fontWeight:800,color:"var(--dk)",margin:"0 0 4px"}}>{owner.name}</h2>
+      <div style={{display:"inline-flex",alignItems:"center",gap:6,background:"#fff",borderRadius:20,padding:"4px 12px",fontSize:12,fontWeight:600,color:gradeColor,boxShadow:"0 1px 6px rgba(0,0,0,0.08)",marginBottom:10}}>
+        <span>{grade.icon}</span><span>{grade.name}</span>
+      </div>
+      {owner.bio&&<p style={{fontSize:13,color:"var(--g)",maxWidth:280,margin:"8px auto 0",lineHeight:1.6}}>{owner.bio}</p>}
+    </div>
+
+    {/* Stats */}
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,padding:"16px",background:"var(--w)",borderBottom:"1px solid var(--bd)"}}>
+      {[["⭐",avgRating>0?avgRating.toFixed(1):"—","Note"],[  "📦",ownerItems.length,"Annonces"],["🔁",owner.rentals||0,"Locations"]].map(([ic,val,label])=>(
+        <div key={label} style={{textAlign:"center",padding:"12px 8px",background:"var(--bg)",borderRadius:14}}>
+          <div style={{fontSize:18,marginBottom:2}}>{ic}</div>
+          <div style={{fontFamily:"var(--fd)",fontSize:18,fontWeight:800,color:"var(--dk)"}}>{val}</div>
+          <div style={{fontSize:10,color:"var(--g)",fontWeight:500}}>{label}</div>
+        </div>
+      ))}
+    </div>
+
+    {/* Annonces */}
+    <div style={{padding:"20px 16px"}}>
+      <p style={{fontSize:13,fontWeight:700,color:"var(--g)",textTransform:"uppercase",letterSpacing:".06em",marginBottom:14}}>{ownerItems.length} annonce{ownerItems.length!==1?"s":""}</p>
+      {ownerItems.length===0
+        ?<div style={{textAlign:"center",padding:"40px 0",color:"var(--g)"}}><div style={{fontSize:40,marginBottom:10}}>📭</div><p style={{fontWeight:600}}>Aucune annonce pour l'instant</p></div>
+        :<div className="grid" style={{padding:0}}>{ownerItems.map(i=><Card key={i.id} item={i} onOpen={onOpen} favs={state.favorites} dispatch={dispatch} onAuthRequired={state.user?null:onAuthRequired}/>)}</div>
+      }
     </div>
   </div>
 }
