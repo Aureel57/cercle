@@ -204,6 +204,8 @@ function reducer(s,a){switch(a.type){
   case"FOLLOW":{const f={id:a.userId,name:a.userName,avatar:a.userAvatar,since:a.userSince,followedAt:new Date().toISOString()};const next=[...s.following.filter(u=>u.id!==a.userId),f];try{localStorage.setItem('cercle_following',JSON.stringify(next));}catch(e){}if(window.db&&s.user){window.db.collection('follows').doc(`${s.user.id}_${a.userId}`).set({followerId:s.user.id,followerName:s.user.name,followedId:a.userId,followedName:a.userName,at:new Date().toISOString()}).catch(()=>{})}return{...s,following:next};}
   case"UNFOLLOW":{const next=s.following.filter(u=>u.id!==a.userId);try{localStorage.setItem('cercle_following',JSON.stringify(next));}catch(e){}if(window.db&&s.user){window.db.collection('follows').doc(`${s.user.id}_${a.userId}`).delete().catch(()=>{})}return{...s,following:next};}
   case"EDIT_ITEM":{const upd={...a.payload};const existing=s.userItems.find(i=>i.id===upd.id)||s.items.find(i=>i.id===upd.id)||{};const fullItem={...existing,...upd};const newUserItems=s.userItems.map(i=>i.id===upd.id?fullItem:i);try{localStorage.setItem('cercle_items',JSON.stringify(newUserItems));}catch(e){}if(window.db){const{images,photos,...firestoreItem}=fullItem;window.db.collection('items').doc(upd.id).set(firestoreItem).catch(console.error);}return{...s,userItems:newUserItems,items:s.items.map(i=>i.id===upd.id?fullItem:i)}}
+  case"DELETE_ITEM":{const next=s.userItems.filter(i=>i.id!==a.id);try{localStorage.setItem('cercle_items',JSON.stringify(next));}catch(e){}if(window.db){window.db.collection('items').doc(a.id).delete().catch(()=>{})}return{...s,userItems:next,items:s.items.filter(i=>i.id!==a.id)}}
+  case"SET_BLOCKED_DATES":{const newUserItems=s.userItems.map(i=>i.id===a.id?{...i,blockedDates:a.dates}:i);try{localStorage.setItem('cercle_items',JSON.stringify(newUserItems));}catch(e){}if(window.db){window.db.collection('items').doc(a.id).update({blockedDates:a.dates}).catch(()=>{})}return{...s,userItems:newUserItems}}
   default:return s}}
 
 /* ========== ICONS ========== */
@@ -1466,6 +1468,62 @@ function calcSavings(rentals, avgPrice) {
   return Math.floor(rentals * avgPrice * 3 * (base - current));
 }
 
+function CalendarModal({item, dispatch, onClose}) {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const [month, setMonth] = React.useState(new Date(today.getFullYear(), today.getMonth(), 1));
+  const [blocked, setBlocked] = React.useState(new Set(item.blockedDates||[]));
+  const daysInMonth = new Date(month.getFullYear(), month.getMonth()+1, 0).getDate();
+  const firstDay = new Date(month.getFullYear(), month.getMonth(), 1).getDay();
+  const startOffset = (firstDay + 6) % 7;
+  const monthLabel = month.toLocaleDateString('fr-FR',{month:'long',year:'numeric'});
+  function toggleDay(d) {
+    const key = `${month.getFullYear()}-${String(month.getMonth()+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    setBlocked(prev => { const n = new Set(prev); n.has(key) ? n.delete(key) : n.add(key); return n; });
+  }
+  function save() {
+    dispatch({type:'SET_BLOCKED_DATES', id:item.id, dates:[...blocked]});
+    onClose();
+  }
+  const days=['Lu','Ma','Me','Je','Ve','Sa','Di'];
+  return (
+    <div onClick={onClose} style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.5)',zIndex:9999,display:'flex',alignItems:'center',justifyContent:'center'}}>
+      <div onClick={e=>e.stopPropagation()} style={{background:'var(--w)',borderRadius:20,padding:24,width:340,maxWidth:'95vw',boxShadow:'0 20px 60px rgba(0,0,0,0.25)'}}>
+        <h3 style={{margin:'0 0 4px',fontSize:16,fontWeight:700,color:'var(--dk)'}}>📅 Disponibilités</h3>
+        <p style={{margin:'0 0 16px',fontSize:12,color:'var(--g)'}}>Touchez les jours pour les bloquer / débloquer</p>
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}>
+          <button onClick={()=>setMonth(new Date(month.getFullYear(),month.getMonth()-1,1))} style={{border:'none',background:'none',fontSize:18,cursor:'pointer',color:'var(--dk)'}}>‹</button>
+          <span style={{fontWeight:700,fontSize:14,color:'var(--dk)',textTransform:'capitalize'}}>{monthLabel}</span>
+          <button onClick={()=>setMonth(new Date(month.getFullYear(),month.getMonth()+1,1))} style={{border:'none',background:'none',fontSize:18,cursor:'pointer',color:'var(--dk)'}}>›</button>
+        </div>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(7,1fr)',gap:3,marginBottom:12}}>
+          {days.map(d=><div key={d} style={{textAlign:'center',fontSize:10,fontWeight:700,color:'var(--g)',padding:'2px 0'}}>{d}</div>)}
+          {Array.from({length:startOffset}).map((_,i)=><div key={'e'+i}/>)}
+          {Array.from({length:daysInMonth}).map((_,i)=>{
+            const d=i+1;
+            const key=`${month.getFullYear()}-${String(month.getMonth()+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+            const date=new Date(month.getFullYear(),month.getMonth(),d);
+            const isPast=date<today;
+            const isBlocked=blocked.has(key);
+            return (
+              <div key={d} onClick={()=>!isPast&&toggleDay(d)} style={{textAlign:'center',padding:'6px 2px',borderRadius:8,fontSize:12,fontWeight:600,cursor:isPast?'default':'pointer',background:isBlocked?'#ef4444':isPast?'transparent':'#f0fdf4',color:isBlocked?'#fff':isPast?'#d1d5db':'var(--dk)',opacity:isPast?0.4:1}}>
+                {d}
+              </div>
+            );
+          })}
+        </div>
+        <div style={{display:'flex',gap:8,marginBottom:12}}>
+          <div style={{display:'flex',alignItems:'center',gap:4,fontSize:11,color:'var(--g)'}}><div style={{width:12,height:12,borderRadius:3,background:'#ef4444'}}/>Bloqué</div>
+          <div style={{display:'flex',alignItems:'center',gap:4,fontSize:11,color:'var(--g)'}}><div style={{width:12,height:12,borderRadius:3,background:'#f0fdf4',border:'1px solid #d1fae5'}}/>Libre</div>
+        </div>
+        <div style={{display:'flex',gap:8}}>
+          <button onClick={onClose} style={{flex:1,padding:'10px 0',borderRadius:12,border:'1.5px solid var(--bd)',background:'transparent',color:'var(--dk)',fontWeight:700,cursor:'pointer',fontSize:13}}>Annuler</button>
+          <button onClick={save} style={{flex:1,padding:'10px 0',borderRadius:12,border:'none',background:'#6C63FF',color:'#fff',fontWeight:700,cursor:'pointer',fontSize:13}}>Enregistrer</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function Profile({state, dispatch, setPage, setSelected, initTab, onEditItem}) {
   const user = (state && state.user) || {};
   const userName = user.name || '';
@@ -1486,6 +1544,7 @@ function Profile({state, dispatch, setPage, setSelected, initTab, onEditItem}) {
   const [demoRentals, setDemoRentals] = React.useState(47);
   const [demoAmount, setDemoAmount] = React.useState(15);
   const [qrItem, setQrItem] = React.useState(null);
+  const [calItem, setCalItem] = React.useState(null);
   const [gradeTooltip, setGradeTooltip] = React.useState(null);
   const [profileData, setProfileData] = React.useState({
     name: userName,
@@ -1958,9 +2017,11 @@ function Profile({state, dispatch, setPage, setSelected, initTab, onEditItem}) {
                   <p style={S.listingTitle}>{l.title}</p>
                   <p style={S.listingPrice}>{l.price}€<span style={{fontWeight:400,fontSize:11,color:'var(--g)'}}>/jour</span></p>
                   <div style={S.listingRating}>⭐ {l.rating || '4.8'} <span>· {l.reviews || 0} avis</span></div>
-                  <div style={{display:'flex',gap:6,marginTop:8}}>
-                    <button onClick={e=>{e.stopPropagation();onEditItem&&onEditItem(l);}} style={{flex:1,padding:'6px 0',border:'1.5px solid #d1fae5',borderRadius:10,background:'#f0fdf4',color:'#059669',fontSize:11,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:4}}>✏️ Modifier</button>
-                    <button onClick={e=>{e.stopPropagation();setQrItem(l);}} style={{flex:1,padding:'6px 0',border:'1.5px solid #d1c9ff',borderRadius:10,background:'#f5f3ff',color:'#6C63FF',fontSize:11,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:4}}>📱 QR</button>
+                  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:5,marginTop:8}}>
+                    <button onClick={e=>{e.stopPropagation();onEditItem&&onEditItem(l);}} style={{padding:'6px 0',border:'1.5px solid #d1fae5',borderRadius:10,background:'#f0fdf4',color:'#059669',fontSize:11,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:3}}>✏️ Modifier</button>
+                    <button onClick={e=>{e.stopPropagation();setCalItem(l);}} style={{padding:'6px 0',border:'1.5px solid #bfdbfe',borderRadius:10,background:'#eff6ff',color:'#2563eb',fontSize:11,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:3}}>📅 Dates</button>
+                    <button onClick={e=>{e.stopPropagation();setQrItem(l);}} style={{padding:'6px 0',border:'1.5px solid #d1c9ff',borderRadius:10,background:'#f5f3ff',color:'#6C63FF',fontSize:11,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:3}}>📱 QR</button>
+                    <button onClick={e=>{e.stopPropagation();if(window.confirm(`Supprimer "${l.title}" ?`)){dispatch({type:'DELETE_ITEM',id:l.id})}}} style={{padding:'6px 0',border:'1.5px solid #fecaca',borderRadius:10,background:'#fff1f2',color:'#ef4444',fontSize:11,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:3}}>🗑️ Supp.</button>
                   </div>
                 </div>
               </div>
@@ -1968,6 +2029,7 @@ function Profile({state, dispatch, setPage, setSelected, initTab, onEditItem}) {
           </div>
         )}
         {qrItem&&<QRModal item={qrItem} onClose={()=>setQrItem(null)}/>}
+        {calItem&&<CalendarModal item={calItem} dispatch={dispatch} onClose={()=>setCalItem(null)}/>}
 
         {/* ── Mon Parc (Pro only) ── */}
         {tab === 'parc' && (
