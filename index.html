@@ -3933,6 +3933,33 @@ function App(){
     },()=>{});
     return()=>unsub();
   },[]);
+  // Sync des annonces locales vers Firestore (items créés avant Firebase)
+  useEffect(()=>{
+    if(!window.db||!loaded||!state.userItems.length)return;
+    const compressForCloud=(dataUrl)=>new Promise(resolve=>{
+      if(!dataUrl||!dataUrl.startsWith('data:'))return resolve('');
+      const img=new Image();
+      img.onload=()=>{
+        const max=300;const ratio=Math.min(1,max/img.width,max/img.height);
+        const c=document.createElement('canvas');c.width=Math.round(img.width*ratio);c.height=Math.round(img.height*ratio);
+        c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+        resolve(c.toDataURL('image/jpeg',0.55));
+      };
+      img.onerror=()=>resolve('');img.src=dataUrl;
+    });
+    state.userItems.forEach(async(item)=>{
+      try{
+        const doc=await window.db.collection('items').doc(item.id).get();
+        const thumbs=await Promise.all((item.images||[]).slice(0,3).map(compressForCloud));
+        const firestoreItem={...item,images:thumbs.filter(Boolean),photos:[]};
+        if(!doc.exists){
+          window.db.collection('items').doc(item.id).set(firestoreItem).catch(()=>{});
+        }else if(thumbs.some(Boolean)&&!(doc.data().images||[]).some(Boolean)){
+          window.db.collection('items').doc(item.id).update({images:thumbs.filter(Boolean)}).catch(()=>{});
+        }
+      }catch(e){}
+    });
+  },[loaded,state.userItems]);
   // Auto-switch mode when pro user logs in
   useEffect(()=>{if(state.user?.isPro)setMode('pro')},[state.user?.isPro]);
   useEffect(()=>{const t=setTimeout(()=>setSplash(false),1200);return()=>clearTimeout(t)},[]);
