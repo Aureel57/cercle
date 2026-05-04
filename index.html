@@ -1053,7 +1053,7 @@ function QRModal({item,onClose}){
 }
 
 /* ===== MINI CALENDAR ===== */
-function MiniCal({value,onChange,label,minDate}){
+function MiniCal({value,onChange,label,minDate,blockedDates}){
   const d=value?new Date(value):new Date();
   const[viewY,setViewY]=useState(d.getFullYear());const[viewM,setViewM]=useState(d.getMonth());
   const months=["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
@@ -1062,6 +1062,7 @@ function MiniCal({value,onChange,label,minDate}){
   const daysInMonth=new Date(viewY,viewM+1,0).getDate();
   const today=new Date();today.setHours(0,0,0,0);
   const minD=minDate?new Date(minDate):today;minD.setHours(0,0,0,0);
+  const blockedSet=new Set(blockedDates||[]);
   const prev=()=>{if(viewM===0){setViewM(11);setViewY(viewY-1)}else setViewM(viewM-1)};
   const next=()=>{if(viewM===11){setViewM(0);setViewY(viewY+1)}else setViewM(viewM+1)};
   const selDate=value?new Date(value):null;if(selDate)selDate.setHours(0,0,0,0);
@@ -1077,16 +1078,22 @@ function MiniCal({value,onChange,label,minDate}){
       <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:2}}>
         {cells.map((day,i)=>{if(!day)return <div key={i}/>;
           const dt=new Date(viewY,viewM,day);dt.setHours(0,0,0,0);
+          const key=`${viewY}-${String(viewM+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
+          const isBlocked=blockedSet.has(key);
           const isPast=dt<minD;const isSel=selDate&&dt.getTime()===selDate.getTime();const isToday=dt.getTime()===today.getTime();
-          return <button key={i} disabled={isPast} onClick={()=>{const m=String(viewM+1).padStart(2,"0");const dd=String(day).padStart(2,"0");onChange(`${viewY}-${m}-${dd}`)}}
-            style={{width:"100%",aspectRatio:"1",border:"none",borderRadius:8,fontSize:12,fontWeight:isSel?700:isToday?600:400,
-              background:isSel?"var(--p)":isToday?"var(--bgw)":"transparent",color:isSel?"#fff":isPast?"var(--gl)":"var(--dk)",
-              cursor:isPast?"default":"pointer",transition:"all .1s"}}>
+          const disabled=isPast||isBlocked;
+          return <button key={i} disabled={disabled} onClick={()=>{if(disabled)return;const m=String(viewM+1).padStart(2,"0");const dd=String(day).padStart(2,"0");onChange(`${viewY}-${m}-${dd}`)}}
+            title={isBlocked?"Indisponible":undefined}
+            style={{width:"100%",aspectRatio:"1",border:isBlocked?"1.5px solid #fecaca":"none",borderRadius:8,fontSize:12,fontWeight:isSel?700:isToday?600:400,
+              background:isSel?"var(--p)":isBlocked?"#fee2e2":isToday?"var(--bgw)":"transparent",
+              color:isSel?"#fff":isBlocked?"#ef4444":isPast?"var(--gl)":"var(--dk)",
+              cursor:disabled?"default":"pointer",transition:"all .1s",textDecoration:isBlocked?"line-through":"none"}}>
             {day}
           </button>
         })}
       </div>
     </div>
+    {blockedDates&&blockedDates.length>0&&<div style={{padding:"4px 12px",fontSize:10,color:"#ef4444",display:"flex",alignItems:"center",gap:4}}><span style={{width:8,height:8,borderRadius:2,background:"#fee2e2",border:"1px solid #fca5a5",display:"inline-block"}}/>Jours indisponibles</div>}
     {label&&<div style={{padding:"6px 12px",borderTop:"1px solid var(--bd)",fontSize:11,color:"var(--g)",textAlign:"center"}}>{label}: <strong>{value||"—"}</strong></div>}
   </div>
 }
@@ -1173,6 +1180,16 @@ function Detail({item,onClose,state,dispatch,setPage,setConvId,setShowShop,setPr
   const feeSaved=Math.round((feeBase-fee)*100)/100;
   const tot=Math.round((base+fee)*100)/100;
   useEffect(()=>{if(sd&&ed){const d=Math.max(1,Math.round((new Date(ed)-new Date(sd))/864e5));setDays(d)}},[sd,ed]);
+  const hasBlockedInRange=React.useMemo(()=>{
+    if(!sd||!ed||!item.blockedDates||!item.blockedDates.length)return false;
+    const bSet=new Set(item.blockedDates);
+    const start=new Date(sd);const end=new Date(ed);
+    for(let dt=new Date(start);dt<=end;dt.setDate(dt.getDate()+1)){
+      const key=dt.toISOString().slice(0,10);
+      if(bSet.has(key))return true;
+    }
+    return false;
+  },[sd,ed,item.blockedDates]);
   const VEHICLE_CATS=["vehicles","vehicle","voiture","moto","transport"];
   const needsDrivingLicense=VEHICLE_CATS.includes((item.cat||"").toLowerCase());
   const pc=state.profileCompletion||{identity:false,phone:false,drivingLicense:false,bankAccount:false};
@@ -1340,8 +1357,8 @@ function Detail({item,onClose,state,dispatch,setPage,setConvId,setShowShop,setPr
         <div style={{marginBottom:12}}>
           <div style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:".06em",color:"var(--g)",marginBottom:6}}>Dates</div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-            <MiniCal value={sd} onChange={setSd} label="Début"/>
-            <MiniCal value={ed} onChange={setEd} label="Fin" minDate={sd}/>
+            <MiniCal value={sd} onChange={setSd} label="Début" blockedDates={item.blockedDates}/>
+            <MiniCal value={ed} onChange={setEd} label="Fin" minDate={sd} blockedDates={item.blockedDates}/>
           </div>
         </div>
 
@@ -1389,8 +1406,9 @@ function Detail({item,onClose,state,dispatch,setPage,setConvId,setShowShop,setPr
           </div>
         </div>
 
-        <button className="bp" style={{width:"100%",padding:"14px",fontSize:15,letterSpacing:"-.01em",background:booked?"#10b981":undefined,boxShadow:booked?"0 4px 16px rgba(16,185,129,.3)":"0 4px 20px rgba(108,99,255,.3)"}} onClick={()=>state.user?(booked?null:handleReserveClick()):null} disabled={booked||!state.user}>
-          {!state.user?"🔐 Connectez-vous pour réserver":booked?"✓ Réservé !":"Réserver · "+tot.toFixed(2)+" €"}
+        {hasBlockedInRange&&<div style={{background:"#fee2e2",border:"1px solid #fca5a5",borderRadius:10,padding:"10px 14px",marginBottom:10,fontSize:12,color:"#dc2626",fontWeight:600}}>⛔ Ces dates contiennent des jours indisponibles. Veuillez choisir d'autres dates.</div>}
+        <button className="bp" style={{width:"100%",padding:"14px",fontSize:15,letterSpacing:"-.01em",background:booked?"#10b981":hasBlockedInRange?"#9ca3af":undefined,boxShadow:booked?"0 4px 16px rgba(16,185,129,.3)":hasBlockedInRange?"none":"0 4px 20px rgba(108,99,255,.3)"}} onClick={()=>state.user&&!hasBlockedInRange?(booked?null:handleReserveClick()):null} disabled={booked||!state.user||hasBlockedInRange}>
+          {!state.user?"🔐 Connectez-vous pour réserver":booked?"✓ Réservé !":hasBlockedInRange?"Dates indisponibles":"Réserver · "+tot.toFixed(2)+" €"}
         </button>
         {!state.user&&<p style={{textAlign:"center",fontSize:11,color:"var(--g)",marginTop:8}}>Pas encore de compte ? C'est gratuit.</p>}
       </>:payStep===1?<>
