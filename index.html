@@ -1496,7 +1496,8 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
   }, [tab, demoRentals]);
 
   const myOwnedItems = (state.items?.filter(i => i.owner?.id === user.id) || []);
-  const listings = [...myOwnedItems, ...(state.userItems || [])];
+  const myUserItems = (state.userItems?.filter(i => i.owner?.id === user.id) || []);
+  const listings = [...myOwnedItems, ...myUserItems];
   const allItems = [...(state.items||[]), ...(state.proItems||[]), ...(state.userItems||[])];
   const favItems = allItems.filter(i => state.favorites && state.favorites.has(i.id));
   const favs = state.favorites || new Set();
@@ -1508,13 +1509,7 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
   const avgRating = reviewCount > 0 ? (state.reviews.reduce((s,r)=>s+r.rating,0)/reviewCount).toFixed(1) : '-';
   const responseRate = '97%';
 
-  const mockListings = [
-    { id: 101, title: 'Perceuse Bosch Pro', price: 12, rating: 4.95, reviews: 87, img: '🔧' },
-    { id: 102, title: 'Vélo électrique Moustache', price: 18, rating: 4.9, reviews: 142, img: '🚲' },
-    { id: 103, title: 'Drone DJI Mini 3 Pro', price: 35, rating: 4.88, reviews: 64, img: '🚁' },
-  ];
-
-  const displayListings = listings.length > 0 ? listings : mockListings;
+  const displayListings = listings;
 
   const mockReservations = [
     { id: 1, item: 'Perceuse Bosch Pro', img: '🔧', dates: '15 – 17 Mars', status: 'En cours', color: '#10b981', bg: '#d1fae5', price: '30 €', renter: 'Marie L.' },
@@ -1940,7 +1935,8 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
 
         {/* ── Annonces ── */}
         {tab === 'annonces' && (
-          <div style={S.listingGrid}>
+          <div style={displayListings.length===0?{textAlign:'center',padding:'48px 20px',color:'#9ca3af'}:S.listingGrid}>
+            {displayListings.length===0&&<><div style={{fontSize:44,marginBottom:12}}>🏷️</div><p style={{fontWeight:700,color:'#374151',fontSize:15,marginBottom:4}}>Aucune annonce pour l'instant</p><p style={{fontSize:13}}>Publie ta première annonce pour commencer à louer !</p></>}
             {displayListings.map((l, i) => (
               <div key={l.id} className="prof-listing-card" style={{...S.card, animation:'fadeSlideUp 0.4s cubic-bezier(0.34,1.56,0.64,1) both', animationDelay:`${i*0.07}s`}} onClick={() => { setSelected && setSelected(l); }}>
                 <div style={{...S.listingImg,padding:0,overflow:'hidden',display:'flex',alignItems:'center',justifyContent:'center',background:'var(--bgw)'}}>
