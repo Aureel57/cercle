@@ -3949,14 +3949,9 @@ function App(){
     });
     state.userItems.forEach(async(item)=>{
       try{
-        const doc=await window.db.collection('items').doc(item.id).get();
         const thumbs=await Promise.all((item.images||[]).slice(0,3).map(compressForCloud));
         const firestoreItem={...item,images:thumbs.filter(Boolean),photos:[]};
-        if(!doc.exists){
-          window.db.collection('items').doc(item.id).set(firestoreItem).catch(()=>{});
-        }else if(thumbs.some(Boolean)&&!(doc.data().images||[]).some(Boolean)){
-          window.db.collection('items').doc(item.id).update({images:thumbs.filter(Boolean)}).catch(()=>{});
-        }
+        window.db.collection('items').doc(item.id).set(firestoreItem).catch(()=>{});
       }catch(e){}
     });
   },[loaded,state.userItems]);
