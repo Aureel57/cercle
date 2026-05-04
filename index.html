@@ -3806,6 +3806,9 @@ function App(){
   const[profTab,setProfTab]=useState("annonces");
   const[cat,setCat]=useState("all");
   const[sel,setSel]=useState(null);
+  const prevPageRef=useRef("home");
+  const openDetail=(item)=>{prevPageRef.current=page;setSel(item);};
+  const closeDetail=()=>{setSel(null);setPage(prevPageRef.current);};
   const[showF,setShowF]=useState(false);
   const[showS,setShowS]=useState(false);
   const[showA,setShowA]=useState(null);
@@ -3970,7 +3973,7 @@ function App(){
         <p style={{fontSize:13,color:"var(--g)"}}>{filtered.length} annonce{filtered.length!==1?"s":""} dans cette catégorie</p>
       </div>}
       {!q&&cat==="all"&&state.user&&<div className="reco"><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}><h3 style={{fontFamily:"var(--fd)",fontSize:20,fontWeight:700,letterSpacing:"-.01em"}}>{mode==="pro"?"Sélection Pro":"Recommandé pour vous"}</h3><button className="cl" style={{color:"var(--p)"}} onClick={()=>window.scrollTo({top:document.querySelector('.grid')?.offsetTop||600,behavior:'smooth'})}>Voir tout →</button></div>
-        <div className="reco-sc">{all.sort(()=>Math.random()-.5).slice(0,8).map(i=><div key={i.id} className="reco-c" onClick={()=>setSel(i)}><img className="reco-ci" src={i.images[0]} alt=""/><div style={{padding:"4px 8px 8px"}}><div style={{fontSize:12,fontWeight:600,marginTop:4,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{i.title}</div><div style={{fontSize:12,fontWeight:700,color:"var(--p)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{i.price}€<span style={{fontWeight:400,color:"var(--g)"}}>/j</span></div></div></div>)}</div>
+        <div className="reco-sc">{all.sort(()=>Math.random()-.5).slice(0,8).map(i=><div key={i.id} className="reco-c" onClick={()=>openDetail(i)}><img className="reco-ci" src={i.images[0]} alt=""/><div style={{padding:"4px 8px 8px"}}><div style={{fontSize:12,fontWeight:600,marginTop:4,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{i.title}</div><div style={{fontSize:12,fontWeight:700,color:"var(--p)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{i.price}€<span style={{fontWeight:400,color:"var(--g)"}}>/j</span></div></div></div>)}</div>
       </div>}
       {mode!=='pro'&&<div style={{padding:"16px 28px 0",maxWidth:1520,margin:"0 auto"}}>
         <div style={{display:"flex",gap:4,background:"var(--bg)",borderRadius:28,padding:3,border:"1px solid var(--bd)",width:"fit-content"}}>
@@ -3985,10 +3988,10 @@ function App(){
         </div>
       </div>}
       {filtered.length===0?<div className="empty"><span>🔍</span><h2>Aucun résultat trouvé</h2><p style={{maxWidth:320,margin:"6px auto 16px",lineHeight:1.5}}>Essayez d'élargir votre recherche ou de modifier vos filtres.</p><button className="bs" onClick={()=>{setQ("");setCat("all")}}>Réinitialiser la recherche</button></div>:
-      <div className="grid" style={{paddingTop:16}}>{filtered.map(i=><Card key={i.id} item={i} onOpen={setSel} favs={state.favorites} dispatch={dispatch} onAuthRequired={state.user?null:()=>setShowA("login")}/>)}</div>}
+      <div className="grid" style={{paddingTop:16}}>{filtered.map(i=><Card key={i.id} item={i} onOpen={openDetail} favs={state.favorites} dispatch={dispatch} onAuthRequired={state.user?null:()=>setShowA("login")}/>)}</div>}
     </main>}
 
-    {page==="profile"&&state.user&&<Profile state={state} dispatch={dispatch} setPage={setPage} setSelected={setSel} initTab={profTab}/>}
+    {page==="profile"&&state.user&&<Profile state={state} dispatch={dispatch} setPage={setPage} setSelected={openDetail} initTab={profTab}/>}
     {page==="messages"&&state.user&&<Messages state={state} dispatch={dispatch} cid={cid} setCid={setCid} setPage={setPage}/>}
     {page==="create"&&state.user&&<CreateListing state={state} dispatch={dispatch} setPage={setPage} mode={mode}/>}
     {(page==="create"||page==="profile"||page==="messages"||page==="dashboard"||page==="referral"||page==="verify"||page==="dispute"||page==="wallet"||page==="badges")&&!state.user&&<div className="empty" style={{paddingTop:100}}><span>🔒</span><h2>Connectez-vous</h2><p>Vous devez être connecté pour accéder à cette page.</p><button className="bp" style={{marginTop:14}} onClick={()=>setShowA("login")}>Se connecter</button></div>}
@@ -4029,14 +4032,14 @@ function App(){
       <div style={{height:80}}/>
     </footer>}
 
-    {sel&&<Detail item={sel} onClose={()=>setSel(null)} state={state} dispatch={dispatch} setPage={setPage} setConvId={setCid} setShowShop={setShowShop} setProfTab={setProfTab} onAuthRequired={()=>setShowA("login")}/>}
+    {sel&&<Detail item={sel} onClose={closeDetail} state={state} dispatch={dispatch} setPage={setPage} setConvId={setCid} setShowShop={setShowShop} setProfTab={setProfTab} onAuthRequired={()=>setShowA("login")}/>}
     {showF&&<FilterM onClose={()=>setShowF(false)} filters={filters} setFilters={setFilters} count={filtered.length}/>}
     {showS&&<SearchM onClose={()=>setShowS(false)} onSearch={search} allItems={all} filters={filters} setFilters={setFilters}/>}
     {showA&&<AuthModal onClose={()=>setShowA(null)} dispatch={dispatch} mode={showA}/>}
     {showOnboarding&&<Onboarding onClose={()=>{setShowOnboarding(false);try{localStorage.setItem('cercle_ob','1')}catch{}}}/>}
     <div className="toast-stack">{toasts.map(t=><div key={t.id} className={"t2 t2-"+t.type}><span>{t.type==='s'?"✅":t.type==='b'?"🎉":t.type==='e'?"❌":t.type==='w'?"⭐":"ℹ️"}</span><span>{t.text}</span></div>)}</div>
     {infoPage&&<InfoPage id={infoPage} setPage={p=>{setInfoPage(null);setPage(p)}}/>}
-    {page==="map"&&<MapPage items={filtered} onOpen={setSel} favs={state.favorites} dispatch={dispatch} mode={mode}/>}
+    {page==="map"&&<MapPage items={filtered} onOpen={openDetail} favs={state.favorites} dispatch={dispatch} mode={mode}/>}
     {page==="notifs"&&state.user&&<NotifCenter state={state} dispatch={dispatch} setPage={setPage}/>}
     {page==="dashboard"&&state.user&&<Dashboard state={state} dispatch={dispatch} setPage={setPage}/>}
     {page==="gestion"&&state.user&&state.user.isPro&&<GestionPro state={state} dispatch={dispatch} setPage={setPage}/>}
@@ -4046,10 +4049,10 @@ function App(){
     {page==="dispute"&&state.user&&<DisputePage state={state} dispatch={dispatch} setPage={setPage}/>}
     {page==="wallet"&&state.user&&<WalletPage state={state} dispatch={dispatch} setPage={setPage}/>}
     {page==="badges"&&state.user&&<BadgesPage state={state} setPage={setPage}/>}
-    {showShop&&<Shop owner={showShop} items={all} onClose={()=>setShowShop(null)} onOpen={i=>{setShowShop(null);setSel(i)}} state={state} dispatch={dispatch} onAuthRequired={()=>setShowA("login")}/>}
+    {showShop&&<Shop owner={showShop} items={all} onClose={()=>setShowShop(null)} onOpen={i=>{setShowShop(null);openDetail(i);}} state={state} dispatch={dispatch} onAuthRequired={()=>setShowA("login")}/>}
     {showGallery&&<Gallery images={showGallery.imgs} start={showGallery.idx||0} onClose={()=>setShowGallery(null)}/>}
     {/* Chatbot */}
-    {showChat?<Chatbot items={all} onOpen={i=>{setShowChat(false);setSel(i)}} onClose={()=>setShowChat(false)}/>:<button className="chatbot-btn" onClick={()=>setShowChat(true)}>🤖</button>}
+    {showChat?<Chatbot items={all} onOpen={i=>{setShowChat(false);openDetail(i);}} onClose={()=>setShowChat(false)}/>:<button className="chatbot-btn" onClick={()=>setShowChat(true)}>🤖</button>}
     {/* Push notification */}
     {pushNotif&&<div className="push"><span style={{fontSize:16}}>🔔</span><div style={{flex:1,fontSize:12}}><div style={{fontWeight:700}}>Cercle</div>{pushNotif.text}</div><button className="push-close" onClick={()=>setPushNotif(null)}>✕</button></div>}
     {menu&&<div style={{position:"fixed",inset:0,zIndex:99}} onClick={()=>setMenu(false)}/>}
