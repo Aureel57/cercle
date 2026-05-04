@@ -1677,28 +1677,26 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
         {/* ── Avis ── */}
         {tab === 'avis' && (
           <div>
+            {reviewCount===0?<div style={{textAlign:'center',padding:'40px 0'}}><span style={{fontSize:44}}>⭐</span><p style={{fontWeight:700,color:'#374151',fontSize:16,marginTop:12}}>Aucun avis pour l'instant</p><p style={{fontSize:13,color:'#9ca3af',marginTop:4}}>Tes premiers avis apparaîtront ici après tes locations.</p></div>:<>
             <div style={S.ratingHero}>
               <div style={{textAlign:'center'}}>
-                <div style={S.ratingBig}>4.9</div>
-                <div style={S.ratingStars}>★★★★★</div>
-                <div style={S.ratingTotal}>12 avis</div>
+                <div style={S.ratingBig}>{avgRating}</div>
+                <div style={S.ratingStars}>{'★'.repeat(Math.round(parseFloat(avgRating)||0))}{'☆'.repeat(5-Math.round(parseFloat(avgRating)||0))}</div>
+                <div style={S.ratingTotal}>{reviewCount} avis</div>
               </div>
               <div style={{flex:1}}>
-                {[5,4,3,2,1].map(n => (
-                  <div key={n} style={S.barRow}>
+                {[5,4,3,2,1].map(n => {
+                  const cnt=state.reviews.filter(r=>Math.round(r.rating)===n).length;
+                  const pct=reviewCount>0?Math.round(cnt/reviewCount*100)+'%':'0%';
+                  return <div key={n} style={S.barRow}>
                     <span style={S.barLabel}>{n}</span>
-                    <div style={S.barTrack}>
-                      <div style={S.barFill(n===5?'83%':n===4?'12%':'5%')} />
-                    </div>
-                    <span style={{fontSize:11,color:'#9ca3af',width:24}}>
-                      {n===5?10:n===4?2:0}
-                    </span>
-                  </div>
-                ))}
+                    <div style={S.barTrack}><div style={S.barFill(pct)}/></div>
+                    <span style={{fontSize:11,color:'#9ca3af',width:24}}>{cnt}</span>
+                  </div>;
+                })}
               </div>
             </div>
-            {state.reviews.length===0?<div style={{textAlign:'center',padding:'40px 0'}}><span style={{fontSize:40}}>⭐</span><p style={{fontWeight:700,color:'#374151',fontSize:15,marginTop:12}}>Aucun avis pour l'instant</p></div>:
-            (()=>{const colors=['#8b5cf6','#3b82f6','#10b981','#f59e0b','#06b6d4'];return state.reviews.map((r,i)=>{
+            {(()=>{const colors=['#8b5cf6','#3b82f6','#10b981','#f59e0b','#06b6d4'];return state.reviews.map((r,i)=>{
               const initials=(r.fromUserName||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
               const dateStr=r.createdAt?new Date(r.createdAt).toLocaleDateString('fr-FR',{month:'short',year:'numeric'}):'';
               return <div key={r.id} style={{...S.reviewCard,animation:'scaleIn 0.4s cubic-bezier(0.34,1.56,0.64,1) both',animationDelay:`${i*0.08}s`}}>
@@ -1715,6 +1713,7 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
                 <p style={S.reviewText}>"{r.text}"</p>
               </div>;
             });})()}
+          </>}
           </div>
         )}
 
@@ -3046,7 +3045,7 @@ function Dashboard({state,dispatch,setPage}){
             {icon:'💛',val:monthlyVals[curMonth]+'€',label:'CA mensuel',sub:months[curMonth],col:'#D97706'},
             {icon:'🔄',val:myBookAsOwner.filter(b=>b.status==='confirmed').length,label:'Locations actives',sub:'confirmées',col:'#059669'},
             {icon:'📊',val:myItems.length>0?Math.min(100,Math.round(myBookAsOwner.filter(b=>b.status==='confirmed').length/Math.max(myItems.length,1)*100))+'%':'—',label:"Taux d'occupation",sub:'du parc',col:'#6C63FF'},
-            {icon:'⭐',val:myItems.length>0?(myItems.reduce((s,i)=>s+i.rating,0)/myItems.length).toFixed(1):'4.9',label:'Note moyenne',sub:'locataires',col:'#D97706'},
+            {icon:'⭐',val:myItems.length>0&&myItems.some(i=>i.rating>0)?(myItems.reduce((s,i)=>s+i.rating,0)/myItems.length).toFixed(1):'–',label:'Note moyenne',sub:'locataires',col:'#D97706'},
           ].map((k,i)=>(
             <div key={i} style={{textAlign:'center',padding:'10px 6px',background:'rgba(255,255,255,0.6)',borderRadius:12}}>
               <div style={{fontSize:20,marginBottom:4}}>{k.icon}</div>
