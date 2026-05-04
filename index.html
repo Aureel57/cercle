@@ -853,32 +853,47 @@ function AuthModal({onClose,dispatch,mode:im}){
       }
       setLoading("login");setErr("");
       window.auth.signInWithEmailAndPassword(f.email,f.password)
-        .then(cred=>window.db?window.db.collection('users').doc(cred.user.uid).get():Promise.resolve(null))
-        .then(doc=>{
-          if(doc&&doc.exists){dispatch({type:"LOGIN",payload:doc.data()});}
-          else{
-            try{const saved=localStorage.getItem('cercle_user_'+f.email.toLowerCase());if(saved){const {_pwd,...p}=JSON.parse(saved);dispatch({type:"LOGIN",payload:p});}}catch(e){}
-          }
-          setLoading("");onClose();
+        .then(cred=>{
+          // Auth réussie — charger le profil Firestore, sans bloquer la connexion si ça échoue
+          const uid=cred.user.uid;
+          const loadProfile=window.db
+            ?window.db.collection('users').doc(uid).get().then(doc=>{
+                if(doc&&doc.exists)return doc.data();
+                const ls=localStorage.getItem('cercle_user_'+f.email.toLowerCase())||localStorage.getItem('cercle_user_'+f.email);
+                if(ls){const{_pwd,...p}=JSON.parse(ls);return{...p,id:uid};}
+                return{id:uid,email:cred.user.email,name:cred.user.email.split('@')[0],avatar:'😊',verified:false,since:new Date().getFullYear(),rating:0,rentals:0,responseTime:'~1h',isPro:false};
+              }).catch(()=>{
+                const ls=localStorage.getItem('cercle_user_'+f.email.toLowerCase())||localStorage.getItem('cercle_user_'+f.email);
+                if(ls){const{_pwd,...p}=JSON.parse(ls);return{...p,id:uid};}
+                return{id:uid,email:cred.user.email,name:cred.user.email.split('@')[0],avatar:'😊',verified:false,since:new Date().getFullYear(),rating:0,rentals:0,responseTime:'~1h',isPro:false};
+              })
+            :Promise.resolve({id:uid,email:cred.user.email,name:cred.user.email.split('@')[0],avatar:'😊',verified:false,since:new Date().getFullYear(),rating:0,rentals:0,responseTime:'~1h',isPro:false});
+          return loadProfile.then(profile=>{dispatch({type:'LOGIN',payload:profile});});
         })
+        .then(()=>{setLoading("");onClose();})
         .catch(e=>{
           setLoading("");
-          // Compte créé avant Firebase (localStorage) → essayer le fallback local
-          if(e.code==="auth/user-not-found"||e.code==="auth/invalid-credential"||e.code==="auth/wrong-password"){
+          if(e.code==="auth/user-not-found"||e.code==="auth/invalid-credential"||e.code==="auth/wrong-password"||e.code==="auth/invalid-email"){
+            // Compte localStorage uniquement → fallback
             try{
               const saved=localStorage.getItem('cercle_user_'+f.email.toLowerCase())||localStorage.getItem('cercle_user_'+f.email);
               if(saved){
                 const u=JSON.parse(saved);
                 if(u._pwd===f.password){
                   const{_pwd,...profile}=u;
-                  // Créer le compte Firebase pour les prochaines fois
-                  if(window.auth){window.auth.createUserWithEmailAndPassword(f.email,f.password).then(cred=>{const up={...profile,id:cred.user.uid};if(window.db)window.db.collection('users').doc(cred.user.uid).set(up).catch(()=>{});dispatch({type:'LOGIN',payload:up});}).catch(()=>{dispatch({type:'LOGIN',payload:profile});});onClose();return;}
-                  dispatch({type:"LOGIN",payload:profile});onClose();return;
+                  window.auth.createUserWithEmailAndPassword(f.email,f.password)
+                    .then(cred=>{const up={...profile,id:cred.user.uid};if(window.db)window.db.collection('users').doc(cred.user.uid).set(up).catch(()=>{});dispatch({type:'LOGIN',payload:up});})
+                    .catch(()=>{dispatch({type:'LOGIN',payload:profile});});
+                  onClose();return;
                 }else{setErr("Mot de passe incorrect");return;}
               }
             }catch(le){}
             setErr("Email ou mot de passe incorrect");
-          }else{setErr("Erreur de connexion : "+e.message);}
+          }else if(e.code==="auth/network-request-failed"){
+            setErr("Pas de connexion internet. Réessaie.");
+          }else if(e.code==="auth/too-many-requests"){
+            setErr("Trop de tentatives. Réessaie dans quelques minutes.");
+          }else{setErr("Erreur de connexion ("+e.code+")");}
         });
     }else{
       if(step===0)return setStep(1);
