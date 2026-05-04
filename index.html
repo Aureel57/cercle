@@ -280,14 +280,14 @@ function reducer(s,a){switch(a.type){
     return{...s,payments:s.payments.map(p=>p.id===a.id?{...p,status:"released",releasedAt:new Date()}:p),notifications:n?[n,...s.notifications]:s.notifications}}
   case"MSG":{const m=a.payload;let cs=[...s.conversations],cv=cs.find(c=>c.id===m.cid);
     if(!cv){cv={id:m.cid,parts:[m.from,m.to],itemId:m.itemId,itemTitle:m.itemTitle||'',last:m.text,at:new Date()};cs.push(cv)}else cs=cs.map(c=>c.id===m.cid?{...c,last:m.text,at:new Date()}:c);
-    if(window.db&&!m._fromCloud){const msgDoc={...m,_fromCloud:false,sentAt:new Date().toISOString()};window.db.collection('messages').add(msgDoc).catch(()=>{});}
+    if(window.db&&!m._fromCloud){const msgDoc={...m,_fromCloud:false,sentAt:new Date().toISOString(),timestamp:new Date().toISOString()};window.db.collection('messages').add(msgDoc).catch(e=>console.error('[MSG]',e));}
     if(window.db&&!m._fromCloud&&m.to){const notif={userId:m.to,text:`💬 Nouveau message de ${m.fromName||'quelqu\'un'} sur "${m.itemTitle||'une annonce'}"`,kind:'message',read:false,at:new Date().toISOString(),itemId:m.itemId};window.db.collection('notifications').add(notif).catch(()=>{});}
     if(s.messages.find(x=>x.id===m.id))return s;
     return{...s,messages:[...s.messages,m],conversations:cs}}
   case"PUSH_NOTIF":{const n=a.payload;if(s.notifications.find(x=>x.id===n.id))return s;return{...s,notifications:[{...n,read:false},...s.notifications]};}
   case"READ_N":return{...s,notifications:s.notifications.map(n=>({...n,read:true}))};
   case"REVIEW":{const r=a.payload;const items=s.items.map(i=>i.id===r.itemId?{...i,reviews:i.reviews+1,rating:+((i.rating*i.reviews+r.rating)/(i.reviews+1)).toFixed(2)}:i);return{...s,reviews:[...s.reviews,r],items}}
-  case"ADD_ITEM":{const it={...a.payload,id:uid(),owner:s.user,rating:0,reviews:0,createdAt:new Date().toISOString(),isPro:a.payload.isPro||false};const newUserItems=[...s.userItems,it];try{localStorage.setItem('cercle_items',JSON.stringify(newUserItems));}catch(e){console.error('[Cercle] localStorage plein, annonce sauvegardée en mémoire seulement:',e.name);try{const light=newUserItems.map(i=>({...i,images:i.images?.map(im=>im.slice(0,200)+'...'),photos:[]}));localStorage.setItem('cercle_items',JSON.stringify(light));}catch(e2){}}if(window.db){const firestoreItem={...it,images:[],photos:[]};window.db.collection('items').doc(it.id).set(firestoreItem).catch(console.error);}return{...s,userItems:newUserItems,notifications:[{id:uid(),text:`"${it.title}" publiée ! ✅`,read:false,at:new Date()},...s.notifications]}}
+  case"ADD_ITEM":{const owner={...s.user,id:window.firebase&&window.firebase.auth&&window.firebase.auth().currentUser?window.firebase.auth().currentUser.uid:s.user.id};const it={...a.payload,id:uid(),owner,rating:0,reviews:0,createdAt:new Date().toISOString(),isPro:a.payload.isPro||false};const newUserItems=[...s.userItems,it];try{localStorage.setItem('cercle_items',JSON.stringify(newUserItems));}catch(e){console.error('[Cercle] localStorage plein, annonce sauvegardée en mémoire seulement:',e.name);try{const light=newUserItems.map(i=>({...i,images:i.images?.map(im=>im.slice(0,200)+'...'),photos:[]}));localStorage.setItem('cercle_items',JSON.stringify(light));}catch(e2){}}if(window.db){const firestoreItem={...it,images:[],photos:[]};window.db.collection('items').doc(it.id).set(firestoreItem).catch(console.error);}return{...s,userItems:newUserItems,notifications:[{id:uid(),text:`"${it.title}" publiée ! ✅`,read:false,at:new Date()},...s.notifications]}}
   case"READ_ONE":return{...s,notifications:s.notifications.map(n=>n.id===a.id?{...n,read:true}:n)};
   case"REFERRAL":{const n={id:uid(),text:`${a.name} a rejoint Cercle ! +5€`,read:false,at:new Date(),kind:"referral"};return{...s,referrals:[...s.referrals,{id:uid(),name:a.name,date:new Date(),bonus:5}],notifications:[n,...s.notifications]}}
   case"DISPUTE":return{...s,disputes:[...s.disputes,a.payload],notifications:[{id:uid(),text:"Litige ouvert",read:false,at:new Date(),kind:"dispute"},...s.notifications]};
@@ -4182,10 +4182,12 @@ function App(){
       };
       img.onerror=()=>resolve('');img.src=dataUrl;
     });
+    const firebaseUid=state.user.id;
     state.userItems.forEach(async(item)=>{
       try{
         const thumbs=await Promise.all((item.images||[]).slice(0,3).map(compressForCloud));
-        const firestoreItem={...item,images:thumbs.filter(Boolean),photos:[]};
+        const owner={...(item.owner||{}),id:firebaseUid};
+        const firestoreItem={...item,owner,images:thumbs.filter(Boolean),photos:[]};
         window.db.collection('items').doc(item.id).set(firestoreItem).catch(()=>{});
       }catch(e){}
     });
