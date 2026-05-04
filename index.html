@@ -4170,7 +4170,7 @@ function App(){
   },[]);
   // Sync des annonces locales vers Firestore (items créés avant Firebase)
   useEffect(()=>{
-    if(!window.db||!loaded||!state.userItems.length)return;
+    if(!window.db||!loaded||!state.user||!state.userItems.length)return;
     const compressForCloud=(dataUrl)=>new Promise(resolve=>{
       if(!dataUrl||!dataUrl.startsWith('data:'))return resolve('');
       const img=new Image();
