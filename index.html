@@ -1461,7 +1461,7 @@ function calcSavings(rentals, avgPrice) {
 
 function Profile({state, dispatch, setPage, setSelected, initTab, onEditItem}) {
   const user = (state && state.user) || {};
-  const userName = user.name || 'Noah M.';
+  const userName = user.name || '';
   const userAvatar = user.avatar || null;
 
   const avatarInputRef = React.useRef(null);
@@ -1482,9 +1482,9 @@ function Profile({state, dispatch, setPage, setSelected, initTab, onEditItem}) {
   const [gradeTooltip, setGradeTooltip] = React.useState(null);
   const [profileData, setProfileData] = React.useState({
     name: userName,
-    email: user.email || 'noah@cercle.fr',
-    phone: user.phone || '+33 6 12 34 56 78',
-    bio: user.bio || "Passionné par le partage et l'économie collaborative. Super hôte depuis 2024.",
+    email: user.email || '',
+    phone: user.phone || '',
+    bio: user.bio || '',
     notifEmail: true,
     notifPush: true,
   });
@@ -1885,8 +1885,8 @@ function Profile({state, dispatch, setPage, setSelected, initTab, onEditItem}) {
               {user.verified && <span style={S.pillGreen}>✓ Identité vérifiée</span>}
               {(user.superHost || (state.reviews.length >= 10 && (state.reviews.reduce((s,r)=>s+r.rating,0)/state.reviews.length) >= 4.5)) && <span style={S.pillPurple}>🏅 Super hôte</span>}
               {isHeroFondateur && <span style={{...S.pill,background:'linear-gradient(90deg,#D4AF37,#FFD700)',color:'#0a0a0a',fontWeight:800,boxShadow:'0 2px 10px rgba(212,175,55,0.5)'}}>👑 Fondateur Cercle</span>}
-              <span style={S.pill}>📍 Paris</span>
-              <span style={S.pill}>🗓️ Membre depuis 2024</span>
+              {(user.city||user.location)&&<span style={S.pill}>📍 {user.city||user.location}</span>}
+              {user.since&&<span style={S.pill}>🗓️ Membre depuis {user.since}</span>}
             </div>
 
             <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:12}}>
