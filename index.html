@@ -123,6 +123,100 @@ body{background:#F4F3FF}
 .auth-submit{width:100%;padding:14px;border:none;border-radius:14px;background:linear-gradient(135deg,var(--p),#f87171);color:#fff;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 4px 20px rgba(108,99,255,.28);transition:opacity .2s,transform .1s;margin-top:6px}
 .auth-submit:disabled{opacity:.4;cursor:not-allowed;box-shadow:none}
 .auth-submit:not(:disabled):active{transform:scale(.98)}
+
+/* ── RESPONSIVE GLOBAL ── */
+*{box-sizing:border-box}
+img{max-width:100%}
+
+/* ── MOBILE SMALL (<480px) ── */
+@media(max-width:480px){
+  /* Grid 1 colonne */
+  .grid{grid-template-columns:1fr;padding:8px 10px 90px;gap:10px}
+  /* Calendriers de réservation en colonne */
+  .minical-row{grid-template-columns:1fr!important}
+  /* Cartes */
+  .cbn{font-size:14px}.cbp{font-size:16px}
+  /* Modal plein écran */
+  .md{width:100%;max-width:100%;border-radius:20px 20px 0 0;position:fixed;bottom:0;top:auto;max-height:92vh;animation:slideFromBottom .3s var(--ease)}
+  .bk{align-items:flex-end}
+  @keyframes slideFromBottom{from{transform:translateY(100%)}to{transform:translateY(0)}}
+  /* Profil compact */
+  .prof{padding:10px 12px}
+  /* Catégories */
+  .ctl{font-size:9px}.cti{font-size:18px}
+  /* Héro */
+  .hero-stat-n{font-size:16px}.hero-stat-l{font-size:10px}
+  /* Dashboard 1 col */
+  .dboard-grid{grid-template-columns:1fr!important}
+  /* Auth */
+  .auth-wrap{padding:0 12px}
+  /* Booking form: calendriers en colonne */
+  .bc{padding:16px}
+  /* Détail images */
+  .dimgs{padding:0;gap:3px}
+  /* Annonce formulaire */
+  .ftg{grid-template-columns:1fr!important}
+}
+
+/* ── MOBILE STANDARD (481–768px) ── */
+@media(min-width:481px) and (max-width:768px){
+  .grid{grid-template-columns:repeat(2,1fr);padding:10px 12px 90px;gap:12px}
+}
+
+/* ── TABLETTE (769–1024px) ── */
+@media(min-width:769px) and (max-width:1024px){
+  .grid{grid-template-columns:repeat(3,1fr);padding:16px 20px 60px;gap:16px}
+  .hi{padding:0 20px}
+  .dc{grid-template-columns:1fr 340px;padding:20px;gap:24px}
+  .prof{max-width:760px}
+}
+
+/* ── DESKTOP (>1024px) ── */
+@media(min-width:1025px){
+  /* Grille large */
+  .grid{grid-template-columns:repeat(auto-fill,minmax(240px,1fr));padding:24px 32px 60px;gap:22px}
+  /* Header */
+  .hi{padding:0 32px}
+  .cw{padding:8px 32px}
+  /* Profil avec meilleur max-width et centrage */
+  .prof{max-width:1000px;padding:32px}
+  /* Modaux plus larges */
+  .md{max-width:640px}
+  /* Détail */
+  .dc{padding:32px;gap:48px}
+  .dimgs{padding:0 32px}
+  /* NC (notifications) */
+  .nc{max-width:720px;padding:28px 32px}
+  /* Reco */
+  .reco{padding:28px 32px}
+  /* Cards hover amélioré */
+  .card:hover{transform:translateY(-8px) scale(1.015)}
+}
+
+/* ── GRAND ÉCRAN (>1400px) ── */
+@media(min-width:1400px){
+  .grid{padding:28px 40px 60px;gap:26px}
+  .hi{padding:0 40px}
+  .cw{padding:8px 40px}
+  .dc{padding:36px 40px}
+  .dimgs{padding:0 40px}
+  .reco{padding:28px 40px}
+}
+
+/* ── CALENDRIERS côte à côte sur mobile ── */
+@media(max-width:520px){
+  /* Forcer les MiniCal à s'empiler */
+  div[style*="grid-template-columns:\"1fr 1fr\""]{grid-template-columns:1fr!important}
+}
+
+/* ── Touch : évite le tap highlight bleu ── */
+@media(hover:none){
+  *{-webkit-tap-highlight-color:transparent}
+  .card:hover{transform:none;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+}
+
+/* ── Overflow horizontal global ── */
+html,body{overflow-x:hidden;width:100%}
 </style>
 </head>
 <body>
@@ -1356,7 +1450,7 @@ function Detail({item,onClose,state,dispatch,setPage,setConvId,setShowShop,setPr
         {/* ── Dates ── */}
         <div style={{marginBottom:12}}>
           <div style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:".06em",color:"var(--g)",marginBottom:6}}>Dates</div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+          <div className="minical-row" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
             <MiniCal value={sd} onChange={setSd} label="Début" blockedDates={item.blockedDates}/>
             <MiniCal value={ed} onChange={setEd} label="Fin" minDate={sd} blockedDates={item.blockedDates}/>
           </div>
