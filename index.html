@@ -188,7 +188,7 @@ function reducer(s,a){switch(a.type){
     return{...s,messages:[...s.messages,m],conversations:cs}}
   case"READ_N":return{...s,notifications:s.notifications.map(n=>({...n,read:true}))};
   case"REVIEW":{const r=a.payload;const items=s.items.map(i=>i.id===r.itemId?{...i,reviews:i.reviews+1,rating:+((i.rating*i.reviews+r.rating)/(i.reviews+1)).toFixed(2)}:i);return{...s,reviews:[...s.reviews,r],items}}
-  case"ADD_ITEM":{const it={...a.payload,id:uid(),owner:s.user,rating:0,reviews:0,createdAt:new Date().toISOString(),isPro:a.payload.isPro||false};const newUserItems=[...s.userItems,it];try{localStorage.setItem('cercle_items',JSON.stringify(newUserItems));}catch(e){}if(window.db&&s.user){window.db.collection('items').doc(it.id).set(it).catch(console.error);}return{...s,userItems:newUserItems,notifications:[{id:uid(),text:`"${it.title}" publiée !`,read:false,at:new Date()},...s.notifications]}}
+  case"ADD_ITEM":{const it={...a.payload,id:uid(),owner:s.user,rating:0,reviews:0,createdAt:new Date().toISOString(),isPro:a.payload.isPro||false};const newUserItems=[...s.userItems,it];try{localStorage.setItem('cercle_items',JSON.stringify(newUserItems));}catch(e){console.error('[Cercle] localStorage plein, annonce sauvegardée en mémoire seulement:',e.name);try{const light=newUserItems.map(i=>({...i,images:i.images?.map(im=>im.slice(0,200)+'...'),photos:[]}));localStorage.setItem('cercle_items',JSON.stringify(light));}catch(e2){}}if(window.db&&s.user){window.db.collection('items').doc(it.id).set(it).catch(console.error);}return{...s,userItems:newUserItems,notifications:[{id:uid(),text:`"${it.title}" publiée ! ✅`,read:false,at:new Date()},...s.notifications]}}
   case"READ_ONE":return{...s,notifications:s.notifications.map(n=>n.id===a.id?{...n,read:true}:n)};
   case"REFERRAL":{const n={id:uid(),text:`${a.name} a rejoint Cercle ! +5€`,read:false,at:new Date(),kind:"referral"};return{...s,referrals:[...s.referrals,{id:uid(),name:a.name,date:new Date(),bonus:5}],notifications:[n,...s.notifications]}}
   case"DISPUTE":return{...s,disputes:[...s.disputes,a.payload],notifications:[{id:uid(),text:"Litige ouvert",read:false,at:new Date(),kind:"dispute"},...s.notifications]};
@@ -2390,19 +2390,53 @@ function CreateListing({state,dispatch,setPage,mode}){
   const camRef=useRef(null);
   const u=(k,v)=>setF(p=>({...p,[k]:v}));
 
+  const [saving,setSaving]=useState(false);
+
+  // Compresse une image base64 à max 800px, JPEG 75% (~60-120KB)
+  const compressImg=(dataUrl,maxW=800,quality=0.75)=>new Promise(resolve=>{
+    const img=new Image();
+    img.onload=()=>{
+      const ratio=Math.min(1,maxW/img.width,maxW/img.height);
+      const cnv=document.createElement('canvas');
+      cnv.width=Math.round(img.width*ratio);
+      cnv.height=Math.round(img.height*ratio);
+      cnv.getContext('2d').drawImage(img,0,0,cnv.width,cnv.height);
+      resolve(cnv.toDataURL('image/jpeg',quality));
+    };
+    img.onerror=()=>resolve(dataUrl);
+    img.src=dataUrl;
+  });
+
   const addPhotos=(files)=>{
     const remaining=5-photos.length;
     Array.from(files).slice(0,remaining).forEach(file=>{
       const reader=new FileReader();
-      reader.onload=ev=>setPhotos(p=>[...p,ev.target.result]);
+      reader.onload=async ev=>{
+        const compressed=await compressImg(ev.target.result);
+        setPhotos(p=>[...p,compressed]);
+      };
       reader.readAsDataURL(file);
     });
   };
 
-  const go=()=>{
+  const go=async()=>{
     if(!f.title||!f.price)return;
+    setSaving(true);
+    // Compresse les photos uploadées (déjà compressées), sinon génère images de catégorie
     const imgs=photos.length>0?photos:[mkImg(f.cat,99,0),mkImg(f.cat,99,1),mkImg(f.cat,99,2)];
-    dispatch({type:"ADD_ITEM",payload:{...f,price:+f.price,deposit:+f.deposit||+f.price*3,photos,images:imgs,isPro:!!state.user?.isPro}});
+    const payload={...f,price:+f.price,deposit:+f.deposit||+f.price*3,photos:imgs,images:imgs,isPro:!!state.user?.isPro};
+    // Tester si localStorage peut stocker avant dispatch
+    try{
+      const testKey='cercle_test_'+Date.now();
+      localStorage.setItem(testKey,JSON.stringify(payload));
+      localStorage.removeItem(testKey);
+    }catch(e){
+      // Quota dépassé : compresser encore plus
+      const smallImgs=await Promise.all(imgs.map(i=>compressImg(i,400,0.6)));
+      payload.images=smallImgs;payload.photos=smallImgs;
+    }
+    dispatch({type:"ADD_ITEM",payload});
+    setSaving(false);
     setPage("profile");
   };
 
@@ -2446,7 +2480,7 @@ function CreateListing({state,dispatch,setPage,mode}){
       </div>}
     </div>
 
-    <button className="bp" style={{width:"100%"}} onClick={go}>Publier l'annonce</button>
+    <button className="bp" style={{width:"100%"}} onClick={go} disabled={saving}>{saving?"⏳ Publication en cours...":"Publier l'annonce"}</button>
   </div>
 }
 
