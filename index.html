@@ -1736,7 +1736,11 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
           <div style={S.listingGrid}>
             {displayListings.map((l, i) => (
               <div key={l.id} className="prof-listing-card" style={{...S.card, animation:'fadeSlideUp 0.4s cubic-bezier(0.34,1.56,0.64,1) both', animationDelay:`${i*0.07}s`}} onClick={() => { setSelected && setSelected(l); setPage && setPage('detail'); }}>
-                <div style={S.listingImg}>{l.img || '📦'}</div>
+                <div style={{...S.listingImg,padding:0,overflow:'hidden',display:'flex',alignItems:'center',justifyContent:'center',background:'var(--bgw)'}}>
+                  {l.images&&l.images[0]
+                    ?<img src={l.images[0]} alt={l.title} style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}}/>
+                    :<span style={{fontSize:32}}>{l.img||'📦'}</span>}
+                </div>
                 <div style={S.listingBody}>
                   <p style={S.listingTitle}>{l.title}</p>
                   <p style={S.listingPrice}>{l.price}€<span style={{fontWeight:400,fontSize:11,color:'var(--g)'}}>/jour</span></p>
