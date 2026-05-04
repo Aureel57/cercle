@@ -21,12 +21,12 @@
 // ⚠️  REMPLACEZ ces valeurs par votre config Firebase Console
 // https://console.firebase.google.com → Paramètres du projet → Vos applications
 var FIREBASE_CONFIG = {
-  apiKey:            "VOTRE_API_KEY",
-  authDomain:        "votre-projet.firebaseapp.com",
-  projectId:         "votre-projet-id",
-  storageBucket:     "votre-projet.appspot.com",
-  messagingSenderId: "VOTRE_SENDER_ID",
-  appId:             "VOTRE_APP_ID"
+  apiKey:            "AIzaSyBF-EUZBgB9kUp16vhv0rzHO3QBp_GVM7c",
+  authDomain:        "cercle-92d7c.firebaseapp.com",
+  projectId:         "cercle-92d7c",
+  storageBucket:     "cercle-92d7c.firebasestorage.app",
+  messagingSenderId: "691327151080",
+  appId:             "1:691327151080:web:de513d38f8c75a4801525d"
 };
 try {
   if (FIREBASE_CONFIG.apiKey && FIREBASE_CONFIG.apiKey !== "VOTRE_API_KEY") {
@@ -165,7 +165,7 @@ const _savedReviews  = _ls('cercle_reviews',[]);
 const _savedBadges   = _ls('cercle_badges',[]);
 const _savedWallet   = _ls('cercle_wallet',0);
 const _savedFavs     = (()=>{try{const d=localStorage.getItem('cercle_favs');return d?new Set(JSON.parse(d)):new Set();}catch(e){return new Set();}})();
-const init={user:null,items:buildItems(),proItems:buildProItems(),favorites:_savedFavs,bookings:_savedBookings,messages:[],conversations:[],reviews:_savedReviews,notifications:[],userItems:_savedItems,payments:_savedPayments,referrals:[],disputes:[],wallet:_savedWallet,badges:_savedBadges,profileCompletion:{identity:false,phone:false,drivingLicense:false,bankAccount:false}};
+const init={user:null,items:buildItems(),proItems:buildProItems(),favorites:_savedFavs,bookings:_savedBookings,messages:[],conversations:[],reviews:_savedReviews,notifications:[],userItems:_savedItems,cloudItems:[],payments:_savedPayments,referrals:[],disputes:[],wallet:_savedWallet,badges:_savedBadges,profileCompletion:{identity:false,phone:false,drivingLicense:false,bankAccount:false}};
 function reducer(s,a){switch(a.type){
   case"LOGIN":return{...s,user:{...a.payload,refCode:a.payload.refCode||uid().toUpperCase().slice(0,6)}};
   case"LOGOUT":return{...s,user:null};
@@ -199,6 +199,7 @@ function reducer(s,a){switch(a.type){
   case"EARN_BADGE":{if(s.badges.includes(a.badge))return s;const bd=ALL_BADGES.find(b=>b.id===a.badge);const bName=bd?bd.name:a.badge;const bIcon=bd?bd.icon:"🏅";return{...s,badges:[...s.badges,a.badge],notifications:[{id:uid(),text:`🎉 Félicitations ! Badge ${bIcon} "${bName}" débloqué ! Continuez comme ça !`,read:false,at:new Date(),kind:"badge"},...s.notifications]}};
   case"TOGGLE_AVAIL":{const toggle=i=>i.id===a.id?{...i,available:!i.available}:i;return{...s,items:s.items.map(toggle),userItems:s.userItems.map(toggle)}};
   case"SET_PROFILE_COMPLETION":{const pc={...s.profileCompletion,...a.payload};const n={id:uid(),text:`Profil complété : ${a.label||"étape"}`,read:false,at:new Date(),kind:"system"};return{...s,profileCompletion:pc,notifications:[n,...s.notifications]}};
+  case"SET_CLOUD_ITEMS":return{...s,cloudItems:a.payload};
   default:return s}}
 
 /* ========== ICONS ========== */
@@ -1498,7 +1499,7 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
   const myOwnedItems = (state.items?.filter(i => i.owner?.id === user.id) || []);
   const myUserItems = (state.userItems?.filter(i => i.owner?.id === user.id) || []);
   const listings = [...myOwnedItems, ...myUserItems];
-  const allItems = [...(state.items||[]), ...(state.proItems||[]), ...(state.userItems||[])];
+  const allItems = [...(state.items||[]), ...(state.proItems||[]), ...(state.userItems||[]), ...(state.cloudItems||[])];
   const favItems = allItems.filter(i => state.favorites && state.favorites.has(i.id));
   const favs = state.favorites || new Set();
   const isUserPro = user.isPro;
@@ -3852,8 +3853,8 @@ function App(){
   const[lang,setLang]=useState('fr');
   const[filters,setFilters]=useState({priceMin:0,priceMax:500,condition:"Tous",options:[],sort:"pertinence",filterCat:"all",minRating:0,searchDate:""});
 
-  const allPerso=useMemo(()=>[...state.items,...state.userItems].filter(i=>!i.isPro&&!i.owner?.isPro),[state.items,state.userItems]);
-  const allPro=useMemo(()=>[...state.proItems,...state.userItems.filter(i=>i.isPro||i.owner?.isPro)],[state.proItems,state.userItems]);
+  const allPerso=useMemo(()=>{const seen=new Set();return[...state.items,...state.userItems,...state.cloudItems].filter(i=>{if(i.isPro||i.owner?.isPro)return false;if(seen.has(i.id))return false;seen.add(i.id);return true;});},[state.items,state.userItems,state.cloudItems]);
+  const allPro=useMemo(()=>{const seen=new Set();return[...state.proItems,...state.userItems.filter(i=>i.isPro||i.owner?.isPro),...state.cloudItems.filter(i=>i.isPro||i.owner?.isPro)].filter(i=>{if(seen.has(i.id))return false;seen.add(i.id);return true;});},[state.proItems,state.userItems,state.cloudItems]);
   const all=mode==='pro'?allPro:(listingTab==='professionnels'?allPro:allPerso);
   const unread=state.notifications.filter(n=>!n.read).length;
 
@@ -3917,6 +3918,15 @@ function App(){
   useEffect(()=>{if(!loaded)return;try{localStorage.setItem('cercle_badges',JSON.stringify(state.badges));}catch(e){}},[state.badges,loaded]);
   useEffect(()=>{if(!loaded)return;try{localStorage.setItem('cercle_wallet',JSON.stringify(state.wallet));}catch(e){}},[state.wallet,loaded]);
   useEffect(()=>{if(!loaded)return;try{localStorage.setItem('cercle_favs',JSON.stringify([...state.favorites]));}catch(e){}},[state.favorites,loaded]);
+  // Listener Firestore temps réel sur toutes les annonces publiées
+  useEffect(()=>{
+    if(!window.db)return;
+    const unsub=window.db.collection('items').onSnapshot(snap=>{
+      const docs=snap.docs.map(d=>({...d.data(),id:d.id}));
+      dispatch({type:'SET_CLOUD_ITEMS',payload:docs});
+    },()=>{});
+    return()=>unsub();
+  },[]);
   // Auto-switch mode when pro user logs in
   useEffect(()=>{if(state.user?.isPro)setMode('pro')},[state.user?.isPro]);
   useEffect(()=>{const t=setTimeout(()=>setSplash(false),1200);return()=>clearTimeout(t)},[]);
