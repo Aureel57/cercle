@@ -726,16 +726,28 @@ function AuthModal({onClose,dispatch,mode:im}){
       // Essai demo users d'abord
       const demo=USERS.find(u=>u.email===f.email&&u.password===f.password)||PRO_USERS.find(u=>u.email===f.email&&u.password===f.password);
       if(demo){dispatch({type:"LOGIN",payload:demo});onClose();return}
-      // Sinon Firebase Auth
-      if(!window.auth){setErr("Connexion impossible, réessaie.");return}
+      // Sinon Firebase Auth ou fallback localStorage
+      if(!window.auth){
+        // Fallback : vérifier le compte dans localStorage
+        try{
+          const saved=localStorage.getItem('cercle_user_'+f.email.toLowerCase());
+          if(saved){
+            const u=JSON.parse(saved);
+            if(u._pwd===f.password){
+              const {_pwd,...profile}=u;
+              dispatch({type:"LOGIN",payload:profile});onClose();
+            }else{setErr("Mot de passe incorrect");}
+          }else{setErr("Aucun compte trouvé avec cet email. Inscris-toi d'abord.");}
+        }catch(e){setErr("Erreur de connexion");}
+        return;
+      }
       setLoading("login");setErr("");
       window.auth.signInWithEmailAndPassword(f.email,f.password)
         .then(cred=>window.db?window.db.collection('users').doc(cred.user.uid).get():Promise.resolve(null))
         .then(doc=>{
           if(doc&&doc.exists){dispatch({type:"LOGIN",payload:doc.data()});}
           else{
-            // profil pas encore dans Firestore, on charge depuis localStorage
-            try{const saved=localStorage.getItem('cercle_user_'+f.email);if(saved)dispatch({type:"LOGIN",payload:JSON.parse(saved)});}catch(e){}
+            try{const saved=localStorage.getItem('cercle_user_'+f.email.toLowerCase());if(saved){const {_pwd,...p}=JSON.parse(saved);dispatch({type:"LOGIN",payload:p});}}catch(e){}
           }
           setLoading("");onClose();
         })
@@ -767,7 +779,12 @@ function AuthModal({onClose,dispatch,mode:im}){
               else setErr("Erreur lors de la création du compte");
             });
         }else{
-          dispatch({type:"LOGIN",payload:{...userData,id:uid()}});onClose();
+          // Fallback localStorage : vérifier si email déjà utilisé
+          const existing=localStorage.getItem('cercle_user_'+f.email.toLowerCase());
+          if(existing){setErr("Cet email est déjà utilisé. Connecte-toi.");return;}
+          const newUser={...userData,id:uid()};
+          try{localStorage.setItem('cercle_user_'+f.email.toLowerCase(),JSON.stringify({...newUser,_pwd:f.password}));}catch(e){}
+          dispatch({type:"LOGIN",payload:newUser});onClose();
         }
       }else{
         if(!f.company||!f.siret||!f.email||!f.password){setErr("Remplissez les champs obligatoires");return}
@@ -787,7 +804,11 @@ function AuthModal({onClose,dispatch,mode:im}){
               else setErr("Erreur lors de la création du compte");
             });
         }else{
-          dispatch({type:"LOGIN",payload:{...userData,id:uid()}});onClose();
+          const existing=localStorage.getItem('cercle_user_'+f.email.toLowerCase());
+          if(existing){setErr("Cet email est déjà utilisé. Connecte-toi.");return;}
+          const newUser={...userData,id:uid()};
+          try{localStorage.setItem('cercle_user_'+f.email.toLowerCase(),JSON.stringify({...newUser,_pwd:f.password}));}catch(e){}
+          dispatch({type:"LOGIN",payload:newUser});onClose();
         }
       }
     }
