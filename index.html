@@ -165,7 +165,8 @@ const _savedReviews  = _ls('cercle_reviews',[]);
 const _savedBadges   = _ls('cercle_badges',[]);
 const _savedWallet   = _ls('cercle_wallet',0);
 const _savedFavs     = (()=>{try{const d=localStorage.getItem('cercle_favs');return d?new Set(JSON.parse(d)):new Set();}catch(e){return new Set();}})();
-const init={user:null,items:buildItems(),proItems:buildProItems(),favorites:_savedFavs,bookings:_savedBookings,messages:[],conversations:[],reviews:_savedReviews,notifications:[],userItems:_savedItems,cloudItems:[],payments:_savedPayments,referrals:[],disputes:[],wallet:_savedWallet,badges:_savedBadges,profileCompletion:{identity:false,phone:false,drivingLicense:false,bankAccount:false}};
+const _savedFollowing=_ls('cercle_following',[]);
+const init={user:null,items:buildItems(),proItems:buildProItems(),favorites:_savedFavs,bookings:_savedBookings,messages:[],conversations:[],reviews:_savedReviews,notifications:[],userItems:_savedItems,cloudItems:[],payments:_savedPayments,referrals:[],disputes:[],wallet:_savedWallet,badges:_savedBadges,following:_savedFollowing,profileCompletion:{identity:false,phone:false,drivingLicense:false,bankAccount:false}};
 function reducer(s,a){switch(a.type){
   case"LOGIN":return{...s,user:{...a.payload,refCode:a.payload.refCode||uid().toUpperCase().slice(0,6)}};
   case"LOGOUT":return{...s,user:null};
@@ -200,6 +201,8 @@ function reducer(s,a){switch(a.type){
   case"TOGGLE_AVAIL":{const toggle=i=>i.id===a.id?{...i,available:!i.available}:i;return{...s,items:s.items.map(toggle),userItems:s.userItems.map(toggle)}};
   case"SET_PROFILE_COMPLETION":{const pc={...s.profileCompletion,...a.payload};const n={id:uid(),text:`Profil complété : ${a.label||"étape"}`,read:false,at:new Date(),kind:"system"};return{...s,profileCompletion:pc,notifications:[n,...s.notifications]}};
   case"SET_CLOUD_ITEMS":return{...s,cloudItems:a.payload};
+  case"FOLLOW":{const f={id:a.userId,name:a.userName,avatar:a.userAvatar,since:a.userSince,followedAt:new Date().toISOString()};const next=[...s.following.filter(u=>u.id!==a.userId),f];try{localStorage.setItem('cercle_following',JSON.stringify(next));}catch(e){}if(window.db&&s.user){window.db.collection('follows').doc(`${s.user.id}_${a.userId}`).set({followerId:s.user.id,followerName:s.user.name,followedId:a.userId,followedName:a.userName,at:new Date().toISOString()}).catch(()=>{})}return{...s,following:next};}
+  case"UNFOLLOW":{const next=s.following.filter(u=>u.id!==a.userId);try{localStorage.setItem('cercle_following',JSON.stringify(next));}catch(e){}if(window.db&&s.user){window.db.collection('follows').doc(`${s.user.id}_${a.userId}`).delete().catch(()=>{})}return{...s,following:next};}
   case"EDIT_ITEM":{const upd={...a.payload};const existing=s.userItems.find(i=>i.id===upd.id)||s.items.find(i=>i.id===upd.id)||{};const fullItem={...existing,...upd};const newUserItems=s.userItems.map(i=>i.id===upd.id?fullItem:i);try{localStorage.setItem('cercle_items',JSON.stringify(newUserItems));}catch(e){}if(window.db){const{images,photos,...firestoreItem}=fullItem;window.db.collection('items').doc(upd.id).set(firestoreItem).catch(console.error);}return{...s,userItems:newUserItems,items:s.items.map(i=>i.id===upd.id?fullItem:i)}}
   default:return s}}
 
@@ -1224,10 +1227,14 @@ function Detail({item,onClose,state,dispatch,setPage,setConvId,setShowShop,setPr
             <div style={{width:52,height:52,borderRadius:"50%",background:"linear-gradient(135deg,var(--bg),var(--bgw))",display:"flex",alignItems:"center",justifyContent:"center",fontSize:28,border:"2px solid var(--bd)"}}>{item.owner.avatar}</div>
             {item.owner.verified&&<div style={{position:"absolute",bottom:-2,right:-2,width:18,height:18,borderRadius:"50%",background:"#10b981",border:"2px solid var(--w)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:9,color:"#fff",fontWeight:700}}>✓</div>}
           </div>
-          <div>
+          <div style={{flex:1}}>
             <div style={{fontSize:11,color:"var(--g)",fontWeight:600,textTransform:"uppercase",letterSpacing:".04em",marginBottom:2}}>Proposé par</div>
             <div style={{fontSize:15,fontWeight:700,cursor:"pointer"}} onClick={()=>{onClose();setShowShop&&setShowShop(item.owner)}}>{item.owner.name}</div>
             <div style={{fontSize:11,color:"var(--g)",marginTop:1}}>Membre depuis {item.owner.since} · {item.owner.rentals} locations · ⏱ {item.owner.responseTime}</div>
+            {state.user&&state.user.id!==item.owner.id&&(()=>{
+              const isFollowing=state.following?.some(f=>f.id===item.owner.id);
+              return <button onClick={()=>dispatch({type:isFollowing?"UNFOLLOW":"FOLLOW",userId:item.owner.id,userName:item.owner.name,userAvatar:item.owner.avatar,userSince:item.owner.since})} style={{marginTop:6,padding:"4px 14px",borderRadius:20,border:`1.5px solid ${isFollowing?"#e5e7eb":"var(--p)"}`,background:isFollowing?"var(--bg)":"var(--p)",color:isFollowing?"var(--g)":"#fff",fontSize:11,fontWeight:700,cursor:"pointer",transition:"all .15s"}}>{isFollowing?"✓ Abonné":"+ Suivre"}</button>;
+            })()}
           </div>
         </div>
         <div style={{textAlign:"right",flexShrink:0}}>
@@ -1543,6 +1550,7 @@ function Profile({state, dispatch, setPage, setSelected, initTab, onEditItem}) {
     { id: 'reservations', label: 'Réservations', icon: '📅', count: state.bookings.filter(b=>b.userId===user.id||b.ownerId===user.id).length },
     { id: 'avis', label: 'Avis', icon: '⭐', count: state.reviews.length },
     { id: 'favoris', label: 'Favoris', icon: '❤️', count: favItems.length },
+    { id: 'abonnements', label: 'Abonnements', icon: '👥', count: (state.following||[]).length||null },
     { id: 'grade', label: 'Mon Grade', icon: '🏅', count: null },
     { id: 'parametres', label: 'Paramètres', icon: '⚙️', count: null },
   ];
@@ -2062,6 +2070,26 @@ function Profile({state, dispatch, setPage, setSelected, initTab, onEditItem}) {
               </div>;
             });})()}
           </>}
+          </div>
+        )}
+
+        {/* ── Abonnements ── */}
+        {tab === 'abonnements' && (
+          <div>
+            <p style={{fontSize:13,color:'var(--g)',margin:'0 0 16px',fontWeight:500}}>{(state.following||[]).length} abonnement{(state.following||[]).length!==1?'s':''}</p>
+            {(state.following||[]).length===0
+              ? <div style={{textAlign:'center',padding:'40px 0'}}><span style={{fontSize:40}}>👥</span><p style={{fontWeight:700,color:'#374151',fontSize:15,marginTop:12}}>Aucun abonnement</p><p style={{fontSize:13,color:'#9ca3af',marginTop:4}}>Suivez des propriétaires depuis leurs annonces.</p></div>
+              : (state.following||[]).map((f,i)=>(
+                <div key={f.id} style={{display:'flex',alignItems:'center',gap:14,padding:'14px 16px',background:'var(--w)',borderRadius:16,border:'1px solid var(--bd)',marginBottom:10,boxShadow:'0 1px 6px rgba(0,0,0,0.05)',animation:'fadeSlideIn 0.4s cubic-bezier(0.34,1.56,0.64,1) both',animationDelay:`${i*0.07}s`}}>
+                  <div style={{width:48,height:48,borderRadius:'50%',background:'linear-gradient(135deg,#ede9fe,#ddd6fe)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:24,flexShrink:0}}>{f.avatar||'👤'}</div>
+                  <div style={{flex:1}}>
+                    <div style={{fontWeight:700,fontSize:14,color:'var(--dk)'}}>{f.name}</div>
+                    {f.since&&<div style={{fontSize:11,color:'var(--g)',marginTop:2}}>Membre depuis {f.since}</div>}
+                  </div>
+                  <button onClick={()=>dispatch({type:'UNFOLLOW',userId:f.id})} style={{padding:'6px 14px',borderRadius:20,border:'1.5px solid #e5e7eb',background:'var(--bg)',color:'var(--g)',fontSize:11,fontWeight:700,cursor:'pointer'}}>Se désabonner</button>
+                </div>
+              ))
+            }
           </div>
         )}
 
