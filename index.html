@@ -94,7 +94,7 @@ body{background:#F4F3FF}
 <body>
 <div id="root"><div class="ld"><div>C</div><h2>Cercle</h2><p>Chargement...</p></div></div>
 <script>
-if(!window.storage){var _s={};window.storage={get:function(k){return Promise.resolve(_s[k]?{key:k,value:_s[k]}:null)},set:function(k,v){_s[k]=v;return Promise.resolve({key:k,value:v})},delete:function(k){delete _s[k];return Promise.resolve({key:k,deleted:true})},list:function(p){return Promise.resolve({keys:Object.keys(_s)})}}}
+if(!window.storage){window.storage={get:function(k){try{var v=localStorage.getItem(k);return Promise.resolve(v?{key:k,value:v}:null)}catch(e){return Promise.resolve(null)}},set:function(k,v){try{localStorage.setItem(k,v)}catch(e){}return Promise.resolve({key:k,value:v})},delete:function(k){try{localStorage.removeItem(k)}catch(e){}return Promise.resolve({key:k,deleted:true})},list:function(p){try{return Promise.resolve({keys:Object.keys(localStorage)})}catch(e){return Promise.resolve({keys:[]})}}}}
 </script>
 <script type="text/babel" data-presets="env,react">
 const { useState, useEffect, useRef, useMemo, useReducer, createContext, useContext } = React;
@@ -679,18 +679,75 @@ function AuthModal({onClose,dispatch,mode:im}){
   const[err,setErr]=useState("");const[loading,setLoading]=useState("");
   const u=(k,v)=>setF(p=>({...p,[k]:v}));
   const go=()=>{
-    if(mode==="login"){if(!f.email||!f.password){setErr("Remplissez tous les champs");return}
-      const found=USERS.find(u=>u.email===f.email&&u.password===f.password)||PRO_USERS.find(u=>u.email===f.email&&u.password===f.password);
-      if(!found){setErr("Email ou mot de passe incorrect");return;}
-      dispatch({type:"LOGIN",payload:found});onClose()
+    if(mode==="login"){
+      if(!f.email||!f.password){setErr("Remplissez tous les champs");return}
+      // Essai demo users d'abord
+      const demo=USERS.find(u=>u.email===f.email&&u.password===f.password)||PRO_USERS.find(u=>u.email===f.email&&u.password===f.password);
+      if(demo){dispatch({type:"LOGIN",payload:demo});onClose();return}
+      // Sinon Firebase Auth
+      if(!window.auth){setErr("Connexion impossible, réessaie.");return}
+      setLoading("login");setErr("");
+      window.auth.signInWithEmailAndPassword(f.email,f.password)
+        .then(cred=>window.db?window.db.collection('users').doc(cred.user.uid).get():Promise.resolve(null))
+        .then(doc=>{
+          if(doc&&doc.exists){dispatch({type:"LOGIN",payload:doc.data()});}
+          else{
+            // profil pas encore dans Firestore, on charge depuis localStorage
+            try{const saved=localStorage.getItem('cercle_user_'+f.email);if(saved)dispatch({type:"LOGIN",payload:JSON.parse(saved)});}catch(e){}
+          }
+          setLoading("");onClose();
+        })
+        .catch(e=>{
+          setLoading("");
+          if(e.code==="auth/wrong-password"||e.code==="auth/user-not-found"||e.code==="auth/invalid-credential")setErr("Email ou mot de passe incorrect");
+          else setErr("Erreur de connexion");
+        });
     }else{
       if(step===0)return setStep(1);
-      if(acctType==="perso"){if(!f.firstName||!f.lastName||!f.email||!f.password){setErr("Remplissez tous les champs obligatoires");return}
+      if(acctType==="perso"){
+        if(!f.firstName||!f.lastName||!f.email||!f.password){setErr("Remplissez tous les champs obligatoires");return}
         if(!cguOk||!privacyOk){setErr("Veuillez accepter les CGU et la Politique de confidentialité");return}
         const dob=f.dobDay&&f.dobMonth&&f.dobYear?`${f.dobDay}/${f.dobMonth}/${f.dobYear}`:"";
-        dispatch({type:"LOGIN",payload:{id:uid(),name:`${f.firstName} ${f.lastName}`,email:f.email,avatar:"😊",verified:false,since:2026,bio:f.bio||"",location:f.city||"",city:f.city,address:f.address,postalCode:f.postalCode,phone:f.phone,dob,marketingEmails:marketingOk,avatarUrl:avatarPreview||null,rating:0,rentals:0,responseTime:"~1h",isPro:false}});onClose()
-      }else{if(!f.company||!f.siret||!f.email||!f.password){setErr("Remplissez les champs obligatoires");return}
-        dispatch({type:"LOGIN",payload:{id:uid(),name:f.company,email:f.email,avatar:"🏢",verified:true,since:2026,bio:f.sector?`Secteur : ${f.sector}`:"Professionnel",location:f.location,rating:0,rentals:0,responseTime:"~15 min",isPro:true,company:f.company,siret:f.siret,tva:f.tva,phone:f.phone,website:f.website,sector:f.sector}});onClose()}
+        const userData={name:`${f.firstName} ${f.lastName}`,email:f.email,avatar:"😊",verified:false,since:new Date().getFullYear(),bio:f.bio||"",location:f.city||"",city:f.city,address:f.address,postalCode:f.postalCode,phone:f.phone,dob,marketingEmails:marketingOk,avatarUrl:avatarPreview||null,rating:0,rentals:0,responseTime:"~1h",isPro:false};
+        if(window.auth){
+          setLoading("register");setErr("");
+          window.auth.createUserWithEmailAndPassword(f.email,f.password)
+            .then(cred=>{
+              const u={...userData,id:cred.user.uid};
+              if(window.db)window.db.collection('users').doc(cred.user.uid).set(u).catch(()=>{});
+              try{localStorage.setItem('cercle_user_'+f.email,JSON.stringify(u));}catch(e){}
+              dispatch({type:"LOGIN",payload:u});setLoading("");onClose();
+            })
+            .catch(e=>{
+              setLoading("");
+              if(e.code==="auth/email-already-in-use")setErr("Cet email est déjà utilisé. Connecte-toi.");
+              else if(e.code==="auth/weak-password")setErr("Mot de passe trop court (6 caractères minimum)");
+              else setErr("Erreur lors de la création du compte");
+            });
+        }else{
+          dispatch({type:"LOGIN",payload:{...userData,id:uid()}});onClose();
+        }
+      }else{
+        if(!f.company||!f.siret||!f.email||!f.password){setErr("Remplissez les champs obligatoires");return}
+        const userData={name:f.company,email:f.email,avatar:"🏢",verified:true,since:new Date().getFullYear(),bio:f.sector?`Secteur : ${f.sector}`:"Professionnel",location:f.city||"",rating:0,rentals:0,responseTime:"~15 min",isPro:true,company:f.company,siret:f.siret,tva:f.tva,phone:f.phone,website:f.website,sector:f.sector};
+        if(window.auth){
+          setLoading("register");setErr("");
+          window.auth.createUserWithEmailAndPassword(f.email,f.password)
+            .then(cred=>{
+              const u={...userData,id:cred.user.uid};
+              if(window.db)window.db.collection('users').doc(cred.user.uid).set(u).catch(()=>{});
+              try{localStorage.setItem('cercle_user_'+f.email,JSON.stringify(u));}catch(e){}
+              dispatch({type:"LOGIN",payload:u});setLoading("");onClose();
+            })
+            .catch(e=>{
+              setLoading("");
+              if(e.code==="auth/email-already-in-use")setErr("Cet email est déjà utilisé. Connecte-toi.");
+              else setErr("Erreur lors de la création du compte");
+            });
+        }else{
+          dispatch({type:"LOGIN",payload:{...userData,id:uid()}});onClose();
+        }
+      }
     }
   };
   const socialLogin=(provider,name,avatar)=>{
@@ -3498,8 +3555,31 @@ function App(){
   const search=(query,loc)=>{setQ(query);setLq(loc||"");setCat("all");setPage("home")};
   useEffect(()=>{if(state.notifications.length){const l=state.notifications[0];if(!l.read){const type=l.kind==="badge"?"s":l.kind==="wallet"?"s":l.kind==="referral"?"w":l.kind==="dispute"?"e":"b";addToast(l.text,type);setPushNotif(l);setTimeout(()=>setPushNotif(null),4000)}}},[state.notifications.length]);
   useEffect(()=>{if(!state.user)return;const b=state.bookings.filter(x=>x.userId===state.user.id);if(b.length>=1&&!state.badges.includes("first_rental"))dispatch({type:"EARN_BADGE",badge:"first_rental"});if(b.length>=5&&!state.badges.includes("super_renter"))dispatch({type:"EARN_BADGE",badge:"super_renter"});const BADGE_KEY='cercle_badge_verifie_notified';if(state.user.verified&&!state.badges.includes("verified")&&!localStorage.getItem(BADGE_KEY)){dispatch({type:"EARN_BADGE",badge:"verified"});localStorage.setItem(BADGE_KEY,'1');}if(state.favorites.size>=10&&!state.badges.includes("collector"))dispatch({type:"EARN_BADGE",badge:"collector"});if(state.referrals.length>=1&&!state.badges.includes("ambassador"))dispatch({type:"EARN_BADGE",badge:"ambassador"});if(state.reviews.length>=1&&!state.badges.includes("reviewer"))dispatch({type:"EARN_BADGE",badge:"reviewer"});const gr=getGrade((state.user.rentals||0)+b.length);if(["pilier","gardien","legende","fondateur"].includes(gr.id)&&!state.badges.includes("loyal"))dispatch({type:"EARN_BADGE",badge:"loyal"})},[state.bookings.length,state.favorites.size,state.referrals.length,state.reviews.length,state.user?.verified]);
-  // Load saved user on mount
-  useEffect(()=>{try{const s=window.storage;if(s){s.get('cercle_user').then(r=>{if(r&&r.value){const u=JSON.parse(r.value);dispatch({type:'LOGIN',payload:u})}}).catch(()=>{}).finally(()=>setLoaded(true))}else setLoaded(true)}catch(e){setLoaded(true)}},[]);
+  // Restore session via Firebase Auth + localStorage fallback
+  useEffect(()=>{
+    if(window.auth){
+      const unsub=window.auth.onAuthStateChanged(firebaseUser=>{
+        if(firebaseUser){
+          // Firebase session active, fetch profile from Firestore
+          if(window.db){
+            window.db.collection('users').doc(firebaseUser.uid).get()
+              .then(doc=>{
+                if(doc.exists)dispatch({type:'LOGIN',payload:doc.data()});
+                else{try{const s=localStorage.getItem('cercle_user_'+firebaseUser.email);if(s)dispatch({type:'LOGIN',payload:JSON.parse(s)});}catch(e){}}
+              })
+              .catch(()=>{try{const s=localStorage.getItem('cercle_user_'+firebaseUser.email);if(s)dispatch({type:'LOGIN',payload:JSON.parse(s)});}catch(e){}})
+              .finally(()=>setLoaded(true));
+          }else{setLoaded(true);}
+        }else{
+          // No Firebase session, try localStorage fallback
+          try{const s=window.storage;if(s){s.get('cercle_user').then(r=>{if(r&&r.value)dispatch({type:'LOGIN',payload:JSON.parse(r.value)})}).catch(()=>{}).finally(()=>setLoaded(true))}else setLoaded(true);}catch(e){setLoaded(true);}
+        }
+      });
+      return ()=>unsub();
+    }else{
+      try{const s=window.storage;if(s){s.get('cercle_user').then(r=>{if(r&&r.value)dispatch({type:'LOGIN',payload:JSON.parse(r.value)})}).catch(()=>{}).finally(()=>setLoaded(true))}else setLoaded(true);}catch(e){setLoaded(true);}
+    }
+  },[]);
   // Save user to storage on login/logout
   useEffect(()=>{try{const s=window.storage;if(s){if(state.user)s.set('cercle_user',JSON.stringify(state.user)).catch(()=>{});else s.delete('cercle_user').catch(()=>{})}}catch(e){}},[state.user]);
   // Auto-switch mode when pro user logs in
