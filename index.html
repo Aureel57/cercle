@@ -1084,6 +1084,75 @@ function MiniCal({value,onChange,label,minDate}){
   </div>
 }
 
+function DetailMap({item}){
+  const mapRef=useRef(null);
+  const leafletRef=useRef(null);
+  const[coords,setCoords]=useState(null);
+  const[loading,setLoading]=useState(true);
+  const[mapsUrl,setMapsUrl]=useState("#");
+
+  useEffect(()=>{
+    // 1. Coordonnées directes sur l'item
+    if(item.lat&&item.lng&&!(item.lat===48.86&&item.lng===2.35)){
+      setCoords({lat:item.lat,lng:item.lng});setLoading(false);
+      setMapsUrl(`https://www.openstreetmap.org/?mlat=${item.lat}&mlon=${item.lng}#map=14/${item.lat}/${item.lng}`);
+      return;
+    }
+    // 2. Table LL pour les villes connues
+    const known=LL[item.location];
+    if(known){
+      setCoords({lat:known[0],lng:known[1]});setLoading(false);
+      setMapsUrl(`https://www.openstreetmap.org/?mlat=${known[0]}&mlon=${known[1]}#map=14/${known[0]}/${known[1]}`);
+      return;
+    }
+    // 3. Geocoding Nominatim pour toute autre adresse (Hambach 57910, etc.)
+    setLoading(true);
+    fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(item.location)}&format=json&limit=1&accept-language=fr`,{headers:{"Accept-Language":"fr"}})
+      .then(r=>r.json())
+      .then(data=>{
+        if(data&&data[0]){
+          const lat=parseFloat(data[0].lat),lng=parseFloat(data[0].lon);
+          setCoords({lat,lng});
+          setMapsUrl(`https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=14/${lat}/${lng}`);
+        }else{setCoords(null);}
+        setLoading(false);
+      })
+      .catch(()=>{setCoords(null);setLoading(false);});
+  },[item.id,item.location]);
+
+  useEffect(()=>{
+    if(!coords||!mapRef.current||!window.L)return;
+    // Nettoyer la carte précédente
+    if(leafletRef.current){leafletRef.current.remove();leafletRef.current=null;}
+    const map=window.L.map(mapRef.current,{zoomControl:true,scrollWheelZoom:false,attributionControl:false})
+      .setView([coords.lat,coords.lng],14);
+    window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(map);
+    const icon=window.L.divIcon({
+      html:`<div style="width:36px;height:36px;background:linear-gradient(135deg,#6C63FF,#FF8A5C);border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid #fff;box-shadow:0 4px 12px rgba(108,99,255,.4)"></div>`,
+      className:"",iconSize:[36,36],iconAnchor:[18,36]
+    });
+    window.L.marker([coords.lat,coords.lng],{icon})
+      .addTo(map)
+      .bindPopup(`<strong style="font-size:13px">${item.location}</strong><br><span style="font-size:11px;color:#767676">Zone approximative</span>`,{closeButton:false})
+      .openPopup();
+    leafletRef.current=map;
+    return()=>{if(leafletRef.current){leafletRef.current.remove();leafletRef.current=null;}};
+  },[coords]);
+
+  return <div style={{marginBottom:24}}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+      <h3 style={{fontSize:15,fontWeight:700,fontFamily:"var(--fd)"}}>📍 Localisation</h3>
+      {!loading&&coords&&<a href={mapsUrl} target="_blank" rel="noopener noreferrer" style={{fontSize:11,color:"var(--p)",fontWeight:600,textDecoration:"none"}}>Ouvrir dans Maps ↗</a>}
+    </div>
+    <p style={{fontSize:12,color:"var(--g)",marginBottom:10}}>Zone approximative · <strong>{item.location}</strong> · adresse exacte après réservation</p>
+    <div style={{borderRadius:16,overflow:"hidden",border:"1px solid var(--bd)",boxShadow:"var(--sh)",height:240,background:"var(--bgw)",display:"flex",alignItems:"center",justifyContent:"center"}}>
+      {loading&&<div style={{fontSize:13,color:"var(--g)"}}>🗺️ Chargement de la carte...</div>}
+      {!loading&&!coords&&<div style={{fontSize:13,color:"var(--g)",textAlign:"center"}}><div style={{fontSize:32,marginBottom:8}}>📍</div>Localisation : <strong>{item.location}</strong></div>}
+      <div ref={mapRef} style={{width:"100%",height:"100%",display:coords&&!loading?"block":"none"}}/>
+    </div>
+  </div>;
+}
+
 function Detail({item,onClose,state,dispatch,setPage,setConvId,setShowShop,setProfTab,onAuthRequired}){
   const[gal,setGal]=useState(null);
   const[days,setDays]=useState(3);const[sd,setSd]=useState("2026-03-12");const[ed,setEd]=useState("2026-03-14");const[durType,setDurType]=useState("jour");const[timeSlot,setTimeSlot]=useState("");const[booked,setBooked]=useState(false);const[showRF,setShowRF]=useState(false);const[rt,setRt]=useState("");const[rr,setRr]=useState(5);
@@ -1219,29 +1288,7 @@ function Detail({item,onClose,state,dispatch,setPage,setConvId,setShowShop,setPr
       </div>
 
       {/* ── Localisation ── */}
-      {(()=>{
-        const lat=item.lat||LL[item.location]?.[0]||48.86;
-        const lng=item.lng||LL[item.location]?.[1]||2.35;
-        const bbox=`${(lng-.015).toFixed(4)},${(lat-.015).toFixed(4)},${(lng+.015).toFixed(4)},${(lat+.015).toFixed(4)}`;
-        const mapsUrl=`https://www.openstreetmap.org/?mlat=${lat.toFixed(4)}&mlon=${lng.toFixed(4)}#map=15/${lat.toFixed(4)}/${lng.toFixed(4)}`;
-        return <div style={{marginBottom:24}}>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
-            <h3 style={{fontSize:15,fontWeight:700,fontFamily:"var(--fd)"}}>📍 Localisation</h3>
-            <a href={mapsUrl} target="_blank" rel="noopener noreferrer" style={{fontSize:11,color:"var(--p)",fontWeight:600,textDecoration:"none",display:"flex",alignItems:"center",gap:4}}>Ouvrir dans Maps ↗</a>
-          </div>
-          <p style={{fontSize:12,color:"var(--g)",marginBottom:10}}>Zone approximative · <strong>{item.location}</strong> · adresse exacte après réservation</p>
-          <div style={{borderRadius:16,overflow:"hidden",border:"1px solid var(--bd)",boxShadow:"var(--sh)",position:"relative"}}>
-            <iframe
-              title={`Carte ${item.location}`}
-              src={`https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${lat.toFixed(4)},${lng.toFixed(4)}`}
-              style={{width:"100%",height:240,border:"none",display:"block"}}
-              loading="lazy"
-            />
-            {/* Voile discret sur le bas pour masquer les contrôles OSM */}
-            <div style={{position:"absolute",bottom:0,left:0,right:0,height:32,background:"linear-gradient(to top,rgba(255,255,255,.7),transparent)",pointerEvents:"none"}}/>
-          </div>
-        </div>;
-      })()}
+      <DetailMap item={item}/>
     </div>
     <div><div className="bc">
 
