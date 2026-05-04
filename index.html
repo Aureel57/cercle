@@ -200,6 +200,7 @@ function reducer(s,a){switch(a.type){
   case"TOGGLE_AVAIL":{const toggle=i=>i.id===a.id?{...i,available:!i.available}:i;return{...s,items:s.items.map(toggle),userItems:s.userItems.map(toggle)}};
   case"SET_PROFILE_COMPLETION":{const pc={...s.profileCompletion,...a.payload};const n={id:uid(),text:`Profil complété : ${a.label||"étape"}`,read:false,at:new Date(),kind:"system"};return{...s,profileCompletion:pc,notifications:[n,...s.notifications]}};
   case"SET_CLOUD_ITEMS":return{...s,cloudItems:a.payload};
+  case"EDIT_ITEM":{const upd={...a.payload};const newUserItems=s.userItems.map(i=>i.id===upd.id?{...i,...upd}:i);try{localStorage.setItem('cercle_items',JSON.stringify(newUserItems));}catch(e){}if(window.db){const{images,photos,...firestoreUpd}=upd;window.db.collection('items').doc(upd.id).set(firestoreUpd,{merge:true}).catch(console.error);}return{...s,userItems:newUserItems,items:s.items.map(i=>i.id===upd.id?{...i,...upd}:i)}}
   default:return s}}
 
 /* ========== ICONS ========== */
@@ -1458,7 +1459,7 @@ function calcSavings(rentals, avgPrice) {
   return Math.floor(rentals * avgPrice * 3 * (base - current));
 }
 
-function Profile({state, dispatch, setPage, setSelected, initTab}) {
+function Profile({state, dispatch, setPage, setSelected, initTab, onEditItem}) {
   const user = (state && state.user) || {};
   const userName = user.name || 'Noah M.';
   const userAvatar = user.avatar || null;
@@ -1949,7 +1950,10 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
                   <p style={S.listingTitle}>{l.title}</p>
                   <p style={S.listingPrice}>{l.price}€<span style={{fontWeight:400,fontSize:11,color:'var(--g)'}}>/jour</span></p>
                   <div style={S.listingRating}>⭐ {l.rating || '4.8'} <span>· {l.reviews || 0} avis</span></div>
-                  <button onClick={e=>{e.stopPropagation();setQrItem(l);}} style={{marginTop:8,width:'100%',padding:'6px 0',border:'1.5px solid #d1c9ff',borderRadius:10,background:'#f5f3ff',color:'#6C63FF',fontSize:11,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:4}}>📱 QR Code</button>
+                  <div style={{display:'flex',gap:6,marginTop:8}}>
+                    <button onClick={e=>{e.stopPropagation();onEditItem&&onEditItem(l);}} style={{flex:1,padding:'6px 0',border:'1.5px solid #d1fae5',borderRadius:10,background:'#f0fdf4',color:'#059669',fontSize:11,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:4}}>✏️ Modifier</button>
+                    <button onClick={e=>{e.stopPropagation();setQrItem(l);}} style={{flex:1,padding:'6px 0',border:'1.5px solid #d1c9ff',borderRadius:10,background:'#f5f3ff',color:'#6C63FF',fontSize:11,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:4}}>📱 QR</button>
+                  </div>
                 </div>
               </div>
             ))}
@@ -2519,9 +2523,9 @@ function Profile({state, dispatch, setPage, setSelected, initTab}) {
   );
 }
 
-function CreateListing({state,dispatch,setPage,mode}){
-  const[f,setF]=useState({title:"",cat:"tools",price:"",location:state.user?.location||"Paris 11e",condition:"Comme neuf",description:"",deposit:""});
-  const[photos,setPhotos]=useState([]);
+function CreateListing({state,dispatch,setPage,mode,editItem}){
+  const[f,setF]=useState(editItem?{title:editItem.title||"",cat:editItem.cat||"tools",price:editItem.price||"",location:editItem.location||state.user?.location||"Paris 11e",condition:editItem.condition||"Comme neuf",description:editItem.description||"",deposit:editItem.deposit||""}:{title:"",cat:"tools",price:"",location:state.user?.location||"Paris 11e",condition:"Comme neuf",description:"",deposit:""});
+  const[photos,setPhotos]=useState(editItem?.images||[]);
   const[drag,setDrag]=useState(false);
   const fileRef=useRef(null);
   const camRef=useRef(null);
@@ -2572,14 +2576,15 @@ function CreateListing({state,dispatch,setPage,mode}){
       const smallImgs=await Promise.all(imgs.map(i=>compressImg(i,400,0.6)));
       payload.images=smallImgs;payload.photos=smallImgs;
     }
-    dispatch({type:"ADD_ITEM",payload});
+    if(editItem){dispatch({type:"EDIT_ITEM",payload:{...payload,id:editItem.id}});}
+    else{dispatch({type:"ADD_ITEM",payload});}
     setSaving(false);
     setPage("profile");
   };
 
   return <div style={{maxWidth:540,margin:"0 auto",padding:28}}>
     <button className="cl" style={{marginBottom:14,display:"flex",alignItems:"center",gap:5}} onClick={()=>setPage("profile")}><I.Back/> Retour</button>
-    <h1 style={{fontFamily:"var(--fd)",fontSize:22,marginBottom:18}}>Créer une annonce</h1>
+    <h1 style={{fontFamily:"var(--fd)",fontSize:22,marginBottom:18}}>{editItem?"✏️ Modifier l'annonce":"Créer une annonce"}</h1>
     <div className="fg"><label>Titre *</label><input value={f.title} onChange={e=>u("title",e.target.value)} placeholder="Ex: Perceuse Bosch Pro"/></div>
     <div className="fg"><label>Catégorie</label><select value={f.cat} onChange={e=>u("cat",e.target.value)}>{CATS.filter(c=>c.id!=="all").map(c=><option key={c.id} value={c.id}>{c.icon} {c.label}</option>)}</select></div>
     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
@@ -2617,7 +2622,7 @@ function CreateListing({state,dispatch,setPage,mode}){
       </div>}
     </div>
 
-    <button className="bp" style={{width:"100%"}} onClick={go} disabled={saving}>{saving?"⏳ Publication en cours...":"Publier l'annonce"}</button>
+    <button className="bp" style={{width:"100%"}} onClick={go} disabled={saving}>{saving?"⏳ Enregistrement...":(editItem?"💾 Enregistrer les modifications":"Publier l'annonce")}</button>
   </div>
 }
 
@@ -3824,6 +3829,7 @@ function App(){
   const[state,dispatch]=useReducer(reducer,init);
   const[page,setPage]=useState("home");
   const[profTab,setProfTab]=useState("annonces");
+  const[editItem,setEditItem]=useState(null);
   const[cat,setCat]=useState("all");
   const[sel,setSel]=useState(null);
   const prevPageRef=useRef("home");
@@ -4020,9 +4026,9 @@ function App(){
       <div className="grid" style={{paddingTop:16}}>{filtered.map(i=><Card key={i.id} item={i} onOpen={openDetail} favs={state.favorites} dispatch={dispatch} onAuthRequired={state.user?null:()=>setShowA("login")}/>)}</div>}
     </main>}
 
-    {page==="profile"&&state.user&&<Profile state={state} dispatch={dispatch} setPage={setPage} setSelected={openDetail} initTab={profTab}/>}
+    {page==="profile"&&state.user&&<Profile state={state} dispatch={dispatch} setPage={setPage} setSelected={openDetail} initTab={profTab} onEditItem={(item)=>{setEditItem(item);setPage("create");}}/>}
     {page==="messages"&&state.user&&<Messages state={state} dispatch={dispatch} cid={cid} setCid={setCid} setPage={setPage}/>}
-    {page==="create"&&state.user&&<CreateListing state={state} dispatch={dispatch} setPage={setPage} mode={mode}/>}
+    {page==="create"&&state.user&&<CreateListing state={state} dispatch={dispatch} setPage={(p)=>{setEditItem(null);setPage(p);}} mode={mode} editItem={editItem}/>}
     {(page==="create"||page==="profile"||page==="messages"||page==="dashboard"||page==="referral"||page==="verify"||page==="dispute"||page==="wallet"||page==="badges")&&!state.user&&<div className="empty" style={{paddingTop:100}}><span>🔒</span><h2>Connectez-vous</h2><p>Vous devez être connecté pour accéder à cette page.</p><button className="bp" style={{marginTop:14}} onClick={()=>setShowA("login")}>Se connecter</button></div>}
 
     {page==="home"&&<footer style={{background:"linear-gradient(160deg,#6C63FF 0%,#7c5ce7 35%,#5a7fff 65%,#4ECDC4 100%)",marginTop:0,paddingBottom:0}}>
