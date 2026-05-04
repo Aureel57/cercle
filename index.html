@@ -266,7 +266,7 @@ function reducer(s,a){switch(a.type){
   case"LOGOUT":return{...s,user:null};
   case"UPD_PROF":return{...s,user:{...s.user,...a.payload}};
   case"SET_AVATAR":return{...s,user:{...s.user,avatar:a.avatar,avatarUrl:a.url||null}};
-  case"TOG_FAV":{const f=new Set(s.favorites);f.has(a.id)?f.delete(a.id):f.add(a.id);return{...s,favorites:f}}
+  case"TOG_FAV":{const f=new Set(s.favorites);const isAdding=!f.has(a.id);isAdding?f.add(a.id):f.delete(a.id);if(isAdding&&window.db&&s.user&&a.ownerId&&a.ownerId!==s.user.id){const notif={userId:a.ownerId,text:`❤️ ${s.user.name||'Quelqu\'un'} a aimé votre annonce "${a.title||''}"`,kind:'like',read:false,at:new Date().toISOString(),itemId:a.id};window.db.collection('notifications').add(notif).catch(()=>{});}return{...s,favorites:f}}
   case"BOOK":{
     const b=a.payload;
     const n={id:uid(),text:`Réservation : ${b.itemTitle}`,read:false,at:new Date()};
@@ -279,8 +279,12 @@ function reducer(s,a){switch(a.type){
     const n=dep?{id:uid(),text:`Caution de ${dep.amount}€ restituée (${dep.itemTitle})`,read:false,at:new Date()}:null;
     return{...s,payments:s.payments.map(p=>p.id===a.id?{...p,status:"released",releasedAt:new Date()}:p),notifications:n?[n,...s.notifications]:s.notifications}}
   case"MSG":{const m=a.payload;let cs=[...s.conversations],cv=cs.find(c=>c.id===m.cid);
-    if(!cv){cv={id:m.cid,parts:[m.from,m.to],itemId:m.itemId,last:m.text,at:new Date()};cs.push(cv)}else cs=cs.map(c=>c.id===m.cid?{...c,last:m.text,at:new Date()}:c);
+    if(!cv){cv={id:m.cid,parts:[m.from,m.to],itemId:m.itemId,itemTitle:m.itemTitle||'',last:m.text,at:new Date()};cs.push(cv)}else cs=cs.map(c=>c.id===m.cid?{...c,last:m.text,at:new Date()}:c);
+    if(window.db&&!m._fromCloud){const msgDoc={...m,_fromCloud:false,sentAt:new Date().toISOString()};window.db.collection('messages').add(msgDoc).catch(()=>{});}
+    if(window.db&&!m._fromCloud&&m.to){const notif={userId:m.to,text:`💬 Nouveau message de ${m.fromName||'quelqu\'un'} sur "${m.itemTitle||'une annonce'}"`,kind:'message',read:false,at:new Date().toISOString(),itemId:m.itemId};window.db.collection('notifications').add(notif).catch(()=>{});}
+    if(s.messages.find(x=>x.id===m.id))return s;
     return{...s,messages:[...s.messages,m],conversations:cs}}
+  case"PUSH_NOTIF":{const n=a.payload;if(s.notifications.find(x=>x.id===n.id))return s;return{...s,notifications:[{...n,read:false},...s.notifications]};}
   case"READ_N":return{...s,notifications:s.notifications.map(n=>({...n,read:true}))};
   case"REVIEW":{const r=a.payload;const items=s.items.map(i=>i.id===r.itemId?{...i,reviews:i.reviews+1,rating:+((i.rating*i.reviews+r.rating)/(i.reviews+1)).toFixed(2)}:i);return{...s,reviews:[...s.reviews,r],items}}
   case"ADD_ITEM":{const it={...a.payload,id:uid(),owner:s.user,rating:0,reviews:0,createdAt:new Date().toISOString(),isPro:a.payload.isPro||false};const newUserItems=[...s.userItems,it];try{localStorage.setItem('cercle_items',JSON.stringify(newUserItems));}catch(e){console.error('[Cercle] localStorage plein, annonce sauvegardée en mémoire seulement:',e.name);try{const light=newUserItems.map(i=>({...i,images:i.images?.map(im=>im.slice(0,200)+'...'),photos:[]}));localStorage.setItem('cercle_items',JSON.stringify(light));}catch(e2){}}if(window.db){const firestoreItem={...it,images:[],photos:[]};window.db.collection('items').doc(it.id).set(firestoreItem).catch(console.error);}return{...s,userItems:newUserItems,notifications:[{id:uid(),text:`"${it.title}" publiée ! ✅`,read:false,at:new Date()},...s.notifications]}}
@@ -757,7 +761,7 @@ function Carousel({images,onClick}){const[c,setC]=useState(0);return <div classN
 
 function Card({item,onOpen,favs,dispatch,onAuthRequired}){return <div className={"card"+(item.isPro?" pro-card":"")} onClick={()=>onOpen(item)}>
   <Carousel images={item.images} onClick={()=>onOpen(item)}/>
-  <button className="cfav" onClick={e=>{e.stopPropagation();if(onAuthRequired){onAuthRequired();return;}dispatch({type:"TOG_FAV",id:item.id})}}><I.Heart f={favs.has(item.id)}/></button>
+  <button className="cfav" onClick={e=>{e.stopPropagation();if(onAuthRequired){onAuthRequired();return;}dispatch({type:"TOG_FAV",id:item.id,ownerId:item.owner?.id,title:item.title})}}><I.Heart f={favs.has(item.id)}/></button>
   {item.isPro&&<div className="pro-badge">PRO</div>}
   {item.owner?.verified&&<div className="cbdg">✓</div>}
   <div className="card-cta">Voir l'annonce →</div>
@@ -1289,7 +1293,7 @@ function Detail({item,onClose,state,dispatch,setPage,setConvId,setShowShop,setPr
   const pc=state.profileCompletion||{identity:false,phone:false,drivingLicense:false,bankAccount:false};
   const handleReserveClick=()=>{if(!state.user)return;if(needsDrivingLicense&&!pc.drivingLicense){setShowVerifModal(true);return;}setPayStep(1);};
   const book=()=>{if(!state.user)return;dispatch({type:"BOOK",payload:{id:uid(),itemId:item.id,itemTitle:item.title,itemImg:item.images[0],ownerId:item.owner.id,ownerName:item.owner.name,userId:state.user.id,startDate:sd,endDate:ed,status:"confirmed",total:tot,deposit:item.deposit,days,createdAt:new Date(),payMethod}});setBooked(true);setPayStep(0)};
-  const startConv=()=>{if(!state.user)return;const cid=`c_${item.owner.id}_${state.user.id}_${item.id}`;dispatch({type:"MSG",payload:{id:uid(),cid,from:state.user.id,to:item.owner.id,itemId:item.id,text:`Bonjour ! "${item.title}" est-il disponible ?`,timestamp:new Date()}});onClose();setConvId(cid);setPage("messages")};
+  const startConv=()=>{if(!state.user)return;const cid=`c_${item.owner.id}_${state.user.id}_${item.id}`;dispatch({type:"MSG",payload:{id:uid(),cid,from:state.user.id,fromName:state.user.name||'',to:item.owner.id,itemId:item.id,itemTitle:item.title||'',text:`Bonjour ! "${item.title}" est-il disponible ?`,timestamp:new Date()}});onClose();setConvId(cid);setPage("messages")};
   const submitRev=()=>{if(!state.user||!rt)return;dispatch({type:"REVIEW",payload:{id:uid(),itemId:item.id,fromUserId:state.user.id,fromUserName:state.user.name,fromUserAvatar:state.user.avatar,rating:rr,text:rt,createdAt:new Date()}});setShowRF(false);setRt("")};
   const iRevs=state.reviews.filter(r=>r.itemId===item.id);
   return <div className="ov">
@@ -1305,7 +1309,7 @@ function Detail({item,onClose,state,dispatch,setPage,setConvId,setShowShop,setPr
         </div>
       </div>
     </div>}
-    <div style={{position:"absolute",top:12,left:12,right:12,display:"flex",justifyContent:"space-between",alignItems:"center",zIndex:10}}><button className="ov-close" onClick={onClose}>&#x2715;</button><div style={{display:"flex",gap:8}}><button className="ov-close" onClick={()=>{if(!state.user){onAuthRequired?.();return;}dispatch({type:"TOG_FAV",id:item.id})}}><I.Heart f={state.favorites.has(item.id)}/></button><button className="ov-close"><I.Share/></button></div></div>
+    <div style={{position:"absolute",top:12,left:12,right:12,display:"flex",justifyContent:"space-between",alignItems:"center",zIndex:10}}><button className="ov-close" onClick={onClose}>&#x2715;</button><div style={{display:"flex",gap:8}}><button className="ov-close" onClick={()=>{if(!state.user){onAuthRequired?.();return;}dispatch({type:"TOG_FAV",id:item.id,ownerId:item.owner?.id,title:item.title})}}><I.Heart f={state.favorites.has(item.id)}/></button><button className="ov-close"><I.Share/></button></div></div>
     <div className="dimgs">
       <img className="dimg0" src={item.images[0]} alt={item.title} onClick={()=>setGal({imgs:item.images,idx:0})} title="Voir toutes les photos"/>
       {item.images[1]&&<img className="dimg1" src={item.images[1]} alt={item.title} onClick={()=>setGal({imgs:item.images,idx:1})}/>}
@@ -2834,7 +2838,7 @@ function Messages({state,dispatch,cid,setCid,setPage}){
   const ac=convs.find(c=>c.id===cid);
   const msgs=state.messages.filter(m=>m.cid===cid).sort((a,b)=>new Date(a.timestamp)-new Date(b.timestamp));
   useEffect(()=>{ref.current&&(ref.current.scrollTop=ref.current.scrollHeight)},[msgs.length]);
-  const send=()=>{if(!msg.trim()||!ac)return;const other=ac.parts.find(p=>p!==state.user.id);dispatch({type:"MSG",payload:{id:uid(),cid,from:state.user.id,to:other,text:msg.trim(),timestamp:new Date()}});setMsg("");
+  const send=()=>{if(!msg.trim()||!ac)return;const other=ac.parts.find(p=>p!==state.user.id);dispatch({type:"MSG",payload:{id:uid(),cid,from:state.user.id,fromName:state.user.name||'',to:other,itemId:ac.itemId||'',itemTitle:ac.itemTitle||'',text:msg.trim(),timestamp:new Date()}});setMsg("");
     setTyping(true);setTimeout(()=>{setTyping(false);const reps=["Bonjour ! Oui c'est disponible 😊","Bien sûr, on s'arrange.","Super, quand voulez-vous le récupérer ?","Envoyez-moi une demande !","Merci pour votre intérêt !"];dispatch({type:"MSG",payload:{id:uid(),cid,from:other,to:state.user.id,text:reps[Math.floor(Math.random()*reps.length)],timestamp:new Date()}})},1200+Math.random()*2e3)};
   const getO=cv=>{const oid=cv.parts.find(p=>p!==state.user?.id);return USERS.find(u=>u.id===oid)||{name:"Utilisateur",avatar:"😊"}};
   return <div style={{height:"100vh",display:"flex",flexDirection:"column"}}><div style={{display:"flex",alignItems:"center",gap:10,padding:"10px 16px",borderBottom:"1px solid var(--bd)",background:"var(--w)",flexShrink:0}}>
@@ -4186,6 +4190,36 @@ function App(){
       }catch(e){}
     });
   },[loaded,state.userItems]);
+  // Listener messages Firestore temps réel (messages reçus)
+  useEffect(()=>{
+    if(!window.db||!state.user)return;
+    const uid=state.user.id;
+    const unsub=window.db.collection('messages').where('to','==',uid).limit(50).onSnapshot(snap=>{
+      snap.docChanges().forEach(change=>{
+        if(change.type==='added'){
+          const m={...change.doc.data(),id:change.doc.id,_fromCloud:true};
+          dispatch({type:'MSG',payload:m});
+        }
+      });
+    },()=>{});
+    return()=>unsub();
+  },[state.user?.id]);
+  // Listener notifications Firestore temps réel
+  useEffect(()=>{
+    if(!window.db||!state.user)return;
+    const uid=state.user.id;
+    const unsub=window.db.collection('notifications').where('userId','==',uid).where('read','==',false).limit(30).onSnapshot(snap=>{
+      snap.docChanges().forEach(change=>{
+        if(change.type==='added'){
+          const n={...change.doc.data(),id:change.doc.id};
+          dispatch({type:'PUSH_NOTIF',payload:n});
+          // Marquer comme lu dans Firestore après affichage
+          setTimeout(()=>window.db.collection('notifications').doc(change.doc.id).update({read:true}).catch(()=>{}),5000);
+        }
+      });
+    },()=>{});
+    return()=>unsub();
+  },[state.user?.id]);
   // Auto-switch mode when pro user logs in
   useEffect(()=>{if(state.user?.isPro)setMode('pro')},[state.user?.isPro]);
   useEffect(()=>{const t=setTimeout(()=>setSplash(false),1200);return()=>clearTimeout(t)},[]);
