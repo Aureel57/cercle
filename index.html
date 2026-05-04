@@ -1309,17 +1309,17 @@ function Detail({item,onClose,state,dispatch,setPage,setConvId,setShowShop,setPr
         <div style={{marginBottom:12}}>
           <div style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:".06em",color:"var(--g)",marginBottom:6}}>Type de location</div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
-            {[["jour","📅 Journée"],["semaine","📆 Semaine"],["demi","☀️ Demi-journée"],["heure","⏰ Heure"]].map(([id,l])=>
+            {[["jour","📅 Journée"],["demi","☀️ Demi-journée"]].map(([id,l])=>
               <button key={id} onClick={()=>setDurType(id)} style={{padding:"8px 4px",borderRadius:10,border:`1.5px solid ${durType===id?"var(--p)":"var(--bd)"}`,background:durType===id?"#f5f3ff":"var(--w)",color:durType===id?"var(--p)":"var(--dk)",fontSize:11,fontWeight:600,cursor:"pointer",transition:"all .15s"}}>{l}</button>
             )}
           </div>
         </div>
 
         {/* ── Créneaux horaires ── */}
-        {(durType==="heure"||durType==="demi")&&<div style={{marginBottom:12}}>
+        {durType==="demi"&&<div style={{marginBottom:12}}>
           <div style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:".06em",color:"var(--g)",marginBottom:6}}>Créneau</div>
           <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
-            {(durType==="heure"?["8h-9h","9h-10h","10h-11h","11h-12h","14h-15h","15h-16h","16h-17h","17h-18h"]:["Matin (8h-12h)","Après-midi (14h-18h)"]).map(s=>
+            {["Matin (8h-12h)","Après-midi (14h-18h)"].map(s=>
               <button key={s} onClick={()=>setTimeSlot(s)} style={{padding:"5px 10px",borderRadius:8,border:`1.5px solid ${timeSlot===s?"var(--p)":"var(--bd)"}`,background:timeSlot===s?"#f5f3ff":"var(--w)",color:timeSlot===s?"var(--p)":"var(--dk)",fontSize:11,fontWeight:600,cursor:"pointer"}}>{s}</button>
             )}
           </div>
