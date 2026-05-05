@@ -299,7 +299,7 @@ function reducer(s,a){switch(a.type){
   case"TOGGLE_AVAIL":{const toggle=i=>i.id===a.id?{...i,available:!i.available}:i;return{...s,items:s.items.map(toggle),userItems:s.userItems.map(toggle)}};
   case"SET_PROFILE_COMPLETION":{const pc={...s.profileCompletion,...a.payload};const n={id:uid(),text:`Profil complété : ${a.label||"étape"}`,read:false,at:new Date(),kind:"system"};return{...s,profileCompletion:pc,notifications:[n,...s.notifications]}};
   case"SET_CLOUD_ITEMS":return{...s,cloudItems:a.payload};
-  case"FOLLOW":{const f={id:a.userId,name:a.userName,avatar:a.userAvatar,since:a.userSince,followedAt:new Date().toISOString()};const next=[...s.following.filter(u=>u.id!==a.userId),f];try{localStorage.setItem('cercle_following',JSON.stringify(next));}catch(e){}if(window.db&&s.user){window.db.collection('follows').doc(`${s.user.id}_${a.userId}`).set({followerId:s.user.id,followerName:s.user.name,followedId:a.userId,followedName:a.userName,at:new Date().toISOString()}).catch(()=>{})}return{...s,following:next};}
+  case"FOLLOW":{const f={id:a.userId,name:a.userName,avatar:a.userAvatar,since:a.userSince,followedAt:new Date().toISOString()};const next=[...s.following.filter(u=>u.id!==a.userId),f];try{localStorage.setItem('cercle_following',JSON.stringify(next));}catch(e){}if(window.db&&s.user){window.db.collection('follows').doc(`${s.user.id}_${a.userId}`).set({followerId:s.user.id,followerName:s.user.name,followedId:a.userId,followedName:a.userName,at:new Date().toISOString()}).catch(()=>{});window.db.collection('notifications').add({userId:a.userId,text:`👤 ${s.user.name||'Quelqu\'un'} vous suit maintenant`,kind:'follow',read:false,at:new Date().toISOString(),fromId:s.user.id}).catch(()=>{});}return{...s,following:next};}
   case"UNFOLLOW":{const next=s.following.filter(u=>u.id!==a.userId);try{localStorage.setItem('cercle_following',JSON.stringify(next));}catch(e){}if(window.db&&s.user){window.db.collection('follows').doc(`${s.user.id}_${a.userId}`).delete().catch(()=>{})}return{...s,following:next};}
   case"EDIT_ITEM":{const upd={...a.payload};const existing=s.userItems.find(i=>i.id===upd.id)||s.items.find(i=>i.id===upd.id)||{};const fullItem={...existing,...upd};const newUserItems=s.userItems.map(i=>i.id===upd.id?fullItem:i);try{localStorage.setItem('cercle_items',JSON.stringify(newUserItems));}catch(e){}if(window.db){const{images,photos,...firestoreItem}=fullItem;window.db.collection('items').doc(upd.id).set(firestoreItem).catch(console.error);}return{...s,userItems:newUserItems,items:s.items.map(i=>i.id===upd.id?fullItem:i)}}
   case"DELETE_ITEM":{const next=s.userItems.filter(i=>i.id!==a.id);try{localStorage.setItem('cercle_items',JSON.stringify(next));}catch(e){}if(window.db){window.db.collection('items').doc(a.id).delete().catch(()=>{})}return{...s,userItems:next,items:s.items.filter(i=>i.id!==a.id)}}
@@ -772,7 +772,6 @@ function Card({item,onOpen,favs,dispatch,onAuthRequired}){return <div className=
       <div className="cbp">{item.price} €<span> / jour</span></div>
       <span className="cond-badge">{item.condition}</span>
     </div>
-    {item.likeCount>0&&<div style={{fontSize:11,color:'#ef4444',fontWeight:600,marginTop:4}}>❤️ {item.likeCount} j'aime</div>}
   </div>
 </div>}
 
@@ -1424,7 +1423,7 @@ function Detail({item,onClose,state,dispatch,setPage,setConvId,setShowShop,setPr
       {/* ── Avis ── */}
       <div style={{marginBottom:24,paddingBottom:24,borderBottom:"1px solid var(--bd)"}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
-          <h3 style={{fontSize:15,fontWeight:700,fontFamily:"var(--fd)"}}>⭐ {item.rating} · {item.reviews+iRevs.length} avis</h3>
+          <h3 style={{fontSize:15,fontWeight:700,fontFamily:"var(--fd)"}}>⭐ {item.rating} · {item.reviews+iRevs.length} avis{item.likeCount>0?` · ❤️ ${item.likeCount}`:''}</h3>
           {state.user&&<button className="bs" style={{fontSize:11,padding:"6px 14px"}} onClick={()=>setShowRF(!showRF)}>Laisser un avis</button>}
         </div>
         {showRF&&<div style={{padding:16,background:"var(--bgw)",borderRadius:14,border:"1px solid var(--bd)",marginBottom:16}}>
@@ -2165,10 +2164,7 @@ function Profile({state, dispatch, setPage, setSelected, initTab, onEditItem}) {
                 <div style={S.listingBody}>
                   <p style={S.listingTitle}>{l.title}</p>
                   <p style={S.listingPrice}>{l.price}€<span style={{fontWeight:400,fontSize:11,color:'var(--g)'}}>/jour</span></p>
-                  <div style={{display:'flex',alignItems:'center',gap:8,flexWrap:'wrap'}}>
-                    <div style={S.listingRating}>⭐ {l.rating || '4.8'} <span>· {l.reviews || 0} avis</span></div>
-                    {(l.likeCount||0)>0&&<span style={{fontSize:11,color:'#ef4444',fontWeight:700}}>❤️ {l.likeCount}</span>}
-                  </div>
+                  <div style={S.listingRating}>⭐ {l.rating || '4.8'} <span>· {l.reviews || 0} avis{(l.likeCount||0)>0?` · ❤️ ${l.likeCount}`:''}</span></div>
                   <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:5,marginTop:8}}>
                     <button onClick={e=>{e.stopPropagation();onEditItem&&onEditItem(l);}} style={{padding:'6px 0',border:'1.5px solid #d1fae5',borderRadius:10,background:'#f0fdf4',color:'#059669',fontSize:11,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:3}}>✏️ Modifier</button>
                     <button onClick={e=>{e.stopPropagation();setCalItem(l);}} style={{padding:'6px 0',border:'1.5px solid #bfdbfe',borderRadius:10,background:'#eff6ff',color:'#2563eb',fontSize:11,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:3}}>📅 Dates</button>
