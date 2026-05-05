@@ -1712,7 +1712,9 @@ function Profile({state, dispatch, setPage, setSelected, initTab, onEditItem}) {
   const isMyItem = i => i.owner?.id === user.id || (user.email && i.owner?.email === user.email);
   const myOwnedItems = (state.items?.filter(isMyItem) || []);
   const myUserItems = (state.userItems?.filter(isMyItem) || []);
-  const listings = [...myOwnedItems, ...myUserItems];
+  // Enrichir avec likeCount depuis cloudItems (mis à jour par Firestore)
+  const withLikes = arr => arr.map(i => {const cloud=(state.cloudItems||[]).find(c=>c.id===i.id);return cloud&&cloud.likeCount?{...i,likeCount:cloud.likeCount}:i;});
+  const listings = withLikes([...myOwnedItems, ...myUserItems]);
   const allItems = [...(state.items||[]), ...(state.proItems||[]), ...(state.userItems||[]), ...(state.cloudItems||[])];
   const favItems = allItems.filter(i => state.favorites && state.favorites.has(i.id));
   const favs = state.favorites || new Set();
@@ -2163,7 +2165,10 @@ function Profile({state, dispatch, setPage, setSelected, initTab, onEditItem}) {
                 <div style={S.listingBody}>
                   <p style={S.listingTitle}>{l.title}</p>
                   <p style={S.listingPrice}>{l.price}€<span style={{fontWeight:400,fontSize:11,color:'var(--g)'}}>/jour</span></p>
-                  <div style={S.listingRating}>⭐ {l.rating || '4.8'} <span>· {l.reviews || 0} avis</span></div>
+                  <div style={{display:'flex',alignItems:'center',gap:8,flexWrap:'wrap'}}>
+                    <div style={S.listingRating}>⭐ {l.rating || '4.8'} <span>· {l.reviews || 0} avis</span></div>
+                    {(l.likeCount||0)>0&&<span style={{fontSize:11,color:'#ef4444',fontWeight:700}}>❤️ {l.likeCount}</span>}
+                  </div>
                   <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:5,marginTop:8}}>
                     <button onClick={e=>{e.stopPropagation();onEditItem&&onEditItem(l);}} style={{padding:'6px 0',border:'1.5px solid #d1fae5',borderRadius:10,background:'#f0fdf4',color:'#059669',fontSize:11,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:3}}>✏️ Modifier</button>
                     <button onClick={e=>{e.stopPropagation();setCalItem(l);}} style={{padding:'6px 0',border:'1.5px solid #bfdbfe',borderRadius:10,background:'#eff6ff',color:'#2563eb',fontSize:11,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:3}}>📅 Dates</button>
