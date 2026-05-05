@@ -1708,7 +1708,7 @@ function Profile({state, dispatch, setPage, setSelected, initTab, onEditItem}) {
       const tid = setTimeout(() => setGradeBarWidth(getDivision(user.rentals||0).prog), 80);
       return () => clearTimeout(tid);
     }
-  }, [tab, demoRentals]);
+  }, [tab]);
 
   const isMyItem = i => i.owner?.id === user.id || (user.email && i.owner?.email === user.email);
   const myOwnedItems = (state.items?.filter(isMyItem) || []);
