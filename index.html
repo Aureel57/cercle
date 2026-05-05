@@ -873,7 +873,7 @@ function AuthModal({onClose,dispatch,mode:im}){
         .then(()=>{setLoading("");onClose();})
         .catch(e=>{
           setLoading("");
-          if(e.code==="auth/user-not-found"||e.code==="auth/invalid-credential"||e.code==="auth/wrong-password"||e.code==="auth/invalid-email"){
+          if(e.code==="auth/user-not-found"||e.code==="auth/invalid-credential"||e.code==="auth/wrong-password"||e.code==="auth/invalid-email"||e.code==="auth/invalid-login-credentials"){
             // Compte localStorage uniquement → fallback
             try{
               const saved=localStorage.getItem('cercle_user_'+f.email.toLowerCase())||localStorage.getItem('cercle_user_'+f.email);
