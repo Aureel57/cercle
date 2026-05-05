@@ -262,7 +262,7 @@ const _savedFavs     = (()=>{try{const d=localStorage.getItem('cercle_favs');ret
 const _savedFollowing=_ls('cercle_following',[]);
 const init={user:null,items:buildItems(),proItems:buildProItems(),favorites:_savedFavs,bookings:_savedBookings,messages:[],conversations:[],reviews:_savedReviews,notifications:[],userItems:_savedItems,cloudItems:[],payments:_savedPayments,referrals:[],disputes:[],wallet:_savedWallet,badges:_savedBadges,following:_savedFollowing,profileCompletion:{identity:false,phone:false,drivingLicense:false,bankAccount:false}};
 function reducer(s,a){switch(a.type){
-  case"LOGIN":return{...s,user:{...a.payload,refCode:a.payload.refCode||uid().toUpperCase().slice(0,6)}};
+  case"LOGIN":{const u={...a.payload,refCode:a.payload.refCode||uid().toUpperCase().slice(0,6)};const fixedItems=s.userItems.map(i=>(!i.owner?.id||i.owner?.email===u.email)?{...i,owner:{...(i.owner||{}),id:u.id,email:u.email}}:i);try{localStorage.setItem('cercle_items',JSON.stringify(fixedItems));}catch(e){}return{...s,user:u,userItems:fixedItems};}
   case"LOGOUT":return{...s,user:null};
   case"UPD_PROF":return{...s,user:{...s.user,...a.payload}};
   case"SET_AVATAR":return{...s,user:{...s.user,avatar:a.avatar,avatarUrl:a.url||null}};
@@ -1708,8 +1708,9 @@ function Profile({state, dispatch, setPage, setSelected, initTab, onEditItem}) {
     }
   }, [tab, demoRentals]);
 
-  const myOwnedItems = (state.items?.filter(i => i.owner?.id === user.id) || []);
-  const myUserItems = (state.userItems?.filter(i => i.owner?.id === user.id) || []);
+  const isMyItem = i => i.owner?.id === user.id || (user.email && i.owner?.email === user.email);
+  const myOwnedItems = (state.items?.filter(isMyItem) || []);
+  const myUserItems = (state.userItems?.filter(isMyItem) || []);
   const listings = [...myOwnedItems, ...myUserItems];
   const allItems = [...(state.items||[]), ...(state.proItems||[]), ...(state.userItems||[]), ...(state.cloudItems||[])];
   const favItems = allItems.filter(i => state.favorites && state.favorites.has(i.id));
@@ -3395,7 +3396,7 @@ function GestionPro({state,dispatch,setPage}){
 function Dashboard({state,dispatch,setPage}){
   const u=state.user;
   const[qrItem,setQrItem]=useState(null);
-  const myItems=[...state.items.filter(i=>i.owner.id===u.id),...state.userItems];
+  const myItems=[...state.items.filter(i=>i.owner?.id===u.id||(u.email&&i.owner?.email===u.email)),...state.userItems.filter(i=>i.owner?.id===u.id||(u.email&&i.owner?.email===u.email))];
   const myBookAsOwner=state.bookings.filter(b=>b.ownerId===u.id);
   const revenue=myBookAsOwner.filter(b=>b.status==="confirmed").reduce((s,b)=>s+b.total,0);
   const pending=myBookAsOwner.filter(b=>b.status==="pending").length;
