@@ -2007,21 +2007,26 @@ function Profile({state, dispatch, setPage, setSelected, initTab, onEditItem}) {
     // Tabs
     tabsWrap: {
       background: 'var(--w)',
-      borderRadius: 0,
       margin: '16px 0 0',
       width: '100%',
-      maxWidth: '100%',
-      boxShadow: '0 1px 0 var(--bd)',
-      overflowX: 'auto', display: 'flex',
       borderTop: '1px solid var(--bd)',
       borderBottom: '1px solid var(--bd)',
       position: 'sticky', top: 72, zIndex: 30,
+      overflowX: 'auto',
+    },
+    tabsInner: {
+      display: 'flex',
+      justifyContent: 'center',
+      minWidth: 'max-content',
+      margin: '0 auto',
+      padding: '0 4px',
     },
     tab: (active) => ({
-      flex: 'none', padding: '13px 14px', fontSize: 12, fontWeight: active ? 700 : 500,
+      flex: '1 1 0', minWidth: 0, padding: '12px 10px', fontSize: 12, fontWeight: active ? 700 : 500,
       color: active ? 'var(--p)' : 'var(--g)',
       cursor: 'pointer', whiteSpace: 'nowrap',
-      display: 'flex', alignItems: 'center', gap: 5, transition: 'all 0.15s',
+      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+      transition: 'all 0.15s',
       background: 'none', border: 'none',
       borderBottom: active ? '2.5px solid var(--p)' : '2.5px solid transparent',
     }),
@@ -2289,15 +2294,17 @@ function Profile({state, dispatch, setPage, setSelected, initTab, onEditItem}) {
 
       {/* ─── TABS ─── */}
       <div style={S.tabsWrap}>
-        {tabs.map(t => (
-          <button key={t.id} onClick={() => setTab(t.id)}
-            style={{...S.tab(tab===t.id), background:'none', outline:'none',
-              borderTop:'none', borderLeft:'none', borderRight:'none'}}>
-            <span>{t.icon}</span>
-            <span>{t.label}</span>
-            {t.count !== null && <span style={S.tabCount(tab===t.id)}>{t.count}</span>}
-          </button>
-        ))}
+        <div style={S.tabsInner}>
+          {tabs.map(t => (
+            <button key={t.id} onClick={() => setTab(t.id)}
+              style={{...S.tab(tab===t.id), outline:'none',
+                borderTop:'none', borderLeft:'none', borderRight:'none'}}>
+              <span>{t.icon}</span>
+              <span>{t.label}</span>
+              {t.count !== null && <span style={S.tabCount(tab===t.id)}>{t.count}</span>}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* ─── CONTENT ─── */}
