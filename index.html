@@ -386,7 +386,7 @@ function reducer(s,a){switch(a.type){
   case"TOGGLE_AVAIL":{const toggle=i=>i.id===a.id?{...i,available:!i.available}:i;return{...s,items:s.items.map(toggle),userItems:s.userItems.map(toggle)}};
   case"SET_PROFILE_COMPLETION":{const pc={...s.profileCompletion,...a.payload};const n={id:uid(),text:`Profil complété : ${a.label||"étape"}`,read:false,at:new Date(),kind:"system"};return{...s,profileCompletion:pc,notifications:[n,...s.notifications]}};
   case"SET_CLOUD_ITEMS":return{...s,cloudItems:a.payload};
-  case"FOLLOW":{const f={id:a.userId,name:a.userName,avatar:a.userAvatar,since:a.userSince,followedAt:new Date().toISOString()};const next=[...s.following.filter(u=>u.id!==a.userId),f];try{localStorage.setItem('cercle_following',JSON.stringify(next));}catch(e){}if(window.db&&s.user){const sendFollowNotif=(targetUid)=>{window.db.collection('follows').doc(`${s.user.id}_${targetUid}`).set({followerId:s.user.id,followerName:s.user.name,followedId:targetUid,followedName:a.userName,at:new Date().toISOString()}).catch(()=>{});window.db.collection('notifications').add({userId:targetUid,text:`👤 ${s.user.name||'Quelqu\'un'} vous suit maintenant`,kind:'follow',read:false,at:new Date().toISOString(),fromId:s.user.id}).catch(()=>{});};if(a.ownerEmail){window.db.collection('users').where('email','==',a.ownerEmail).limit(1).get().then(snap=>{const uid=snap.docs.length>0?snap.docs[0].id:a.userId;sendFollowNotif(uid);}).catch(()=>sendFollowNotif(a.userId));}else{sendFollowNotif(a.userId);}}return{...s,following:next};}
+  case"FOLLOW":{const f={id:a.userId,name:a.userName,avatar:a.userAvatar,since:a.userSince,followedAt:new Date().toISOString()};const next=[...s.following.filter(u=>u.id!==a.userId),f];try{localStorage.setItem('cercle_following',JSON.stringify(next));}catch(e){}if(window.db&&s.user){const sendFollowNotif=(targetUid)=>{window.db.collection('follows').doc(`${s.user.id}_${targetUid}`).set({followerId:s.user.id,followerName:s.user.name,followerEmail:s.user.email||'',followedId:targetUid,followedEmail:a.ownerEmail||'',followedName:a.userName,at:new Date().toISOString()}).catch(()=>{});window.db.collection('notifications').add({userId:targetUid,text:`👤 ${s.user.name||'Quelqu\'un'} vous suit maintenant`,kind:'follow',read:false,at:new Date().toISOString(),fromId:s.user.id}).catch(()=>{});};if(a.ownerEmail){window.db.collection('users').where('email','==',a.ownerEmail).limit(1).get().then(snap=>{const uid=snap.docs.length>0?snap.docs[0].id:a.userId;sendFollowNotif(uid);}).catch(()=>sendFollowNotif(a.userId));}else{sendFollowNotif(a.userId);}}return{...s,following:next};}
   case"UNFOLLOW":{const next=s.following.filter(u=>u.id!==a.userId);try{localStorage.setItem('cercle_following',JSON.stringify(next));}catch(e){}if(window.db&&s.user){window.db.collection('follows').doc(`${s.user.id}_${a.userId}`).delete().catch(()=>{})}return{...s,following:next};}
   case"EDIT_ITEM":{const upd={...a.payload};const existing=s.userItems.find(i=>i.id===upd.id)||s.items.find(i=>i.id===upd.id)||{};const fullItem={...existing,...upd};const newUserItems=s.userItems.map(i=>i.id===upd.id?fullItem:i);try{localStorage.setItem('cercle_items',JSON.stringify(newUserItems));}catch(e){}if(window.db){const{images,photos,...firestoreItem}=fullItem;window.db.collection('items').doc(upd.id).set(firestoreItem).catch(console.error);}return{...s,userItems:newUserItems,items:s.items.map(i=>i.id===upd.id?fullItem:i)}}
   case"DELETE_ITEM":{const next=s.userItems.filter(i=>i.id!==a.id);try{localStorage.setItem('cercle_items',JSON.stringify(next));}catch(e){}if(window.db){window.db.collection('items').doc(a.id).delete().catch(()=>{})}return{...s,userItems:next,items:s.items.filter(i=>i.id!==a.id)}}
@@ -1809,7 +1809,18 @@ function Profile({state, dispatch, setPage, setSelected, initTab, onEditItem}) {
   const reviewCount = state.reviews.length;
   const avgRating = reviewCount > 0 ? (state.reviews.reduce((s,r)=>s+r.rating,0)/reviewCount).toFixed(1) : '-';
   const [followerCount, setFollowerCount] = React.useState(0);
-  React.useEffect(()=>{if(!window.db||!user.id)return;window.db.collection('follows').where('followedId','==',user.id).get().then(s=>setFollowerCount(s.size)).catch(()=>{});},[user.id]);
+  React.useEffect(()=>{
+    if(!window.db)return;
+    const queries=[];
+    if(user.id)queries.push(window.db.collection('follows').where('followedId','==',user.id).get());
+    if(user.email)queries.push(window.db.collection('follows').where('followedEmail','==',user.email).get());
+    if(!queries.length)return;
+    Promise.all(queries).then(snaps=>{
+      const ids=new Set();
+      snaps.forEach(s=>s.docs.forEach(d=>ids.add(d.id)));
+      setFollowerCount(ids.size);
+    }).catch(()=>{});
+  },[user.id,user.email]);
 
   const displayListings = listings;
 
