@@ -217,6 +217,89 @@ img{max-width:100%}
 
 /* ── Overflow horizontal global ── */
 html,body{overflow-x:hidden;width:100%}
+
+/* ── CreateListing Modern ── */
+.cl-page{min-height:100vh;background:var(--bg);padding-bottom:40px}
+.cl-header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,0.95);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--bd);padding:14px 20px;display:flex;align-items:center;gap:12px}
+.dark .cl-header{background:rgba(15,15,19,0.95)}
+.cl-prog{height:3px;background:var(--bd);border-radius:99;margin-top:0;overflow:hidden}
+.cl-prog-fill{height:100%;background:linear-gradient(90deg,var(--p),#FF8A5C);border-radius:99;transition:width .4s ease}
+.cl-body{max-width:600px;margin:0 auto;padding:24px 20px}
+.cl-section{background:var(--w);border-radius:20px;padding:22px;margin-bottom:16px;box-shadow:0 2px 12px rgba(0,0,0,0.06);border:1px solid var(--bd)}
+.dark .cl-section{background:#1a1a24;border-color:rgba(255,255,255,.08)}
+.cl-section-title{font-size:13px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--p);margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.cl-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.fg2{margin-bottom:14px}.fg2 label{display:block;font-size:12px;font-weight:700;margin-bottom:6px;color:var(--dk)}.fg2 input,.fg2 textarea,.fg2 select{width:100%;padding:13px 16px;border:1.5px solid var(--bd);border-radius:14px;font-size:14px;outline:none;transition:border-color .2s,box-shadow .2s;background:var(--bg);color:var(--dk);font-family:var(--f);box-sizing:border-box}.fg2 input:focus,.fg2 textarea:focus,.fg2 select:focus{border-color:var(--p);box-shadow:0 0 0 3px rgba(108,99,255,.1)}.fg2 textarea{resize:vertical;min-height:100px;line-height:1.6}.fg2 select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:36px}
+.dark .fg2 input,.dark .fg2 textarea,.dark .fg2 select{background:#111118;border-color:rgba(255,255,255,.12);color:#F5F5F5}
+.cl-price-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.cl-submit{position:sticky;bottom:0;z-index:40;padding:16px 20px;background:rgba(255,255,255,0.97);backdrop-filter:blur(16px);border-top:1px solid var(--bd)}
+.dark .cl-submit{background:rgba(15,15,19,0.97)}
+.cl-cta{width:100%;padding:16px;background:linear-gradient(135deg,var(--p),#FF8A5C);color:#fff;border:none;border-radius:16px;font-size:16px;font-weight:700;cursor:pointer;transition:all .2s;box-shadow:0 4px 16px rgba(108,99,255,.3);display:flex;align-items:center;justify-content:center;gap:8px}
+.cl-cta:hover{transform:translateY(-1px);box-shadow:0 8px 28px rgba(108,99,255,.4)}.cl-cta:disabled{opacity:.4;transform:none;box-shadow:none;cursor:default}
+.photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.photo-cell{aspect-ratio:1;border-radius:14px;overflow:hidden;position:relative;border:2px solid var(--bd)}
+.photo-cell img{width:100%;height:100%;object-fit:cover}
+.photo-cell-add{aspect-ratio:1;border-radius:14px;border:2px dashed var(--p);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer;background:rgba(108,99,255,.04);transition:all .2s;color:var(--p)}
+.photo-cell-add:hover{background:rgba(108,99,255,.1);border-style:solid}
+.photo-cell-del{position:absolute;top:6px;right:6px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;border:none;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700;backdrop-filter:blur(4px)}
+@media(max-width:480px){.cl-row,.cl-price-row{grid-template-columns:1fr}.photo-grid{grid-template-columns:repeat(3,1fr)}}
+
+/* ── Messages Modern ── */
+.msg-page{height:100vh;display:flex;flex-direction:column;background:var(--bg)}
+.msg-header{flex-shrink:0;background:rgba(255,255,255,.97);backdrop-filter:blur(16px);border-bottom:1px solid var(--bd);padding:0 16px;display:flex;align-items:center;height:60px;gap:12px}
+.dark .msg-header{background:rgba(15,15,19,.97)}
+.msg-body{flex:1;display:flex;overflow:hidden}
+.conv-list{width:320px;flex-shrink:0;border-right:1px solid var(--bd);display:flex;flex-direction:column;background:var(--w);overflow:hidden}
+.dark .conv-list{background:#111118}
+.conv-search{padding:12px 14px;border-bottom:1px solid var(--bd)}.conv-search input{width:100%;padding:9px 14px;border:1.5px solid var(--bd);border-radius:24px;font-size:13px;background:var(--bg);outline:none;box-sizing:border-box;color:var(--dk)}.conv-search input:focus{border-color:var(--p)}
+.dark .conv-search input{background:#1a1a24;border-color:rgba(255,255,255,.1);color:#F5F5F5}
+.conv-items{flex:1;overflow-y:auto}
+.conv-item{display:flex;align-items:center;gap:12px;padding:13px 16px;cursor:pointer;transition:background .15s;border-bottom:1px solid rgba(0,0,0,.04);position:relative}
+.conv-item:hover,.conv-item.active{background:var(--bg)}
+.dark .conv-item:hover,.dark .conv-item.active{background:#1a1a24}
+.conv-av{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,#e0dbff,#c7f0ee);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;position:relative}
+.conv-av-online{position:absolute;bottom:1px;right:1px;width:12px;height:12px;border-radius:50%;background:#22c55e;border:2px solid var(--w)}
+.conv-info{flex:1;min-width:0}
+.conv-name{font-size:14px;font-weight:700;color:var(--dk);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.conv-last{font-size:12px;color:var(--g);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.conv-meta{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0}
+.conv-time{font-size:11px;color:var(--gl)}
+.conv-badge{background:var(--p);color:#fff;border-radius:99px;font-size:10px;font-weight:700;padding:2px 7px;min-width:18px;text-align:center}
+.chat-area{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.chat-header{flex-shrink:0;padding:14px 18px;border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:12px;background:var(--w)}
+.dark .chat-header{background:#111118}
+.chat-header-name{font-size:15px;font-weight:700;color:var(--dk)}
+.chat-header-sub{font-size:12px;color:var(--g);margin-top:1px}
+.chat-back-btn{display:none;background:none;border:none;padding:4px;cursor:pointer;color:var(--dk);border-radius:10px}
+.chat-msgs{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:6px;background:var(--bg)}
+.dark .chat-msgs{background:#0f0f13}
+.msg-bubble{max-width:72%;padding:11px 16px;border-radius:22px;font-size:14px;line-height:1.5;position:relative;word-break:break-word}
+.msg-bubble.me{background:linear-gradient(135deg,#6C63FF,#7c5ce7);color:#fff;align-self:flex-end;border-bottom-right-radius:6px;box-shadow:0 2px 12px rgba(108,99,255,.25)}
+.msg-bubble.them{background:var(--w);color:var(--dk);align-self:flex-start;border-bottom-left-radius:6px;box-shadow:0 2px 8px rgba(0,0,0,.07)}
+.dark .msg-bubble.them{background:#1e1e2e;color:#F5F5F5}
+.msg-time{font-size:10px;opacity:.55;margin-top:4px;display:block;text-align:right}
+.msg-time.left{text-align:left}
+.msg-day-sep{text-align:center;font-size:11px;color:var(--gl);font-weight:600;margin:10px 0;position:relative}.msg-day-sep::before{content:'';position:absolute;top:50%;left:0;right:0;height:1px;background:var(--bd)}.msg-day-sep span{background:var(--bg);padding:0 12px;position:relative}
+.dark .msg-day-sep span{background:#0f0f13}
+.chat-typing{display:flex;align-items:center;gap:6px;padding:10px 16px;align-self:flex-start}.chat-typing-av{width:30px;height:30px;border-radius:50%;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:14px}.chat-typing-dots{display:flex;gap:4px;background:var(--w);padding:10px 14px;border-radius:18px;border-bottom-left-radius:4px;box-shadow:0 2px 8px rgba(0,0,0,.06)}.chat-typing-dots span{width:7px;height:7px;border-radius:50%;background:var(--gl);animation:ty .9s infinite}.chat-typing-dots span:nth-child(2){animation-delay:.15s}.chat-typing-dots span:nth-child(3){animation-delay:.3s}@keyframes ty{0%,80%,100%{transform:scale(0.8);opacity:.5}40%{transform:scale(1.1);opacity:1}}
+.dark .chat-typing-dots{background:#1e1e2e}
+.chat-input-area{flex-shrink:0;padding:12px 16px;border-top:1px solid var(--bd);background:var(--w);display:flex;align-items:flex-end;gap:8px}
+.dark .chat-input-area{background:#111118}
+.chat-input{flex:1;padding:12px 16px;border:1.5px solid var(--bd);border-radius:24px;font-size:14px;background:var(--bg);color:var(--dk);outline:none;resize:none;max-height:100px;line-height:1.4;font-family:var(--f);transition:border-color .2s}
+.chat-input:focus{border-color:var(--p)}
+.dark .chat-input{background:#1a1a24;border-color:rgba(255,255,255,.12);color:#F5F5F5}
+.chat-send{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#6C63FF,#7c5ce7);color:#fff;border:none;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;transition:all .2s;box-shadow:0 2px 10px rgba(108,99,255,.3)}
+.chat-send:hover{transform:scale(1.08);box-shadow:0 4px 18px rgba(108,99,255,.45)}.chat-send:disabled{opacity:.35;transform:none;box-shadow:none}
+.chat-empty{flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;color:var(--g);text-align:center;padding:24px}
+.chat-empty-icon{font-size:52px;opacity:.5}
+.conv-empty{flex:1;display:flex;align-items:center;justify-content:center;color:var(--g);font-size:13px;text-align:center;padding:24px}
+@media(max-width:768px){
+  .conv-list{width:100%;border-right:none;display:flex}
+  .conv-list.hidden{display:none}
+  .chat-area.hidden{display:none}
+  .chat-back-btn{display:flex;align-items:center;justify-content:center}
+  .msg-body{position:relative}
+}
 </style>
 </head>
 <body>
@@ -2548,23 +2631,6 @@ function Profile({state, dispatch, setPage, setSelected, initTab, onEditItem}) {
                 })()}
               </div>
 
-              {/* ── Demo progress card ── */}
-              {(()=>{
-                return (
-                  <div style={{background:'var(--w)',borderRadius:16,padding:20,margin:'16px 0 0',boxShadow:'0 2px 12px rgba(0,0,0,0.10)'}}>
-                    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:8}}>
-                      <span style={{color:'var(--dk)',fontWeight:700,fontSize:16}}>{currentGrade.icon} {currentGrade.name}</span>
-                      <span style={{color:'var(--dk)',fontSize:13}}>{rentals} / {nextGrade ? nextGrade.min : '∞'} loc.</span>
-                    </div>
-                    <div style={{background:'rgba(0,0,0,0.10)',borderRadius:99,height:10,overflow:'hidden'}}>
-                      <div style={{background:'var(--p)',height:'100%',borderRadius:99,transition:'width 0.6s ease',width:progressPct+'%'}}/>
-                    </div>
-                    {nextGrade
-                      ? <div style={{color:'var(--dk)',fontSize:13,marginTop:8}}>{nextGrade.min - rentals} locations restantes pour atteindre <b>{nextGrade.name}</b></div>
-                      : <div style={{color:'#d4af37',fontSize:13,marginTop:8}}>👑 Vous avez atteint le sommet</div>}
-                  </div>
-                );
-              })()}
 
             </div>
           );
@@ -2817,65 +2883,264 @@ function CreateListing({state,dispatch,setPage,mode,editItem}){
     setPage("profile");
   };
 
-  return <div style={{maxWidth:540,margin:"0 auto",padding:28}}>
-    <button className="cl" style={{marginBottom:14,display:"flex",alignItems:"center",gap:5}} onClick={()=>setPage("profile")}><I.Back/> Retour</button>
-    <h1 style={{fontFamily:"var(--fd)",fontSize:22,marginBottom:18}}>{editItem?"✏️ Modifier l'annonce":"Créer une annonce"}</h1>
-    <div className="fg"><label>Titre *</label><input value={f.title} onChange={e=>u("title",e.target.value)} placeholder="Ex: Perceuse Bosch Pro"/></div>
-    <div className="fg"><label>Catégorie</label><select value={f.cat} onChange={e=>u("cat",e.target.value)}>{CATS.filter(c=>c.id!=="all").map(c=><option key={c.id} value={c.id}>{c.icon} {c.label}</option>)}</select></div>
-    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-      <div className="fg"><label>Prix/jour (€) *</label><input type="number" value={f.price} onChange={e=>u("price",e.target.value)} placeholder="15"/></div>
-      <div className="fg"><label>Caution (€)</label><input type="number" value={f.deposit} onChange={e=>u("deposit",e.target.value)} placeholder="Auto"/></div>
-    </div>
-    <div className="fg"><label>État</label><select value={f.condition} onChange={e=>u("condition",e.target.value)}><option>Comme neuf</option><option>Très bon état</option><option>Bon état</option></select></div>
-    <div className="fg"><label>Ville</label><input value={f.location} onChange={e=>u("location",e.target.value)}/></div>
-    <div className="fg"><label>Description</label><textarea value={f.description} onChange={e=>u("description",e.target.value)} placeholder="Décrivez votre objet..." rows={3}/></div>
-
-    <div className="fg">
-      <label>Photos {photos.length>0&&`(${photos.length}/5)`}</label>
-      <input ref={fileRef} type="file" accept="image/*" multiple style={{display:"none"}} onChange={e=>{addPhotos(e.target.files);e.target.value=""}}/>
-      <input ref={camRef} type="file" accept="image/*" capture="environment" style={{display:"none"}} onChange={e=>{addPhotos(e.target.files);e.target.value=""}}/>
-
-      {photos.length<5&&<div
-        className={"photo-drop"+(drag?" drag":"")}
-        onDrop={e=>{e.preventDefault();setDrag(false);addPhotos(e.dataTransfer.files)}}
-        onDragOver={e=>{e.preventDefault();setDrag(true)}}
-        onDragLeave={()=>setDrag(false)}
-        onClick={()=>fileRef.current&&fileRef.current.click()}
-      >
-        <span style={{fontSize:28}}>🖼️</span>
-        <p style={{fontSize:13,fontWeight:600,color:"var(--p)",margin:"8px 0 4px"}}>Glissez vos photos ici ou cliquez pour sélectionner</p>
-        <p style={{fontSize:11,color:"var(--g)"}}>JPEG, PNG · max 5 photos</p>
-        <button className="bs" style={{marginTop:10,fontSize:12,padding:"6px 14px",display:"inline-flex",alignItems:"center",gap:5}} onClick={e=>{e.stopPropagation();camRef.current&&camRef.current.click()}}>📷 Prendre une photo</button>
-      </div>}
-
-      {photos.length>0&&<div className="photo-thumbs">
-        {photos.map((src,i)=><div key={i} className="photo-thumb">
-          <img src={src} alt=""/>
-          <button className="photo-thumb-del" onClick={()=>setPhotos(p=>p.filter((_,j)=>j!==i))}>✕</button>
-        </div>)}
-        {photos.length<5&&<div style={{width:80,height:80,border:"2px dashed var(--bd)",borderRadius:10,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",fontSize:24,color:"var(--g)"}} onClick={()=>fileRef.current&&fileRef.current.click()}>+</div>}
-      </div>}
+  const canSubmit = f.title.trim() && f.price;
+  return <div className="cl-page">
+    {/* Sticky header */}
+    <div className="cl-header">
+      <button onClick={()=>setPage("profile")} style={{background:'none',border:'none',padding:'4px',cursor:'pointer',display:'flex',alignItems:'center',color:'var(--dk)',borderRadius:10,flexShrink:0}}><I.Back/></button>
+      <div style={{flex:1}}>
+        <div style={{fontSize:16,fontWeight:800,fontFamily:'var(--fd)',color:'var(--dk)'}}>{editItem?"Modifier l'annonce":"Nouvelle annonce"}</div>
+        <div style={{fontSize:12,color:'var(--g)',marginTop:1}}>{editItem?"Mettez à jour votre annonce":"Proposez votre objet en quelques étapes"}</div>
+      </div>
+      {saving&&<div style={{fontSize:12,color:'var(--p)',fontWeight:600}}>Enregistrement…</div>}
     </div>
 
-    <button className="bp" style={{width:"100%"}} onClick={go} disabled={saving}>{saving?"⏳ Enregistrement...":(editItem?"💾 Enregistrer les modifications":"Publier l'annonce")}</button>
+    <div className="cl-body">
+      {/* Section 1: Infos de base */}
+      <div className="cl-section">
+        <div className="cl-section-title"><span>📝</span> L'essentiel</div>
+        <div className="fg2">
+          <label>Titre de l'annonce *</label>
+          <input value={f.title} onChange={e=>u("title",e.target.value)} placeholder="Ex: Perceuse Bosch Pro 800W"/>
+        </div>
+        <div className="cl-row">
+          <div className="fg2" style={{marginBottom:0}}>
+            <label>Catégorie</label>
+            <select value={f.cat} onChange={e=>u("cat",e.target.value)}>{CATS.filter(c=>c.id!=="all").map(c=><option key={c.id} value={c.id}>{c.icon} {c.label}</option>)}</select>
+          </div>
+          <div className="fg2" style={{marginBottom:0}}>
+            <label>État</label>
+            <select value={f.condition} onChange={e=>u("condition",e.target.value)}><option>Comme neuf</option><option>Très bon état</option><option>Bon état</option></select>
+          </div>
+        </div>
+      </div>
+
+      {/* Section 2: Prix */}
+      <div className="cl-section">
+        <div className="cl-section-title"><span>💰</span> Prix &amp; caution</div>
+        <div className="cl-price-row">
+          <div className="fg2" style={{marginBottom:0}}>
+            <label>Prix par jour (€) *</label>
+            <input type="number" value={f.price} onChange={e=>u("price",e.target.value)} placeholder="15" min="1"/>
+          </div>
+          <div className="fg2" style={{marginBottom:0}}>
+            <label>Caution (€)</label>
+            <input type="number" value={f.deposit} onChange={e=>u("deposit",e.target.value)} placeholder="Calculée auto"/>
+          </div>
+        </div>
+        {f.price&&<div style={{marginTop:12,padding:'10px 14px',background:'rgba(108,99,255,.07)',borderRadius:12,fontSize:12,color:'var(--p)',fontWeight:600}}>
+          💡 Vos gains estimés : <strong>{Math.round(f.price*0.88)}€/jour</strong> après commission Cercle (12%)
+        </div>}
+      </div>
+
+      {/* Section 3: Localisation */}
+      <div className="cl-section">
+        <div className="cl-section-title"><span>📍</span> Localisation</div>
+        <div className="fg2" style={{marginBottom:0}}>
+          <label>Ville</label>
+          <input value={f.location} onChange={e=>u("location",e.target.value)} placeholder="Paris, Lyon, Bordeaux…"/>
+        </div>
+      </div>
+
+      {/* Section 4: Description */}
+      <div className="cl-section">
+        <div className="cl-section-title"><span>📄</span> Description</div>
+        <div className="fg2" style={{marginBottom:0}}>
+          <label>Décrivez votre objet</label>
+          <textarea value={f.description} onChange={e=>u("description",e.target.value)} placeholder="Dimensions, accessoires inclus, conditions d'utilisation…" rows={4}/>
+        </div>
+        <div style={{fontSize:11,color:'var(--gl)',marginTop:6}}>{(f.description||'').length}/500 caractères</div>
+      </div>
+
+      {/* Section 5: Photos */}
+      <div className="cl-section">
+        <div className="cl-section-title"><span>📸</span> Photos <span style={{fontSize:12,fontWeight:500,textTransform:'none',letterSpacing:0,color:'var(--g)'}}>{photos.length}/5</span></div>
+        <input ref={fileRef} type="file" accept="image/*" multiple style={{display:"none"}} onChange={e=>{addPhotos(e.target.files);e.target.value=""}}/>
+        <input ref={camRef} type="file" accept="image/*" capture="environment" style={{display:"none"}} onChange={e=>{addPhotos(e.target.files);e.target.value=""}}/>
+        <div
+          className={"photo-grid"}
+          onDrop={e=>{e.preventDefault();setDrag(false);addPhotos(e.dataTransfer.files)}}
+          onDragOver={e=>{e.preventDefault();setDrag(true)}}
+          onDragLeave={()=>setDrag(false)}
+        >
+          {photos.map((src,i)=><div key={i} className="photo-cell">
+            <img src={src} alt=""/>
+            <button className="photo-cell-del" onClick={()=>setPhotos(p=>p.filter((_,j)=>j!==i))}>✕</button>
+          </div>)}
+          {photos.length<5&&<div className={"photo-cell-add"+(drag?" drag":"")} onClick={()=>fileRef.current&&fileRef.current.click()}>
+            <span style={{fontSize:24}}>+</span>
+            <span style={{fontSize:11,fontWeight:600}}>{photos.length===0?"Ajouter":"Plus"}</span>
+          </div>}
+        </div>
+        {photos.length===0&&<p style={{fontSize:12,color:'var(--g)',marginTop:10,textAlign:'center'}}>Les annonces avec photos reçoivent 3× plus de demandes</p>}
+        <button onClick={e=>{e.stopPropagation();camRef.current&&camRef.current.click()}} style={{marginTop:12,width:'100%',padding:'10px',background:'var(--bg)',border:'1.5px solid var(--bd)',borderRadius:12,fontSize:13,fontWeight:600,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:8,color:'var(--dk)'}}>📷 Prendre une photo</button>
+      </div>
+    </div>
+
+    {/* Sticky CTA */}
+    <div className="cl-submit">
+      <button className="cl-cta" onClick={go} disabled={saving||!canSubmit}>
+        {saving?<><span style={{animation:'spin 1s linear infinite',display:'inline-block'}}>⏳</span> Enregistrement…</>:editItem?<><span>💾</span> Enregistrer les modifications</>:<><span>🚀</span> Publier l'annonce</>}
+      </button>
+    </div>
   </div>
 }
 
 function Messages({state,dispatch,cid,setCid,setPage}){
-  const[msg,setMsg]=useState("");const ref=useRef(null);const[typing,setTyping]=useState(false);const[seen,setSeen]=useState({});
-  const convs=state.conversations.sort((a,b)=>new Date(b.at)-new Date(a.at));
+  const[msg,setMsg]=useState("");
+  const ref=useRef(null);
+  const inputRef=useRef(null);
+  const[typing,setTyping]=useState(false);
+  const[showList,setShowList]=useState(!cid);
+
+  const convs=state.conversations.slice().sort((a,b)=>new Date(b.at)-new Date(a.at));
   const ac=convs.find(c=>c.id===cid);
   const msgs=state.messages.filter(m=>m.cid===cid).sort((a,b)=>new Date(a.timestamp)-new Date(b.timestamp));
-  useEffect(()=>{ref.current&&(ref.current.scrollTop=ref.current.scrollHeight)},[msgs.length]);
-  const send=()=>{if(!msg.trim()||!ac)return;const other=ac.parts.find(p=>p!==state.user.id);dispatch({type:"MSG",payload:{id:uid(),cid,from:state.user.id,fromName:state.user.name||'',to:other,itemId:ac.itemId||'',itemTitle:ac.itemTitle||'',text:msg.trim(),timestamp:new Date()}});setMsg("");
-    setTyping(true);setTimeout(()=>{setTyping(false);const reps=["Bonjour ! Oui c'est disponible 😊","Bien sûr, on s'arrange.","Super, quand voulez-vous le récupérer ?","Envoyez-moi une demande !","Merci pour votre intérêt !"];dispatch({type:"MSG",payload:{id:uid(),cid,from:other,to:state.user.id,text:reps[Math.floor(Math.random()*reps.length)],timestamp:new Date()}})},1200+Math.random()*2e3)};
-  const getO=cv=>{const oid=cv.parts.find(p=>p!==state.user?.id);const demo=USERS.find(u=>u.id===oid);if(demo)return demo;const msgFrom=state.messages.find(m=>m.cid===cv.id&&m.from!==state.user?.id);const n=cv.otherName||msgFrom?.fromName||'Utilisateur';const av=cv.otherAvatar||msgFrom?.fromAvatar||'😊';return{name:n,avatar:av};};
-  return <div style={{height:"100vh",display:"flex",flexDirection:"column"}}><div style={{display:"flex",alignItems:"center",gap:10,padding:"10px 16px",borderBottom:"1px solid var(--bd)",background:"var(--w)",flexShrink:0}}>
-    <button className="mx" style={{position:"static"}} onClick={()=>setPage("home")}><I.Back/></button>
-    <a className="logo" onClick={()=>setPage("home")} style={{textDecoration:'none'}}><svg viewBox="0 0 400 200" width="100" height="36" xmlns="http://www.w3.org/2000/svg"><circle cx="75" cy="100" r="50" fill="none" stroke="#6C63FF" strokeWidth="3.5"/><circle cx="115" cy="100" r="50" fill="none" stroke="#6C63FF" strokeWidth="3.5"/><path d="M95 58 A50 50 0 0 1 95 142 A50 50 0 0 1 95 58Z" fill="#6C63FF" opacity=".15"/><text x="265" y="111" textAnchor="middle" fontFamily="Georgia,serif" fontSize="44" fontWeight="400" fill="#6C63FF" letterSpacing="3">Cercle</text></svg></a>
-    <span style={{fontSize:15,fontWeight:600,fontFamily:"var(--fd)",marginLeft:8}}>Messages</span>
-  </div><div className="ml"><div className="mls"><div style={{padding:14,fontFamily:"var(--fd)",fontSize:16,fontWeight:600,borderBottom:"1px solid var(--bd)"}}>Messages</div>{convs.length===0?<div style={{padding:18,textAlign:"center",color:"var(--g)",fontSize:12}}>Aucune conversation</div>:convs.map(c=>{const o=getO(c);return <div key={c.id} className={"mc"+(cid===c.id?" on":"")} onClick={()=>setCid(c.id)}><div className="mca" style={{position:"relative"}}>{o.avatar}<span className="online-dot"/></div><div className="mci"><div className="mcn">{o.name}</div><div className="mcl">{c.last}</div></div></div>})}</div>
-  <div className="mch">{!ac?<div style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",color:"var(--g)"}}><div style={{textAlign:"center"}}><span style={{fontSize:36,display:"block",marginBottom:6}}>💬</span>Sélectionnez une conversation</div></div>:<><div className="mchd"><span style={{fontSize:20}}>{getO(ac).avatar}</span>{getO(ac).name}</div><div className="mcbd" ref={ref}>{msgs.map(m=><div key={m.id} className={"bub"+(m.from===state.user?.id?" me":" th")}>{m.text}<span className="bt">{new Date(m.timestamp).toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})}{m.from===state.user?.id&&" ✓✓"}</span></div>)}{typing&&<div className="typing"><span/><span/><span/></div>}</div><div className="mip"><input value={msg} onChange={e=>setMsg(e.target.value)} placeholder="Écrire un message..." onKeyDown={e=>e.key==="Enter"&&send()}/><button onClick={send}><I.Send/></button></div></>}</div></div></div>
+
+  useEffect(()=>{ref.current&&(ref.current.scrollTop=ref.current.scrollHeight)},[msgs.length,cid]);
+
+  const unreadCount=cv=>{
+    const cvMsgs=state.messages.filter(m=>m.cid===cv.id&&m.to===state.user?.id);
+    return cvMsgs.length>0?1:0;
+  };
+
+  const fmtTime=ts=>{
+    if(!ts)return'';
+    const d=new Date(ts);const now=new Date();
+    const diff=(now-d)/1000;
+    if(diff<60)return'maintenant';
+    if(diff<3600)return Math.floor(diff/60)+'min';
+    if(d.toDateString()===now.toDateString())return d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+    return d.toLocaleDateString('fr-FR',{day:'numeric',month:'short'});
+  };
+
+  const send=()=>{
+    if(!msg.trim()||!ac)return;
+    const other=ac.parts.find(p=>p!==state.user.id);
+    dispatch({type:"MSG",payload:{id:uid(),cid,from:state.user.id,fromName:state.user.name||'',fromAvatar:state.user.avatar||'😊',to:other,toName:ac.otherName||'',toAvatar:ac.otherAvatar||'😊',itemId:ac.itemId||'',itemTitle:ac.itemTitle||'',text:msg.trim(),timestamp:new Date()}});
+    setMsg("");
+    if(inputRef.current)inputRef.current.focus();
+    setTyping(true);
+    setTimeout(()=>{
+      setTyping(false);
+      const reps=["Bonjour ! Oui c'est disponible 😊","Bien sûr, on s'arrange.","Super, quand voulez-vous le récupérer ?","Envoyez-moi une demande !","Merci pour votre intérêt !"];
+      dispatch({type:"MSG",payload:{id:uid(),cid,from:other,to:state.user.id,text:reps[Math.floor(Math.random()*reps.length)],timestamp:new Date()}});
+    },1200+Math.random()*2e3);
+  };
+
+  const getO=cv=>{
+    const oid=cv.parts.find(p=>p!==state.user?.id);
+    const demo=USERS.find(u=>u.id===oid);if(demo)return demo;
+    const msgFrom=state.messages.find(m=>m.cid===cv.id&&m.from!==state.user?.id);
+    const n=cv.otherName||msgFrom?.fromName||'Utilisateur';
+    const av=cv.otherAvatar||msgFrom?.fromAvatar||'😊';
+    return{name:n,avatar:av};
+  };
+
+  const openConv=id=>{setCid(id);setShowList(false);};
+  const backToList=()=>{setCid(null);setShowList(true);};
+
+  const o=ac?getO(ac):null;
+
+  return <div className="msg-page">
+    {/* Header */}
+    <div className="msg-header">
+      {ac&&<button className="chat-back-btn" onClick={backToList}><I.Back/></button>}
+      {!ac&&<button onClick={()=>setPage("home")} style={{background:'none',border:'none',padding:'4px',cursor:'pointer',display:'flex',alignItems:'center',color:'var(--dk)',borderRadius:10}}><I.Back/></button>}
+      <div style={{flex:1}}>
+        <div style={{fontSize:17,fontWeight:800,fontFamily:'var(--fd)',color:'var(--dk)'}}>{ac?o.name:'Messages'}</div>
+        {ac&&<div style={{fontSize:12,color:'#22c55e',fontWeight:600}}>● En ligne</div>}
+        {!ac&&<div style={{fontSize:12,color:'var(--g)'}}>{convs.length} conversation{convs.length!==1?'s':''}</div>}
+      </div>
+      {ac&&<div style={{width:38,height:38,borderRadius:'50%',background:'linear-gradient(135deg,#e0dbff,#c7f0ee)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:18}}>{o.avatar}</div>}
+    </div>
+
+    {/* Body */}
+    <div className="msg-body">
+      {/* Conversation list */}
+      <div className={"conv-list"+((!showList&&ac)?" hidden":"")}>
+        <div className="conv-search">
+          <input placeholder="🔍  Rechercher…" readOnly style={{cursor:'default'}}/>
+        </div>
+        <div className="conv-items">
+          {convs.length===0&&<div className="conv-empty"><div><div style={{fontSize:42,marginBottom:12}}>💬</div><div style={{fontWeight:600,color:'var(--dk)',marginBottom:6}}>Aucune conversation</div><div style={{fontSize:13}}>Contactez un propriétaire pour commencer</div></div></div>}
+          {convs.map(c=>{
+            const o2=getO(c);
+            const ub=unreadCount(c);
+            const isActive=cid===c.id;
+            return <div key={c.id} className={"conv-item"+(isActive?" active":"")} onClick={()=>openConv(c.id)}>
+              <div className="conv-av">
+                {o2.avatar}
+                <span className="conv-av-online"/>
+              </div>
+              <div className="conv-info">
+                <div className="conv-name">{o2.name}</div>
+                {c.itemTitle&&<div style={{fontSize:11,color:'var(--p)',fontWeight:600,marginBottom:1}}>📦 {c.itemTitle}</div>}
+                <div className="conv-last">{c.last||'Démarrer la conversation'}</div>
+              </div>
+              <div className="conv-meta">
+                <span className="conv-time">{fmtTime(c.at)}</span>
+                {ub>0&&!isActive&&<span className="conv-badge">{ub}</span>}
+              </div>
+            </div>;
+          })}
+        </div>
+      </div>
+
+      {/* Chat area */}
+      <div className={"chat-area"+(showList&&!ac?" hidden":"")}>
+        {!ac?<div className="chat-empty">
+          <div className="chat-empty-icon">💬</div>
+          <div style={{fontWeight:700,fontSize:16,color:'var(--dk)',marginBottom:6}}>Vos conversations</div>
+          <div style={{fontSize:13,lineHeight:1.6}}>Sélectionnez une conversation dans la liste pour commencer à échanger</div>
+        </div>:<>
+          {/* Chat header */}
+          <div className="chat-header">
+            <div style={{width:40,height:40,borderRadius:'50%',background:'linear-gradient(135deg,#e0dbff,#c7f0ee)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,flexShrink:0}}>{o.avatar}</div>
+            <div style={{flex:1}}>
+              <div className="chat-header-name">{o.name}</div>
+              {ac.itemTitle&&<div className="chat-header-sub">📦 {ac.itemTitle}</div>}
+            </div>
+          </div>
+
+          {/* Messages */}
+          <div className="chat-msgs" ref={ref}>
+            {msgs.length===0&&<div style={{textAlign:'center',color:'var(--g)',fontSize:13,marginTop:24}}>Commencez la conversation !</div>}
+            {msgs.map((m,idx)=>{
+              const isMe=m.from===state.user?.id;
+              const showTime=idx===0||idx===msgs.length-1||(new Date(msgs[idx].timestamp)-new Date(msgs[idx-1]?.timestamp))>300000;
+              return <React.Fragment key={m.id}>
+                {showTime&&<div className="msg-day-sep"><span>{fmtTime(m.timestamp)}</span></div>}
+                <div className={"msg-bubble"+(isMe?" me":" them")}>
+                  {m.text}
+                  {isMe&&<span className="msg-time">✓✓</span>}
+                  {!isMe&&<span className={"msg-time left"}>{new Date(m.timestamp).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}</span>}
+                </div>
+              </React.Fragment>;
+            })}
+            {typing&&<div className="chat-typing">
+              <div className="chat-typing-av">{o.avatar}</div>
+              <div className="chat-typing-dots"><span/><span/><span/></div>
+            </div>}
+          </div>
+
+          {/* Input */}
+          <div className="chat-input-area">
+            <textarea
+              ref={inputRef}
+              className="chat-input"
+              value={msg}
+              onChange={e=>setMsg(e.target.value)}
+              placeholder="Écrire un message…"
+              rows={1}
+              onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}}}
+            />
+            <button className="chat-send" onClick={send} disabled={!msg.trim()}><I.Send/></button>
+          </div>
+        </>}
+      </div>
+    </div>
+  </div>;
 }
 
 function SearchM({onClose,onSearch,allItems,filters,setFilters}){
