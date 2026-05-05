@@ -1870,144 +1870,148 @@ function Profile({state, dispatch, setPage, setSelected, initTab, onEditItem}) {
   const S = {
     page: {
       maxWidth: '100%', margin: '0 auto', paddingBottom: 100,
-      fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif',
-      background: 'var(--bg)',
-      minHeight: '100vh',
-      position: 'relative',
+      background: 'var(--bg)', minHeight: '100vh',
     },
 
-    // Cover band (top gradient zone — like LinkedIn/Instagram)
-    coverBand: {
+    // Header block : dégradé pleine largeur avec fondu bas vers blanc
+    headerBlock: {
       position: 'relative',
-      height: 220,
-      background: 'linear-gradient(160deg,#3d2fa0 0%,#6C63FF 35%,#7c5ce7 65%,#4ECDC4 100%)',
+      background: 'linear-gradient(150deg,#1a0533 0%,#3d2fa0 40%,#6C63FF 75%,#4ECDC4 100%)',
+      paddingTop: 32,
+      paddingBottom: 80,
+      textAlign: 'center',
       overflow: 'hidden',
     },
-    // Fondu sombre en haut pour adoucir la transition avec la navbar
-    coverFadeTop: {
-      position: 'absolute', top: 0, left: 0, right: 0, height: 80,
-      background: 'linear-gradient(to bottom,rgba(10,8,30,0.55) 0%,transparent 100%)',
-      zIndex: 1, pointerEvents: 'none',
+    headerFade: {
+      position: 'absolute', bottom: 0, left: 0, right: 0, height: 100,
+      background: 'linear-gradient(to bottom,transparent,var(--bg))',
+      pointerEvents: 'none',
     },
-    coverDots: {
-      position: 'absolute', inset: 0,
-      backgroundImage: 'radial-gradient(circle,rgba(255,255,255,0.10) 1px,transparent 1px)',
-      backgroundSize: '22px 22px',
-      pointerEvents: 'none', zIndex: 0,
+    headerDots: {
+      position: 'absolute', inset: 0, pointerEvents: 'none',
+      backgroundImage: 'radial-gradient(circle,rgba(255,255,255,0.07) 1px,transparent 1px)',
+      backgroundSize: '28px 28px',
     },
-    coverShimmer: {
-      position: 'absolute', bottom: 0, left: 0, right: 0, height: 60,
-      background: 'linear-gradient(to bottom,transparent,rgba(108,99,255,0.08))',
-      pointerEvents: 'none', zIndex: 1,
+    headerTopRow: {
+      position: 'relative', zIndex: 2,
+      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+      padding: '0 16px', marginBottom: 20,
     },
 
-    // Info card (white card below cover)
-    infoCard: {
-      background: 'var(--w)',
-      margin: '0 12px',
-      borderRadius: '0 0 24px 24px',
-      padding: '0 20px 20px',
-      boxShadow: '0 4px 24px rgba(0,0,0,0.10)',
-      position: 'relative',
-      zIndex: 2,
-    },
-
-    // Avatar floating section
-    avatarSection: {
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'flex-end',
-      padding: '0 20px',
-      marginTop: -54,
-      marginBottom: 0,
-      position: 'relative',
-      zIndex: 10,
+    // Avatar centré
+    avatarWrap: {
+      position: 'relative', zIndex: 2,
+      display: 'inline-flex', flexDirection: 'column', alignItems: 'center',
     },
     avatarRing: {
       borderRadius: '50%',
-      background: isHeroFondateur
-        ? 'linear-gradient(135deg,#D4AF37,#FFD700,#B8860B)'
-        : 'var(--w)',
-      padding: 4,
-      boxShadow: isHeroFondateur
-        ? '0 0 0 3px var(--w), 0 8px 32px rgba(212,175,55,0.5)'
-        : '0 0 0 3px var(--w), 0 8px 32px rgba(0,0,0,0.18)',
-      display: 'inline-flex',
+      background: isHeroFondateur ? 'linear-gradient(135deg,#D4AF37,#FFD700,#B8860B)' : 'rgba(255,255,255,0.25)',
+      padding: isHeroFondateur ? 3 : 3,
+      boxShadow: isHeroFondateur ? '0 0 0 4px rgba(212,175,55,0.4),0 12px 40px rgba(0,0,0,0.4)' : '0 0 0 4px rgba(255,255,255,0.3),0 12px 40px rgba(0,0,0,0.3)',
       animation: isHeroFondateur ? 'fondateurBorder 2.5s ease-in-out infinite' : 'none',
-      flexShrink: 0,
-      position: 'relative',
+      display: 'inline-flex', position: 'relative',
     },
     avatar: {
-      width: 96, height: 96, borderRadius: '50%',
+      width: 100, height: 100, borderRadius: '50%',
       background: 'linear-gradient(135deg,#e0dbff,#c7f0ee)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontSize: 36,
-      position: 'relative',
-      flexShrink: 0,
-      overflow: 'hidden',
+      fontSize: 40, overflow: 'hidden', position: 'relative',
     },
     verifiedBadge: {
-      position: 'absolute', bottom: 3, right: 3,
-      width: 26, height: 26, borderRadius: '50%',
+      position: 'absolute', bottom: 2, right: 2,
+      width: 28, height: 28, borderRadius: '50%',
       background: isHeroFondateur ? 'linear-gradient(135deg,#D4AF37,#FFD700)' : '#10b981',
-      border: '2.5px solid var(--w)',
+      border: '3px solid var(--bg)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontSize: 12, color: 'white', fontWeight: 800,
-      boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+      fontSize: 12, color: 'white', fontWeight: 900,
+      boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
     },
-    heroActions: { display: 'flex', gap: 8, paddingBottom: 4 },
-    btnEdit: {
-      padding: '8px 16px', borderRadius: 20, fontSize: 13, fontWeight: 600,
-      background: 'var(--w)', border: '1.5px solid var(--bd)',
-      color: 'var(--dk)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4,
-      boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+
+    // Nom + infos sous l'avatar
+    name: {
+      fontSize: 24, fontWeight: 900, color: 'white',
+      margin: '14px 0 4px', letterSpacing: -0.5, textShadow: '0 2px 12px rgba(0,0,0,0.2)',
     },
-    btnShare: {
-      padding: '8px 12px', borderRadius: 20, fontSize: 15,
-      background: 'var(--w)', border: '1.5px solid var(--bd)',
-      color: 'var(--dk)', cursor: 'pointer', display: 'flex', alignItems: 'center',
-      boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+    gradeBadge: {
+      display: 'inline-flex', alignItems: 'center', gap: 5,
+      background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(8px)',
+      border: '1px solid rgba(255,255,255,0.25)', borderRadius: 20,
+      padding: '4px 12px', fontSize: 12, color: 'white', fontWeight: 700,
+      margin: '0 0 10px',
     },
-    name: { fontSize: 22, fontWeight: 800, color: 'var(--dk)', margin: '16px 0 4px', letterSpacing: -0.3 },
-    subInfo: { fontSize: 13, color: 'var(--g)', margin: '0 0 12px', display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' },
+    ratingRow: {
+      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+      marginBottom: 12,
+    },
+
+    // Stats — 3 colonnes séparées flottantes
+    statsFloat: {
+      display: 'flex', justifyContent: 'center', gap: 10,
+      padding: '0 16px', marginTop: -48, marginBottom: 16,
+      position: 'relative', zIndex: 5,
+    },
+    statCard: {
+      flex: 1, maxWidth: 110,
+      background: 'var(--w)', borderRadius: 16,
+      padding: '14px 8px', textAlign: 'center',
+      boxShadow: '0 4px 20px rgba(0,0,0,0.10)', border: '1px solid var(--bd)',
+    },
+    statNum: { fontSize: 22, fontWeight: 900, color: 'var(--dk)', display: 'block', lineHeight: 1 },
+    statLbl: { fontSize: 10, color: 'var(--g)', marginTop: 4, display: 'block', textTransform: 'uppercase', letterSpacing: 0.6, fontWeight: 600 },
+
+    // Pills sous les stats
+    pillsRow: {
+      display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 7,
+      padding: '0 16px', marginBottom: 16,
+    },
     pill: {
       display: 'inline-flex', alignItems: 'center', gap: 4,
-      background: 'var(--bg)', borderRadius: 20, padding: '4px 11px',
-      fontSize: 12, color: 'var(--dk)', fontWeight: 500,
-      border: '1px solid var(--bd)',
+      background: 'var(--w)', borderRadius: 20, padding: '5px 12px',
+      fontSize: 12, color: 'var(--dk)', fontWeight: 500, border: '1px solid var(--bd)',
+      boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
     },
     pillGreen: {
       display: 'inline-flex', alignItems: 'center', gap: 4,
-      background: 'rgba(16,185,129,0.10)', borderRadius: 20, padding: '4px 11px',
+      background: '#f0fdf4', borderRadius: 20, padding: '5px 12px',
       fontSize: 12, color: '#059669', fontWeight: 600,
-      border: '1px solid rgba(16,185,129,0.25)',
+      border: '1px solid #bbf7d0', boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
     },
     pillPurple: {
       display: 'inline-flex', alignItems: 'center', gap: 4,
-      background: 'rgba(108,99,255,0.10)', borderRadius: 20, padding: '4px 11px',
+      background: '#f5f3ff', borderRadius: 20, padding: '5px 12px',
       fontSize: 12, color: 'var(--p)', fontWeight: 600,
-      border: '1px solid rgba(108,99,255,0.2)',
+      border: '1px solid #ddd6fe', boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
     },
-    stars: { display: 'flex', gap: 2, alignItems: 'center' },
-    bio: { fontSize: 14, color: 'var(--g)', lineHeight: 1.6, margin: '0 0 16px' },
-    statsRow: {
-      display: 'grid', gridTemplateColumns: 'repeat(3,1fr)',
-      gap: 0, background: 'var(--bg)', borderRadius: 16, overflow: 'hidden',
-      margin: '0 0 16px',
-      border: '1px solid var(--bd)',
+
+    // Bio card
+    bioCard: {
+      margin: '0 16px 16px', background: 'var(--w)', borderRadius: 16,
+      padding: '14px 16px', border: '1px solid var(--bd)',
+      fontSize: 14, color: 'var(--g)', lineHeight: 1.65,
     },
-    statCell: {
-      background: 'transparent', padding: '14px 8px', textAlign: 'center',
-      borderRight: '1px solid var(--bd)',
+
+    // Boutons d'action
+    heroActions: { display: 'flex', justifyContent: 'center', gap: 10, marginBottom: 0 },
+    btnEdit: {
+      padding: '9px 20px', borderRadius: 22, fontSize: 13, fontWeight: 700,
+      background: 'rgba(255,255,255,0.18)', border: '1.5px solid rgba(255,255,255,0.35)',
+      color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5,
+      backdropFilter: 'blur(8px)', boxShadow: '0 2px 10px rgba(0,0,0,0.15)',
     },
-    statNum: { fontSize: 20, fontWeight: 800, color: 'var(--dk)', display: 'block', lineHeight: 1 },
-    statLbl: { fontSize: 11, color: 'var(--g)', marginTop: 3, display: 'block', textTransform: 'uppercase', letterSpacing: 0.5 },
-    trustRow: { display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 4 },
+    btnShare: {
+      padding: '9px 14px', borderRadius: 22, fontSize: 15,
+      background: 'rgba(255,255,255,0.18)', border: '1.5px solid rgba(255,255,255,0.35)',
+      color: 'white', cursor: 'pointer',
+      backdropFilter: 'blur(8px)', boxShadow: '0 2px 10px rgba(0,0,0,0.15)',
+    },
+
+    // Trust row
+    trustRow: { display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 7, padding: '0 16px', marginBottom: 20 },
 
     // Tabs
     tabsWrap: {
       background: 'var(--w)',
-      margin: '16px 0 0',
+      margin: '0',
       width: '100%',
       borderTop: '1px solid var(--bd)',
       borderBottom: '1px solid var(--bd)',
@@ -2019,20 +2023,19 @@ function Profile({state, dispatch, setPage, setSelected, initTab, onEditItem}) {
       justifyContent: 'center',
       minWidth: 'max-content',
       margin: '0 auto',
-      padding: '0 4px',
     },
     tab: (active) => ({
-      flex: '1 1 0', minWidth: 0, padding: '12px 10px', fontSize: 12, fontWeight: active ? 700 : 500,
+      flex: 'none', padding: '13px 16px', fontSize: 12, fontWeight: active ? 700 : 500,
       color: active ? 'var(--p)' : 'var(--g)',
       cursor: 'pointer', whiteSpace: 'nowrap',
-      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
-      transition: 'all 0.15s',
+      display: 'flex', alignItems: 'center', gap: 5,
+      transition: 'color 0.15s',
       background: 'none', border: 'none',
       borderBottom: active ? '2.5px solid var(--p)' : '2.5px solid transparent',
     }),
     tabCount: (active) => ({
       fontSize: 10, fontWeight: 700,
-      background: active ? 'rgba(108,99,255,0.15)' : 'var(--bgw)',
+      background: active ? 'rgba(108,99,255,0.12)' : 'var(--bgw)',
       color: active ? 'var(--p)' : 'var(--gl)',
       borderRadius: 10, padding: '1px 6px', minWidth: 18, textAlign: 'center',
     }),
@@ -2217,22 +2220,20 @@ function Profile({state, dispatch, setPage, setSelected, initTab, onEditItem}) {
   return (
     <div style={S.page} className="profile-page-grain">
 
-      {/* ─── COVER BAND ─── */}
-      <div style={S.coverBand}>
-        <div style={S.coverFadeTop}/>
-        <div style={S.coverDots}/>
-        <div style={S.coverShimmer}/>
-        {/* Grade badge top-right */}
-        <div style={{position:'absolute',top:16,right:16,zIndex:2,display:'flex',alignItems:'center',gap:6,background:'rgba(255,255,255,0.15)',backdropFilter:'blur(8px)',border:'1px solid rgba(255,255,255,0.25)',borderRadius:20,padding:'5px 12px'}}>
-          <span style={{fontSize:16}}>{heroGrade.icon}</span>
-          <span style={{fontSize:12,fontWeight:700,color:'white'}}>{heroGrade.name}</span>
+      {/* ─── HEADER BLOCK ─── */}
+      <div style={S.headerBlock}>
+        <div style={S.headerDots}/>
+        {/* Ligne du haut : vide à gauche, boutons à droite */}
+        <div style={S.headerTopRow}>
+          <div/>
+          <div style={{display:'flex',gap:8}}>
+            <button onClick={() => setTab('parametres')} style={S.btnEdit}>✏️ Modifier</button>
+            <button style={S.btnShare} onClick={()=>{const url=window.location.href;if(navigator.share){navigator.share({title:'Cercle',url}).catch(()=>{})}else{navigator.clipboard.writeText(url).then(()=>alert('Lien copié !')).catch(()=>alert(url));}}} title="Partager">↗</button>
+          </div>
         </div>
-      </div>
 
-      {/* ─── INFO CARD ─── */}
-      <div style={S.infoCard}>
-        {/* Avatar flottant */}
-        <div style={S.avatarSection}>
+        {/* Avatar centré */}
+        <div style={{position:'relative',zIndex:2,display:'flex',flexDirection:'column',alignItems:'center'}}>
           <div style={S.avatarRing}>
             <input ref={avatarInputRef} type="file" accept="image/*" capture="user" style={{display:'none'}} onChange={handleAvatarChange}/>
             <div className="avatar-edit-wrap" onClick={()=>avatarInputRef.current&&avatarInputRef.current.click()} title="Changer la photo de profil">
@@ -2246,50 +2247,56 @@ function Profile({state, dispatch, setPage, setSelected, initTab, onEditItem}) {
             </div>
             {user.isPro && <div className="pro-avatar-badge">PRO</div>}
           </div>
-          <div style={S.heroActions}>
-            <button onClick={() => setTab('parametres')} style={S.btnEdit}>✏️ Modifier</button>
-            <button style={S.btnShare} onClick={()=>{const url=window.location.href;const txt=`Découvrez le profil de ${profileData.name} sur Cercle !`;if(navigator.share){navigator.share({title:'Cercle',text:txt,url}).catch(()=>{})}else{navigator.clipboard.writeText(url).then(()=>alert('Lien copié !')).catch(()=>alert(url));}}} title="Partager le profil">↗</button>
+
+          <h2 style={S.name}>{profileData.name}</h2>
+
+          <div style={S.gradeBadge}>
+            <span>{heroGrade.icon}</span>
+            <span>{heroGrade.name}</span>
+            {isHeroFondateur && <span style={{marginLeft:2}}>👑</span>}
+          </div>
+
+          <div style={S.ratingRow}>
+            <StarRow n={5}/>
+            <span style={{fontSize:14,fontWeight:800,color:'white'}}>{avgRating}</span>
+            <span style={{fontSize:13,color:'rgba(255,255,255,0.65)'}}>· {reviewCount} avis</span>
           </div>
         </div>
+        <div style={S.headerFade}/>
+      </div>
 
-        {/* Infos */}
-        <h2 style={S.name}>{profileData.name}</h2>
+      {/* ─── STATS FLOTTANTES ─── */}
+      <div style={S.statsFloat}>
+        {[
+          {num: listings.length || 0, lbl: 'Annonces', icon: '🏷️'},
+          {num: reviewCount, lbl: 'Avis', icon: '⭐'},
+          {num: followerCount, lbl: 'Abonnés', icon: '👥'},
+        ].map(s => (
+          <div key={s.lbl} style={S.statCard}>
+            <span style={{fontSize:18,display:'block',marginBottom:4}}>{s.icon}</span>
+            <strong style={S.statNum}>{s.num}</strong>
+            <span style={S.statLbl}>{s.lbl}</span>
+          </div>
+        ))}
+      </div>
 
-        <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:10}}>
-          <StarRow n={5} />
-          <span style={{fontSize:14,fontWeight:800,color:'var(--dk)'}}>{avgRating}</span>
-          <span style={{fontSize:13,color:'var(--g)'}}>· {reviewCount} avis</span>
-        </div>
+      {/* ─── BADGES / PILLS ─── */}
+      <div style={S.pillsRow}>
+        {user.verified && <span style={S.pillGreen}>✓ Identité vérifiée</span>}
+        {(user.superHost || (state.reviews.length >= 10 && (state.reviews.reduce((s,r)=>s+r.rating,0)/state.reviews.length) >= 4.5)) && <span style={S.pillPurple}>🏅 Super hôte</span>}
+        {(user.city||user.location)&&<span style={S.pill}>📍 {user.city||user.location}</span>}
+        {user.since&&<span style={S.pill}>🗓️ Membre depuis {user.since}</span>}
+        {followerCount>0&&<span style={S.pill}>👥 {followerCount} abonné{followerCount>1?'s':''}</span>}
+      </div>
 
-        <div style={S.subInfo}>
-          {user.verified && <span style={S.pillGreen}>✓ Identité vérifiée</span>}
-          {(user.superHost || (state.reviews.length >= 10 && (state.reviews.reduce((s,r)=>s+r.rating,0)/state.reviews.length) >= 4.5)) && <span style={S.pillPurple}>🏅 Super hôte</span>}
-          {isHeroFondateur && <span style={{...S.pill,background:'linear-gradient(90deg,#D4AF37,#FFD700)',color:'#0a0a0a',fontWeight:800,border:'none',boxShadow:'0 2px 10px rgba(212,175,55,0.4)'}}>👑 Fondateur Cercle</span>}
-          {(user.city||user.location)&&<span style={S.pill}>📍 {user.city||user.location}</span>}
-          {user.since&&<span style={S.pill}>🗓️ Membre depuis {user.since}</span>}
-          {followerCount>0&&<span style={S.pill}>👥 {followerCount} abonné{followerCount>1?'s':''}</span>}
-        </div>
+      {/* ─── BIO ─── */}
+      {profileData.bio && <div style={S.bioCard}>{profileData.bio}</div>}
 
-        {profileData.bio && <p style={S.bio}>{profileData.bio}</p>}
-
-        <div style={S.statsRow}>
-          {[
-            {num: listings.length || 0, lbl: 'Annonces'},
-            {num: reviewCount, lbl: 'Avis'},
-            {num: followerCount, lbl: 'Abonnés'},
-          ].map((s,i,arr) => (
-            <div key={s.lbl} style={{...S.statCell,borderRight:i<arr.length-1?'1px solid var(--bd)':'none'}}>
-              <strong style={S.statNum}>{s.num}</strong>
-              <span style={S.statLbl}>{s.lbl}</span>
-            </div>
-          ))}
-        </div>
-
-        <div style={S.trustRow}>
-          <span style={S.pill}>⚡ Répond en &lt;1h</span>
-          <span style={S.pill}>🔒 Paiement sécurisé</span>
-          <span style={S.pill}>🛡️ Caution assurée</span>
-        </div>
+      {/* ─── TRUST ─── */}
+      <div style={S.trustRow}>
+        <span style={S.pill}>⚡ Répond en &lt;1h</span>
+        <span style={S.pill}>🔒 Paiement sécurisé</span>
+        <span style={S.pill}>🛡️ Caution assurée</span>
       </div>
 
       {/* ─── TABS ─── */}
