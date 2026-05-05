@@ -266,7 +266,7 @@ function reducer(s,a){switch(a.type){
   case"LOGOUT":return{...s,user:null};
   case"UPD_PROF":return{...s,user:{...s.user,...a.payload}};
   case"SET_AVATAR":return{...s,user:{...s.user,avatar:a.avatar,avatarUrl:a.url||null}};
-  case"TOG_FAV":{const f=new Set(s.favorites);const isAdding=!f.has(a.id);isAdding?f.add(a.id):f.delete(a.id);if(isAdding&&window.db&&s.user&&a.ownerId&&a.ownerId!==s.user.id){const notif={userId:a.ownerId,text:`❤️ ${s.user.name||'Quelqu\'un'} a aimé votre annonce "${a.title||''}"`,kind:'like',read:false,at:new Date().toISOString(),itemId:a.id};window.db.collection('notifications').add(notif).catch(()=>{});}return{...s,favorites:f}}
+  case"TOG_FAV":{const f=new Set(s.favorites);const isAdding=!f.has(a.id);isAdding?f.add(a.id):f.delete(a.id);if(window.db){const delta=isAdding?1:-1;const inc=window.firebase&&window.firebase.firestore?window.firebase.firestore.FieldValue.increment(delta):null;if(inc)window.db.collection('items').doc(a.id).update({likeCount:inc}).catch(()=>{});}if(isAdding&&window.db&&s.user&&a.ownerId&&a.ownerId!==s.user.id){const notif={userId:a.ownerId,text:`❤️ ${s.user.name||'Quelqu\'un'} a aimé votre annonce "${a.title||''}"`,kind:'like',read:false,at:new Date().toISOString(),itemId:a.id};window.db.collection('notifications').add(notif).catch(()=>{});}return{...s,favorites:f}}
   case"BOOK":{
     const b=a.payload;
     const n={id:uid(),text:`Réservation : ${b.itemTitle}`,read:false,at:new Date()};
@@ -772,6 +772,7 @@ function Card({item,onOpen,favs,dispatch,onAuthRequired}){return <div className=
       <div className="cbp">{item.price} €<span> / jour</span></div>
       <span className="cond-badge">{item.condition}</span>
     </div>
+    {item.likeCount>0&&<div style={{fontSize:11,color:'#ef4444',fontWeight:600,marginTop:4}}>❤️ {item.likeCount} j'aime</div>}
   </div>
 </div>}
 
@@ -4222,6 +4223,21 @@ function App(){
       }catch(e){}
     });
   },[loaded,state.userItems]);
+  // Mise à jour immédiate owner.id dans Firestore au login
+  useEffect(()=>{
+    if(!window.db||!state.user||!state.userItems.length)return;
+    const fuid=state.user.id;const femail=state.user.email;
+    state.userItems.forEach(item=>{
+      if(item.owner?.id!==fuid){
+        window.db.collection('items').doc(item.id).update({
+          'owner.id':fuid,'owner.email':femail
+        }).catch(()=>{
+          // Si le doc n'existe pas encore, on le crée sans images
+          window.db.collection('items').doc(item.id).set({...item,owner:{...(item.owner||{}),id:fuid,email:femail},images:[],photos:[]}).catch(()=>{});
+        });
+      }
+    });
+  },[state.user?.id]);
   // Listener messages Firestore temps réel (messages reçus)
   useEffect(()=>{
     if(!window.db||!state.user)return;
