@@ -273,7 +273,7 @@ function App(){
         </div>
       </div>}
       {filtered.length===0?<div className="empty"><span>🔍</span><h2>Aucun résultat trouvé</h2><p style={{maxWidth:320,margin:"6px auto 16px",lineHeight:1.5}}>Essayez d'élargir votre recherche ou de modifier vos filtres.</p><button className="bs" onClick={()=>{setQ("");setCat("all")}}>Réinitialiser la recherche</button></div>:
-      <div className="grid" style={{paddingTop:16}}>{filtered.map(i=><Card key={i.id} item={i} onOpen={openDetail} favs={state.favorites} dispatch={dispatch} onAuthRequired={state.user?null:()=>setShowA("login")}/>)}</div>}
+      <div className="grid" style={{paddingTop:16}}>{filtered.map(i=><Card key={i.id} item={i} onOpen={openDetail} favs={state.favorites} dispatch={dispatch} onAuthRequired={state.user?null:()=>setShowA("login")} userLocation={filters.userLocation}/>)}</div>}
     </main>}
 
     {page==="info"&&infoPage&&<InfoPage id={infoPage} setPage={p=>{setInfoPage(null);setPage(p);}}/>}
@@ -299,11 +299,16 @@ function App(){
         </div>
       </div>
       {/* Accordéons */}
-      <div style={{maxWidth:1200,margin:"0 auto",padding:"0 24px",display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:32,borderTop:"1px solid rgba(255,255,255,0.15)",paddingTop:32}}>
+      <div className="footer-grid" style={{maxWidth:1200,margin:"0 auto",padding:"0 24px"}}>
         {[{key:"assistance",label:"Assistance",links:[{t:"Centre d'aide",a:()=>setShowChat(true)},{t:"Guide de démarrage",a:()=>goInfo("guide")},{t:"Résoudre un litige",a:()=>{if(state.user)setPage("dispute");else setShowA("login")}},{t:"Sécurité paiements",a:()=>goInfo("security")},{t:"Nous contacter",a:()=>goInfo("contact")}]},{key:"communaute",label:"Communauté",links:[{t:"Blog Cercle",a:()=>goInfo("blog")},{t:"Forum d'entraide",a:()=>goInfo("forum")},{t:"Guides pratiques",a:()=>goInfo("guides")},{t:"Parrainage",a:()=>{if(state.user)setPage("referral");else setShowA("login")}},{t:"Impact environnemental",a:()=>goInfo("impact")},{t:"Témoignages",a:()=>goInfo("temoignages")}]},{key:"proprietaire",label:"Propriétaire",links:[{t:"Proposer un objet",a:()=>{if(state.user)setPage("create");else setShowA("login")}},{t:"Tableau de bord",a:()=>{if(state.user)setPage("dashboard");else setShowA("login")}},{t:"Conseils pour louer",a:()=>goInfo("conseils")},{t:"Maximiser ses revenus",a:()=>goInfo("revenus")},{t:"Bonnes photos",a:()=>goInfo("photos")},{t:"Super Proprio",a:()=>goInfo("superproprio")}]},{key:"cercle",label:"Cercle",links:[{t:"À propos",a:()=>goInfo("about")},{t:"Notre mission",a:()=>goInfo("mission")},{t:"Carrières",a:()=>goInfo("careers")},{t:"Espace presse",a:()=>goInfo("press")},{t:"Partenariats",a:()=>goInfo("partners")},{t:"Newsletter",a:()=>goInfo("newsletter")}]}].map(sec=>(
           <div key={sec.key}>
-            <div style={{fontWeight:700,fontSize:11,letterSpacing:"0.08em",textTransform:"uppercase",color:"rgba(255,255,255,0.6)",marginBottom:14}}>{sec.label}</div>
-            {sec.links.map(l=><div key={l.t} onClick={l.a} style={{fontSize:13,color:"rgba(255,255,255,0.85)",padding:"5px 0",cursor:"pointer",transition:"color .15s"}} onMouseEnter={e=>e.currentTarget.style.color="#fff"} onMouseLeave={e=>e.currentTarget.style.color="rgba(255,255,255,0.85)"}>{l.t}</div>)}
+            <div className="footer-sec-hdr" style={{fontWeight:700,fontSize:11,letterSpacing:"0.08em",textTransform:"uppercase",color:"rgba(255,255,255,0.6)",marginBottom:14}} onClick={()=>toggleSection(sec.key)}>
+              {sec.label}
+              <span style={{fontSize:14,opacity:0.7,display:'none'}} className="footer-toggle">{openSection===sec.key?'−':'+'}</span>
+            </div>
+            <div className={"footer-sec-links"+(openSection===sec.key?" open":"")}>
+              {sec.links.map(l=><div key={l.t} onClick={l.a} style={{fontSize:13,color:"rgba(255,255,255,0.85)",padding:"5px 0",cursor:"pointer",transition:"color .15s"}} onMouseEnter={e=>e.currentTarget.style.color="#fff"} onMouseLeave={e=>e.currentTarget.style.color="rgba(255,255,255,0.85)"}>{l.t}</div>)}
+            </div>
           </div>
         ))}
       </div>

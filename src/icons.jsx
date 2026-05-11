@@ -445,16 +445,25 @@ html.dark,html.dark body,html.dark #root{background:#0f0f13 !important;color:#f1
 .auth-pro-tag{background:#FEF3C7;color:#92400E;font-size:9px;padding:2px 7px;border-radius:5px;font-weight:600}
 /* Gestion Pro */
 .gestion-tab-active{border-bottom:2.5px solid #D97706!important;color:#D97706!important}
+/* Distance badge on card */
+.card-dist{position:absolute;top:10px;left:10px;background:rgba(0,0,0,0.6);color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;backdrop-filter:blur(6px);z-index:4;letter-spacing:.02em}
+/* Footer responsive */
+.footer-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:32px;padding-top:32px;border-top:1px solid rgba(255,255,255,0.15)}
+.footer-sec-links{}
+@media(max-width:680px){.footer-grid{grid-template-columns:repeat(2,1fr);gap:20px;}.footer-grid-full{grid-template-columns:1fr!important;}.footer-sec-hdr{cursor:pointer;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(255,255,255,0.12);padding-bottom:8px;margin-bottom:0!important;}.footer-sec-links{overflow:hidden;max-height:0;transition:max-height .3s ease;}.footer-sec-links.open{max-height:300px;}}
 `;
 
 /* ========== COMPONENTS ========== */
 function Carousel({images,onClick}){const[c,setC]=useState(0);return <div className="ciw"><img className="cimg" src={images[c]} alt="" loading="lazy" onClick={onClick}/>{images.length>1&&<><button className="nav l" onClick={e=>{e.stopPropagation();setC(x=>(x-1+images.length)%images.length)}}><I.Chv d="l"/></button><button className="nav r" onClick={e=>{e.stopPropagation();setC(x=>(x+1)%images.length)}}><I.Chv d="r"/></button><div className="dts">{images.map((_,i)=><div key={i} className={"dt"+(i===c?" on":"")}/>)}</div></>}</div>}
 
-function Card({item,onOpen,favs,dispatch,onAuthRequired}){return <div className={"card"+(item.isPro?" pro-card":"")} onClick={()=>onOpen(item)}>
+function Card({item,onOpen,favs,dispatch,onAuthRequired,userLocation}){
+  const dist=(userLocation&&LL[item.location])?Math.round(haversine(userLocation.lat,userLocation.lng,LL[item.location][0],LL[item.location][1])):null;
+  return <div className={"card"+(item.isPro?" pro-card":"")} onClick={()=>onOpen(item)}>
   <Carousel images={item.images} onClick={()=>onOpen(item)}/>
   <button className="cfav" onClick={e=>{e.stopPropagation();if(onAuthRequired){onAuthRequired();return;}dispatch({type:"TOG_FAV",id:item.id,ownerId:item.owner?.id,title:item.title})}}><I.Heart f={favs.has(item.id)}/></button>
   {item.isPro&&<div className="pro-badge">PRO</div>}
   {item.owner?.verified&&<div className="cbdg">✓</div>}
+  {dist!==null&&<div className="card-dist">📍 {dist} km</div>}
   <div className="card-cta">Voir l'annonce →</div>
   <div className="cbo">
     <div className="cbt"><span className="cbn">{item.title}</span><span className="cbr">⭐ {item.rating}</span></div>

@@ -845,16 +845,25 @@ html.dark,html.dark body,html.dark #root{background:#0f0f13 !important;color:#f1
 .auth-pro-tag{background:#FEF3C7;color:#92400E;font-size:9px;padding:2px 7px;border-radius:5px;font-weight:600}
 /* Gestion Pro */
 .gestion-tab-active{border-bottom:2.5px solid #D97706!important;color:#D97706!important}
+/* Distance badge on card */
+.card-dist{position:absolute;top:10px;left:10px;background:rgba(0,0,0,0.6);color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;backdrop-filter:blur(6px);z-index:4;letter-spacing:.02em}
+/* Footer responsive */
+.footer-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:32px;padding-top:32px;border-top:1px solid rgba(255,255,255,0.15)}
+.footer-sec-links{}
+@media(max-width:680px){.footer-grid{grid-template-columns:repeat(2,1fr);gap:20px;}.footer-grid-full{grid-template-columns:1fr!important;}.footer-sec-hdr{cursor:pointer;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(255,255,255,0.12);padding-bottom:8px;margin-bottom:0!important;}.footer-sec-links{overflow:hidden;max-height:0;transition:max-height .3s ease;}.footer-sec-links.open{max-height:300px;}}
 `;
 
 /* ========== COMPONENTS ========== */
 function Carousel({images,onClick}){const[c,setC]=useState(0);return <div className="ciw"><img className="cimg" src={images[c]} alt="" loading="lazy" onClick={onClick}/>{images.length>1&&<><button className="nav l" onClick={e=>{e.stopPropagation();setC(x=>(x-1+images.length)%images.length)}}><I.Chv d="l"/></button><button className="nav r" onClick={e=>{e.stopPropagation();setC(x=>(x+1)%images.length)}}><I.Chv d="r"/></button><div className="dts">{images.map((_,i)=><div key={i} className={"dt"+(i===c?" on":"")}/>)}</div></>}</div>}
 
-function Card({item,onOpen,favs,dispatch,onAuthRequired}){return <div className={"card"+(item.isPro?" pro-card":"")} onClick={()=>onOpen(item)}>
+function Card({item,onOpen,favs,dispatch,onAuthRequired,userLocation}){
+  const dist=(userLocation&&LL[item.location])?Math.round(haversine(userLocation.lat,userLocation.lng,LL[item.location][0],LL[item.location][1])):null;
+  return <div className={"card"+(item.isPro?" pro-card":"")} onClick={()=>onOpen(item)}>
   <Carousel images={item.images} onClick={()=>onOpen(item)}/>
   <button className="cfav" onClick={e=>{e.stopPropagation();if(onAuthRequired){onAuthRequired();return;}dispatch({type:"TOG_FAV",id:item.id,ownerId:item.owner?.id,title:item.title})}}><I.Heart f={favs.has(item.id)}/></button>
   {item.isPro&&<div className="pro-badge">PRO</div>}
   {item.owner?.verified&&<div className="cbdg">✓</div>}
+  {dist!==null&&<div className="card-dist">📍 {dist} km</div>}
   <div className="card-cta">Voir l'annonce →</div>
   <div className="cbo">
     <div className="cbt"><span className="cbn">{item.title}</span><span className="cbr">⭐ {item.rating}</span></div>
@@ -1841,22 +1850,6 @@ function Profile({state, dispatch, setPage, setSelected, initTab, onEditItem}) {
 
   const displayListings = listings;
 
-  const mockReservations = [
-    { id: 1, item: 'Perceuse Bosch Pro', img: '🔧', dates: '15 – 17 Mars', status: 'En cours', color: '#10b981', bg: '#d1fae5', price: '30 €', renter: 'Marie L.' },
-    { id: 2, item: 'Vélo électrique Moustache', img: '🚲', dates: '5 – 7 Mars', status: 'Terminée', color: '#6b7280', bg: '#f3f4f6', price: '45 €', renter: 'Thomas B.' },
-    { id: 3, item: 'Kayak biplace gonflable', img: '🛶', dates: '25 – 27 Avr.', status: 'À venir', color: '#3b82f6', bg: '#dbeafe', price: '80 €', renter: 'Julie K.' },
-    { id: 4, item: 'Drone DJI Mini 3 Pro', img: '🚁', dates: '18 – 20 Avr.', status: 'À venir', color: '#3b82f6', bg: '#dbeafe', price: '120 €', renter: 'Pierre M.' },
-    { id: 5, item: 'Canon EOS R6 + objectif', img: '📷', dates: '12 – 14 Avr.', status: 'Terminée', color: '#6b7280', bg: '#f3f4f6', price: '95 €', renter: 'Sophie D.' },
-  ];
-
-  const mockReviews = [
-    { id: 1, author: 'Marie L.', initials: 'ML', date: 'Avr. 2024', rating: 5, text: 'Très sérieux, matériel en parfait état. Nettoyage impeccable après la location. Je recommande vivement !', color: '#8b5cf6' },
-    { id: 2, author: 'Thomas B.', initials: 'TB', date: 'Mars 2024', rating: 5, text: 'Transaction rapide et sans souci. L\'objet était exactement conforme à la description. Super hôte, à recommander !', color: '#3b82f6' },
-    { id: 3, author: 'Julie K.', initials: 'JK', date: 'Fév. 2024', rating: 5, text: 'Livraison impeccable et matériel de première qualité. Très professionnel et à l\'écoute des besoins.', color: '#10b981' },
-    { id: 4, author: 'Sophie D.', initials: 'SD', date: 'Jan. 2024', rating: 4, text: 'Bon état général, échange ponctuel et correct. Petit manque de communication au démarrage mais très arrangeant.', color: '#f59e0b' },
-    { id: 5, author: 'Pierre M.', initials: 'PM', date: 'Déc. 2023', rating: 5, text: 'Location sans prise de tête. Propriétaire réactif et responsable. Matériel bien entretenu. Parfait !', color: '#06b6d4' },
-  ];
-
   const proParc = [
     {id:'eq1',title:'Nacelle élévatrice 12m',cat:'tools',price:120,status:'available',rentals:34,icon:'🏗️'},
     {id:'eq2',title:'Mini-pelle 1.5T',cat:'tools',price:180,status:'rented',rentals:28,icon:'⛏️'},
@@ -1874,14 +1867,6 @@ function Profile({state, dispatch, setPage, setSelected, initTab, onEditItem}) {
     { id: 'abonnements', label: 'Abonnements', icon: '👥', count: (state.following||[]).length||null },
     { id: 'grade', label: 'Mon Grade', icon: '🏅', count: null },
     { id: 'parametres', label: 'Paramètres', icon: '⚙️', count: null },
-  ];
-
-  const mockFavs = [
-    { id: 1, title: 'Tente 4 places Quechua', price: 15, rating: 4.95, reviews: 52, img: '⛺', owner: 'Lucas M.', badge: '🏅' },
-    { id: 2, title: 'Canon EOS R6 + 24-70mm', price: 45, rating: 4.92, reviews: 68, img: '📷', owner: 'Emma R.', badge: '' },
-    { id: 3, title: 'Paddle gonflable + accessoires', price: 28, rating: 4.88, reviews: 41, img: '🏄', owner: 'Alex V.', badge: '⚡' },
-    { id: 4, title: 'Perceuse Bosch Pro', price: 12, rating: 4.98, reviews: 103, img: '🔧', owner: 'Paul D.', badge: '🏅' },
-    { id: 5, title: 'Drone DJI Mini 3 Pro', price: 35, rating: 4.89, reviews: 79, img: '🚁', owner: 'Sophie D.', badge: '' },
   ];
 
   const S = {
@@ -3336,6 +3321,7 @@ function CreateListing({state,dispatch,setPage,mode,editItem}){
 /* ====== src/messages.jsx ====== */
 function Messages({state,dispatch,cid,setCid,setPage}){
   const[msg,setMsg]=useState("");
+  const[searchQ,setSearchQ]=useState("");
   const ref=useRef(null);
   const inputRef=useRef(null);
   const[typing,setTyping]=useState(false);
@@ -3408,11 +3394,12 @@ function Messages({state,dispatch,cid,setCid,setPage}){
       {/* Conversation list */}
       <div className={"conv-list"+((!showList&&ac)?" hidden":"")}>
         <div className="conv-search">
-          <input placeholder="🔍  Rechercher…" readOnly style={{cursor:'default'}}/>
+          <input placeholder="🔍  Rechercher une conversation…" value={searchQ} onChange={e=>setSearchQ(e.target.value)}/>
         </div>
         <div className="conv-items">
           {convs.length===0&&<div className="conv-empty"><div><div style={{fontSize:42,marginBottom:12}}>💬</div><div style={{fontWeight:600,color:'var(--dk)',marginBottom:6}}>Aucune conversation</div><div style={{fontSize:13}}>Contactez un propriétaire pour commencer</div></div></div>}
-          {convs.map(c=>{
+          {convs.length>0&&searchQ&&convs.filter(c=>{const o2=getO(c);return o2.name.toLowerCase().includes(searchQ.toLowerCase())||(c.itemTitle||'').toLowerCase().includes(searchQ.toLowerCase());}).length===0&&<div className="conv-empty"><div><div style={{fontSize:36,marginBottom:10}}>🔍</div><div style={{fontWeight:600,color:'var(--dk)',marginBottom:4}}>Aucun résultat</div><div style={{fontSize:12,color:'var(--g)'}}>Aucune conversation avec "{searchQ}"</div></div></div>}
+          {(searchQ?convs.filter(c=>{const o2=getO(c);return o2.name.toLowerCase().includes(searchQ.toLowerCase())||(c.itemTitle||'').toLowerCase().includes(searchQ.toLowerCase());}):convs).map(c=>{
             const o2=getO(c);
             const ub=unreadCount(c);
             const isActive=cid===c.id;
@@ -5041,7 +5028,7 @@ function App(){
         </div>
       </div>}
       {filtered.length===0?<div className="empty"><span>🔍</span><h2>Aucun résultat trouvé</h2><p style={{maxWidth:320,margin:"6px auto 16px",lineHeight:1.5}}>Essayez d'élargir votre recherche ou de modifier vos filtres.</p><button className="bs" onClick={()=>{setQ("");setCat("all")}}>Réinitialiser la recherche</button></div>:
-      <div className="grid" style={{paddingTop:16}}>{filtered.map(i=><Card key={i.id} item={i} onOpen={openDetail} favs={state.favorites} dispatch={dispatch} onAuthRequired={state.user?null:()=>setShowA("login")}/>)}</div>}
+      <div className="grid" style={{paddingTop:16}}>{filtered.map(i=><Card key={i.id} item={i} onOpen={openDetail} favs={state.favorites} dispatch={dispatch} onAuthRequired={state.user?null:()=>setShowA("login")} userLocation={filters.userLocation}/>)}</div>}
     </main>}
 
     {page==="info"&&infoPage&&<InfoPage id={infoPage} setPage={p=>{setInfoPage(null);setPage(p);}}/>}
@@ -5067,11 +5054,16 @@ function App(){
         </div>
       </div>
       {/* Accordéons */}
-      <div style={{maxWidth:1200,margin:"0 auto",padding:"0 24px",display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:32,borderTop:"1px solid rgba(255,255,255,0.15)",paddingTop:32}}>
+      <div className="footer-grid" style={{maxWidth:1200,margin:"0 auto",padding:"0 24px"}}>
         {[{key:"assistance",label:"Assistance",links:[{t:"Centre d'aide",a:()=>setShowChat(true)},{t:"Guide de démarrage",a:()=>goInfo("guide")},{t:"Résoudre un litige",a:()=>{if(state.user)setPage("dispute");else setShowA("login")}},{t:"Sécurité paiements",a:()=>goInfo("security")},{t:"Nous contacter",a:()=>goInfo("contact")}]},{key:"communaute",label:"Communauté",links:[{t:"Blog Cercle",a:()=>goInfo("blog")},{t:"Forum d'entraide",a:()=>goInfo("forum")},{t:"Guides pratiques",a:()=>goInfo("guides")},{t:"Parrainage",a:()=>{if(state.user)setPage("referral");else setShowA("login")}},{t:"Impact environnemental",a:()=>goInfo("impact")},{t:"Témoignages",a:()=>goInfo("temoignages")}]},{key:"proprietaire",label:"Propriétaire",links:[{t:"Proposer un objet",a:()=>{if(state.user)setPage("create");else setShowA("login")}},{t:"Tableau de bord",a:()=>{if(state.user)setPage("dashboard");else setShowA("login")}},{t:"Conseils pour louer",a:()=>goInfo("conseils")},{t:"Maximiser ses revenus",a:()=>goInfo("revenus")},{t:"Bonnes photos",a:()=>goInfo("photos")},{t:"Super Proprio",a:()=>goInfo("superproprio")}]},{key:"cercle",label:"Cercle",links:[{t:"À propos",a:()=>goInfo("about")},{t:"Notre mission",a:()=>goInfo("mission")},{t:"Carrières",a:()=>goInfo("careers")},{t:"Espace presse",a:()=>goInfo("press")},{t:"Partenariats",a:()=>goInfo("partners")},{t:"Newsletter",a:()=>goInfo("newsletter")}]}].map(sec=>(
           <div key={sec.key}>
-            <div style={{fontWeight:700,fontSize:11,letterSpacing:"0.08em",textTransform:"uppercase",color:"rgba(255,255,255,0.6)",marginBottom:14}}>{sec.label}</div>
-            {sec.links.map(l=><div key={l.t} onClick={l.a} style={{fontSize:13,color:"rgba(255,255,255,0.85)",padding:"5px 0",cursor:"pointer",transition:"color .15s"}} onMouseEnter={e=>e.currentTarget.style.color="#fff"} onMouseLeave={e=>e.currentTarget.style.color="rgba(255,255,255,0.85)"}>{l.t}</div>)}
+            <div className="footer-sec-hdr" style={{fontWeight:700,fontSize:11,letterSpacing:"0.08em",textTransform:"uppercase",color:"rgba(255,255,255,0.6)",marginBottom:14}} onClick={()=>toggleSection(sec.key)}>
+              {sec.label}
+              <span style={{fontSize:14,opacity:0.7,display:'none'}} className="footer-toggle">{openSection===sec.key?'−':'+'}</span>
+            </div>
+            <div className={"footer-sec-links"+(openSection===sec.key?" open":"")}>
+              {sec.links.map(l=><div key={l.t} onClick={l.a} style={{fontSize:13,color:"rgba(255,255,255,0.85)",padding:"5px 0",cursor:"pointer",transition:"color .15s"}} onMouseEnter={e=>e.currentTarget.style.color="#fff"} onMouseLeave={e=>e.currentTarget.style.color="rgba(255,255,255,0.85)"}>{l.t}</div>)}
+            </div>
           </div>
         ))}
       </div>

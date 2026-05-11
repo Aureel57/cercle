@@ -73,22 +73,6 @@ function Profile({state, dispatch, setPage, setSelected, initTab, onEditItem}) {
 
   const displayListings = listings;
 
-  const mockReservations = [
-    { id: 1, item: 'Perceuse Bosch Pro', img: '🔧', dates: '15 – 17 Mars', status: 'En cours', color: '#10b981', bg: '#d1fae5', price: '30 €', renter: 'Marie L.' },
-    { id: 2, item: 'Vélo électrique Moustache', img: '🚲', dates: '5 – 7 Mars', status: 'Terminée', color: '#6b7280', bg: '#f3f4f6', price: '45 €', renter: 'Thomas B.' },
-    { id: 3, item: 'Kayak biplace gonflable', img: '🛶', dates: '25 – 27 Avr.', status: 'À venir', color: '#3b82f6', bg: '#dbeafe', price: '80 €', renter: 'Julie K.' },
-    { id: 4, item: 'Drone DJI Mini 3 Pro', img: '🚁', dates: '18 – 20 Avr.', status: 'À venir', color: '#3b82f6', bg: '#dbeafe', price: '120 €', renter: 'Pierre M.' },
-    { id: 5, item: 'Canon EOS R6 + objectif', img: '📷', dates: '12 – 14 Avr.', status: 'Terminée', color: '#6b7280', bg: '#f3f4f6', price: '95 €', renter: 'Sophie D.' },
-  ];
-
-  const mockReviews = [
-    { id: 1, author: 'Marie L.', initials: 'ML', date: 'Avr. 2024', rating: 5, text: 'Très sérieux, matériel en parfait état. Nettoyage impeccable après la location. Je recommande vivement !', color: '#8b5cf6' },
-    { id: 2, author: 'Thomas B.', initials: 'TB', date: 'Mars 2024', rating: 5, text: 'Transaction rapide et sans souci. L\'objet était exactement conforme à la description. Super hôte, à recommander !', color: '#3b82f6' },
-    { id: 3, author: 'Julie K.', initials: 'JK', date: 'Fév. 2024', rating: 5, text: 'Livraison impeccable et matériel de première qualité. Très professionnel et à l\'écoute des besoins.', color: '#10b981' },
-    { id: 4, author: 'Sophie D.', initials: 'SD', date: 'Jan. 2024', rating: 4, text: 'Bon état général, échange ponctuel et correct. Petit manque de communication au démarrage mais très arrangeant.', color: '#f59e0b' },
-    { id: 5, author: 'Pierre M.', initials: 'PM', date: 'Déc. 2023', rating: 5, text: 'Location sans prise de tête. Propriétaire réactif et responsable. Matériel bien entretenu. Parfait !', color: '#06b6d4' },
-  ];
-
   const proParc = [
     {id:'eq1',title:'Nacelle élévatrice 12m',cat:'tools',price:120,status:'available',rentals:34,icon:'🏗️'},
     {id:'eq2',title:'Mini-pelle 1.5T',cat:'tools',price:180,status:'rented',rentals:28,icon:'⛏️'},
@@ -106,14 +90,6 @@ function Profile({state, dispatch, setPage, setSelected, initTab, onEditItem}) {
     { id: 'abonnements', label: 'Abonnements', icon: '👥', count: (state.following||[]).length||null },
     { id: 'grade', label: 'Mon Grade', icon: '🏅', count: null },
     { id: 'parametres', label: 'Paramètres', icon: '⚙️', count: null },
-  ];
-
-  const mockFavs = [
-    { id: 1, title: 'Tente 4 places Quechua', price: 15, rating: 4.95, reviews: 52, img: '⛺', owner: 'Lucas M.', badge: '🏅' },
-    { id: 2, title: 'Canon EOS R6 + 24-70mm', price: 45, rating: 4.92, reviews: 68, img: '📷', owner: 'Emma R.', badge: '' },
-    { id: 3, title: 'Paddle gonflable + accessoires', price: 28, rating: 4.88, reviews: 41, img: '🏄', owner: 'Alex V.', badge: '⚡' },
-    { id: 4, title: 'Perceuse Bosch Pro', price: 12, rating: 4.98, reviews: 103, img: '🔧', owner: 'Paul D.', badge: '🏅' },
-    { id: 5, title: 'Drone DJI Mini 3 Pro', price: 35, rating: 4.89, reviews: 79, img: '🚁', owner: 'Sophie D.', badge: '' },
   ];
 
   const S = {

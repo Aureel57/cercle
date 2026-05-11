@@ -1,5 +1,6 @@
 function Messages({state,dispatch,cid,setCid,setPage}){
   const[msg,setMsg]=useState("");
+  const[searchQ,setSearchQ]=useState("");
   const ref=useRef(null);
   const inputRef=useRef(null);
   const[typing,setTyping]=useState(false);
@@ -72,11 +73,12 @@ function Messages({state,dispatch,cid,setCid,setPage}){
       {/* Conversation list */}
       <div className={"conv-list"+((!showList&&ac)?" hidden":"")}>
         <div className="conv-search">
-          <input placeholder="🔍  Rechercher…" readOnly style={{cursor:'default'}}/>
+          <input placeholder="🔍  Rechercher une conversation…" value={searchQ} onChange={e=>setSearchQ(e.target.value)}/>
         </div>
         <div className="conv-items">
           {convs.length===0&&<div className="conv-empty"><div><div style={{fontSize:42,marginBottom:12}}>💬</div><div style={{fontWeight:600,color:'var(--dk)',marginBottom:6}}>Aucune conversation</div><div style={{fontSize:13}}>Contactez un propriétaire pour commencer</div></div></div>}
-          {convs.map(c=>{
+          {convs.length>0&&searchQ&&convs.filter(c=>{const o2=getO(c);return o2.name.toLowerCase().includes(searchQ.toLowerCase())||(c.itemTitle||'').toLowerCase().includes(searchQ.toLowerCase());}).length===0&&<div className="conv-empty"><div><div style={{fontSize:36,marginBottom:10}}>🔍</div><div style={{fontWeight:600,color:'var(--dk)',marginBottom:4}}>Aucun résultat</div><div style={{fontSize:12,color:'var(--g)'}}>Aucune conversation avec "{searchQ}"</div></div></div>}
+          {(searchQ?convs.filter(c=>{const o2=getO(c);return o2.name.toLowerCase().includes(searchQ.toLowerCase())||(c.itemTitle||'').toLowerCase().includes(searchQ.toLowerCase());}):convs).map(c=>{
             const o2=getO(c);
             const ub=unreadCount(c);
             const isActive=cid===c.id;
