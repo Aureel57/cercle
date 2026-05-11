@@ -1772,6 +1772,11 @@ function Profile({state, dispatch, setPage, setSelected, initTab, onEditItem}) {
 
   const [tab, setTab] = React.useState(initTab || 'annonces');
   const [editMode, setEditMode] = React.useState(false);
+  const [verifModal, setVerifModal] = React.useState(null);
+  const [verifData, setVerifData] = React.useState({firstName:'',lastName:'',docType:'CNI',docNum:'',docExp:'',phoneNum:'',smsCode:'',smsSent:false,licNum:'',licDate:'',licCat:'B',bankHolder:'',iban:'',bic:'',bankName:''});
+  const vd = (k,v) => setVerifData(p=>({...p,[k]:v}));
+  const closeVerif = () => { setVerifModal(null); setVerifData(p=>({...p,smsSent:false,smsCode:''})); };
+  const completeVerif = (key) => { dispatch({type:'SET_PROFILE_COMPLETION',payload:{[key]:true}}); if(key==='phone'&&verifData.phoneNum)setProfileData(p=>({...p,phone:verifData.phoneNum})); closeVerif(); };
   const [gradeBarWidth, setGradeBarWidth] = React.useState(0);
   const [qrItem, setQrItem] = React.useState(null);
   const [calItem, setCalItem] = React.useState(null);
@@ -2777,10 +2782,9 @@ function Profile({state, dispatch, setPage, setSelected, initTab, onEditItem}) {
               const doneCount = steps.filter(s=>pc[s.key]).length;
               const pct = Math.round(doneCount/steps.length*100);
               const circ = 188.5;
-              const handleComplete = (key,label)=>{
-                if(window.confirm(`Simuler la complétion de "${label}" ?`)){
-                  dispatch({type:'SET_PROFILE_COMPLETION',payload:{[key]:true},label});
-                }
+              const handleComplete = (key)=>{
+                if(key==='phone') setVerifData(p=>({...p,phoneNum:profileData.phone||''}));
+                setVerifModal(key);
               };
               return (
                 <div style={{background:'var(--w)',borderRadius:20,border:'1px solid var(--bd)',boxShadow:'0 2px 16px rgba(0,0,0,0.06)',padding:'20px',marginBottom:16,animation:'fadeSlideUp 0.4s cubic-bezier(0.34,1.56,0.64,1) both',animationDelay:'0.04s'}}>
@@ -2819,7 +2823,7 @@ function Profile({state, dispatch, setPage, setSelected, initTab, onEditItem}) {
                   </div>
                   <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
                     {steps.map(step=>(
-                      <div key={step.key} onClick={!pc[step.key]?()=>handleComplete(step.key,step.label):undefined}
+                      <div key={step.key} onClick={!pc[step.key]?()=>handleComplete(step.key):undefined}
                         style={{display:'flex',alignItems:'center',gap:9,padding:'11px 12px',background:pc[step.key]?'#f0fdf4':'var(--bg)',borderRadius:13,border:pc[step.key]?'1.5px solid #86efac':'1.5px solid var(--bd)',cursor:pc[step.key]?'default':'pointer',transition:'all .2s'}}>
                         <span style={{fontSize:18}}>{pc[step.key]?'✅':step.icon}</span>
                         <div style={{minWidth:0}}>
@@ -2959,25 +2963,125 @@ function Profile({state, dispatch, setPage, setSelected, initTab, onEditItem}) {
               Sauvegarder les modifications
             </button>
 
-            {/* ── Zone de danger ── */}
-            <div style={{background:'#fff5f5',borderRadius:20,border:'1px solid #fecaca',padding:'20px',animation:'fadeSlideUp 0.4s cubic-bezier(0.34,1.56,0.64,1) both',animationDelay:'0.32s'}}>
-              <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:16}}>
-                <div style={{width:38,height:38,borderRadius:12,background:'linear-gradient(135deg,#ef4444,#dc2626)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:19,flexShrink:0}}>⚠️</div>
-                <div>
-                  <div style={{fontSize:15,fontWeight:700,color:'#dc2626',lineHeight:1.2}}>Zone de danger</div>
-                  <div style={{fontSize:12,color:'#f87171'}}>Actions irréversibles</div>
-                </div>
-              </div>
-              <button style={{width:'100%',padding:'14px',borderRadius:14,background:'#fff',border:'1.5px solid #fecaca',color:'#ef4444',fontSize:14,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:8}}
-                onClick={()=>{dispatch({type:"LOGOUT"});setPage('home');}}>
-                🚪 Se déconnecter
-              </button>
-            </div>
+            {/* ── Déconnexion ── */}
+            <button style={{width:'100%',padding:'14px',borderRadius:16,background:'var(--w)',border:'1.5px solid #fecaca',color:'#ef4444',fontSize:14,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:8,animation:'fadeSlideUp 0.4s cubic-bezier(0.34,1.56,0.64,1) both',animationDelay:'0.32s'}}
+              onClick={()=>{dispatch({type:"LOGOUT"});setPage('home');}}>
+              🚪 Se déconnecter
+            </button>
 
           </div>
         )}
 
       </div>
+
+      {/* ── Modals de vérification ── */}
+      {verifModal && (
+      <div className="bk" onClick={e=>{if(e.target===e.currentTarget)closeVerif();}}>
+        <div className="md" style={{width:'92%',maxWidth:440}}>
+          <div className="mh">
+            <button className="mx" onClick={closeVerif} style={{position:'absolute',left:14}}>←</button>
+            <h2 style={{fontSize:16,fontWeight:700}}>
+              {verifModal==='identity'&&'Vérification d\'identité'}
+              {verifModal==='phone'&&'Vérification du téléphone'}
+              {verifModal==='drivingLicense'&&'Permis de conduire'}
+              {verifModal==='bankAccount'&&'Compte bancaire'}
+            </h2>
+          </div>
+          <div className="mb">
+
+            {/* ─ Identité ─ */}
+            {verifModal==='identity'&&(<div>
+              <p style={{fontSize:13,color:'var(--g)',marginBottom:16,lineHeight:1.5}}>Vos informations doivent correspondre exactement à votre pièce d'identité officielle.</p>
+              <div className="fg"><label>Prénom</label><input value={verifData.firstName} onChange={e=>vd('firstName',e.target.value)} placeholder="Votre prénom"/></div>
+              <div className="fg"><label>Nom de famille</label><input value={verifData.lastName} onChange={e=>vd('lastName',e.target.value)} placeholder="Votre nom"/></div>
+              <div className="fg"><label>Type de document</label>
+                <select value={verifData.docType} onChange={e=>vd('docType',e.target.value)}>
+                  <option value="CNI">Carte nationale d'identité</option>
+                  <option value="passeport">Passeport</option>
+                  <option value="sejour">Titre de séjour</option>
+                </select>
+              </div>
+              <div className="fg"><label>Numéro du document</label><input value={verifData.docNum} onChange={e=>vd('docNum',e.target.value)} placeholder="Ex : 123456789"/></div>
+              <div className="fg"><label>Date d'expiration</label><input type="date" value={verifData.docExp} onChange={e=>vd('docExp',e.target.value)}/></div>
+              <div className="fg">
+                <label>Photo du document (recto)</label>
+                <div style={{border:'2px dashed var(--bd)',borderRadius:14,padding:'24px 16px',textAlign:'center',cursor:'pointer',color:'var(--g)',background:'var(--bg)',fontSize:13}}
+                  onClick={()=>document.getElementById('idFileInput').click()}>
+                  📎 Cliquez pour joindre une photo
+                </div>
+                <input id="idFileInput" type="file" accept="image/*,.pdf" style={{display:'none'}} onChange={e=>vd('docFile',e.target.files[0])}/>
+                {verifData.docFile&&<p style={{fontSize:12,color:'#10b981',marginTop:6}}>✓ {verifData.docFile.name}</p>}
+              </div>
+            </div>)}
+
+            {/* ─ Téléphone ─ */}
+            {verifModal==='phone'&&(<div>
+              <p style={{fontSize:13,color:'var(--g)',marginBottom:16,lineHeight:1.5}}>Entrez votre numéro, nous vous enverrons un code de vérification par SMS.</p>
+              <div className="fg"><label>Numéro de téléphone</label><input type="tel" value={verifData.phoneNum} onChange={e=>vd('phoneNum',e.target.value)} placeholder="+33 6 00 00 00 00"/></div>
+              {!verifData.smsSent
+                ?<button className="bp" style={{width:'100%',marginBottom:8}} onClick={()=>{if(verifData.phoneNum)vd('smsSent',true);}}>Envoyer le code SMS</button>
+                :<div>
+                  <div style={{padding:'10px 14px',background:'#f0fdf4',borderRadius:12,border:'1px solid #86efac',fontSize:13,color:'#166534',marginBottom:14}}>✓ Code envoyé au {verifData.phoneNum}</div>
+                  <div className="fg"><label>Code reçu par SMS</label><input type="number" value={verifData.smsCode} onChange={e=>vd('smsCode',e.target.value)} placeholder="6 chiffres" maxLength={6}/></div>
+                </div>
+              }
+            </div>)}
+
+            {/* ─ Permis ─ */}
+            {verifModal==='drivingLicense'&&(<div>
+              <p style={{fontSize:13,color:'var(--g)',marginBottom:16,lineHeight:1.5}}>Votre permis est requis pour louer des véhicules et équipements motorisés.</p>
+              <div className="fg"><label>Numéro de permis</label><input value={verifData.licNum} onChange={e=>vd('licNum',e.target.value)} placeholder="Ex : 12AB12345"/></div>
+              <div className="fg"><label>Date d'obtention</label><input type="date" value={verifData.licDate} onChange={e=>vd('licDate',e.target.value)}/></div>
+              <div className="fg"><label>Catégorie principale</label>
+                <select value={verifData.licCat} onChange={e=>vd('licCat',e.target.value)}>
+                  <option value="B">B — Voiture</option>
+                  <option value="A">A — Moto</option>
+                  <option value="BE">BE — Voiture + remorque</option>
+                  <option value="C">C — Poids lourd</option>
+                  <option value="AM">AM — Cyclomoteur</option>
+                </select>
+              </div>
+              <div className="fg">
+                <label>Photo du permis (recto)</label>
+                <div style={{border:'2px dashed var(--bd)',borderRadius:14,padding:'24px 16px',textAlign:'center',cursor:'pointer',color:'var(--g)',background:'var(--bg)',fontSize:13}}
+                  onClick={()=>document.getElementById('licFileInput').click()}>
+                  📎 Cliquez pour joindre une photo
+                </div>
+                <input id="licFileInput" type="file" accept="image/*,.pdf" style={{display:'none'}} onChange={e=>vd('licFile',e.target.files[0])}/>
+                {verifData.licFile&&<p style={{fontSize:12,color:'#10b981',marginTop:6}}>✓ {verifData.licFile.name}</p>}
+              </div>
+            </div>)}
+
+            {/* ─ Compte bancaire ─ */}
+            {verifModal==='bankAccount'&&(<div>
+              <p style={{fontSize:13,color:'var(--g)',marginBottom:16,lineHeight:1.5}}>Nécessaire pour recevoir vos paiements de locations. Vos données sont chiffrées.</p>
+              <div className="fg"><label>Titulaire du compte</label><input value={verifData.bankHolder} onChange={e=>vd('bankHolder',e.target.value)} placeholder="Nom complet du titulaire"/></div>
+              <div className="fg"><label>IBAN</label><input value={verifData.iban} onChange={e=>vd('iban',e.target.value.toUpperCase())} placeholder="FR76 XXXX XXXX XXXX XXXX XXXX XXX" style={{letterSpacing:'0.04em'}}/></div>
+              <div className="fg"><label>BIC / SWIFT</label><input value={verifData.bic} onChange={e=>vd('bic',e.target.value.toUpperCase())} placeholder="Ex : BNPAFRPPXXX"/></div>
+              <div className="fg"><label>Nom de la banque</label><input value={verifData.bankName} onChange={e=>vd('bankName',e.target.value)} placeholder="Ex : BNP Paribas"/></div>
+              <div style={{padding:'10px 14px',background:'#f0fdf4',borderRadius:12,border:'1px solid #86efac',fontSize:12,color:'#166534',display:'flex',gap:8,alignItems:'center'}}>
+                🔒 Vos informations bancaires sont sécurisées et chiffrées.
+              </div>
+            </div>)}
+
+          </div>
+          <div className="mf">
+            <button className="bs" onClick={closeVerif}>Annuler</button>
+            <button className="bp"
+              disabled={
+                (verifModal==='identity'&&(!verifData.firstName||!verifData.lastName||!verifData.docNum))||
+                (verifModal==='phone'&&(!verifData.smsSent||!verifData.smsCode))||
+                (verifModal==='drivingLicense'&&(!verifData.licNum||!verifData.licDate))||
+                (verifModal==='bankAccount'&&(!verifData.bankHolder||!verifData.iban||!verifData.bic))
+              }
+              onClick={()=>completeVerif(verifModal)}>
+              Valider
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+
     </div>
   );
 }
