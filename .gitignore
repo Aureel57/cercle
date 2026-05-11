@@ -1,0 +1,8 @@
+push.py
+.env
+*.zip
+.netlify/
+.claude/
+.claude-flow/
+.mcp.json
+index.backup.*.html

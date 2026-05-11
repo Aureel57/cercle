@@ -308,6 +308,7 @@ html,body{overflow-x:hidden;width:100%}
 if(!window.storage){window.storage={get:function(k){try{var v=localStorage.getItem(k);return Promise.resolve(v?{key:k,value:v}:null)}catch(e){return Promise.resolve(null)}},set:function(k,v){try{localStorage.setItem(k,v)}catch(e){}return Promise.resolve({key:k,value:v})},delete:function(k){try{localStorage.removeItem(k)}catch(e){}return Promise.resolve({key:k,deleted:true})},list:function(p){try{return Promise.resolve({keys:Object.keys(localStorage)})}catch(e){return Promise.resolve({keys:[]})}}}}
 </script>
 <script type="text/babel" data-presets="env,react">
+/* ====== src/constants.jsx ====== */
 const { useState, useEffect, useRef, useMemo, useReducer, createContext, useContext } = React;
 const Ctx=createContext();
 const LANGS={fr:"Français",en:"English",es:"Español"};
@@ -394,6 +395,9 @@ function reducer(s,a){switch(a.type){
   default:return s}}
 
 /* ========== ICONS ========== */
+
+
+/* ====== src/icons.jsx ====== */
 const I={
   Search:()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{width:15,height:15}}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>,
   Heart:({f})=><svg viewBox="0 0 24 24" fill={f?"#E85D4A":"rgba(0,0,0,.4)"} stroke={f?"#E85D4A":"#fff"} strokeWidth="2" style={{width:20,height:20}}><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>,
@@ -862,6 +866,9 @@ function Card({item,onOpen,favs,dispatch,onAuthRequired}){return <div className=
   </div>
 </div>}
 
+
+
+/* ====== src/modals.jsx ====== */
 function CGUModal({onClose}){
   return <div className="bk" onClick={onClose}><div className="md" onClick={e=>e.stopPropagation()} style={{maxWidth:560}}>
     <div className="mh"><button className="mx" onClick={onClose}><I.X/></button><h2>Conditions Générales d'Utilisation</h2></div>
@@ -1236,6 +1243,9 @@ function Onboarding({onClose}){
 }
 
 /* ===== QR CODE MODAL ===== */
+
+
+/* ====== src/detail.jsx ====== */
 function QRModal({item,onClose}){
   const qrRef=useRef(null);
   const baseUrl=window.location.href.split('?')[0];
@@ -1756,6 +1766,9 @@ function CalendarModal({item, dispatch, onClose}) {
   );
 }
 
+
+
+/* ====== src/profile.jsx ====== */
 function Profile({state, dispatch, setPage, setSelected, initTab, onEditItem}) {
   const user = (state && state.user) || {};
   const userName = user.name || '';
@@ -3086,6 +3099,9 @@ function Profile({state, dispatch, setPage, setSelected, initTab, onEditItem}) {
   );
 }
 
+
+
+/* ====== src/create.jsx ====== */
 function CreateListing({state,dispatch,setPage,mode,editItem}){
   const[f,setF]=useState(editItem?{title:editItem.title||"",cat:editItem.cat||"tools",price:editItem.price||"",location:editItem.location||state.user?.location||"Paris 11e",condition:editItem.condition||"Comme neuf",description:editItem.description||"",deposit:editItem.deposit||""}:{title:"",cat:"tools",price:"",location:state.user?.location||"Paris 11e",condition:"Comme neuf",description:"",deposit:""});
   const[photos,setPhotos]=useState(editItem?.images||[]);
@@ -3248,6 +3264,9 @@ function CreateListing({state,dispatch,setPage,mode,editItem}){
   </div>
 }
 
+
+
+/* ====== src/messages.jsx ====== */
 function Messages({state,dispatch,cid,setCid,setPage}){
   const[msg,setMsg]=useState("");
   const ref=useRef(null);
@@ -3405,6 +3424,9 @@ function Messages({state,dispatch,cid,setCid,setPage}){
   </div>;
 }
 
+
+
+/* ====== src/pages.jsx ====== */
 function SearchM({onClose,onSearch,allItems,filters,setFilters}){
   const[q,setQ]=useState("");const[w,setW]=useState("");const[af,setAf]=useState("what");const[searchDate,setSearchDate]=useState(filters?.searchDate||"");
   const sugg=useMemo(()=>!q||q.length<2?[]:allItems.filter(i=>i.title.toLowerCase().includes(q.toLowerCase())).slice(0,5),[q,allItems]);
@@ -4612,6 +4634,9 @@ function ConfirmDeliveryPage({annonceId, allItems, onBack}){
 }
 
 /* ========== MAIN APP ========== */
+
+
+/* ====== src/app.jsx ====== */
 function App(){
   // Persist login
   const[loaded,setLoaded]=useState(false);
@@ -4964,6 +4989,7 @@ function App(){
 }
 
 ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App));
+
 
 </script>
 </body>
