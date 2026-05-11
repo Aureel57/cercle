@@ -296,7 +296,7 @@ function GestionPro({state,dispatch,setPage}){
   const refused=requests.filter(r=>r.status==='refused');
 
   const genInvoicePDF=async(inv)=>{
-    if(!window.jspdf){alert('jsPDF non disponible');return;}
+    if(!window.jspdf){console.error('jsPDF non chargé');return;}
     const now=new Date().toLocaleDateString('fr-FR');
     const wrapper=document.createElement('div');
     wrapper.style.cssText='position:absolute;left:-9999px;top:0;width:794px;background:#fff;font-family:DM Sans,system-ui,sans-serif;';
@@ -330,7 +330,7 @@ function GestionPro({state,dispatch,setPage}){
       const iw=pw;const ih=canvas.height*pw/canvas.width;
       doc.addImage(canvas.toDataURL('image/png'),'PNG',0,0,iw,Math.min(ih,ph));
       doc.save(`${inv.id}.pdf`);
-    }catch(e){alert('Erreur export PDF');}
+    }catch(e){console.error('Erreur export PDF',e);}
     finally{document.body.removeChild(wrapper);}
   };
 
@@ -603,8 +603,7 @@ function Dashboard({state,dispatch,setPage}){
     return()=>{if(pieInst.current)pieInst.current.destroy()};
   },[myItems.length]);
   const exportPDF=async()=>{
-    if(!window.jspdf){alert("jsPDF non disponible.");return}
-    if(!window.html2canvas){alert("html2canvas non disponible.");return}
+    if(!window.jspdf||!window.html2canvas){console.error("Dépendances PDF non chargées");return}
     const now=new Date().toLocaleDateString("fr-FR");
     const kpiData=[
       {icon:"💰",val:revenue+"€",label:"Revenus",sub:"confirmés",color:"#6C63FF",lightBg:"#ede9fe"},
@@ -732,7 +731,7 @@ function Dashboard({state,dispatch,setPage}){
       doc.save(`cercle-dashboard-${now.replace(/\//g,"-")}.pdf`);
     }catch(e){
       console.error("PDF export error:",e);
-      alert("Erreur lors de l'export PDF.");
+      console.error("Erreur lors de l'export PDF.", e);
     }finally{
       document.body.removeChild(wrapper);
     }
@@ -954,7 +953,7 @@ function ReferralPage({state,dispatch,setPage}){
       <div style={{border:"1.5px solid var(--bd)",borderRadius:12,padding:14,textAlign:"center"}}><div style={{fontSize:24}}>👥</div><div style={{fontFamily:"var(--fd)",fontSize:22,fontWeight:700}}>{state.referrals.length}</div><div style={{fontSize:10,color:"var(--g)"}}>Filleuls</div></div>
       <div style={{border:"1.5px solid var(--bd)",borderRadius:12,padding:14,textAlign:"center"}}><div style={{fontSize:24}}>💰</div><div style={{fontFamily:"var(--fd)",fontSize:22,fontWeight:700,color:"var(--acc)"}}>{totalBonus}€</div><div style={{fontSize:10,color:"var(--g)"}}>Gagnés</div></div>
     </div>
-    <div className="fg"><label>Simuler un parrainage</label><div style={{display:"flex",gap:6}}><input value={friendName} onChange={e=>setFriendName(e.target.value)} placeholder="Nom de votre ami"/><button className="bp" style={{fontSize:12,padding:"8px 14px",flexShrink:0}} onClick={invite}>Inviter</button></div></div>
+    <div className="fg"><label>Inviter un ami par email ou lien</label><div style={{display:"flex",gap:6}}><input value={friendName} onChange={e=>setFriendName(e.target.value)} placeholder="Nom de votre ami"/><button className="bp" style={{fontSize:12,padding:"8px 14px",flexShrink:0}} onClick={invite}>Inviter</button></div></div>
     {state.referrals.length>0&&<><h3 style={{fontFamily:"var(--fd)",fontSize:15,marginTop:12,marginBottom:8}}>Historique</h3>
     {state.referrals.map(r=><div key={r.id} style={{display:"flex",justifyContent:"space-between",padding:10,border:"1px solid var(--bd)",borderRadius:8,marginBottom:4,fontSize:13}}><span>👤 {r.name} · {ds(r.date)}</span><span style={{color:"var(--acc)",fontWeight:700}}>+{r.bonus}€</span></div>)}</>}
   </div>

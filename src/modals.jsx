@@ -56,10 +56,7 @@ function AuthModal({onClose,dispatch,mode:im}){
   const go=()=>{
     if(mode==="login"){
       if(!f.email||!f.password){setErr("Remplissez tous les champs");return}
-      // Essai demo users d'abord
-      const demo=USERS.find(u=>u.email===f.email&&u.password===f.password)||PRO_USERS.find(u=>u.email===f.email&&u.password===f.password);
-      if(demo){dispatch({type:"LOGIN",payload:demo});onClose();return}
-      // Sinon Firebase Auth ou fallback localStorage
+      // Firebase Auth ou fallback localStorage
       if(!window.auth){
         // Fallback : vérifier le compte dans localStorage
         try{

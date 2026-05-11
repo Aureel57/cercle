@@ -35,11 +35,9 @@ try {
     window.db   = firebase.firestore();
     // Activer la persistance Firestore hors-ligne
     window.db.enablePersistence().catch(function(){});
-    console.log('[Cercle] Firebase initialisé');
   } else {
     window.auth = null;
     window.db   = null;
-    console.log('[Cercle] Mode localStorage (Firebase non configuré)');
   }
 } catch(e) {
   window.auth = null;
@@ -927,10 +925,7 @@ function AuthModal({onClose,dispatch,mode:im}){
   const go=()=>{
     if(mode==="login"){
       if(!f.email||!f.password){setErr("Remplissez tous les champs");return}
-      // Essai demo users d'abord
-      const demo=USERS.find(u=>u.email===f.email&&u.password===f.password)||PRO_USERS.find(u=>u.email===f.email&&u.password===f.password);
-      if(demo){dispatch({type:"LOGIN",payload:demo});onClose();return}
-      // Sinon Firebase Auth ou fallback localStorage
+      // Firebase Auth ou fallback localStorage
       if(!window.auth){
         // Fallback : vérifier le compte dans localStorage
         try{
@@ -1393,7 +1388,7 @@ function DetailMap({item}){
 
 function Detail({item,onClose,state,dispatch,setPage,setConvId,setShowShop,setProfTab,onAuthRequired}){
   const[gal,setGal]=useState(null);
-  const[days,setDays]=useState(3);const[sd,setSd]=useState("2026-03-12");const[ed,setEd]=useState("2026-03-14");const[durType,setDurType]=useState("jour");const[timeSlot,setTimeSlot]=useState("");const[booked,setBooked]=useState(false);const[showRF,setShowRF]=useState(false);const[rt,setRt]=useState("");const[rr,setRr]=useState(5);
+  const[days,setDays]=useState(3);const[sd,setSd]=useState(()=>{const d=new Date();d.setDate(d.getDate()+1);return d.toISOString().split('T')[0]});const[ed,setEd]=useState(()=>{const d=new Date();d.setDate(d.getDate()+4);return d.toISOString().split('T')[0]});const[durType,setDurType]=useState("jour");const[timeSlot,setTimeSlot]=useState("");const[booked,setBooked]=useState(false);const[showRF,setShowRF]=useState(false);const[rt,setRt]=useState("");const[rr,setRr]=useState(5);
   const[payStep,setPayStep]=useState(0);const[showBid,setShowBid]=useState(false);const[bidAmt,setBidAmt]=useState('');const[payMethod,setPayMethod]=useState("card");const[cardNum,setCardNum]=useState("");const[cardExp,setCardExp]=useState("");const[cardCvc,setCardCvc]=useState("");
   const[showVerifModal,setShowVerifModal]=useState(false);
   const userRentals=(state.user?.rentals||0)+state.bookings.filter(b=>b.userId===state.user?.id).length;
@@ -1790,6 +1785,8 @@ function Profile({state, dispatch, setPage, setSelected, initTab, onEditItem}) {
   const vd = (k,v) => setVerifData(p=>({...p,[k]:v}));
   const closeVerif = () => { setVerifModal(null); setVerifData(p=>({...p,smsSent:false,smsCode:''})); };
   const completeVerif = (key) => { dispatch({type:'SET_PROFILE_COMPLETION',payload:{[key]:true}}); if(key==='phone'&&verifData.phoneNum)setProfileData(p=>({...p,phone:verifData.phoneNum})); closeVerif(); };
+  const [deleteConfirm, setDeleteConfirm] = React.useState(null);
+  const [shareCopied, setShareCopied] = React.useState(false);
   const [gradeBarWidth, setGradeBarWidth] = React.useState(0);
   const [qrItem, setQrItem] = React.useState(null);
   const [calItem, setCalItem] = React.useState(null);
@@ -2246,7 +2243,7 @@ function Profile({state, dispatch, setPage, setSelected, initTab, onEditItem}) {
           <div/>
           <div style={{display:'flex',gap:8}}>
             <button onClick={() => setTab('parametres')} style={S.btnEdit}>✏️ Modifier</button>
-            <button style={S.btnShare} onClick={()=>{const url=window.location.href;if(navigator.share){navigator.share({title:'Cercle',url}).catch(()=>{})}else{navigator.clipboard.writeText(url).then(()=>alert('Lien copié !')).catch(()=>alert(url));}}} title="Partager">↗</button>
+            <button style={{...S.btnShare,position:'relative'}} onClick={()=>{const url=window.location.href;if(navigator.share){navigator.share({title:'Cercle',url}).catch(()=>{})}else{navigator.clipboard.writeText(url).then(()=>{setShareCopied(true);setTimeout(()=>setShareCopied(false),2000);}).catch(()=>{});}}} title="Partager">{shareCopied?<span style={{fontSize:10,fontWeight:700,color:'#10b981'}}>Copié ✓</span>:'↗'}</button>
           </div>
         </div>
 
@@ -2354,7 +2351,13 @@ function Profile({state, dispatch, setPage, setSelected, initTab, onEditItem}) {
                     <button onClick={e=>{e.stopPropagation();onEditItem&&onEditItem(l);}} style={{padding:'6px 0',border:'1.5px solid #d1fae5',borderRadius:10,background:'#f0fdf4',color:'#059669',fontSize:11,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:3}}>✏️ Modifier</button>
                     <button onClick={e=>{e.stopPropagation();setCalItem(l);}} style={{padding:'6px 0',border:'1.5px solid #bfdbfe',borderRadius:10,background:'#eff6ff',color:'#2563eb',fontSize:11,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:3}}>📅 Dates</button>
                     <button onClick={e=>{e.stopPropagation();setQrItem(l);}} style={{padding:'6px 0',border:'1.5px solid #d1c9ff',borderRadius:10,background:'#f5f3ff',color:'#6C63FF',fontSize:11,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:3}}>📱 QR</button>
-                    <button onClick={e=>{e.stopPropagation();if(window.confirm(`Supprimer "${l.title}" ?`)){dispatch({type:'DELETE_ITEM',id:l.id})}}} style={{padding:'6px 0',border:'1.5px solid #fecaca',borderRadius:10,background:'#fff1f2',color:'#ef4444',fontSize:11,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:3}}>🗑️ Supp.</button>
+                    {deleteConfirm===l.id
+                      ?<div style={{display:'flex',gap:3,gridColumn:'span 2'}}>
+                          <button onClick={e=>{e.stopPropagation();dispatch({type:'DELETE_ITEM',id:l.id});setDeleteConfirm(null);}} style={{flex:1,padding:'6px 0',border:'none',borderRadius:10,background:'#ef4444',color:'#fff',fontSize:11,fontWeight:700,cursor:'pointer'}}>Confirmer</button>
+                          <button onClick={e=>{e.stopPropagation();setDeleteConfirm(null);}} style={{flex:1,padding:'6px 0',border:'1.5px solid var(--bd)',borderRadius:10,background:'var(--w)',color:'var(--dk)',fontSize:11,fontWeight:700,cursor:'pointer'}}>Annuler</button>
+                        </div>
+                      :<button onClick={e=>{e.stopPropagation();setDeleteConfirm(l.id);}} style={{padding:'6px 0',border:'1.5px solid #fecaca',borderRadius:10,background:'#fff1f2',color:'#ef4444',fontSize:11,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:3}}>🗑️ Supp.</button>
+                    }
                   </div>
                 </div>
               </div>
@@ -3725,7 +3728,7 @@ function GestionPro({state,dispatch,setPage}){
   const refused=requests.filter(r=>r.status==='refused');
 
   const genInvoicePDF=async(inv)=>{
-    if(!window.jspdf){alert('jsPDF non disponible');return;}
+    if(!window.jspdf){console.error('jsPDF non chargé');return;}
     const now=new Date().toLocaleDateString('fr-FR');
     const wrapper=document.createElement('div');
     wrapper.style.cssText='position:absolute;left:-9999px;top:0;width:794px;background:#fff;font-family:DM Sans,system-ui,sans-serif;';
@@ -3759,7 +3762,7 @@ function GestionPro({state,dispatch,setPage}){
       const iw=pw;const ih=canvas.height*pw/canvas.width;
       doc.addImage(canvas.toDataURL('image/png'),'PNG',0,0,iw,Math.min(ih,ph));
       doc.save(`${inv.id}.pdf`);
-    }catch(e){alert('Erreur export PDF');}
+    }catch(e){console.error('Erreur export PDF',e);}
     finally{document.body.removeChild(wrapper);}
   };
 
@@ -4032,8 +4035,7 @@ function Dashboard({state,dispatch,setPage}){
     return()=>{if(pieInst.current)pieInst.current.destroy()};
   },[myItems.length]);
   const exportPDF=async()=>{
-    if(!window.jspdf){alert("jsPDF non disponible.");return}
-    if(!window.html2canvas){alert("html2canvas non disponible.");return}
+    if(!window.jspdf||!window.html2canvas){console.error("Dépendances PDF non chargées");return}
     const now=new Date().toLocaleDateString("fr-FR");
     const kpiData=[
       {icon:"💰",val:revenue+"€",label:"Revenus",sub:"confirmés",color:"#6C63FF",lightBg:"#ede9fe"},
@@ -4161,7 +4163,7 @@ function Dashboard({state,dispatch,setPage}){
       doc.save(`cercle-dashboard-${now.replace(/\//g,"-")}.pdf`);
     }catch(e){
       console.error("PDF export error:",e);
-      alert("Erreur lors de l'export PDF.");
+      console.error("Erreur lors de l'export PDF.", e);
     }finally{
       document.body.removeChild(wrapper);
     }
@@ -4383,7 +4385,7 @@ function ReferralPage({state,dispatch,setPage}){
       <div style={{border:"1.5px solid var(--bd)",borderRadius:12,padding:14,textAlign:"center"}}><div style={{fontSize:24}}>👥</div><div style={{fontFamily:"var(--fd)",fontSize:22,fontWeight:700}}>{state.referrals.length}</div><div style={{fontSize:10,color:"var(--g)"}}>Filleuls</div></div>
       <div style={{border:"1.5px solid var(--bd)",borderRadius:12,padding:14,textAlign:"center"}}><div style={{fontSize:24}}>💰</div><div style={{fontFamily:"var(--fd)",fontSize:22,fontWeight:700,color:"var(--acc)"}}>{totalBonus}€</div><div style={{fontSize:10,color:"var(--g)"}}>Gagnés</div></div>
     </div>
-    <div className="fg"><label>Simuler un parrainage</label><div style={{display:"flex",gap:6}}><input value={friendName} onChange={e=>setFriendName(e.target.value)} placeholder="Nom de votre ami"/><button className="bp" style={{fontSize:12,padding:"8px 14px",flexShrink:0}} onClick={invite}>Inviter</button></div></div>
+    <div className="fg"><label>Inviter un ami par email ou lien</label><div style={{display:"flex",gap:6}}><input value={friendName} onChange={e=>setFriendName(e.target.value)} placeholder="Nom de votre ami"/><button className="bp" style={{fontSize:12,padding:"8px 14px",flexShrink:0}} onClick={invite}>Inviter</button></div></div>
     {state.referrals.length>0&&<><h3 style={{fontFamily:"var(--fd)",fontSize:15,marginTop:12,marginBottom:8}}>Historique</h3>
     {state.referrals.map(r=><div key={r.id} style={{display:"flex",justifyContent:"space-between",padding:10,border:"1px solid var(--bd)",borderRadius:8,marginBottom:4,fontSize:13}}><span>👤 {r.name} · {ds(r.date)}</span><span style={{color:"var(--acc)",fontWeight:700}}>+{r.bonus}€</span></div>)}</>}
   </div>

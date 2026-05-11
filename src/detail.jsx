@@ -145,7 +145,7 @@ function DetailMap({item}){
 
 function Detail({item,onClose,state,dispatch,setPage,setConvId,setShowShop,setProfTab,onAuthRequired}){
   const[gal,setGal]=useState(null);
-  const[days,setDays]=useState(3);const[sd,setSd]=useState("2026-03-12");const[ed,setEd]=useState("2026-03-14");const[durType,setDurType]=useState("jour");const[timeSlot,setTimeSlot]=useState("");const[booked,setBooked]=useState(false);const[showRF,setShowRF]=useState(false);const[rt,setRt]=useState("");const[rr,setRr]=useState(5);
+  const[days,setDays]=useState(3);const[sd,setSd]=useState(()=>{const d=new Date();d.setDate(d.getDate()+1);return d.toISOString().split('T')[0]});const[ed,setEd]=useState(()=>{const d=new Date();d.setDate(d.getDate()+4);return d.toISOString().split('T')[0]});const[durType,setDurType]=useState("jour");const[timeSlot,setTimeSlot]=useState("");const[booked,setBooked]=useState(false);const[showRF,setShowRF]=useState(false);const[rt,setRt]=useState("");const[rr,setRr]=useState(5);
   const[payStep,setPayStep]=useState(0);const[showBid,setShowBid]=useState(false);const[bidAmt,setBidAmt]=useState('');const[payMethod,setPayMethod]=useState("card");const[cardNum,setCardNum]=useState("");const[cardExp,setCardExp]=useState("");const[cardCvc,setCardCvc]=useState("");
   const[showVerifModal,setShowVerifModal]=useState(false);
   const userRentals=(state.user?.rentals||0)+state.bookings.filter(b=>b.userId===state.user?.id).length;

@@ -19,6 +19,8 @@ function Profile({state, dispatch, setPage, setSelected, initTab, onEditItem}) {
   const vd = (k,v) => setVerifData(p=>({...p,[k]:v}));
   const closeVerif = () => { setVerifModal(null); setVerifData(p=>({...p,smsSent:false,smsCode:''})); };
   const completeVerif = (key) => { dispatch({type:'SET_PROFILE_COMPLETION',payload:{[key]:true}}); if(key==='phone'&&verifData.phoneNum)setProfileData(p=>({...p,phone:verifData.phoneNum})); closeVerif(); };
+  const [deleteConfirm, setDeleteConfirm] = React.useState(null);
+  const [shareCopied, setShareCopied] = React.useState(false);
   const [gradeBarWidth, setGradeBarWidth] = React.useState(0);
   const [qrItem, setQrItem] = React.useState(null);
   const [calItem, setCalItem] = React.useState(null);
@@ -475,7 +477,7 @@ function Profile({state, dispatch, setPage, setSelected, initTab, onEditItem}) {
           <div/>
           <div style={{display:'flex',gap:8}}>
             <button onClick={() => setTab('parametres')} style={S.btnEdit}>✏️ Modifier</button>
-            <button style={S.btnShare} onClick={()=>{const url=window.location.href;if(navigator.share){navigator.share({title:'Cercle',url}).catch(()=>{})}else{navigator.clipboard.writeText(url).then(()=>alert('Lien copié !')).catch(()=>alert(url));}}} title="Partager">↗</button>
+            <button style={{...S.btnShare,position:'relative'}} onClick={()=>{const url=window.location.href;if(navigator.share){navigator.share({title:'Cercle',url}).catch(()=>{})}else{navigator.clipboard.writeText(url).then(()=>{setShareCopied(true);setTimeout(()=>setShareCopied(false),2000);}).catch(()=>{});}}} title="Partager">{shareCopied?<span style={{fontSize:10,fontWeight:700,color:'#10b981'}}>Copié ✓</span>:'↗'}</button>
           </div>
         </div>
 
@@ -583,7 +585,13 @@ function Profile({state, dispatch, setPage, setSelected, initTab, onEditItem}) {
                     <button onClick={e=>{e.stopPropagation();onEditItem&&onEditItem(l);}} style={{padding:'6px 0',border:'1.5px solid #d1fae5',borderRadius:10,background:'#f0fdf4',color:'#059669',fontSize:11,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:3}}>✏️ Modifier</button>
                     <button onClick={e=>{e.stopPropagation();setCalItem(l);}} style={{padding:'6px 0',border:'1.5px solid #bfdbfe',borderRadius:10,background:'#eff6ff',color:'#2563eb',fontSize:11,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:3}}>📅 Dates</button>
                     <button onClick={e=>{e.stopPropagation();setQrItem(l);}} style={{padding:'6px 0',border:'1.5px solid #d1c9ff',borderRadius:10,background:'#f5f3ff',color:'#6C63FF',fontSize:11,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:3}}>📱 QR</button>
-                    <button onClick={e=>{e.stopPropagation();if(window.confirm(`Supprimer "${l.title}" ?`)){dispatch({type:'DELETE_ITEM',id:l.id})}}} style={{padding:'6px 0',border:'1.5px solid #fecaca',borderRadius:10,background:'#fff1f2',color:'#ef4444',fontSize:11,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:3}}>🗑️ Supp.</button>
+                    {deleteConfirm===l.id
+                      ?<div style={{display:'flex',gap:3,gridColumn:'span 2'}}>
+                          <button onClick={e=>{e.stopPropagation();dispatch({type:'DELETE_ITEM',id:l.id});setDeleteConfirm(null);}} style={{flex:1,padding:'6px 0',border:'none',borderRadius:10,background:'#ef4444',color:'#fff',fontSize:11,fontWeight:700,cursor:'pointer'}}>Confirmer</button>
+                          <button onClick={e=>{e.stopPropagation();setDeleteConfirm(null);}} style={{flex:1,padding:'6px 0',border:'1.5px solid var(--bd)',borderRadius:10,background:'var(--w)',color:'var(--dk)',fontSize:11,fontWeight:700,cursor:'pointer'}}>Annuler</button>
+                        </div>
+                      :<button onClick={e=>{e.stopPropagation();setDeleteConfirm(l.id);}} style={{padding:'6px 0',border:'1.5px solid #fecaca',borderRadius:10,background:'#fff1f2',color:'#ef4444',fontSize:11,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:3}}>🗑️ Supp.</button>
+                    }
                   </div>
                 </div>
               </div>
