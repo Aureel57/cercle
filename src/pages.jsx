@@ -14,13 +14,49 @@ function SearchM({onClose,onSearch,allItems,filters,setFilters}){
 
 function FilterM({onClose,filters,setFilters,count}){
   const[l,setL]=useState({...filters});const up=(k,v)=>setL(p=>({...p,[k]:v}));
+  const[geoLoading,setGeoLoading]=useState(false);
+  const requestGeo=()=>{
+    if(!navigator.geolocation){return;}
+    setGeoLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      pos=>{up('userLocation',{lat:pos.coords.latitude,lng:pos.coords.longitude});setGeoLoading(false);},
+      ()=>setGeoLoading(false),
+      {timeout:8000}
+    );
+  };
   return <div className="bk" onClick={onClose}><div className="md" onClick={e=>e.stopPropagation()} style={{maxWidth:520}}>
     <div className="mh"><button className="mx" onClick={onClose}><I.X/></button><h2>Filtres</h2></div>
     <div className="mb">
+      {/* ─ Proche de moi ─ */}
+      <div style={{marginBottom:18}}>
+        <h3 style={{fontSize:14,fontWeight:700,fontFamily:"var(--fd)",marginBottom:8}}>📍 Proche de moi</h3>
+        {!l.userLocation
+          ?<button className="pill" style={{display:'flex',alignItems:'center',gap:6}} onClick={requestGeo} disabled={geoLoading}>
+              {geoLoading?'Localisation…':'📍 Utiliser ma position'}
+            </button>
+          :<div>
+              <div style={{fontSize:12,color:'#10b981',fontWeight:600,marginBottom:12,display:'flex',alignItems:'center',gap:5}}>
+                ✓ Position obtenue
+                <button style={{marginLeft:'auto',fontSize:11,color:'var(--g)',background:'none',border:'none',cursor:'pointer',padding:0,textDecoration:'underline'}} onClick={()=>{up('userLocation',null);up('sort',l.sort==='nearest'?'pertinence':l.sort);}}>Retirer</button>
+              </div>
+              <div style={{display:'flex',justifyContent:'space-between',fontSize:13,marginBottom:6}}>
+                <span style={{fontWeight:600,color:'var(--dk)'}}>Distance maximale</span>
+                <span style={{fontWeight:700,color:'var(--p)'}}>{l.maxDistance||20} km</span>
+              </div>
+              <input type="range" className="range-sl" min="1" max="100" step="1" value={l.maxDistance||20} onChange={e=>up('maxDistance',+e.target.value)} style={{width:'100%'}}/>
+              <div style={{display:'flex',justifyContent:'space-between',fontSize:10,color:'var(--gl)',marginTop:4}}>
+                <span>1 km</span><span>25 km</span><span>50 km</span><span>100 km</span>
+              </div>
+            </div>
+        }
+      </div>
       <div style={{marginBottom:18}}><h3 style={{fontSize:14,fontWeight:700,fontFamily:"var(--fd)",marginBottom:8}}>Trier par</h3>
-        <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>{[["pertinence","Pertinence"],["price_asc","Prix ↑"],["price_desc","Prix ↓"],["rating","Note ↓"],["recent","Récent"]].map(([id,label])=>
-          <button key={id} className={"pill"+((l.sort||"pertinence")===id?" on":"")} onClick={()=>up("sort",id)}>{label}</button>
-        )}</div>
+        <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
+          {[["pertinence","Pertinence"],["price_asc","Prix ↑"],["price_desc","Prix ↓"],["rating","Note ↓"],["recent","Récent"]].map(([id,label])=>
+            <button key={id} className={"pill"+((l.sort||"pertinence")===id?" on":"")} onClick={()=>up("sort",id)}>{label}</button>
+          )}
+          {l.userLocation&&<button className={"pill"+(l.sort==="nearest"?" on":"")} onClick={()=>up("sort","nearest")}>📍 Le plus proche</button>}
+        </div>
       </div>
       <div style={{marginBottom:18}}><h3 style={{fontSize:14,fontWeight:700,fontFamily:"var(--fd)",marginBottom:8}}>Prix / jour</h3><div style={{display:"flex",gap:10,alignItems:"center"}}><div className="fg" style={{flex:1,margin:0}}><label>Min €</label><input type="number" value={l.priceMin} onChange={e=>up("priceMin",+e.target.value)}/></div><span style={{color:"var(--gl)"}}>–</span><div className="fg" style={{flex:1,margin:0}}><label>Max €</label><input type="number" value={l.priceMax} onChange={e=>up("priceMax",+e.target.value)}/></div></div></div>
       <div style={{marginBottom:18}}><h3 style={{fontSize:14,fontWeight:700,fontFamily:"var(--fd)",marginBottom:8}}>Catégorie</h3>
@@ -32,7 +68,7 @@ function FilterM({onClose,filters,setFilters,count}){
       </div>
       <div style={{marginBottom:18}}><h3 style={{fontSize:14,fontWeight:700,fontFamily:"var(--fd)",marginBottom:8}}>Options</h3><div style={{display:"flex",gap:5,flexWrap:"wrap"}}>{["Propriétaire vérifié","Livraison","Annulation flexible"].map(o=><button key={o} className={"pill"+((l.options||[]).includes(o)?" on":"")} onClick={()=>{const os=l.options||[];up("options",os.includes(o)?os.filter(x=>x!==o):[...os,o])}}>{o}</button>)}</div></div>
     </div>
-    <div className="mf"><button className="cl" onClick={()=>setL({priceMin:0,priceMax:500,condition:"Tous",options:[],sort:"pertinence",filterCat:"all",minRating:0})}>Effacer</button><button className="bd" onClick={()=>{setFilters(l);onClose()}}>Afficher {count} résultats</button></div>
+    <div className="mf"><button className="cl" onClick={()=>setL({priceMin:0,priceMax:500,condition:"Tous",options:[],sort:"pertinence",filterCat:"all",minRating:0,userLocation:null,maxDistance:20})}>Effacer</button><button className="bd" onClick={()=>{setFilters(l);onClose()}}>Afficher {count} résultats</button></div>
   </div></div>
 }
 

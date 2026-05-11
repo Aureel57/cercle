@@ -34,7 +34,7 @@ function App(){
   const[openSection,setOpenSection]=useState(null);
   const toggleSection=(name)=>setOpenSection(prev=>prev===name?null:name);
   const[lang,setLang]=useState('fr');
-  const[filters,setFilters]=useState({priceMin:0,priceMax:500,condition:"Tous",options:[],sort:"pertinence",filterCat:"all",minRating:0,searchDate:""});
+  const[filters,setFilters]=useState({priceMin:0,priceMax:500,condition:"Tous",options:[],sort:"pertinence",filterCat:"all",minRating:0,searchDate:"",userLocation:null,maxDistance:20});
 
   const allPerso=useMemo(()=>{const seen=new Set();return[...state.items,...state.userItems,...state.cloudItems].filter(i=>{if(i.isPro||i.owner?.isPro)return false;if(seen.has(i.id))return false;seen.add(i.id);return true;});},[state.items,state.userItems,state.cloudItems]);
   const allPro=useMemo(()=>{const seen=new Set();return[...state.proItems,...state.userItems.filter(i=>i.isPro||i.owner?.isPro),...state.cloudItems.filter(i=>i.isPro||i.owner?.isPro)].filter(i=>{if(seen.has(i.id))return false;seen.add(i.id);return true;});},[state.proItems,state.userItems,state.cloudItems]);
@@ -52,10 +52,13 @@ function App(){
     if(filters.condition!=="Tous")r=r.filter(i=>i.condition===filters.condition);
     if(filters.minRating>0)r=r.filter(i=>i.rating>=filters.minRating);
     if((filters.options||[]).includes("Propriétaire vérifié"))r=r.filter(i=>i.owner?.verified);
+    // Filtre proximité
+    if(filters.userLocation&&filters.maxDistance>0){const{lat,lng}=filters.userLocation;r=r.filter(i=>{const c=LL[i.location];if(!c)return true;return haversine(lat,lng,c[0],c[1])<=filters.maxDistance;});}
     // Sort
     if(filters.sort==="price_asc")r=[...r].sort((a,b)=>a.price-b.price);
     else if(filters.sort==="price_desc")r=[...r].sort((a,b)=>b.price-a.price);
     else if(filters.sort==="rating")r=[...r].sort((a,b)=>b.rating-a.rating);
+    else if(filters.sort==="nearest"&&filters.userLocation){const{lat,lng}=filters.userLocation;r=[...r].sort((a,b)=>{const ca=LL[a.location];const cb=LL[b.location];const da=ca?haversine(lat,lng,ca[0],ca[1]):9999;const db=cb?haversine(lat,lng,cb[0],cb[1]):9999;return da-db;});}
     return r;
   },[all,cat,q,lq,filters]);
 
