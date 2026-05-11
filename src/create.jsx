@@ -7,6 +7,23 @@ function CreateListing({state,dispatch,setPage,mode,editItem}){
   const u=(k,v)=>setF(p=>({...p,[k]:v}));
 
   const [saving,setSaving]=useState(false);
+  const [showSimilar,setShowSimilar]=useState(true);
+
+  const allItems = useMemo(()=>{const seen=new Set();return [...(state.items||[]),...(state.proItems||[]),...(state.userItems||[]),...(state.cloudItems||[])].filter(i=>{if(seen.has(i.id))return false;seen.add(i.id);return true;});},[state.items,state.proItems,state.userItems,state.cloudItems]);
+
+  const similar = useMemo(()=>{
+    const words=(f.title||'').toLowerCase().split(/\s+/).filter(w=>w.length>2);
+    return allItems.filter(i=>{
+      if(i.cat!==f.cat)return false;
+      if(words.length===0)return true;
+      return words.some(w=>i.title.toLowerCase().includes(w));
+    }).sort((a,b)=>a.price-b.price).slice(0,6);
+  },[f.cat,f.title,allItems]);
+
+  const simPrices=similar.map(i=>+i.price);
+  const simMin=simPrices.length?Math.min(...simPrices):0;
+  const simMax=simPrices.length?Math.max(...simPrices):0;
+  const simAvg=simPrices.length?Math.round(simPrices.reduce((a,b)=>a+b,0)/simPrices.length):0;
 
   // Compresse une image base64 à max 800px, JPEG 75% (~60-120KB)
   const compressImg=(dataUrl,maxW=800,quality=0.75)=>new Promise(resolve=>{
@@ -106,6 +123,51 @@ function CreateListing({state,dispatch,setPage,mode,editItem}){
           💡 Vos gains estimés : <strong>{Math.round(f.price*0.88)}€/jour</strong> après commission Cercle (12%)
         </div>}
       </div>
+
+      {/* Section 2b: Annonces similaires */}
+      {similar.length>0&&(
+        <div className="cl-section" style={{background:'linear-gradient(135deg,rgba(108,99,255,0.04),rgba(139,92,246,0.04))',border:'1.5px solid rgba(108,99,255,0.18)'}}>
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:14}}>
+            <div className="cl-section-title" style={{margin:0}}><span>📊</span> Prix du marché</div>
+            <button onClick={()=>setShowSimilar(p=>!p)} style={{background:'none',border:'none',fontSize:12,color:'var(--g)',cursor:'pointer',fontWeight:600}}>{showSimilar?'Masquer':'Afficher'}</button>
+          </div>
+          {showSimilar&&<>
+            {/* Stats */}
+            <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8,marginBottom:16}}>
+              {[{label:'Min',val:simMin,c:'#10b981',bg:'#f0fdf4',bc:'#86efac'},{label:'Moyenne',val:simAvg,c:'#6C63FF',bg:'rgba(108,99,255,0.08)',bc:'rgba(108,99,255,0.35)'},{label:'Max',val:simMax,c:'#f59e0b',bg:'#fefce8',bc:'#fde68a'}].map(s=>(
+                <div key={s.label} onClick={()=>u('price',String(s.val))} style={{textAlign:'center',padding:'12px 8px',background:s.bg,borderRadius:14,border:'1.5px solid '+s.bc,cursor:'pointer',transition:'transform .15s'}}
+                  onMouseEnter={e=>e.currentTarget.style.transform='scale(1.04)'} onMouseLeave={e=>e.currentTarget.style.transform=''}>
+                  <div style={{fontSize:20,fontWeight:800,color:s.c}}>{s.val}€</div>
+                  <div style={{fontSize:10,fontWeight:700,color:s.c,textTransform:'uppercase',letterSpacing:'.04em'}}>{s.label}</div>
+                  <div style={{fontSize:9,color:'var(--g)',marginTop:1}}>cliquer pour appliquer</div>
+                </div>
+              ))}
+            </div>
+            {/* Comparateur si prix saisi */}
+            {f.price&&simAvg>0&&(()=>{
+              const ratio=+f.price/simAvg;
+              const msg=ratio<0.75?{t:'Très bas · attire plus de locataires',c:'#2563eb',bg:'#dbeafe'}:ratio>1.35?{t:'Élevé · réduire pour plus de réservations',c:'#d97706',bg:'#fef3c7'}:{t:'Dans la fourchette ✓',c:'#059669',bg:'#d1fae5'};
+              return <div style={{padding:'9px 14px',background:msg.bg,borderRadius:12,fontSize:12,fontWeight:600,color:msg.c,marginBottom:14,display:'flex',alignItems:'center',gap:6}}>
+                <span>Votre prix ({f.price}€/j) ·</span><span>{msg.t}</span>
+              </div>;
+            })()}
+            {/* Liste */}
+            <div>{similar.map((item,i)=>(
+              <div key={item.id} style={{display:'flex',alignItems:'center',gap:10,padding:'9px 0',borderBottom:i<similar.length-1?'1px solid var(--bg)':'none'}}>
+                <img src={item.images&&item.images[0]} alt="" style={{width:42,height:42,borderRadius:10,objectFit:'cover',flexShrink:0,background:'var(--bg)'}}/>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{fontSize:13,fontWeight:600,color:'var(--dk)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{item.title}</div>
+                  <div style={{fontSize:11,color:'var(--g)'}}>📍 {item.location} · ⭐ {item.rating||'4.8'}</div>
+                </div>
+                <div style={{flexShrink:0,textAlign:'right'}}>
+                  <div style={{fontSize:15,fontWeight:800,color:'var(--p)'}}>{item.price}€</div>
+                  <div style={{fontSize:10,color:'var(--g)'}}>/jour</div>
+                </div>
+              </div>
+            ))}</div>
+          </>}
+        </div>
+      )}
 
       {/* Section 3: Localisation */}
       <div className="cl-section">
