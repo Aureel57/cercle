@@ -2757,146 +2757,223 @@ function Profile({state, dispatch, setPage, setSelected, initTab, onEditItem}) {
 
         {/* ── Paramètres ── */}
         {tab === 'parametres' && (
-          <div>
+          <div style={{paddingBottom:80}}>
+
+            {/* ── Titre de page ── */}
+            <div style={{marginBottom:24,animation:'fadeSlideUp 0.35s cubic-bezier(0.34,1.56,0.64,1) both'}}>
+              <h2 style={{fontSize:22,fontWeight:800,color:'var(--dk)',letterSpacing:'-.03em',margin:0}}>Paramètres</h2>
+              <p style={{fontSize:13,color:'var(--g)',marginTop:4,margin:'4px 0 0'}}>Gérez votre compte et vos préférences</p>
+            </div>
+
             {/* ── Complétion du profil ── */}
             {(()=>{
               const pc = state.profileCompletion || {identity:false,phone:false,drivingLicense:false,bankAccount:false};
               const steps = [
-                {key:'identity', label:'Vérifier identité', icon:'🪪', desc:'Pièce d\'identité officielle'},
-                {key:'phone', label:'Ajouter numéro de téléphone', icon:'📱', desc:'Numéro vérifié par SMS'},
-                {key:'drivingLicense', label:'Ajouter permis de conduire', icon:'🚗', desc:'Requis pour louer des véhicules'},
-                {key:'bankAccount', label:'Ajouter compte bancaire', icon:'🏦', desc:'Pour recevoir vos paiements'},
+                {key:'identity', label:'Identité', icon:'🪪', desc:'Pièce d\'identité officielle'},
+                {key:'phone', label:'Téléphone', icon:'📱', desc:'Numéro vérifié par SMS'},
+                {key:'drivingLicense', label:'Permis', icon:'🚗', desc:'Requis pour louer'},
+                {key:'bankAccount', label:'Bancaire', icon:'🏦', desc:'Pour vos paiements'},
               ];
               const doneCount = steps.filter(s=>pc[s.key]).length;
               const pct = Math.round(doneCount/steps.length*100);
+              const circ = 188.5;
               const handleComplete = (key,label)=>{
                 if(window.confirm(`Simuler la complétion de "${label}" ?`)){
                   dispatch({type:'SET_PROFILE_COMPLETION',payload:{[key]:true},label});
                 }
               };
               return (
-                <div style={{marginBottom:24,animation:'fadeSlideUp 0.4s cubic-bezier(0.34,1.56,0.64,1) both',animationDelay:'0s'}}>
-                  <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:10}}>
-                    <p style={{fontSize:15,fontWeight:700,color:'var(--dk)',fontFamily:'DM Sans,system-ui,sans-serif'}}>Complétion du profil</p>
-                    <span style={{fontSize:13,fontWeight:600,color:'#6C63FF'}}>{doneCount}/{steps.length}</span>
+                <div style={{background:'var(--w)',borderRadius:20,border:'1px solid var(--bd)',boxShadow:'0 2px 16px rgba(0,0,0,0.06)',padding:'20px',marginBottom:16,animation:'fadeSlideUp 0.4s cubic-bezier(0.34,1.56,0.64,1) both',animationDelay:'0.04s'}}>
+                  <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:20}}>
+                    <div style={{width:38,height:38,borderRadius:12,background:'linear-gradient(135deg,#6C63FF,#8b5cf6)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:19,flexShrink:0}}>🧩</div>
+                    <div>
+                      <div style={{fontSize:15,fontWeight:700,color:'var(--dk)',lineHeight:1.2}}>Complétion du profil</div>
+                      <div style={{fontSize:12,color:'var(--g)'}}>Boostez votre visibilité</div>
+                    </div>
                   </div>
-                  <div style={{height:8,background:'#ede9fe',borderRadius:99,marginBottom:16,overflow:'hidden'}}>
-                    <div style={{height:'100%',width:pct+'%',background:'linear-gradient(90deg,#6C63FF,#a78bfa)',borderRadius:99,transition:'width .4s ease'}}/>
+                  <div style={{display:'flex',alignItems:'center',gap:20,marginBottom:20}}>
+                    <div style={{position:'relative',flexShrink:0}}>
+                      <svg width="76" height="76" viewBox="0 0 76 76">
+                        <circle cx="38" cy="38" r="30" fill="none" stroke="#ede9fe" strokeWidth="7"/>
+                        <circle cx="38" cy="38" r="30" fill="none" stroke="url(#pgGrad)" strokeWidth="7"
+                          strokeLinecap="round"
+                          strokeDasharray={`${pct/100*circ} ${circ}`}
+                          transform="rotate(-90 38 38)"
+                        />
+                        <defs>
+                          <linearGradient id="pgGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stopColor="#6C63FF"/>
+                            <stop offset="100%" stopColor="#a78bfa"/>
+                          </linearGradient>
+                        </defs>
+                      </svg>
+                      <div style={{position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center'}}>
+                        <span style={{fontSize:17,fontWeight:800,color:'var(--dk)',lineHeight:1}}>{pct}%</span>
+                      </div>
+                    </div>
+                    <div style={{flex:1}}>
+                      <div style={{fontSize:15,fontWeight:700,color:'var(--dk)',marginBottom:3}}>{pct===100?'Profil complet ✨':'Profil incomplet'}</div>
+                      <div style={{fontSize:13,color:'var(--g)',marginBottom:pct<100?8:0}}>{doneCount}/{steps.length} étapes complétées</div>
+                      {pct<100&&<div style={{fontSize:12,color:'#6C63FF',fontWeight:600,background:'#f5f3ff',padding:'5px 10px',borderRadius:8,display:'inline-block'}}>Complétez pour +50% de visibilité</div>}
+                    </div>
                   </div>
-                  <div style={{display:'flex',flexDirection:'column',gap:10}}>
+                  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
                     {steps.map(step=>(
-                      <div key={step.key} style={{display:'flex',alignItems:'center',gap:12,padding:'14px 16px',background:'var(--w)',borderRadius:14,border:pc[step.key]?'1.5px solid #10b981':'1.5px solid var(--bd)',boxShadow:'0 1px 4px rgba(0,0,0,.05)'}}>
-                        <div style={{width:42,height:42,borderRadius:12,background:pc[step.key]?'#d1fae5':'var(--bgw)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:22,flexShrink:0}}>{pc[step.key]?'✅':step.icon}</div>
-                        <div style={{flex:1,minWidth:0}}>
-                          <div style={{fontSize:14,fontWeight:600,color:'var(--dk)'}}>{step.label}</div>
-                          <div style={{fontSize:12,color:'var(--g)',marginTop:1}}>{step.desc}</div>
+                      <div key={step.key} onClick={!pc[step.key]?()=>handleComplete(step.key,step.label):undefined}
+                        style={{display:'flex',alignItems:'center',gap:9,padding:'11px 12px',background:pc[step.key]?'#f0fdf4':'var(--bg)',borderRadius:13,border:pc[step.key]?'1.5px solid #86efac':'1.5px solid var(--bd)',cursor:pc[step.key]?'default':'pointer',transition:'all .2s'}}>
+                        <span style={{fontSize:18}}>{pc[step.key]?'✅':step.icon}</span>
+                        <div style={{minWidth:0}}>
+                          <div style={{fontSize:12,fontWeight:600,color:pc[step.key]?'#15803d':'var(--dk)',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{step.label}</div>
+                          <div style={{fontSize:10,color:pc[step.key]?'#22c55e':'var(--g)'}}>{pc[step.key]?'Complété':'Ajouter →'}</div>
                         </div>
-                        {pc[step.key]
-                          ?<span style={{fontSize:12,fontWeight:600,color:'#10b981',flexShrink:0}}>Complété ✓</span>
-                          :<button onClick={()=>handleComplete(step.key,step.label)} style={{flexShrink:0,padding:'7px 14px',background:'#6C63FF',color:'#fff',border:'none',borderRadius:9,fontSize:12,fontWeight:600,cursor:'pointer'}}>Ajouter</button>
-                        }
                       </div>
                     ))}
                   </div>
                 </div>
               );
             })()}
-            <div style={{...S.settingsSection,animation:'fadeSlideUp 0.4s cubic-bezier(0.34,1.56,0.64,1) both',animationDelay:'0.08s'}}>
-              <p style={S.sectionTitle}>Mon profil</p>
-              <div style={S.fieldCard}>
-                {[
-                  {label:'Nom complet', key:'name'},
-                  {label:'Email', key:'email'},
-                  {label:'Téléphone', key:'phone'},
-                ].map((f,i,arr) => (
-                  <div key={f.key} style={{...S.fieldRow, borderBottom: i<arr.length-1 ? '1px solid #f9fafb' : 'none'}}>
-                    <span style={S.fieldLabel}>{f.label}</span>
-                    <input value={profileData[f.key]}
-                      onChange={e => setProfileData({...profileData,[f.key]:e.target.value})}
-                      style={S.fieldInput} />
+
+            {/* ── Mon profil ── */}
+            <div style={{background:'var(--w)',borderRadius:20,border:'1px solid var(--bd)',boxShadow:'0 2px 16px rgba(0,0,0,0.06)',padding:'20px',marginBottom:16,animation:'fadeSlideUp 0.4s cubic-bezier(0.34,1.56,0.64,1) both',animationDelay:'0.08s'}}>
+              <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:20}}>
+                <div style={{width:38,height:38,borderRadius:12,background:'linear-gradient(135deg,#3b82f6,#6C63FF)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:19,flexShrink:0}}>👤</div>
+                <div>
+                  <div style={{fontSize:15,fontWeight:700,color:'var(--dk)',lineHeight:1.2}}>Mon profil</div>
+                  <div style={{fontSize:12,color:'var(--g)'}}>Informations personnelles</div>
+                </div>
+              </div>
+              {[
+                {icon:'✏️',label:'Nom complet',key:'name',type:'text',placeholder:'Votre nom'},
+                {icon:'📧',label:'Email',key:'email',type:'email',placeholder:'votre@email.fr'},
+                {icon:'📱',label:'Téléphone',key:'phone',type:'tel',placeholder:'+33 6 00 00 00 00'},
+              ].map((f,i,arr)=>(
+                <div key={f.key} style={{display:'flex',alignItems:'center',gap:12,padding:'13px 0',borderBottom:i<arr.length-1?'1px solid var(--bg)':'none'}}>
+                  <span style={{fontSize:19,flexShrink:0,width:26,textAlign:'center'}}>{f.icon}</span>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontSize:10,fontWeight:700,color:'var(--gl)',textTransform:'uppercase',letterSpacing:'.06em',marginBottom:2}}>{f.label}</div>
+                    <input type={f.type} value={profileData[f.key]}
+                      onChange={e=>setProfileData({...profileData,[f.key]:e.target.value})}
+                      placeholder={f.placeholder}
+                      style={{border:'none',outline:'none',fontSize:14,color:'var(--dk)',background:'transparent',padding:0,width:'100%',fontFamily:'inherit',fontWeight:500}}/>
                   </div>
-                ))}
-                <div style={{...S.fieldRow,borderBottom:'none'}}>
-                  <span style={S.fieldLabel}>Bio</span>
+                </div>
+              ))}
+              <div style={{display:'flex',alignItems:'flex-start',gap:12,padding:'13px 0'}}>
+                <span style={{fontSize:19,flexShrink:0,width:26,textAlign:'center',marginTop:2}}>✍️</span>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{fontSize:10,fontWeight:700,color:'var(--gl)',textTransform:'uppercase',letterSpacing:'.06em',marginBottom:4}}>Bio</div>
                   <textarea rows={3} value={profileData.bio}
-                    onChange={e => setProfileData({...profileData,bio:e.target.value})}
-                    style={{...S.fieldInput,resize:'none'}} />
+                    onChange={e=>setProfileData({...profileData,bio:e.target.value})}
+                    placeholder="Décrivez-vous en quelques mots..."
+                    style={{border:'none',outline:'none',fontSize:14,color:'var(--dk)',background:'transparent',padding:0,width:'100%',fontFamily:'inherit',fontWeight:500,resize:'none',lineHeight:1.5}}/>
                 </div>
               </div>
             </div>
 
+            {/* ── Informations Pro ── */}
             {user.isPro && (
-              <div style={{...S.settingsSection,animation:'fadeSlideUp 0.4s cubic-bezier(0.34,1.56,0.64,1) both',animationDelay:'0.12s'}}>
-                <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:12}}>
-                  <p style={{...S.sectionTitle,margin:0}}>Informations Pro</p>
-                  <span style={{background:'linear-gradient(135deg,#F59E0B,#D97706)',color:'#fff',fontSize:9,fontWeight:800,padding:'3px 8px',borderRadius:20,letterSpacing:'.04em'}}>PRO</span>
-                </div>
-                <div style={S.fieldCard}>
-                  {[
-                    {label:'Entreprise', key:'company', val:user.company||''},
-                    {label:'N° SIRET', key:'siret', val:user.siret||''},
-                    {label:'N° TVA', key:'tva', val:user.tva||''},
-                    {label:'Téléphone pro', key:'phone', val:user.phone||''},
-                  ].map((f,i,arr)=>(
-                    <div key={f.key} style={{...S.fieldRow,borderBottom:i<arr.length-1?'1px solid #f9fafb':'none'}}>
-                      <span style={S.fieldLabel}>{f.label}</span>
-                      <input defaultValue={f.val} style={S.fieldInput} placeholder={f.val||'—'} readOnly/>
-                    </div>
-                  ))}
-                  <div style={{...S.fieldRow,borderBottom:'none'}}>
-                    <span style={S.fieldLabel}>Site web</span>
-                    <input defaultValue={user.website||''} style={S.fieldInput} placeholder="https://monentreprise.fr" readOnly/>
+              <div style={{background:'var(--w)',borderRadius:20,border:'1px solid var(--bd)',boxShadow:'0 2px 16px rgba(0,0,0,0.06)',padding:'20px',marginBottom:16,animation:'fadeSlideUp 0.4s cubic-bezier(0.34,1.56,0.64,1) both',animationDelay:'0.12s'}}>
+                <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:20}}>
+                  <div style={{width:38,height:38,borderRadius:12,background:'linear-gradient(135deg,#F59E0B,#D97706)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:19,flexShrink:0}}>🏢</div>
+                  <div style={{flex:1}}>
+                    <div style={{fontSize:15,fontWeight:700,color:'var(--dk)',lineHeight:1.2}}>Informations Pro</div>
+                    <div style={{fontSize:12,color:'var(--g)'}}>Votre compte professionnel</div>
                   </div>
+                  <span style={{background:'linear-gradient(135deg,#F59E0B,#D97706)',color:'#fff',fontSize:9,fontWeight:800,padding:'3px 8px',borderRadius:20,letterSpacing:'.04em',flexShrink:0}}>PRO</span>
                 </div>
-                <div style={{marginTop:10,padding:'10px 14px',background:'#FFFBEB',borderRadius:12,border:'1px solid #FDE68A',fontSize:12,color:'#92400E',display:'flex',alignItems:'center',gap:8}}>
-                  <span>⭐</span> Compte Pro actif — accès Dashboard, Gestion, Facturation PDF
+                {[
+                  {icon:'🏗️',label:'Entreprise',val:user.company||'—'},
+                  {icon:'🔢',label:'N° SIRET',val:user.siret||'—'},
+                  {icon:'💶',label:'N° TVA',val:user.tva||'—'},
+                  {icon:'📞',label:'Tél. pro',val:user.phone||'—'},
+                  {icon:'🌐',label:'Site web',val:user.website||'—'},
+                ].map((f,i,arr)=>(
+                  <div key={f.label} style={{display:'flex',alignItems:'center',gap:12,padding:'11px 0',borderBottom:i<arr.length-1?'1px solid var(--bg)':'none'}}>
+                    <span style={{fontSize:18,flexShrink:0,width:26,textAlign:'center'}}>{f.icon}</span>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{fontSize:10,fontWeight:700,color:'var(--gl)',textTransform:'uppercase',letterSpacing:'.06em',marginBottom:1}}>{f.label}</div>
+                      <div style={{fontSize:14,color:'var(--dk)',fontWeight:500}}>{f.val}</div>
+                    </div>
+                  </div>
+                ))}
+                <div style={{marginTop:14,padding:'10px 14px',background:'#FFFBEB',borderRadius:12,border:'1px solid #FDE68A',fontSize:12,color:'#92400E',display:'flex',alignItems:'center',gap:8}}>
+                  <span>⭐</span> Compte Pro actif — Dashboard, Gestion, Facturation PDF
                 </div>
               </div>
             )}
 
-            <div style={{...S.settingsSection,animation:'fadeSlideUp 0.4s cubic-bezier(0.34,1.56,0.64,1) both',animationDelay:'0.16s'}}>
-              <p style={S.sectionTitle}>Notifications</p>
-              <div style={S.toggleCard}>
-                {[
-                  {key:'notifEmail',title:'Emails',sub:'Nouvelles réservations et messages'},
-                  {key:'notifPush',title:'Notifications push',sub:'Alertes en temps réel'},
-                ].map((f,i,arr) => (
-                  <div key={f.key} style={{...S.toggleRow,borderBottom:i<arr.length-1?'1px solid #f9fafb':'none'}}>
-                    <div style={S.toggleInfo}>
-                      <span style={S.toggleTitle}>{f.title}</span>
-                      <span style={S.toggleSub}>{f.sub}</span>
-                    </div>
-                    <div style={S.toggle(profileData[f.key])}
-                      onClick={()=>setProfileData({...profileData,[f.key]:!profileData[f.key]})}>
-                      <div style={S.toggleKnob(profileData[f.key])} />
-                    </div>
-                  </div>
-                ))}
+            {/* ── Notifications ── */}
+            <div style={{background:'var(--w)',borderRadius:20,border:'1px solid var(--bd)',boxShadow:'0 2px 16px rgba(0,0,0,0.06)',padding:'20px',marginBottom:16,animation:'fadeSlideUp 0.4s cubic-bezier(0.34,1.56,0.64,1) both',animationDelay:'0.16s'}}>
+              <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:20}}>
+                <div style={{width:38,height:38,borderRadius:12,background:'linear-gradient(135deg,#f59e0b,#ef4444)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:19,flexShrink:0}}>🔔</div>
+                <div>
+                  <div style={{fontSize:15,fontWeight:700,color:'var(--dk)',lineHeight:1.2}}>Notifications</div>
+                  <div style={{fontSize:12,color:'var(--g)'}}>Choisissez ce que vous recevez</div>
+                </div>
               </div>
+              {[
+                {key:'notifEmail',icon:'📧',bg:'#FEF9C3',title:'Emails',sub:'Nouvelles réservations et messages'},
+                {key:'notifPush',icon:'📲',bg:'#DCFCE7',title:'Notifications push',sub:'Alertes en temps réel sur votre appareil'},
+              ].map((f,i,arr)=>(
+                <div key={f.key} style={{display:'flex',alignItems:'center',gap:12,padding:'12px 0',borderBottom:i<arr.length-1?'1px solid var(--bg)':'none'}}>
+                  <div style={{width:38,height:38,borderRadius:11,background:f.bg,display:'flex',alignItems:'center',justifyContent:'center',fontSize:19,flexShrink:0}}>{f.icon}</div>
+                  <div style={{flex:1}}>
+                    <div style={{fontSize:14,fontWeight:600,color:'var(--dk)'}}>{f.title}</div>
+                    <div style={{fontSize:12,color:'var(--g)',marginTop:1}}>{f.sub}</div>
+                  </div>
+                  <div style={S.toggle(profileData[f.key])} onClick={()=>setProfileData({...profileData,[f.key]:!profileData[f.key]})}>
+                    <div style={S.toggleKnob(profileData[f.key])}/>
+                  </div>
+                </div>
+              ))}
             </div>
 
-            <div style={{...S.settingsSection,animation:'fadeSlideUp 0.4s cubic-bezier(0.34,1.56,0.64,1) both',animationDelay:'0.24s'}}>
-              <p style={S.sectionTitle}>Confiance &amp; Sécurité</p>
-              <div style={S.fieldCard}>
-                {[
-                  {icon:'✅',label:'Identité vérifiée',value:'Confirmée'},
-                  {icon:'📱',label:'Numéro vérifié',value:profileData.phone},
-                  {icon:'📧',label:'Email vérifié',value:profileData.email},
-                ].map((item,i,arr) => (
-                  <div key={item.label} style={{
-                    ...S.fieldRow, flexDirection:'row',
-                    alignItems:'center', justifyContent:'space-between',
-                    borderBottom: i<arr.length-1 ? '1px solid #f9fafb' : 'none'
-                  }}>
-                    <span style={{fontSize:14,color:'var(--dk)'}}>{item.icon} {item.label}</span>
-                    <span style={{fontSize:13,color:'#10b981',fontWeight:600}}>{item.value}</span>
-                  </div>
-                ))}
+            {/* ── Confiance & Sécurité ── */}
+            <div style={{background:'var(--w)',borderRadius:20,border:'1px solid var(--bd)',boxShadow:'0 2px 16px rgba(0,0,0,0.06)',padding:'20px',marginBottom:16,animation:'fadeSlideUp 0.4s cubic-bezier(0.34,1.56,0.64,1) both',animationDelay:'0.20s'}}>
+              <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:20}}>
+                <div style={{width:38,height:38,borderRadius:12,background:'linear-gradient(135deg,#10b981,#059669)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:19,flexShrink:0}}>🛡️</div>
+                <div>
+                  <div style={{fontSize:15,fontWeight:700,color:'var(--dk)',lineHeight:1.2}}>Confiance &amp; Sécurité</div>
+                  <div style={{fontSize:12,color:'var(--g)'}}>Statut de vos vérifications</div>
+                </div>
               </div>
+              {[
+                {icon:'✅',bg:'#d1fae5',label:'Identité vérifiée',value:'Confirmée',color:'#10b981'},
+                {icon:'📱',bg:'#dbeafe',label:'Numéro vérifié',value:profileData.phone||'—',color:'#3b82f6'},
+                {icon:'📧',bg:'#ede9fe',label:'Email vérifié',value:profileData.email||'—',color:'#6C63FF'},
+              ].map((item,i,arr)=>(
+                <div key={item.label} style={{display:'flex',alignItems:'center',gap:12,padding:'12px 0',borderBottom:i<arr.length-1?'1px solid var(--bg)':'none'}}>
+                  <div style={{width:38,height:38,borderRadius:11,background:item.bg,display:'flex',alignItems:'center',justifyContent:'center',fontSize:19,flexShrink:0}}>{item.icon}</div>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontSize:14,fontWeight:600,color:'var(--dk)'}}>{item.label}</div>
+                    <div style={{fontSize:12,color:'var(--g)',marginTop:1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{item.value}</div>
+                  </div>
+                  <span style={{fontSize:11,fontWeight:700,color:item.color,background:item.bg,padding:'4px 10px',borderRadius:20,flexShrink:0}}>Vérifié ✓</span>
+                </div>
+              ))}
             </div>
 
-            <button style={{...S.savBtn,animation:'fadeSlideUp 0.4s cubic-bezier(0.34,1.56,0.64,1) both',animationDelay:'0.32s'}} onClick={()=>dispatch({type:"UPD_PROF",payload:{name:profileData.name,email:profileData.email,bio:profileData.bio,phone:profileData.phone}})}>Sauvegarder les modifications</button>
-            <button style={{...S.logoutBtn,animation:'fadeSlideUp 0.4s cubic-bezier(0.34,1.56,0.64,1) both',animationDelay:'0.38s'}} onClick={()=>{dispatch({type:"LOGOUT"});setPage('home');}}>🚪 Se déconnecter</button>
+            {/* ── Sauvegarder ── */}
+            <button style={{width:'100%',padding:'16px',borderRadius:16,background:'linear-gradient(135deg,#6C63FF,#8b5cf6)',border:'none',color:'white',fontSize:15,fontWeight:700,cursor:'pointer',boxShadow:'0 4px 20px rgba(108,99,255,0.35)',marginBottom:12,animation:'fadeSlideUp 0.4s cubic-bezier(0.34,1.56,0.64,1) both',animationDelay:'0.28s'}}
+              onClick={()=>dispatch({type:"UPD_PROF",payload:{name:profileData.name,email:profileData.email,bio:profileData.bio,phone:profileData.phone}})}>
+              Sauvegarder les modifications
+            </button>
+
+            {/* ── Zone de danger ── */}
+            <div style={{background:'#fff5f5',borderRadius:20,border:'1px solid #fecaca',padding:'20px',animation:'fadeSlideUp 0.4s cubic-bezier(0.34,1.56,0.64,1) both',animationDelay:'0.32s'}}>
+              <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:16}}>
+                <div style={{width:38,height:38,borderRadius:12,background:'linear-gradient(135deg,#ef4444,#dc2626)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:19,flexShrink:0}}>⚠️</div>
+                <div>
+                  <div style={{fontSize:15,fontWeight:700,color:'#dc2626',lineHeight:1.2}}>Zone de danger</div>
+                  <div style={{fontSize:12,color:'#f87171'}}>Actions irréversibles</div>
+                </div>
+              </div>
+              <button style={{width:'100%',padding:'14px',borderRadius:14,background:'#fff',border:'1.5px solid #fecaca',color:'#ef4444',fontSize:14,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:8}}
+                onClick={()=>{dispatch({type:"LOGOUT"});setPage('home');}}>
+                🚪 Se déconnecter
+              </button>
+            </div>
+
           </div>
         )}
 
