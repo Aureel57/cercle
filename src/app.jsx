@@ -282,7 +282,7 @@ function App(){
     {page==="create"&&state.user&&<CreateListing state={state} dispatch={dispatch} setPage={(p)=>{setEditItem(null);setPage(p);}} mode={mode} editItem={editItem}/>}
     {(page==="create"||page==="profile"||page==="messages"||page==="dashboard"||page==="referral"||page==="verify"||page==="dispute"||page==="wallet"||page==="badges")&&!state.user&&<div className="empty" style={{paddingTop:100}}><span>🔒</span><h2>Connectez-vous</h2><p>Vous devez être connecté pour accéder à cette page.</p><button className="bp" style={{marginTop:14}} onClick={()=>setShowA("login")}>Se connecter</button></div>}
 
-    {page==="home"&&<footer style={{background:"linear-gradient(160deg,#6C63FF 0%,#7c5ce7 35%,#5a7fff 65%,#4ECDC4 100%)",marginTop:0,paddingBottom:0}}>
+    {page==="home"&&<footer id="site-footer" style={{background:"linear-gradient(160deg,#6C63FF 0%,#7c5ce7 35%,#5a7fff 65%,#4ECDC4 100%)",marginTop:0,paddingBottom:0}}>
       {/* Fondu de transition */}
       <div style={{height:56,background:dark?"linear-gradient(to bottom,#0f0f13,transparent)":"linear-gradient(to bottom,#F4F3FF,transparent)",marginBottom:0}}/>
       {/* Cartes promo */}
