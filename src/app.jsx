@@ -30,6 +30,7 @@ function App(){
   const[showGallery,setShowGallery]=useState(null);
   const[showShop,setShowShop]=useState(null);
   const[infoPage,setInfoPage]=useState(null);
+  const goInfo=(id)=>{setInfoPage(id);setPage("info");window.scrollTo(0,0);};
   const[pushNotif,setPushNotif]=useState(null);
   const[openSection,setOpenSection]=useState(null);
   const toggleSection=(name)=>setOpenSection(prev=>prev===name?null:name);
@@ -275,6 +276,7 @@ function App(){
       <div className="grid" style={{paddingTop:16}}>{filtered.map(i=><Card key={i.id} item={i} onOpen={openDetail} favs={state.favorites} dispatch={dispatch} onAuthRequired={state.user?null:()=>setShowA("login")}/>)}</div>}
     </main>}
 
+    {page==="info"&&infoPage&&<InfoPage id={infoPage} setPage={p=>{setInfoPage(null);setPage(p);}}/>}
     {page==="profile"&&state.user&&<Profile state={state} dispatch={dispatch} setPage={setPage} setSelected={openDetail} initTab={profTab} onEditItem={(item)=>{setEditItem(item);setPage("create");}}/>}
     {page==="messages"&&state.user&&<Messages state={state} dispatch={dispatch} cid={cid} setCid={setCid} setPage={setPage}/>}
     {page==="create"&&state.user&&<CreateListing state={state} dispatch={dispatch} setPage={(p)=>{setEditItem(null);setPage(p);}} mode={mode} editItem={editItem}/>}
@@ -298,7 +300,7 @@ function App(){
       </div>
       {/* Accordéons */}
       <div style={{maxWidth:1200,margin:"0 auto",padding:"0 24px",display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:32,borderTop:"1px solid rgba(255,255,255,0.15)",paddingTop:32}}>
-        {[{key:"assistance",label:"Assistance",links:[{t:"Centre d'aide",a:()=>setShowChat(true)},{t:"Guide de démarrage",a:()=>{setInfoPage("guide");window.scrollTo(0,0)}},{t:"Résoudre un litige",a:()=>{if(state.user)setPage("dispute");else setShowA("login")}},{t:"Sécurité paiements",a:()=>{setInfoPage("security");window.scrollTo(0,0)}},{t:"Nous contacter",a:()=>{setInfoPage("contact");window.scrollTo(0,0)}}]},{key:"communaute",label:"Communauté",links:[{t:"Blog Cercle",a:()=>{setInfoPage("blog");window.scrollTo(0,0)}},{t:"Forum d'entraide",a:()=>{setInfoPage("forum");window.scrollTo(0,0)}},{t:"Guides pratiques",a:()=>{setInfoPage("guides");window.scrollTo(0,0)}},{t:"Parrainage",a:()=>{if(state.user)setPage("referral");else setShowA("login")}},{t:"Impact environnemental",a:()=>{setInfoPage("impact");window.scrollTo(0,0)}},{t:"Témoignages",a:()=>{setInfoPage("temoignages");window.scrollTo(0,0)}}]},{key:"proprietaire",label:"Propriétaire",links:[{t:"Proposer un objet",a:()=>{if(state.user)setPage("create");else setShowA("login")}},{t:"Tableau de bord",a:()=>{if(state.user)setPage("dashboard");else setShowA("login")}},{t:"Conseils pour louer",a:()=>{setInfoPage("conseils");window.scrollTo(0,0)}},{t:"Maximiser ses revenus",a:()=>{setInfoPage("revenus");window.scrollTo(0,0)}},{t:"Bonnes photos",a:()=>{setInfoPage("photos");window.scrollTo(0,0)}},{t:"Super Proprio",a:()=>{setInfoPage("superproprio");window.scrollTo(0,0)}}]},{key:"cercle",label:"Cercle",links:[{t:"À propos",a:()=>{setInfoPage("about");window.scrollTo(0,0)}},{t:"Notre mission",a:()=>{setInfoPage("mission");window.scrollTo(0,0)}},{t:"Carrières",a:()=>{setInfoPage("careers");window.scrollTo(0,0)}},{t:"Espace presse",a:()=>{setInfoPage("press");window.scrollTo(0,0)}},{t:"Partenariats",a:()=>{setInfoPage("partners");window.scrollTo(0,0)}},{t:"Newsletter",a:()=>{setInfoPage("newsletter");window.scrollTo(0,0)}}]}].map(sec=>(
+        {[{key:"assistance",label:"Assistance",links:[{t:"Centre d'aide",a:()=>setShowChat(true)},{t:"Guide de démarrage",a:()=>goInfo("guide")},{t:"Résoudre un litige",a:()=>{if(state.user)setPage("dispute");else setShowA("login")}},{t:"Sécurité paiements",a:()=>goInfo("security")},{t:"Nous contacter",a:()=>goInfo("contact")}]},{key:"communaute",label:"Communauté",links:[{t:"Blog Cercle",a:()=>goInfo("blog")},{t:"Forum d'entraide",a:()=>goInfo("forum")},{t:"Guides pratiques",a:()=>goInfo("guides")},{t:"Parrainage",a:()=>{if(state.user)setPage("referral");else setShowA("login")}},{t:"Impact environnemental",a:()=>goInfo("impact")},{t:"Témoignages",a:()=>goInfo("temoignages")}]},{key:"proprietaire",label:"Propriétaire",links:[{t:"Proposer un objet",a:()=>{if(state.user)setPage("create");else setShowA("login")}},{t:"Tableau de bord",a:()=>{if(state.user)setPage("dashboard");else setShowA("login")}},{t:"Conseils pour louer",a:()=>goInfo("conseils")},{t:"Maximiser ses revenus",a:()=>goInfo("revenus")},{t:"Bonnes photos",a:()=>goInfo("photos")},{t:"Super Proprio",a:()=>goInfo("superproprio")}]},{key:"cercle",label:"Cercle",links:[{t:"À propos",a:()=>goInfo("about")},{t:"Notre mission",a:()=>goInfo("mission")},{t:"Carrières",a:()=>goInfo("careers")},{t:"Espace presse",a:()=>goInfo("press")},{t:"Partenariats",a:()=>goInfo("partners")},{t:"Newsletter",a:()=>goInfo("newsletter")}]}].map(sec=>(
           <div key={sec.key}>
             <div style={{fontWeight:700,fontSize:11,letterSpacing:"0.08em",textTransform:"uppercase",color:"rgba(255,255,255,0.6)",marginBottom:14}}>{sec.label}</div>
             {sec.links.map(l=><div key={l.t} onClick={l.a} style={{fontSize:13,color:"rgba(255,255,255,0.85)",padding:"5px 0",cursor:"pointer",transition:"color .15s"}} onMouseEnter={e=>e.currentTarget.style.color="#fff"} onMouseLeave={e=>e.currentTarget.style.color="rgba(255,255,255,0.85)"}>{l.t}</div>)}
@@ -309,7 +311,7 @@ function App(){
       <div style={{maxWidth:1200,margin:"32px auto 0",padding:"20px 24px",borderTop:"1px solid rgba(255,255,255,0.15)",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:12}}>
         <svg viewBox="0 0 220 80" width="88" height="32" xmlns="http://www.w3.org/2000/svg"><circle cx="30" cy="40" r="25" fill="none" stroke="white" strokeWidth="4"/><circle cx="54" cy="40" r="25" fill="none" stroke="white" strokeWidth="4"/><path d="M42 17 A25 25 0 0 1 42 63 A25 25 0 0 1 42 17Z" fill="white" opacity=".2"/><text x="130" y="47" textAnchor="middle" fontFamily="Georgia,serif" fontSize="28" fontWeight="700" fill="white" letterSpacing="2">Cercle</text></svg>
         <div style={{display:"flex",gap:20,flexWrap:"wrap"}}>
-          {["Conditions générales","Confidentialité","Mentions légales","Cookies"].map(t=><span key={t} style={{fontSize:11,color:"rgba(255,255,255,0.55)",cursor:"pointer"}} onClick={()=>{setInfoPage("guide");window.scrollTo(0,0)}}>{t}</span>)}
+          {["Conditions générales","Confidentialité","Mentions légales","Cookies"].map(t=><span key={t} style={{fontSize:11,color:"rgba(255,255,255,0.55)",cursor:"pointer"}} onClick={()=>goInfo("guide")}>{t}</span>)}
         </div>
         <span style={{fontSize:11,color:"rgba(255,255,255,0.55)"}}>© 2026 Cercle</span>
       </div>
@@ -322,7 +324,6 @@ function App(){
     {showA&&<AuthModal onClose={()=>setShowA(null)} dispatch={dispatch} mode={showA}/>}
     {showOnboarding&&<Onboarding onClose={()=>{setShowOnboarding(false);try{localStorage.setItem('cercle_ob','1')}catch{}}}/>}
     <div className="toast-stack">{toasts.map(t=><div key={t.id} className={"t2 t2-"+t.type}><span>{t.type==='s'?"✅":t.type==='b'?"🎉":t.type==='e'?"❌":t.type==='w'?"⭐":"ℹ️"}</span><span>{t.text}</span></div>)}</div>
-    {infoPage&&<InfoPage id={infoPage} setPage={p=>{setInfoPage(null);setPage(p)}}/>}
     {page==="map"&&<MapPage items={filtered} onOpen={openDetail} favs={state.favorites} dispatch={dispatch} mode={mode}/>}
     {page==="notifs"&&state.user&&<NotifCenter state={state} dispatch={dispatch} setPage={setPage}/>}
     {page==="dashboard"&&state.user&&<Dashboard state={state} dispatch={dispatch} setPage={setPage}/>}
