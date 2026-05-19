@@ -119,6 +119,15 @@ body,html,#root{font-family:var(--f);color:var(--tx);background:var(--bg);-webki
 .ct{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 14px;cursor:pointer;border-bottom:2.5px solid transparent;opacity:.45;transition:all .2s var(--ease);white-space:nowrap;flex-shrink:0}.ct:hover{opacity:.7}.ct.on{opacity:1;border-bottom-color:var(--dk)}
 .cti{font-size:20px}.ctl{font-size:10px;font-weight:600;color:var(--g);letter-spacing:.02em}.ct.on .ctl{color:var(--dk)}
 .fb{display:flex;align-items:center;gap:7px;padding:10px 16px;border:1px solid var(--bd);border-radius:12px;background:var(--w);font-size:12px;font-weight:600;flex-shrink:0;color:var(--dk);transition:all .2s}.fb:hover{border-color:var(--dk);box-shadow:var(--sh)}
+/* Distance bar */
+.dist-bar{display:flex;align-items:center;gap:8px;padding:4px 28px 10px;max-width:1520px;margin:0 auto;overflow-x:auto;scrollbar-width:none}.dist-bar::-webkit-scrollbar{display:none}
+.dchip{display:flex;align-items:center;gap:5px;padding:7px 14px;border:1.5px solid var(--bd);border-radius:24px;font-size:12px;font-weight:600;background:var(--w);color:var(--dk);cursor:pointer;transition:all .2s var(--ease);white-space:nowrap;flex-shrink:0}.dchip:hover{border-color:var(--dk)}.dchip.on{background:var(--dk);color:#fff;border-color:var(--dk)}
+.dchip.geo-idle{background:linear-gradient(135deg,#FF5A5F,#FF8A5C);color:#fff;border-color:transparent;box-shadow:0 2px 10px rgba(255,90,95,.25)}.dchip.geo-ok{background:#E6F9F0;color:#1a7a4a;border-color:#b2ecd0}.dchip.geo-denied{background:var(--bg);color:var(--gl);border-color:var(--bd);cursor:default}
+@keyframes geopulse{0%,100%{opacity:1}50%{opacity:.5}}.dchip.geo-loading{animation:geopulse 1.2s ease-in-out infinite;background:var(--bg);color:var(--g);border-color:var(--bd);cursor:default}
+/* Distance badge on card image */
+.dist-badge{position:absolute;bottom:10px;left:10px;background:rgba(255,255,255,.94);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-radius:10px;padding:4px 9px;font-size:11px;font-weight:700;color:var(--dk);display:flex;align-items:center;gap:3px;box-shadow:0 2px 10px rgba(0,0,0,.13);z-index:2}
+/* Geo pill in search bar */
+.geo-pill{display:flex;align-items:center;gap:5px;padding:4px 11px;border-radius:20px;font-size:11.5px;font-weight:600;cursor:pointer;transition:all .2s var(--ease);flex-shrink:0}.geo-pill.active{background:#E6F9F0;color:#1a7a4a}.geo-pill.inactive{background:rgba(255,90,95,.08);color:var(--p)}.geo-pill:hover{filter:brightness(.94)}
 /* Grid & Cards */
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:24px;padding:20px 28px 60px;max-width:1520px;margin:0 auto;animation:fu .4s var(--ease)}@keyframes fu{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 .card{cursor:pointer;position:relative;transition:transform .25s var(--ease)}.card:hover{transform:translateY(-4px)}.ciw{position:relative;width:100%;aspect-ratio:4/3;border-radius:var(--rl);overflow:hidden;background:var(--bg)}.cimg{width:100%;height:100%;object-fit:cover;transition:transform .4s var(--ease)}.card:hover .cimg{transform:scale(1.04)}
@@ -562,13 +571,16 @@ function Carousel({images,onClick}){const[c,setC]=useState(0);return <div classN
 function Card({item,onOpen,favs,dispatch,userPos}){
   const dist=userPos&&item.lat&&item.lng?haversine(userPos.lat,userPos.lng,item.lat,item.lng):null;
   return <div className={"card cb"+(item.isPro?" pro-card":"")}>
-  <Carousel images={item.images} onClick={()=>onOpen(item)}/>
+  <div style={{position:'relative'}}>
+    <Carousel images={item.images} onClick={()=>onOpen(item)}/>
+    {dist!=null&&<div className="dist-badge">📍 {fmtDist(dist)}</div>}
+  </div>
   <button className="cfav" onClick={e=>{e.stopPropagation();dispatch({type:"TOG_FAV",id:item.id})}}><I.Heart f={favs.has(item.id)}/></button>
   {item.isPro&&<div className="pro-badge">PRO</div>}
   {item.owner?.verified&&<div className="cbdg">✓</div>}
   <div className="cbo" onClick={()=>onOpen(item)}>
     <div className="cbt"><span className="cbn">{item.title}</span><span className="cbr"><I.Star/> {item.rating}</span></div>
-    <div className="cbl">{dist!=null?<>📍 {fmtDist(dist)} · {item.location}</>:item.location}</div>
+    <div className="cbl">{item.location}</div>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginTop:6}}>
       <div className="cbp"><strong>{item.price} €</strong><span> / jour</span></div>
       <span className="cond-badge">{item.condition}</span>
@@ -2128,7 +2140,17 @@ function App(){
   const[lang,setLang]=useState('fr');
   const[filters,setFilters]=useState({priceMin:0,priceMax:500,condition:"Tous",options:[],sort:"pertinence",filterCat:"all",minRating:0,maxDist:null});
   const[userPos,setUserPos]=useState(null);
-  useEffect(()=>{if(!navigator.geolocation)return;navigator.geolocation.getCurrentPosition(p=>setUserPos({lat:p.coords.latitude,lng:p.coords.longitude}),()=>{})},[]);
+  const[geoStatus,setGeoStatus]=useState('idle'); // idle | loading | granted | denied
+  const requestGeo=()=>{
+    if(geoStatus==='granted'||geoStatus==='loading')return;
+    setGeoStatus('loading');
+    navigator.geolocation.getCurrentPosition(
+      p=>{setUserPos({lat:p.coords.latitude,lng:p.coords.longitude});setGeoStatus('granted');setFilters(f=>f.sort==='pertinence'?{...f,sort:'distance'}:f)},
+      ()=>setGeoStatus('denied'),
+      {timeout:8000,maximumAge:60000}
+    );
+  };
+  useEffect(()=>{if(navigator.geolocation&&geoStatus==='idle')requestGeo();},[]);
 
   const allPerso=useMemo(()=>[...state.items,...state.userItems].filter(i=>!i.isPro),[state.items,state.userItems]);
   const allPro=useMemo(()=>[...state.proItems,...state.userItems.filter(i=>i.isPro)],[state.proItems,state.userItems]);
@@ -2176,6 +2198,7 @@ function App(){
         <button className={"mode-btn"+(mode==='pro'?' pro-on':'')} onClick={()=>setMode('pro')}>🏢 Professionnel</button>
       </div>
       <div className="sb" onClick={()=>setShowS(true)}><div className="ss"><span style={{marginRight:4}}>🔍</span>{q||"Rechercher un objet..."}</div><div className="ss m">{lq||"Partout"}</div><div className="ss m">Quand ?</div><button className="sbb"><I.Search/></button></div>
+      {geoStatus==='granted'?<button className="geo-pill active" onClick={()=>setFilters(f=>({...f,sort:'distance',maxDist:f.maxDist}))} title="Tri par proximité actif">📍 Ma position</button>:geoStatus==='denied'?<button className="geo-pill inactive" onClick={requestGeo} title="Cliquer pour réessayer">📍 Désactivé</button>:geoStatus==='loading'?<span className="geo-pill inactive" style={{cursor:'default',opacity:.6}}>📍 …</span>:null}
       <div className="nr">
         {state.user&&<button className="nb" onClick={()=>setPage("create")}><I.Plus/> Proposer</button>}
         {state.user&&<button className="nb" onClick={()=>{setPage("messages");dispatch({type:"READ_N"})}}><I.Msg/>{unread>0&&<span className="ndot"/>}</button>}
@@ -2199,7 +2222,23 @@ function App(){
         </button>
       </div>
     </div>
-    {page==="home"&&<div className="cw"><div className="cts">{CATS.map(c=><div key={c.id} className={"ct"+(cat===c.id?" on":"")} onClick={()=>setCat(c.id)}><span className="cti">{c.icon}</span><span className="ctl">{c.label}</span></div>)}</div><button className="fb" onClick={()=>setShowF(true)}><I.Flt/> Filtres{Object.values(filters).filter(v=>v&&v!=="all"&&v!=="pertinence"&&v!==0&&v!==500).length>0&&<span style={{background:"var(--p)",color:"#fff",borderRadius:"50%",width:18,height:18,display:"inline-flex",alignItems:"center",justifyContent:"center",fontSize:10,fontWeight:700,marginLeft:4}}>{Object.values(filters).filter(v=>v&&v!=="all"&&v!=="pertinence"&&v!==0&&v!==500).length}</span>}</button></div>}
+    {page==="home"&&<div className="cw"><div className="cts">{CATS.map(c=><div key={c.id} className={"ct"+(cat===c.id?" on":"")} onClick={()=>setCat(c.id)}><span className="cti">{c.icon}</span><span className="ctl">{c.label}</span></div>)}</div><button className="fb" onClick={()=>setShowF(true)}><I.Flt/> Filtres{Object.values(filters).filter(v=>v&&v!=="all"&&v!=="pertinence"&&v!==0&&v!==500&&v!==null).length>0&&<span style={{background:"var(--p)",color:"#fff",borderRadius:"50%",width:18,height:18,display:"inline-flex",alignItems:"center",justifyContent:"center",fontSize:10,fontWeight:700,marginLeft:4}}>{Object.values(filters).filter(v=>v&&v!=="all"&&v!=="pertinence"&&v!==0&&v!==500&&v!==null).length}</span>}</button></div>}
+    {page==="home"&&<div className="dist-bar">
+      {geoStatus==='idle'||geoStatus==='loading'
+        ?<button className={"dchip geo-"+(geoStatus==='loading'?'loading':'idle')} onClick={requestGeo} disabled={geoStatus==='loading'}>{geoStatus==='loading'?'📍 Localisation…':'📍 Activer ma position'}</button>
+        :geoStatus==='denied'
+          ?<button className="dchip geo-denied" title="Géolocalisation refusée — vérifiez les permissions de votre navigateur">📍 Position désactivée</button>
+          :<button className={"dchip geo-ok"+(filters.sort==='distance'?' on':'')} onClick={()=>setFilters(f=>({...f,sort:f.sort==='distance'?'pertinence':'distance'}))}>📍 {filters.sort==='distance'?'✓ Tri proximité':'Trier par proximité'}</button>
+      }
+      {geoStatus==='granted'&&[
+        [null,'Toute distance'],
+        [1,'< 1 km'],
+        [2,'< 2 km'],
+        [5,'< 5 km'],
+        [10,'< 10 km'],
+        [25,'< 25 km'],
+      ].map(([v,label])=><button key={label} className={"dchip"+((filters.maxDist||null)===v?' on':'')} onClick={()=>setFilters(f=>({...f,maxDist:f.maxDist===v?null:v}))}>{label}</button>)}
+    </div>}
     </header>}
 
     {page==="home"&&<main className="page-tr">
