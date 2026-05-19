@@ -354,6 +354,10 @@ html,body{overflow-x:hidden;width:100%}
 .msp-send{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#5B4EE8,#2E1FC2);color:#fff;border:none;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;box-shadow:0 4px 14px rgba(91,79,232,.35);font-size:20px;font-weight:700;font-family:var(--f);transition:opacity .2s,transform .15s}
 .msp-send:disabled{opacity:.35;cursor:default}
 .msp-send:hover:not(:disabled){transform:scale(1.06)}
+@media(min-width:769px){
+  .msp-list,.msp-list.hidden{display:flex!important}
+  .msp-chat,.msp-chat.hidden{display:flex!important}
+}
 @media(max-width:768px){
   .msp-hd{padding:0 16px}
   .msp-list{width:100%}
