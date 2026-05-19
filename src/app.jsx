@@ -226,17 +226,34 @@ function App(){
     </header>}
 
     {page==="home"&&<main className="page-tr">
-      {mode!=='pro'&&!q&&cat==='all'&&<div style={{background:dark?"linear-gradient(135deg,#1a1a2e 0%,#16213e 60%,#0f3460 100%)":"linear-gradient(160deg,#6C63FF 0%,#7c5ce7 28%,#5a7fff 62%,#4ECDC4 100%)",backgroundAttachment:"fixed",padding:"56px 28px 0",textAlign:"center",borderRadius:"0 0 48px 48px",marginBottom:0,position:"relative",overflow:"hidden"}}>
-        <div style={{display:"inline-flex",alignItems:"center",gap:6,background:"rgba(255,255,255,.15)",backdropFilter:"blur(8px)",border:"1px solid rgba(255,255,255,.25)",color:"#fff",padding:"5px 16px",borderRadius:24,fontSize:11,fontWeight:700,letterSpacing:".06em",marginBottom:14}}>🚀 NOUVELLE PLATEFORME · 2 500+ articles à louer</div>
-        <h1 style={{fontFamily:"var(--fd)",fontSize:"clamp(28px,5vw,48px)",fontWeight:800,background:"linear-gradient(270deg,#fff,#f0f0ff,#fff)",backgroundSize:"400% 400%",animation:"gradShift 4s ease infinite",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",letterSpacing:"-.03em",marginBottom:10,lineHeight:1.1}}>Louez, partagez,<br/>économisez</h1>
-        <p style={{color:"rgba(255,255,255,.85)",fontSize:15,maxWidth:550,margin:"0 auto 22px",lineHeight:1.6,animation:"fadeSlideUp 0.6s 0.2s ease both"}}>Accédez à des milliers d'objets à louer entre particuliers et professionnels. Une solution économique, écologique et pratique pour tous vos besoins.</p>
-        <div style={{display:"flex",gap:10,justifyContent:"center",flexWrap:"wrap",marginBottom:32}}>
-          {[["🔧","Outils"],["🚲","Véhicules"],["📷","Photo/Vidéo"],["🎮","Gaming"],["⛺","Camping"],["🎉","Événementiel"]].map(([ic,t],i)=><button key={t} onClick={()=>setCat(Object.keys(CE).find(k=>CE[k]===ic)||"all")} style={{background:"rgba(255,255,255,.18)",backdropFilter:"blur(8px)",border:"1px solid rgba(255,255,255,.25)",color:"#fff",padding:"10px 18px",borderRadius:24,fontSize:13,fontWeight:600,cursor:"pointer",display:"flex",alignItems:"center",gap:6,transition:"all 0.2s cubic-bezier(0.34,1.56,0.64,1)",animation:`fadeSlideUp 0.5s ${0.25+i*0.08}s ease both`,":hover":{background:"rgba(255,255,255,.28)",transform:"translateY(-2px)"},willChange:"transform"}}>{ic} {t}</button>)}
+      {mode!=='pro'&&!q&&cat==='all'&&<div style={{background:dark?"linear-gradient(160deg,#1a1a2e 0%,#16213e 60%,#0f3460 100%)":"linear-gradient(160deg,#5B4EE8 0%,#4538D1 50%,#3A30D8 100%)",padding:"64px 28px 0",textAlign:"center",borderRadius:"0 0 56px 56px",marginBottom:0,position:"relative",overflow:"hidden"}}>
+        {/* Decorative circles */}
+        <div style={{position:"absolute",width:480,height:480,borderRadius:"50%",background:"rgba(255,255,255,.05)",top:-120,right:-100,pointerEvents:"none"}}/>
+        <div style={{position:"absolute",width:300,height:300,borderRadius:"50%",background:"rgba(255,255,255,.04)",bottom:-80,left:-60,pointerEvents:"none"}}/>
+        <div style={{position:"absolute",width:200,height:200,borderRadius:"50%",background:"rgba(255,255,255,.03)",top:60,left:80,pointerEvents:"none"}}/>
+        {/* Tag */}
+        <div style={{display:"inline-flex",alignItems:"center",gap:8,background:"rgba(255,255,255,.15)",backdropFilter:"blur(12px)",border:"1px solid rgba(255,255,255,.28)",color:"#fff",padding:"7px 20px",borderRadius:100,fontSize:11,fontWeight:700,letterSpacing:".08em",marginBottom:22,textTransform:"uppercase",animation:"fadeSlideUp .5s ease both"}}>✨ Location entre voisins · 2 500+ articles</div>
+        {/* H1 — Playfair Display */}
+        <h1 style={{fontFamily:"var(--fd)",fontSize:"clamp(32px,5.5vw,58px)",fontWeight:800,color:"#fff",letterSpacing:"-.02em",marginBottom:18,lineHeight:1.08,maxWidth:700,margin:"0 auto 18px",animation:"fadeSlideUp .5s .1s ease both"}}>Louez ce dont vous<br/>avez besoin, près<br/>de chez vous.</h1>
+        {/* Subtitle */}
+        <p style={{color:"rgba(255,255,255,.8)",fontSize:16,maxWidth:480,margin:"0 auto 36px",lineHeight:1.65,animation:"fadeSlideUp .5s .2s ease both"}}>Des milliers d'articles disponibles dans votre quartier — économique, écologique et pratique.</p>
+        {/* Hero search bar */}
+        <div style={{display:"flex",alignItems:"center",background:"#fff",borderRadius:100,boxShadow:"0 20px 60px rgba(0,0,0,.22)",maxWidth:600,margin:"0 auto 36px",padding:"8px 8px 8px 22px",gap:0,animation:"fadeSlideUp .5s .3s ease both"}}>
+          <span style={{fontSize:18,marginRight:10,flexShrink:0}}>🔍</span>
+          <input value={q} onChange={e=>setQ(e.target.value)} onFocus={()=>setShowS(true)} placeholder="Que cherchez-vous ?" readOnly style={{flex:1,border:"none",outline:"none",fontSize:15,color:"var(--dk)",background:"transparent",fontFamily:"var(--f)",cursor:"pointer"}}/>
+          <div style={{width:1,height:26,background:"var(--bd)",margin:"0 14px",flexShrink:0}}/>
+          <span style={{fontSize:13,fontWeight:600,color:"var(--g)",marginRight:14,whiteSpace:"nowrap",flexShrink:0}}>📍 Paris</span>
+          <button onClick={()=>setShowS(true)} style={{background:"linear-gradient(135deg,var(--p),var(--pd))",border:"none",borderRadius:100,padding:"13px 24px",color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer",flexShrink:0,boxShadow:"0 4px 16px rgba(91,78,232,.4)",transition:"transform .15s",willChange:"transform"}}>Chercher</button>
         </div>
+        {/* Category quick links */}
+        <div style={{display:"flex",gap:9,justifyContent:"center",flexWrap:"wrap",marginBottom:40}}>
+          {CATS.slice(1,7).map((c,i)=><button key={c.id} onClick={()=>setCat(c.id)} style={{background:"rgba(255,255,255,.16)",backdropFilter:"blur(8px)",border:"1px solid rgba(255,255,255,.28)",color:"#fff",padding:"10px 18px",borderRadius:100,fontSize:13,fontWeight:600,cursor:"pointer",display:"flex",alignItems:"center",gap:7,transition:"all .2s",animation:`fadeSlideUp .5s ${.35+i*.07}s ease both`,willChange:"transform"}}>{c.icon} {c.label}</button>)}
+        </div>
+        {/* Stats bar */}
         <div className="hero-stats" style={{marginBottom:0}}>
           {[["2 500+","articles disponibles"],["15","villes couvertes"],["98%","de satisfaction"],["4.9 ★","note moyenne"]].map(([n,l])=><div key={l} className="hero-stat"><span className="hero-stat-n">{n}</span><span className="hero-stat-l">{l}</span></div>)}
         </div>
-        <div style={{height:48}}/>
+        <div style={{height:52}}/>
       </div>}
       {mode==='pro'&&<div className="pro-banner"><h2 style={{fontFamily:"var(--fd)",fontSize:22,marginBottom:4}}>🏢 Espace Professionnel</h2><p style={{fontSize:13,opacity:.8}}>Matériel pro certifié · Grandes quantités · Livraison chantier · Facturation entreprise</p></div>}
       {q&&<div style={{padding:"6px 28px 0",fontSize:12,color:"var(--g)"}}>{filtered.length} résultat{filtered.length!==1?"s":""} pour <strong>"{q}"</strong>{lq&&<> à <strong>{lq}</strong></>}<button className="cl" style={{marginLeft:6}} onClick={()=>{setQ("");setLq("")}}>✕</button></div>}
