@@ -297,8 +297,10 @@ html,body{overflow-x:hidden;width:100%}
 .chat-header{flex-shrink:0;padding:14px 20px;border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:12px;background:var(--w);box-shadow:0 2px 8px rgba(0,0,0,.04)}
 .dark .chat-header{background:#111118}
 .chat-header-name{font-size:15px;font-weight:700;color:var(--dk)}
-.chat-header-sub{font-size:12px;color:var(--g);margin-top:1px}
+.chat-header-sub{font-size:12px;color:var(--p);font-weight:600;margin-top:2px}
 .chat-back-btn{display:none;background:none;border:none;padding:4px;cursor:pointer;color:var(--dk);border-radius:10px}
+/* Conv list desktop title */
+@media(min-width:769px){.conv-list-title{display:block!important}}
 .chat-msgs{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:6px;background:var(--bg)}
 .dark .chat-msgs{background:#0f0f13}
 .msg-bubble{max-width:72%;padding:11px 16px;border-radius:22px;font-size:14px;line-height:1.5;position:relative;word-break:break-word}
@@ -3447,24 +3449,29 @@ function Messages({state,dispatch,cid,setCid,setPage}){
   const o=ac?getO(ac):null;
 
   return <div className="msg-page">
-    {/* Header */}
+    {/* Header — desktop : titre + badge, mobile : back + nom */}
     <div className="msg-header">
       {ac&&<button className="chat-back-btn" onClick={backToList}><I.Back/></button>}
-      {!ac&&<button onClick={()=>setPage("home")} style={{background:'none',border:'none',padding:'4px',cursor:'pointer',display:'flex',alignItems:'center',color:'var(--dk)',borderRadius:10}}><I.Back/></button>}
-      <div style={{flex:1}}>
-        <div style={{fontSize:17,fontWeight:800,fontFamily:'var(--fd)',color:'var(--dk)'}}>{ac?o.name:'Messages'}</div>
-        {ac&&<div style={{fontSize:12,color:'#22c55e',fontWeight:600}}>● En ligne</div>}
-        {!ac&&<div style={{fontSize:12,color:'var(--g)'}}>{convs.length} conversation{convs.length!==1?'s':''}</div>}
+      {!ac&&<button onClick={()=>setPage("home")} style={{background:'none',border:'none',padding:'6px 8px',cursor:'pointer',display:'flex',alignItems:'center',color:'var(--dk)',borderRadius:10}}><I.Back/></button>}
+      <div style={{flex:1,display:'flex',alignItems:'center',gap:10}}>
+        <div style={{fontSize:17,fontWeight:800,fontFamily:'var(--fd)',color:'var(--dk)'}}>{ac?o.name:'💬 Messages'}</div>
+        {!ac&&convs.length>0&&<span style={{background:'var(--p)',color:'#fff',borderRadius:100,fontSize:11,fontWeight:700,padding:'2px 9px'}}>{convs.length}</span>}
+        {ac&&<div style={{fontSize:12,color:'#22c55e',fontWeight:600,display:'flex',alignItems:'center',gap:4}}><span style={{width:7,height:7,borderRadius:'50%',background:'#22c55e',display:'inline-block'}}/> En ligne</div>}
       </div>
-      {ac&&<div style={{width:38,height:38,borderRadius:'50%',background:'linear-gradient(135deg,#e0dbff,#c7f0ee)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:18}}>{o.avatar}</div>}
+      {ac&&ac.itemTitle&&<button onClick={()=>{}} style={{background:'var(--bg)',border:'1.5px solid var(--bd)',borderRadius:100,padding:'7px 16px',fontSize:12,fontWeight:700,color:'var(--p)',cursor:'pointer',flexShrink:0,display:'none',whiteSpace:'nowrap'}} className="chat-view-item">Voir l'annonce →</button>}
+      {ac&&<div style={{width:38,height:38,borderRadius:'50%',background:'linear-gradient(135deg,var(--p),var(--pd,#3A30D8))',display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,color:'#fff',fontWeight:700,flexShrink:0}}>{(o.name||'?')[0]}</div>}
     </div>
 
     {/* Body */}
     <div className="msg-body">
       {/* Conversation list */}
       <div className={"conv-list"+((!showList&&ac)?" hidden":"")}>
+        {/* Titre liste (desktop uniquement) */}
+        <div style={{padding:'16px 18px 0',borderBottom:'none'}}>
+          <div style={{fontSize:15,fontWeight:800,fontFamily:'var(--fd)',color:'var(--dk)',marginBottom:12}}>Conversations</div>
+        </div>
         <div className="conv-search">
-          <input placeholder="🔍  Rechercher une conversation…" value={searchQ} onChange={e=>setSearchQ(e.target.value)}/>
+          <input placeholder="Rechercher une conversation…" value={searchQ} onChange={e=>setSearchQ(e.target.value)}/>
         </div>
         <div className="conv-items">
           {convs.length===0&&<div className="conv-empty"><div><div style={{fontSize:42,marginBottom:12}}>💬</div><div style={{fontWeight:600,color:'var(--dk)',marginBottom:6}}>Aucune conversation</div><div style={{fontSize:13}}>Contactez un propriétaire pour commencer</div></div></div>}
@@ -3501,11 +3508,12 @@ function Messages({state,dispatch,cid,setCid,setPage}){
         </div>:<>
           {/* Chat header */}
           <div className="chat-header">
-            <div style={{width:40,height:40,borderRadius:'50%',background:'linear-gradient(135deg,#e0dbff,#c7f0ee)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,flexShrink:0}}>{o.avatar}</div>
-            <div style={{flex:1}}>
+            <div style={{width:44,height:44,borderRadius:'50%',background:'linear-gradient(135deg,var(--p),var(--pd,#3A30D8))',display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,color:'#fff',fontWeight:800,flexShrink:0,boxShadow:'0 4px 12px rgba(91,78,232,.3)'}}>{(o.name||'?')[0]}</div>
+            <div style={{flex:1,minWidth:0}}>
               <div className="chat-header-name">{o.name}</div>
-              {ac.itemTitle&&<div className="chat-header-sub">📦 {ac.itemTitle}</div>}
+              {ac.itemTitle&&<div className="chat-header-sub" style={{color:'var(--p)',fontWeight:600}}>📦 {ac.itemTitle}</div>}
             </div>
+            {ac.itemTitle&&<button style={{background:'var(--bg)',border:'1.5px solid var(--bd)',borderRadius:100,padding:'8px 18px',fontSize:12,fontWeight:700,color:'var(--p)',cursor:'pointer',flexShrink:0,whiteSpace:'nowrap'}}>Voir l'annonce →</button>}
           </div>
 
           {/* Messages */}
