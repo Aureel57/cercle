@@ -3353,8 +3353,6 @@ function CreateListing({state,dispatch,setPage,mode,editItem}){
         <button onClick={e=>{e.stopPropagation();camRef.current&&camRef.current.click()}} style={{marginTop:12,width:'100%',padding:'10px',background:'var(--bg)',border:'1.5px solid var(--bd)',borderRadius:12,fontSize:13,fontWeight:600,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:8,color:'var(--dk)'}}>📷 Prendre une photo</button>
       </div>
     </div>
-
-      </div>{/* end cl-body */}
       {/* Sticky CTA */}
       <div className="cl-submit">
         <button className="cl-cta" onClick={go} disabled={saving||!canSubmit}>
