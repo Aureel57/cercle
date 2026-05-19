@@ -443,7 +443,38 @@ function Profile({state, dispatch, setPage, setSelected, initTab, onEditItem}) {
   );
 
   return (
-    <div style={S.page} className="profile-page-grain">
+    <div className="prf-dsk-wrap profile-page-grain">
+
+      {/* ── Desktop sidebar ── */}
+      <aside className="prf-sb">
+        <div className="prf-avc">
+          <div style={{width:64,height:64,borderRadius:'50%',background:'rgba(255,255,255,.25)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:26,fontWeight:800,color:'#fff',position:'relative',flexShrink:0}}>
+            {(profileData.name||'N')[0].toUpperCase()}
+            <div style={{position:'absolute',width:14,height:14,borderRadius:'50%',background:'#22C55E',border:'2.5px solid #fff',top:-1,right:-1}}/>
+          </div>
+          <div style={{fontSize:16,fontWeight:700,color:'#fff',textAlign:'center'}}>{profileData.name||'Utilisateur'}</div>
+          <div style={{background:'rgba(255,255,255,.2)',borderRadius:100,padding:'4px 16px',fontSize:11,fontWeight:700,color:'#fff'}}>{heroGrade.icon} {heroGrade.name}</div>
+          <div style={{fontSize:11,color:'rgba(255,255,255,.7)',textAlign:'center'}}>Membre depuis {user.since||'2024'}</div>
+        </div>
+        {[{num:listings.length,lbl:'Annonces'},{num:avgRating!=='-'?avgRating+' ⭐':'-',lbl:'Note moy.'},{num:(state.bookings?.filter(b=>b.userId===user.id)?.length||0)+' locations',lbl:'Réservations'}].map(s=>(
+          <div key={s.lbl} className="prf-stb">
+            <strong style={{fontSize:20,fontWeight:800,color:'#5B4EE8'}}>{s.num}</strong>
+            <span style={{fontSize:12,color:'#8F8CA6'}}>{s.lbl}</span>
+          </div>
+        ))}
+        {[{id:'annonces',icon:'📋',lbl:'Mes annonces'},{id:'reservations',icon:'🗓',lbl:'Réservations'},{id:'avis',icon:'⭐',lbl:'Avis reçus'},{id:'favoris',icon:'❤️',lbl:'Favoris'},{id:'grade',icon:'🏅',lbl:'Mon Grade'},{id:'parametres',icon:'⚙️',lbl:'Paramètres'}].map(item=>(
+          <div key={item.id} className={'prf-nv'+(tab===item.id?' on':'')} onClick={()=>setTab(item.id)}>
+            <span style={{fontSize:18}}>{item.icon}</span>
+            <span>{item.lbl}</span>
+          </div>
+        ))}
+      </aside>
+
+      {/* ── Main area ── */}
+      <div className="prf-main">
+
+      {/* Mobile-only: gradient header, stats, pills, tabs */}
+      <div className="prf-mob">
 
       {/* ─── HEADER BLOCK ─── */}
       <div style={S.headerBlock}>
@@ -537,6 +568,14 @@ function Profile({state, dispatch, setPage, setSelected, initTab, onEditItem}) {
             </button>
           ))}
         </div>
+      </div>
+
+      </div>{/* end prf-mob */}
+
+      {/* Desktop content header */}
+      <div className="prf-cnthd">
+        <span style={{fontSize:22,fontWeight:700,color:'var(--dk)',fontFamily:'var(--f)'}}>{tabs.find(t=>t.id===tab)?.icon} {tabs.find(t=>t.id===tab)?.label}</span>
+        {tab==='annonces'&&<button onClick={()=>setPage('create')} style={{background:'linear-gradient(135deg,#5B4EE8,#2E1FC2)',color:'#fff',border:'none',borderRadius:100,height:44,padding:'0 24px',fontSize:13,fontWeight:700,cursor:'pointer',boxShadow:'0 4px 12px rgba(91,79,232,.28)',fontFamily:'var(--f)'}}>+ Nouvelle annonce</button>}
       </div>
 
       {/* ─── CONTENT ─── */}
@@ -1308,6 +1347,7 @@ function Profile({state, dispatch, setPage, setSelected, initTab, onEditItem}) {
       </div>
     )}
 
+      </div>{/* end prf-main */}
     </div>
   );
 }
