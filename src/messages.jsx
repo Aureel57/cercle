@@ -58,8 +58,7 @@ function Messages({state,dispatch,cid,setCid,setPage}){
   return <div className="msg-page">
     {/* Header */}
     <div className="msg-header">
-      {ac&&<button className="chat-back-btn" onClick={backToList}><I.Back/></button>}
-      {!ac&&<button onClick={()=>setPage("home")} style={{background:'none',border:'none',padding:'4px',cursor:'pointer',display:'flex',alignItems:'center',color:'var(--dk)',borderRadius:10}}><I.Back/></button>}
+      <button onClick={()=>ac?backToList():setPage("home")} style={{background:'none',border:'none',padding:'6px 8px',cursor:'pointer',display:'flex',alignItems:'center',color:'var(--dk)',borderRadius:10,flexShrink:0}}><I.Back/></button>
       <div style={{flex:1}}>
         <div style={{fontSize:17,fontWeight:800,fontFamily:'var(--fd)',color:'var(--dk)'}}>{ac?o.name:'Messages'}</div>
         {ac&&<div style={{fontSize:12,color:'#22c55e',fontWeight:600}}>● En ligne</div>}
