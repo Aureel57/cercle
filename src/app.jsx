@@ -198,7 +198,7 @@ function App(){
   return <Ctx.Provider value={{dark,setDark,lang,setLang}}><div className={(dark?"dark":"")}><style>{css}</style>
     {/* Splash Screen */}
     {splash&&<div className="splash" style={{opacity:1,transition:"opacity .5s"}}><div className="splash-logo" style={{display:"flex",alignItems:"center",justifyContent:"center"}}><img src={CERCLE_LOGO} alt="Cercle" style={{height:90,width:90,objectFit:"contain",filter:"invert(1)",mixBlendMode:"screen"}} /></div><h2 style={{fontFamily:'Georgia,serif',fontWeight:400,letterSpacing:3,fontSize:28}}>Cercle</h2><p>Location entre particuliers & pros</p></div>}
-    {page!=="messages"&&page!=="notifs"&&page!=="dashboard"&&page!=="gestion"&&page!=="referral"&&page!=="verify"&&page!=="dispute"&&page!=="wallet"&&page!=="badges"&&<header className={"hdr"+(mode==="pro"?" pro-hdr":"")}><div className="hi">
+    {page!=="messages"&&page!=="notifs"&&page!=="dashboard"&&page!=="gestion"&&page!=="referral"&&page!=="verify"&&page!=="dispute"&&page!=="wallet"&&page!=="badges"&&page!=="annonces"&&page!=="favoris"&&page!=="reservations"&&page!=="grade"&&page!=="avis"&&page!=="parametres"&&<header className={"hdr"+(mode==="pro"?" pro-hdr":"")}><div className="hi">
       <a className="logo" onClick={home} style={{textDecoration:'none',display:'flex',alignItems:'center',gap:8}}><img src={CERCLE_LOGO} alt="Cercle" style={{height:44,width:44,objectFit:'contain'}}/><span className="lt" style={{color:mode==='pro'?'#2563EB':'var(--dk)'}}>{mode==='pro'?'Cercle Pro':'Cercle'}</span></a>
       <div className="mode-sw">
         <button className={"mode-btn"+(mode==='perso'?' on':'')} onClick={()=>setMode('perso')}>👤 Particulier</button>
@@ -213,6 +213,10 @@ function App(){
           {menu&&<div className="dd" onClick={e=>e.stopPropagation()}>
             {state.user?<><div className="di b" onClick={()=>{setProfTab("annonces");setPage("profile");setMenu(false)}}>👤 Mon profil</div><div className="di" onClick={()=>{setPage("messages");setMenu(false);dispatch({type:"READ_N"})}}>💬 Messages{unread>0&&<span style={{background:"var(--p)",color:"#fff",borderRadius:8,padding:"1px 6px",fontSize:10,fontWeight:700,marginLeft:4}}>{unread}</span>}</div><div className="di" onClick={()=>{setPage("create");setMenu(false)}}>➕ Proposer</div>
               <div className="di" onClick={()=>{setPage("dashboard");setMenu(false)}}>📊 Dashboard</div>
+              <div className="di" onClick={()=>{setPage("annonces");setMenu(false)}}>📋 Mes annonces</div>
+              <div className="di" onClick={()=>{setPage("favoris");setMenu(false)}}>❤ Favoris</div>
+              <div className="di" onClick={()=>{setPage("reservations");setMenu(false);dispatch({type:"READ_N"})}}>📅 Réservations</div>
+              <div className="di" onClick={()=>{setPage("grade");setMenu(false)}}>🏅 Mon Grade</div>
               {state.user?.isPro&&<div className="di" onClick={()=>{setPage("gestion");setMenu(false)}} style={{color:'#D97706',fontWeight:700}}>⭐ Gestion Pro</div>}
               <div className="di" onClick={()=>{setPage("notifs");setMenu(false);dispatch({type:"READ_N"})}}>🔔 Notifications{unread>0&&<span style={{background:"var(--p)",color:"#fff",borderRadius:8,padding:"1px 6px",fontSize:10,fontWeight:700}}>{unread}</span>}</div>
               <div className="di" onClick={()=>{setDark(!dark);setMenu(false)}}>{dark?"☀️ Mode clair":"🌙 Mode sombre"}</div>
@@ -297,7 +301,7 @@ function App(){
     {page==="profile"&&state.user&&<Profile state={state} dispatch={dispatch} setPage={setPage} setSelected={openDetail} initTab={profTab} onEditItem={(item)=>{setEditItem(item);setPage("create");}}/>}
     {page==="messages"&&state.user&&<Messages state={state} dispatch={dispatch} cid={cid} setCid={setCid} setPage={setPage} openDetail={openDetail}/>}
     {page==="create"&&state.user&&<CreateListing state={state} dispatch={dispatch} setPage={(p)=>{setEditItem(null);setPage(p);}} mode={mode} editItem={editItem}/>}
-    {(page==="create"||page==="profile"||page==="messages"||page==="dashboard"||page==="referral"||page==="verify"||page==="dispute"||page==="wallet"||page==="badges")&&!state.user&&<div className="empty" style={{paddingTop:100}}><span>🔒</span><h2>Connectez-vous</h2><p>Vous devez être connecté pour accéder à cette page.</p><button className="bp" style={{marginTop:14}} onClick={()=>setShowA("login")}>Se connecter</button></div>}
+    {(page==="create"||page==="profile"||page==="messages"||page==="dashboard"||page==="referral"||page==="verify"||page==="dispute"||page==="wallet"||page==="badges"||page==="annonces"||page==="favoris"||page==="reservations"||page==="grade"||page==="avis"||page==="parametres")&&!state.user&&<div className="empty" style={{paddingTop:100}}><span>🔒</span><h2>Connectez-vous</h2><p>Vous devez être connecté pour accéder à cette page.</p><button className="bp" style={{marginTop:14}} onClick={()=>setShowA("login")}>Se connecter</button></div>}
 
     {page==="home"&&<footer id="site-footer" style={{background:"linear-gradient(160deg,#6C63FF 0%,#7c5ce7 35%,#5a7fff 65%,#4ECDC4 100%)",marginTop:0,paddingBottom:0}}>
       {/* Fondu de transition */}
@@ -347,8 +351,14 @@ function App(){
     {showOnboarding&&<Onboarding onClose={()=>{setShowOnboarding(false);try{localStorage.setItem('cercle_ob','1')}catch{}}}/>}
     <div className="toast-stack">{toasts.map(t=><div key={t.id} className={"t2 t2-"+t.type}><span>{t.type==='s'?"✅":t.type==='b'?"🎉":t.type==='e'?"❌":t.type==='w'?"⭐":"ℹ️"}</span><span>{t.text}</span></div>)}</div>
     {page==="map"&&<MapPage items={filtered} onOpen={openDetail} favs={state.favorites} dispatch={dispatch} mode={mode}/>}
-    {page==="notifs"&&state.user&&<NotifCenter state={state} dispatch={dispatch} setPage={setPage}/>}
-    {page==="dashboard"&&state.user&&<Dashboard state={state} dispatch={dispatch} setPage={setPage}/>}
+    {page==="notifs"&&state.user&&<DeskNotifications state={state} dispatch={dispatch} setPage={setPage}/>}
+    {page==="dashboard"&&state.user&&<DeskDashboard state={state} dispatch={dispatch} setPage={setPage}/>}
+    {page==="annonces"&&state.user&&<DeskMesAnnonces state={state} dispatch={dispatch} setPage={setPage}/>}
+    {page==="favoris"&&state.user&&<DeskFavoris state={state} dispatch={dispatch} setPage={setPage} allItems={all} openDetail={openDetail}/>}
+    {page==="reservations"&&state.user&&<DeskReservations state={state} dispatch={dispatch} setPage={setPage}/>}
+    {page==="grade"&&state.user&&<DeskGrade state={state} dispatch={dispatch} setPage={setPage}/>}
+    {page==="avis"&&state.user&&<DeskAvis state={state} dispatch={dispatch} setPage={setPage}/>}
+    {page==="parametres"&&state.user&&<DeskParametres state={state} dispatch={dispatch} setPage={setPage}/>}
     {page==="gestion"&&state.user&&state.user.isPro&&<GestionPro state={state} dispatch={dispatch} setPage={setPage}/>}
     {page==="gestion"&&state.user&&!state.user.isPro&&<div className="empty" style={{paddingTop:100}}><span>⭐</span><h2>Réservé aux Pro</h2><p>Créez un compte professionnel pour accéder à la Gestion Pro.</p><button className="bp" style={{marginTop:14}} onClick={()=>setShowA("register")}>Passer en Pro</button></div>}
     {page==="referral"&&state.user&&<ReferralPage state={state} dispatch={dispatch} setPage={setPage}/>}

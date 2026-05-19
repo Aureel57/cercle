@@ -39,6 +39,9 @@ function reducer(s,a){switch(a.type){
   case"LOGIN":{const u={...a.payload,refCode:a.payload.refCode||uid().toUpperCase().slice(0,6)};const fixedItems=s.userItems.map(i=>(!i.owner?.id||i.owner?.email===u.email)?{...i,owner:{...(i.owner||{}),id:u.id,email:u.email}}:i);try{localStorage.setItem('cercle_items',JSON.stringify(fixedItems));}catch(e){}return{...s,user:u,userItems:fixedItems};}
   case"LOGOUT":return{...s,user:null};
   case"UPD_PROF":return{...s,user:{...s.user,...a.payload}};
+  case"UPDATE_PROFILE":return{...s,user:{...s.user,...a.payload}};
+  case"CONFIRM_BOOKING":return{...s,bookings:s.bookings.map(b=>b.id===a.id?{...b,status:'confirmed'}:b)};
+  case"MARK_N_READ":return{...s,notifications:s.notifications.map(n=>n.id===a.id?{...n,read:true}:n)};
   case"SET_AVATAR":return{...s,user:{...s.user,avatar:a.avatar,avatarUrl:a.url||null}};
   case"TOG_FAV":{const f=new Set(s.favorites);const isAdding=!f.has(a.id);isAdding?f.add(a.id):f.delete(a.id);if(window.db){const delta=isAdding?1:-1;const inc=window.firebase&&window.firebase.firestore?window.firebase.firestore.FieldValue.increment(delta):null;if(inc)window.db.collection('items').doc(a.id).update({likeCount:inc}).catch(()=>{});}if(isAdding&&window.db&&s.user&&a.ownerId&&a.ownerId!==s.user.id){const notif={userId:a.ownerId,text:`❤️ ${s.user.name||'Quelqu\'un'} a aimé votre annonce "${a.title||''}"`,kind:'like',read:false,at:new Date().toISOString(),itemId:a.id};window.db.collection('notifications').add(notif).catch(()=>{});}return{...s,favorites:f}}
   case"BOOK":{

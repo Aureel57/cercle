@@ -1266,4 +1266,455 @@ function ConfirmDeliveryPage({annonceId, allItems, onBack}){
   );
 }
 
+/* ========== DESKTOP LAYOUT SHELL ========== */
+function DesktopLayout({children,active,setPage,state,dispatch}){
+  const u=state.user;
+  const unread=(state.notifications||[]).filter(n=>!n.read).length;
+  const g=getGrade(u?.rentals||0);
+  const nav=[
+    {ic:'⊞',lbl:'Dashboard',pg:'dashboard'},
+    {ic:'📋',lbl:'Mes annonces',pg:'annonces'},
+    {ic:'❤',lbl:'Favoris',pg:'favoris'},
+    {ic:'📅',lbl:'Réservations',pg:'reservations'},
+    {ic:'💬',lbl:'Messages',pg:'messages'},
+    {ic:'🏅',lbl:'Mon Grade',pg:'grade'},
+    {ic:'⭐',lbl:'Avis',pg:'avis'},
+    {ic:'🔔',lbl:'Notifications',pg:'notifs',badge:unread>0?unread:null},
+    {ic:'⚙',lbl:'Paramètres',pg:'parametres'},
+  ];
+  return <div className="dsk">
+    <div className="dsk-sb">
+      <div className="dsk-logo" onClick={()=>setPage('home')}>
+        <img src={CERCLE_LOGO} alt="Cercle" style={{width:34,height:34,objectFit:'contain'}}/>
+        <span style={{fontFamily:'var(--fd)',fontSize:17,fontWeight:700,color:'var(--dk)'}}>Cercle</span>
+      </div>
+      {u&&<div className="dsk-ucard">
+        <div style={{width:36,height:36,borderRadius:'50%',background:'var(--p)',display:'flex',alignItems:'center',justifyContent:'center',color:'#fff',fontWeight:800,fontSize:14,flexShrink:0}}>{u.avatar||u.name?.[0]||'U'}</div>
+        <div style={{minWidth:0}}>
+          <div style={{fontSize:13,fontWeight:700,color:'var(--dk)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{u.name}</div>
+          <div style={{fontSize:10,color:'var(--p)',fontWeight:600}}>{g.name} {getDivision(u.rentals||0).div.label}</div>
+        </div>
+      </div>}
+      <div style={{padding:'8px 0'}}>
+        {nav.map(item=>(
+          <button key={item.pg} className={`dsk-ni${active===item.pg?' on':''}`} onClick={()=>{setPage(item.pg);if(item.pg==='notifs')dispatch({type:'READ_N'});}}>
+            <span className="dsk-ni-ic">{item.ic}</span>
+            <span style={{flex:1}}>{item.lbl}</span>
+            {item.badge&&<span style={{background:'#ef4444',color:'#fff',borderRadius:100,minWidth:18,height:18,display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:700,padding:'0 4px'}}>{item.badge}</span>}
+          </button>
+        ))}
+      </div>
+      <div style={{flex:1}}/>
+      <div style={{borderTop:'1px solid #E6E5EF',padding:'8px 0'}}>
+        <button className="dsk-ni" style={{color:'#ef4444'}} onClick={()=>{if(window.auth)window.auth.signOut().catch(()=>{});dispatch({type:'LOGOUT'});setPage('home');}}>
+          <span className="dsk-ni-ic">→</span>
+          <span>Déconnexion</span>
+        </button>
+      </div>
+    </div>
+    <div className="dsk-main">{children}</div>
+  </div>;
+}
+
+/* ========== DESKTOP PAGES ========== */
+
+function DeskDashboard({state,dispatch,setPage}){
+  const u=state.user;
+  const myItems=[...state.items.filter(i=>i.owner?.id===u.id||(u.email&&i.owner?.email===u.email)),...state.userItems.filter(i=>i.owner?.id===u.id||(u.email&&i.owner?.email===u.email))];
+  const myBookAsOwner=state.bookings.filter(b=>b.ownerId===u.id);
+  const revenue=myBookAsOwner.filter(b=>b.status==='confirmed').reduce((s,b)=>s+b.total,0);
+  const pending=myBookAsOwner.filter(b=>b.status==='pending').length;
+  const confirmed=myBookAsOwner.filter(b=>b.status==='confirmed').length;
+  const unread=(state.notifications||[]).filter(n=>!n.read).length;
+  const months=["Jan","Fév","Mar","Avr","Mai","Juin","Jul","Août","Sep","Oct","Nov","Déc"];
+  const curMonth=new Date().getMonth();
+  const monthlyRevenue=new Array(12).fill(0);
+  myBookAsOwner.filter(b=>b.status==='confirmed').forEach(b=>{const d=new Date(b.createdAt||b.date||Date.now());if(d.getFullYear()===new Date().getFullYear())monthlyRevenue[d.getMonth()]+=b.total||0;});
+  const hasReal=monthlyRevenue.some(v=>v>0);
+  const seed=revenue||320;
+  const monthlyVals=hasReal?monthlyRevenue:months.map((_,i)=>Math.max(0,Math.floor(seed/12*(0.3+Math.sin(i*0.9+1)*0.5+0.2))));
+  const maxVal=Math.max(...monthlyVals,1);
+  const barRef=useRef(null);const barInst=useRef(null);
+  useEffect(()=>{if(!window.Chart||!barRef.current)return;if(barInst.current)barInst.current.destroy();barInst.current=new window.Chart(barRef.current,{type:'bar',data:{labels:months,datasets:[{data:monthlyVals,backgroundColor:monthlyVals.map((_,i)=>i===curMonth?'#5B4EE8':i<curMonth?'rgba(91,78,232,0.35)':'rgba(91,78,232,0.1)'),borderRadius:6,borderSkipped:false,hoverBackgroundColor:'rgba(91,78,232,0.6)'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.raw+'€'}}},scales:{x:{grid:{display:false},ticks:{font:{size:9},color:'#9ca3af'},border:{display:false}},y:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{callback:v=>v===0?'':v+'€',font:{size:9},color:'#9ca3af',maxTicksLimit:5},border:{display:false}}}}});return()=>{if(barInst.current)barInst.current.destroy();};},[JSON.stringify(monthlyVals)]);
+  const kpis=[
+    {l:'Locations réalisées',v:confirmed,s:`+${Math.max(0,confirmed-3)} ce mois`,ac:'#5B4EE8'},
+    {l:'Revenus totaux',v:revenue+'€',s:'Confirmés',ac:'#10b981'},
+    {l:'Note moyenne',v:(state.reviews?.length?((state.reviews.reduce((s,r)=>s+(r.rating||5),0)/state.reviews.length).toFixed(1)):'—')+'★',s:`${state.reviews?.length||0} avis`,ac:'#F59E0B'},
+    {l:'Mes annonces',v:myItems.length,s:'Actives',ac:'#8b5cf6'},
+  ];
+  const recentBookings=myBookAsOwner.slice(-5).reverse();
+  return <DesktopLayout active="dashboard" setPage={setPage} state={state} dispatch={dispatch}>
+    <div className="dsk-pg">
+      <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:28}}>
+        <div><div className="dsk-h1">Bonjour, {u.name?.split(' ')[0]} 👋</div><div className="dsk-sub" style={{marginBottom:0}}>{new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</div></div>
+        <div style={{display:'flex',gap:10}}>
+          {unread>0&&<button className="dsk-btn ghost" onClick={()=>setPage('notifs')}><span style={{marginRight:4}}>🔔</span>{unread} non lu{unread>1?'s':''}</button>}
+          <button className="dsk-btn primary" onClick={()=>setPage('create')}>+ Publier une annonce</button>
+        </div>
+      </div>
+      {/* KPIs */}
+      <div className="dsk-kpis">
+        {kpis.map(k=><div key={k.l} className="dsk-kpi">
+          <div style={{position:'absolute',top:0,left:0,width:4,height:'100%',background:k.ac,borderRadius:'16px 0 0 16px'}}/>
+          <div className="dsk-kpi-l">{k.l}</div>
+          <div className="dsk-kpi-v">{k.v}</div>
+          <div className="dsk-kpi-s">{k.s}</div>
+        </div>)}
+      </div>
+      {/* Chart + Actions */}
+      <div style={{display:'grid',gridTemplateColumns:'1fr 360px',gap:20,marginBottom:24}}>
+        <div className="dsk-card" style={{minHeight:300}}>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
+            <div><div style={{fontSize:15,fontWeight:700,color:'var(--dk)'}}>Revenus mensuels</div><div style={{fontSize:11,color:'var(--g)'}}>Année en cours</div></div>
+            <div style={{fontSize:22,fontWeight:800,color:'#5B4EE8'}}>{monthlyVals.reduce((a,b)=>a+b,0)}€</div>
+          </div>
+          <div style={{height:220}}><canvas ref={barRef}/></div>
+        </div>
+        <div className="dsk-card">
+          <div style={{fontSize:15,fontWeight:700,color:'var(--dk)',marginBottom:16}}>Actions rapides</div>
+          {[
+            {ic:'➕',lbl:'Publier une annonce',sub:'Mettez un objet en location',fn:()=>setPage('create')},
+            {ic:'📋',lbl:'Mes annonces',sub:`${myItems.length} actives`,fn:()=>setPage('annonces')},
+            {ic:'📅',lbl:'Réservations',sub:pending>0?`${pending} en attente`:'Tout est à jour',fn:()=>setPage('reservations')},
+            {ic:'⭐',lbl:'Mes avis',sub:`${state.reviews?.length||0} reçus`,fn:()=>setPage('avis')},
+          ].map(a=><button key={a.lbl} onClick={a.fn} style={{display:'flex',alignItems:'center',gap:12,width:'100%',padding:'12px 14px',borderRadius:10,background:'#F8F7FF',border:'none',cursor:'pointer',marginBottom:8,fontFamily:'var(--f)',textAlign:'left',transition:'background .15s'}}>
+            <span style={{fontSize:20,flexShrink:0}}>{a.ic}</span>
+            <div><div style={{fontSize:13,fontWeight:700,color:'var(--dk)'}}>{a.lbl}</div><div style={{fontSize:11,color:'var(--g)'}}>{a.sub}</div></div>
+          </button>)}
+        </div>
+      </div>
+      {/* Recent bookings */}
+      <div className="dsk-card" style={{padding:0}}>
+        <div style={{padding:'20px 24px',borderBottom:'1px solid #E6E5EF',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+          <div style={{fontSize:15,fontWeight:700,color:'var(--dk)'}}>Réservations récentes</div>
+          <button className="dsk-btn ghost" style={{padding:'6px 14px',fontSize:12}} onClick={()=>setPage('reservations')}>Voir tout →</button>
+        </div>
+        {recentBookings.length===0?<div style={{padding:40,textAlign:'center',color:'var(--g)'}}>Aucune réservation pour l'instant</div>:<table className="dsk-tbl">
+          <thead><tr><th>Objet</th><th>Locataire</th><th>Dates</th><th>Montant</th><th>Statut</th></tr></thead>
+          <tbody>{recentBookings.map(b=>{
+            const item=state.items.find(i=>i.id===b.itemId)||state.userItems.find(i=>i.id===b.itemId);
+            const isOk=b.status==='confirmed';const isPend=b.status==='pending';
+            return <tr key={b.id}>
+              <td style={{fontWeight:600}}>{item?.title||b.itemTitle||'Objet'}</td>
+              <td style={{color:'var(--g)'}}>{b.renterName||'Locataire'}</td>
+              <td style={{color:'var(--g)',fontSize:12}}>{b.dateStart&&b.dateEnd?`${new Date(b.dateStart).toLocaleDateString('fr-FR',{day:'numeric',month:'short'})} – ${new Date(b.dateEnd).toLocaleDateString('fr-FR',{day:'numeric',month:'short'})}`:b.date||'—'}</td>
+              <td style={{fontWeight:700,color:'#5B4EE8'}}>{b.total}€</td>
+              <td><span className={`dsk-badge ${isOk?'ok':isPend?'warn':'info'}`}>{b.status==='confirmed'?'Confirmée':b.status==='pending'?'En attente':'Nouvelle'}</span></td>
+            </tr>;
+          })}</tbody>
+        </table>}
+      </div>
+    </div>
+  </DesktopLayout>;
+}
+
+function DeskNotifications({state,dispatch,setPage}){
+  const notifs=state.notifications||[];
+  const tabs=['Tout','Non lus','Locations','Messages','Système'];
+  const[tab,setTab]=useState('Tout');
+  const filtered=tab==='Non lus'?notifs.filter(n=>!n.read):tab==='Tout'?notifs:notifs.filter(n=>n.kind===tab.toLowerCase());
+  return <DesktopLayout active="notifs" setPage={setPage} state={state} dispatch={dispatch}>
+    <div className="dsk-pg">
+      <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:4}}>
+        <div><div className="dsk-h1">Notifications</div><div className="dsk-sub" style={{marginBottom:0}}>Gérez vos alertes et restez informé</div></div>
+        <button className="dsk-btn ghost" onClick={()=>dispatch({type:'READ_N'})}>✓ Tout marquer lu</button>
+      </div>
+      <div style={{display:'flex',gap:8,margin:'20px 0'}}>
+        {tabs.map(t=><button key={t} onClick={()=>setTab(t)} style={{padding:'7px 16px',borderRadius:100,border:'none',cursor:'pointer',fontFamily:'var(--f)',fontSize:12,fontWeight:600,background:tab===t?'#5B4EE8':'#EFEEFE',color:tab===t?'#fff':'#5B4EE8',transition:'all .15s'}}>{t}</button>)}
+      </div>
+      <div className="dsk-card" style={{padding:0}}>
+        {filtered.length===0?<div style={{padding:60,textAlign:'center',color:'var(--g)'}}><div style={{fontSize:48,marginBottom:12}}>🔔</div><div style={{fontWeight:700,fontSize:15,color:'var(--dk)',marginBottom:6}}>Aucune notification</div><div style={{fontSize:13}}>Vous êtes à jour !</div></div>:
+        filtered.map(n=>{
+          const icons={message:'💬',booking:'📅',review:'⭐',badge:'🏅',wallet:'💰',dispute:'⚖️',referral:'🎁'};
+          const ic=icons[n.kind]||'🔔';
+          return <div key={n.id} className={`dsk-notif-row${n.read?'':' unread'}`} onClick={()=>{dispatch({type:'MARK_N_READ',id:n.id})}}>
+            <div style={{width:40,height:40,borderRadius:10,background:'#EFEEFE',display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,flexShrink:0}}>{ic}</div>
+            <div style={{flex:1,minWidth:0}}>
+              {!n.read&&<div style={{display:'inline-block',width:6,height:6,borderRadius:'50%',background:'#5B4EE8',marginRight:6,verticalAlign:'middle'}}/>}
+              <div style={{fontSize:13,fontWeight:n.read?500:700,color:'var(--dk)',marginBottom:2}}>{n.text}</div>
+              <div style={{fontSize:11,color:'var(--g)'}}>{n.at?new Date(n.at).toLocaleDateString('fr-FR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'—'}</div>
+            </div>
+            <div><span className={`dsk-badge ${n.read?'muted':'info'}`}>{n.read?'Lu':'Nouveau'}</span></div>
+          </div>;
+        })}
+      </div>
+    </div>
+  </DesktopLayout>;
+}
+
+function DeskGrade({state,dispatch,setPage}){
+  const u=state.user;const rentals=u?.rentals||0;
+  const currentGradeIdx=GRADES.reduce((acc,g,i)=>rentals>=g.min?i:acc,0);
+  const currentGrade=GRADES[currentGradeIdx];const nextGrade=GRADES[currentGradeIdx+1];
+  const fromMin=currentGrade.min;const toMin=nextGrade?nextGrade.min:fromMin+1;
+  const progressPct=nextGrade?Math.min(100,Math.round(((rentals-fromMin)/(toMin-fromMin))*100)):100;
+  const {div}=getDivision(rentals);
+  const GC={voisin:'#6b7280',habitant:'#3b82f6',pilier:'#F59E0B',gardien:'#7C3AED',legende:'#06B6D4',fondateur:'#D4AF37'};
+  const gc=GC[currentGrade.id]||'#5B4EE8';
+  return <DesktopLayout active="grade" setPage={setPage} state={state} dispatch={dispatch}>
+    <div className="dsk-pg">
+      <div className="dsk-h1">Mon Grade</div><div className="dsk-sub">Votre progression et vos avantages exclusifs</div>
+      {/* Hero card */}
+      <div style={{borderRadius:20,background:`linear-gradient(135deg,${gc},${gc}bb)`,padding:'28px 32px',color:'#fff',marginBottom:24,display:'flex',alignItems:'center',gap:24,boxShadow:`0 8px 32px ${gc}44`}}>
+        <span style={{fontSize:56}}>{currentGrade.icon}</span>
+        <div style={{flex:1}}>
+          <div style={{fontSize:11,fontWeight:700,letterSpacing:'.1em',textTransform:'uppercase',opacity:.75,marginBottom:4}}>Votre grade actuel</div>
+          <div style={{fontSize:30,fontWeight:900,letterSpacing:'-.02em',marginBottom:4}}>{currentGrade.name} {div.label}</div>
+          <div style={{fontSize:14,opacity:.8}}>{rentals} location{rentals!==1?'s':''} complétée{rentals!==1?'s':''} · Commission {currentGrade.feeRate*100}%</div>
+        </div>
+        {nextGrade&&<div style={{textAlign:'right',flexShrink:0}}>
+          <div style={{fontSize:11,opacity:.7,marginBottom:4}}>Prochain grade</div>
+          <div style={{fontSize:15,fontWeight:700}}>{nextGrade.name} I</div>
+          <div style={{fontSize:11,opacity:.7}}>{nextGrade.min-rentals} locations restantes</div>
+        </div>}
+      </div>
+      {/* Progress */}
+      {nextGrade&&<div className="dsk-card" style={{marginBottom:24}}>
+        <div style={{display:'flex',justifyContent:'space-between',fontSize:13,fontWeight:600,color:'var(--dk)',marginBottom:10}}>
+          <span>Progression vers {nextGrade.name}</span><span style={{color:'#5B4EE8'}}>{progressPct}%</span>
+        </div>
+        <div style={{background:'#EFEEFE',borderRadius:100,height:10,overflow:'hidden'}}>
+          <div style={{width:`${progressPct}%`,height:'100%',background:'#5B4EE8',borderRadius:100,transition:'width 1s ease'}}/>
+        </div>
+        <div style={{fontSize:11,color:'var(--g)',marginTop:8}}>Il vous faut encore {nextGrade.min-rentals} locations pour atteindre {nextGrade.name}</div>
+      </div>}
+      {/* Grade tiers */}
+      <div style={{display:'grid',gridTemplateColumns:`repeat(${GRADES.length},1fr)`,gap:12,marginBottom:24}}>
+        {GRADES.map((g,i)=>{const isActive=g.id===currentGrade.id;const isDone=i<currentGradeIdx;const gcolor=GC[g.id]||'#5B4EE8';
+        return <div key={g.id} style={{borderRadius:14,padding:'20px 16px',border:`2px solid ${isActive?gcolor:'#E6E5EF'}`,background:isActive?gcolor:'#fff',position:'relative',textAlign:'center',transition:'all .2s'}}>
+          {isDone&&<div style={{position:'absolute',top:8,right:8,width:20,height:20,borderRadius:'50%',background:'#10b981',color:'#fff',fontSize:12,display:'flex',alignItems:'center',justifyContent:'center',fontWeight:700}}>✓</div>}
+          <div style={{fontSize:32,marginBottom:8}}>{g.icon}</div>
+          <div style={{fontSize:14,fontWeight:700,color:isActive?'#fff':'var(--dk)',marginBottom:4}}>{g.name}</div>
+          <div style={{fontSize:11,color:isActive?'rgba(255,255,255,.8)':'var(--g)'}}>{g.feeRate*100}% commission</div>
+        </div>;})}
+      </div>
+      {/* Perks */}
+      <div className="dsk-card">
+        <div style={{fontSize:15,fontWeight:700,color:'var(--dk)',marginBottom:16}}>Avantages {currentGrade.name}</div>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))',gap:12}}>
+          {(currentGrade.avantages||currentGrade.perks||[]).map(p=><div key={p} style={{display:'flex',alignItems:'center',gap:12,padding:'12px 14px',background:'#F8F7FF',borderRadius:10}}>
+            <div style={{width:32,height:32,borderRadius:8,background:'#EFEEFE',display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,flexShrink:0}}>✦</div>
+            <span style={{fontSize:13,fontWeight:500,color:'var(--dk)'}}>{p}</span>
+          </div>)}
+        </div>
+      </div>
+    </div>
+  </DesktopLayout>;
+}
+
+function DeskParametres({state,dispatch,setPage}){
+  const u=state.user;
+  const[form,setForm]=useState({name:u?.name||'',email:u?.email||'',bio:u?.bio||'',location:u?.location||'',phone:u?.phone||''});
+  const[saved,setSaved]=useState(false);
+  const settingsTabs=[{id:'profil',lbl:'Profil'},{id:'securite',lbl:'Sécurité'},{id:'notifs',lbl:'Notifications'},{id:'paiement',lbl:'Paiement'},{id:'confidentialite',lbl:'Confidentialité'}];
+  const[stab,setStab]=useState('profil');
+  const save=()=>{dispatch({type:'UPDATE_PROFILE',payload:form});setSaved(true);setTimeout(()=>setSaved(false),2000);};
+  return <DesktopLayout active="parametres" setPage={setPage} state={state} dispatch={dispatch}>
+    <div className="dsk-pg">
+      <div className="dsk-h1">Paramètres</div><div className="dsk-sub">Personnalisez votre compte Cercle</div>
+      <div style={{display:'grid',gridTemplateColumns:'220px 1fr',gap:20}}>
+        {/* Settings tabs */}
+        <div className="dsk-card" style={{padding:12,alignSelf:'start'}}>
+          {settingsTabs.map(t=><button key={t.id} onClick={()=>setStab(t.id)} style={{display:'flex',width:'100%',padding:'11px 14px',borderRadius:10,background:stab===t.id?'#EFEEFE':'transparent',color:stab===t.id?'#5B4EE8':'var(--g)',fontWeight:stab===t.id?700:500,fontSize:13,border:'none',cursor:'pointer',fontFamily:'var(--f)',textAlign:'left',marginBottom:2}}>{t.lbl}</button>)}
+        </div>
+        {/* Content */}
+        <div className="dsk-card">
+          {stab==='profil'&&<>
+            <div style={{fontSize:17,fontWeight:700,color:'var(--dk)',marginBottom:20}}>Informations personnelles</div>
+            {/* Avatar */}
+            <div style={{display:'flex',alignItems:'center',gap:16,marginBottom:24}}>
+              <div style={{width:72,height:72,borderRadius:'50%',background:'#5B4EE8',display:'flex',alignItems:'center',justifyContent:'center',color:'#fff',fontWeight:800,fontSize:28}}>{u?.avatar||u?.name?.[0]||'U'}</div>
+              <div><div style={{fontSize:14,fontWeight:600,color:'var(--dk)',marginBottom:4}}>{u?.name}</div><button className="dsk-btn ghost" style={{padding:'6px 14px',fontSize:12}}>Modifier la photo</button></div>
+            </div>
+            {/* Fields */}
+            {[['Prénom & Nom','name','text',form.name],['Email','email','email',form.email],['Téléphone','phone','tel',form.phone],['Ville','location','text',form.location]].map(([lbl,key,type,val])=><div key={key} style={{marginBottom:16}}>
+              <label style={{display:'block',fontSize:11,fontWeight:700,color:'var(--g)',textTransform:'uppercase',letterSpacing:'.06em',marginBottom:6}}>{lbl}</label>
+              <input type={type} value={val} onChange={e=>setForm(f=>({...f,[key]:e.target.value}))} style={{width:'100%',padding:'11px 14px',border:'1.5px solid #E6E5EF',borderRadius:12,fontSize:14,fontFamily:'var(--f)',color:'var(--dk)',outline:'none',background:'#FAFAFE',boxSizing:'border-box'}}/>
+            </div>)}
+            <div style={{marginBottom:24}}>
+              <label style={{display:'block',fontSize:11,fontWeight:700,color:'var(--g)',textTransform:'uppercase',letterSpacing:'.06em',marginBottom:6}}>Biographie</label>
+              <textarea value={form.bio} onChange={e=>setForm(f=>({...f,bio:e.target.value}))} rows={3} style={{width:'100%',padding:'11px 14px',border:'1.5px solid #E6E5EF',borderRadius:12,fontSize:14,fontFamily:'var(--f)',color:'var(--dk)',outline:'none',background:'#FAFAFE',boxSizing:'border-box',resize:'vertical'}}/>
+            </div>
+            <button className="dsk-btn primary" onClick={save}>{saved?'✓ Enregistré !':'Enregistrer les modifications'}</button>
+          </>}
+          {stab==='securite'&&<div style={{textAlign:'center',padding:'40px 20px',color:'var(--g)'}}><div style={{fontSize:40,marginBottom:12}}>🔐</div><div style={{fontSize:15,fontWeight:700,color:'var(--dk)',marginBottom:6}}>Sécurité du compte</div><div style={{fontSize:13}}>Fonctionnalité disponible prochainement</div></div>}
+          {stab==='notifs'&&<div style={{textAlign:'center',padding:'40px 20px',color:'var(--g)'}}><div style={{fontSize:40,marginBottom:12}}>🔔</div><div style={{fontSize:15,fontWeight:700,color:'var(--dk)',marginBottom:6}}>Préférences notifications</div><div style={{fontSize:13}}>Fonctionnalité disponible prochainement</div></div>}
+          {stab==='paiement'&&<div style={{textAlign:'center',padding:'40px 20px',color:'var(--g)'}}><div style={{fontSize:40,marginBottom:12}}>💳</div><div style={{fontSize:15,fontWeight:700,color:'var(--dk)',marginBottom:6}}>Paiement & wallet</div><button className="dsk-btn ghost" style={{marginTop:12}} onClick={()=>setPage('wallet')}>Voir mon wallet →</button></div>}
+          {stab==='confidentialite'&&<div style={{textAlign:'center',padding:'40px 20px',color:'var(--g)'}}><div style={{fontSize:40,marginBottom:12}}>🔏</div><div style={{fontSize:15,fontWeight:700,color:'var(--dk)',marginBottom:6}}>Confidentialité & données</div><div style={{fontSize:13}}>Fonctionnalité disponible prochainement</div></div>}
+        </div>
+      </div>
+    </div>
+  </DesktopLayout>;
+}
+
+function DeskAvis({state,dispatch,setPage}){
+  const reviews=state.reviews||[];
+  const avg=reviews.length?(reviews.reduce((s,r)=>s+(r.rating||5),0)/reviews.length).toFixed(1):'—';
+  const dist=[5,4,3,2,1].map(s=>({s,n:reviews.filter(r=>(r.rating||5)===s).length}));
+  return <DesktopLayout active="avis" setPage={setPage} state={state} dispatch={dispatch}>
+    <div className="dsk-pg">
+      <div className="dsk-h1">Mes avis</div><div className="dsk-sub">Votre réputation sur la plateforme</div>
+      {/* Stats */}
+      <div className="dsk-kpis">
+        {[{v:avg,l:'Note moyenne'},{v:reviews.length,l:'Avis reçus'},{v:`${reviews.length>0?Math.round(reviews.filter(r=>(r.rating||5)>=4).length/reviews.length*100):100}%`,l:'Avis positifs (4★+)'},{v:'★'.repeat(Math.round(parseFloat(avg)||5)),l:'Dernière note'}].map(k=><div key={k.l} className="dsk-kpi">
+          <div style={{position:'absolute',top:0,left:0,width:4,height:'100%',background:'#F59E0B',borderRadius:'16px 0 0 16px'}}/>
+          <div className="dsk-kpi-l">{k.l}</div>
+          <div className="dsk-kpi-v" style={{fontSize:k.v.length>5?20:30,color:k.l==='Dernière note'?'#F59E0B':'var(--dk)'}}>{k.v}</div>
+        </div>)}
+      </div>
+      <div style={{display:'grid',gridTemplateColumns:'320px 1fr',gap:20}}>
+        {/* Distribution */}
+        <div className="dsk-card">
+          <div style={{fontSize:14,fontWeight:700,color:'var(--dk)',marginBottom:16}}>Répartition des notes</div>
+          {dist.map(d=>{const pct=reviews.length?Math.round(d.n/reviews.length*100):0;return <div key={d.s} style={{display:'flex',alignItems:'center',gap:10,marginBottom:10}}>
+            <span style={{fontSize:11,fontWeight:600,color:'#F59E0B',width:20}}>{d.s}★</span>
+            <div style={{flex:1,background:'#F3F4F6',borderRadius:100,height:8,overflow:'hidden'}}><div style={{width:`${pct}%`,height:'100%',background:'#F59E0B',borderRadius:100}}/></div>
+            <span style={{fontSize:11,color:'var(--g)',width:20,textAlign:'right'}}>{d.n}</span>
+          </div>;})}
+        </div>
+        {/* Reviews list */}
+        <div className="dsk-card" style={{padding:0}}>
+          {reviews.length===0?<div style={{padding:60,textAlign:'center',color:'var(--g)'}}><div style={{fontSize:48,marginBottom:12}}>⭐</div><div style={{fontWeight:700,fontSize:15,color:'var(--dk)',marginBottom:6}}>Aucun avis pour l'instant</div><div style={{fontSize:13}}>Vos premiers avis apparaîtront ici</div></div>:
+          reviews.slice().reverse().map((r,i)=><div key={i} style={{padding:'18px 24px',borderBottom:'1px solid #F5F4FF',display:'flex',gap:14}}>
+            <div style={{width:40,height:40,borderRadius:'50%',background:'#EFEEFE',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:800,fontSize:15,color:'#5B4EE8',flexShrink:0}}>{r.fromName?.[0]||'U'}</div>
+            <div style={{flex:1}}>
+              <div style={{display:'flex',justifyContent:'space-between',marginBottom:4}}>
+                <div style={{fontSize:13,fontWeight:700,color:'var(--dk)'}}>{r.fromName||'Utilisateur'}</div>
+                <div style={{fontSize:11,color:'var(--g)'}}>{r.at?new Date(r.at).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'}):'—'}</div>
+              </div>
+              <div style={{color:'#F59E0B',fontSize:13,marginBottom:6}}>{'★'.repeat(r.rating||5)}{'☆'.repeat(5-(r.rating||5))}</div>
+              <div style={{fontSize:13,color:'var(--dk)',lineHeight:1.5}}>{r.text||'Avis positif.'}</div>
+            </div>
+          </div>)}
+        </div>
+      </div>
+    </div>
+  </DesktopLayout>;
+}
+
+function DeskMesAnnonces({state,dispatch,setPage}){
+  const u=state.user;
+  const myItems=[...state.items.filter(i=>i.owner?.id===u.id||(u.email&&i.owner?.email===u.email)),...state.userItems.filter(i=>i.owner?.id===u.id||(u.email&&i.owner?.email===u.email))];
+  const revenue=state.bookings.filter(b=>b.ownerId===u.id&&b.status==='confirmed').reduce((s,b)=>s+b.total,0);
+  const[filter,setFilter]=useState('Toutes');
+  const filters=['Toutes','Actives','En pause','Brouillons'];
+  return <DesktopLayout active="annonces" setPage={setPage} state={state} dispatch={dispatch}>
+    <div className="dsk-pg">
+      <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:4}}>
+        <div><div className="dsk-h1">Mes annonces</div><div className="dsk-sub" style={{marginBottom:0}}>Gérez vos objets en location</div></div>
+        <button className="dsk-btn primary" onClick={()=>setPage('create')}>+ Nouvelle annonce</button>
+      </div>
+      {/* Stats */}
+      <div className="dsk-kpis" style={{marginTop:24}}>
+        {[{v:myItems.length,l:'Annonces actives'},{v:state.bookings.filter(b=>b.ownerId===u.id&&b.status==='confirmed').length,l:'Locations totales'},{v:revenue+'€',l:'Revenus totaux'},{v:state.reviews?.length||0,l:'Avis reçus'}].map(k=><div key={k.l} className="dsk-kpi"><div style={{position:'absolute',top:0,left:0,width:4,height:'100%',background:'#5B4EE8',borderRadius:'16px 0 0 16px'}}/><div className="dsk-kpi-l">{k.l}</div><div className="dsk-kpi-v">{k.v}</div></div>)}
+      </div>
+      {/* Filters */}
+      <div style={{display:'flex',gap:8,marginBottom:20}}>
+        {filters.map(f=><button key={f} onClick={()=>setFilter(f)} style={{padding:'7px 16px',borderRadius:100,border:'none',cursor:'pointer',fontFamily:'var(--f)',fontSize:12,fontWeight:600,background:filter===f?'#5B4EE8':'#EFEEFE',color:filter===f?'#fff':'#5B4EE8'}}>{f}</button>)}
+      </div>
+      {/* Table */}
+      {myItems.length===0?<div className="dsk-card" style={{padding:60,textAlign:'center'}}><div style={{fontSize:48,marginBottom:12}}>📋</div><div style={{fontSize:16,fontWeight:700,color:'var(--dk)',marginBottom:8}}>Aucune annonce pour l'instant</div><div style={{fontSize:13,color:'var(--g)',marginBottom:20}}>Commencez à louer vos objets en quelques minutes</div><button className="dsk-btn primary" onClick={()=>setPage('create')}>Publier ma première annonce</button></div>:
+      <div className="dsk-card" style={{padding:0}}>
+        <table className="dsk-tbl" style={{width:'100%'}}>
+          <thead><tr><th>Annonce</th><th>Catégorie</th><th>Prix/jour</th><th>Locations</th><th>Note</th><th>Statut</th><th>Actions</th></tr></thead>
+          <tbody>{myItems.map(item=>{
+            const itemBookings=state.bookings.filter(b=>b.itemId===item.id&&b.status==='confirmed').length;
+            return <tr key={item.id}>
+              <td><div style={{fontWeight:700,color:'var(--dk)',marginBottom:2}}>{item.title}</div><div style={{fontSize:11,color:'var(--g)'}}>{item.location}</div></td>
+              <td><span className="dsk-badge info">{CATS_FR[item.cat]||item.cat}</span></td>
+              <td style={{fontWeight:700,color:'#5B4EE8'}}>{item.price}€</td>
+              <td style={{color:'var(--g)',fontWeight:600}}>{itemBookings}</td>
+              <td><span style={{color:'#F59E0B',fontWeight:700}}>★ {item.rating?.toFixed(1)||'—'}</span></td>
+              <td><span className="dsk-badge ok">Active</span></td>
+              <td><button className="dsk-btn ghost" style={{padding:'5px 12px',fontSize:11}} onClick={()=>{setPage('create');}}>Éditer</button></td>
+            </tr>;
+          })}</tbody>
+        </table>
+      </div>}
+    </div>
+  </DesktopLayout>;
+}
+
+function DeskFavoris({state,dispatch,setPage,allItems,openDetail}){
+  const favItems=allItems.filter(i=>state.favorites&&state.favorites.has(i.id));
+  return <DesktopLayout active="favoris" setPage={setPage} state={state} dispatch={dispatch}>
+    <div className="dsk-pg">
+      <div className="dsk-h1">Mes favoris <span style={{fontSize:16,background:'#EFEEFE',color:'#5B4EE8',borderRadius:100,padding:'2px 12px',fontFamily:'var(--f)',fontWeight:700,marginLeft:8,verticalAlign:'middle'}}>{favItems.length}</span></div>
+      <div className="dsk-sub">Les annonces que vous avez sauvegardées</div>
+      {favItems.length===0?<div className="dsk-card" style={{padding:60,textAlign:'center'}}><div style={{fontSize:48,marginBottom:12}}>❤️</div><div style={{fontSize:16,fontWeight:700,color:'var(--dk)',marginBottom:8}}>Aucun favori pour l'instant</div><div style={{fontSize:13,color:'var(--g)',marginBottom:20}}>Explorez les annonces et cliquez sur ❤ pour les sauvegarder</div><button className="dsk-btn primary" onClick={()=>setPage('home')}>Découvrir des annonces</button></div>:
+      <div className="dsk-fav-grid">
+        {favItems.map(item=><div key={item.id} className="dsk-fav-card" onClick={()=>openDetail&&openDetail(item)}>
+          <div style={{height:140,background:`linear-gradient(135deg,#5B4EE8,#3A30D8)`,display:'flex',alignItems:'center',justifyContent:'center',position:'relative'}}>
+            {item.images?.[0]?<img src={item.images[0]} alt={item.title} style={{width:'100%',height:140,objectFit:'cover'}}/>:<span style={{fontSize:40}}>{CE[item.cat]||'📦'}</span>}
+            <button onClick={e=>{e.stopPropagation();dispatch({type:'TOG_FAV',id:item.id,ownerId:item.owner?.id,title:item.title});}} style={{position:'absolute',top:8,right:8,width:32,height:32,borderRadius:'50%',background:'rgba(255,255,255,.9)',border:'none',cursor:'pointer',fontSize:16,display:'flex',alignItems:'center',justifyContent:'center'}}>❤️</button>
+          </div>
+          <div className="dsk-fav-body">
+            <div style={{fontSize:13,fontWeight:700,color:'var(--dk)',marginBottom:2}}>{item.title}</div>
+            <div style={{fontSize:11,color:'var(--g)',marginBottom:8}}>{item.owner?.name||'Propriétaire'}</div>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+              <span style={{fontWeight:800,color:'#5B4EE8',fontSize:16}}>{item.price}€<span style={{fontSize:11,fontWeight:400,color:'var(--g)'}}>/j</span></span>
+              <span style={{fontSize:11,color:'#F59E0B',fontWeight:600}}>★ {item.rating?.toFixed(1)||'—'}</span>
+            </div>
+          </div>
+        </div>)}
+      </div>}
+    </div>
+  </DesktopLayout>;
+}
+
+function DeskReservations({state,dispatch,setPage}){
+  const u=state.user;
+  const myBookings=state.bookings.filter(b=>b.userId===u.id||b.ownerId===u.id);
+  const tabs=['Toutes','En cours','À venir','Terminées'];
+  const[tab,setTab]=useState('Toutes');
+  const now=new Date();
+  const filtered=tab==='Toutes'?myBookings:tab==='Terminées'?myBookings.filter(b=>b.status==='confirmed'&&new Date(b.dateEnd||b.date||0)<now):tab==='En cours'?myBookings.filter(b=>b.status==='confirmed'&&new Date(b.dateStart||b.date||0)<=now&&new Date(b.dateEnd||b.date||0)>=now):myBookings.filter(b=>b.status==='pending'||new Date(b.dateStart||b.date||0)>now);
+  return <DesktopLayout active="reservations" setPage={setPage} state={state} dispatch={dispatch}>
+    <div className="dsk-pg">
+      <div className="dsk-h1">Réservations</div><div className="dsk-sub">Gérez vos locations en cours et à venir</div>
+      {/* Stats */}
+      <div className="dsk-kpis">
+        {[{v:myBookings.length,l:'Total réservations'},{v:myBookings.filter(b=>b.status==='confirmed').length,l:'Confirmées'},{v:myBookings.filter(b=>b.status==='pending').length,l:'En attente'},{v:myBookings.filter(b=>b.status==='confirmed').reduce((s,b)=>s+b.total,0)+'€',l:'Montant total'}].map(k=><div key={k.l} className="dsk-kpi"><div style={{position:'absolute',top:0,left:0,width:4,height:'100%',background:'#5B4EE8',borderRadius:'16px 0 0 16px'}}/><div className="dsk-kpi-l">{k.l}</div><div className="dsk-kpi-v">{k.v}</div></div>)}
+      </div>
+      {/* Tabs */}
+      <div style={{display:'flex',gap:8,marginBottom:20}}>
+        {tabs.map(t=><button key={t} onClick={()=>setTab(t)} style={{padding:'7px 16px',borderRadius:100,border:'none',cursor:'pointer',fontFamily:'var(--f)',fontSize:12,fontWeight:600,background:tab===t?'#5B4EE8':'#EFEEFE',color:tab===t?'#fff':'#5B4EE8'}}>{t}</button>)}
+      </div>
+      {/* Cards */}
+      {filtered.length===0?<div className="dsk-card" style={{padding:60,textAlign:'center'}}><div style={{fontSize:48,marginBottom:12}}>📅</div><div style={{fontSize:16,fontWeight:700,color:'var(--dk)',marginBottom:8}}>Aucune réservation ici</div><div style={{fontSize:13,color:'var(--g)',marginBottom:20}}>Trouvez des objets à louer autour de vous</div><button className="dsk-btn primary" onClick={()=>setPage('home')}>Explorer les annonces</button></div>:
+      <div style={{display:'flex',flexDirection:'column',gap:14}}>
+        {filtered.map(b=>{
+          const item=state.items.find(i=>i.id===b.itemId)||state.userItems.find(i=>i.id===b.itemId);
+          const isOwner=b.ownerId===u.id;const isOk=b.status==='confirmed';const isPend=b.status==='pending';
+          return <div key={b.id} className="dsk-card" style={{padding:0,overflow:'hidden'}}>
+            <div style={{display:'flex',alignItems:'center',gap:0}}>
+              {/* Thumb */}
+              <div style={{width:80,height:80,background:'linear-gradient(135deg,#5B4EE8,#3A30D8)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:32,flexShrink:0}}>
+                {item?.images?.[0]?<img src={item.images[0]} alt="" style={{width:80,height:80,objectFit:'cover'}}/>:<span>{CE[item?.cat||'']||'📦'}</span>}
+              </div>
+              <div style={{flex:1,padding:'16px 20px'}}>
+                <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}>
+                  <div>
+                    <div style={{fontSize:14,fontWeight:700,color:'var(--dk)',marginBottom:2}}>{item?.title||b.itemTitle||'Location'}</div>
+                    <div style={{fontSize:12,color:'var(--g)',marginBottom:4}}>{isOwner?`Loué par ${b.renterName||'Locataire'}`:`Propriétaire: ${item?.owner?.name||'—'}`}</div>
+                    <div style={{fontSize:11,color:'var(--g)'}}>📅 {b.dateStart?new Date(b.dateStart).toLocaleDateString('fr-FR',{day:'numeric',month:'short'}):''}{b.dateEnd?` – ${new Date(b.dateEnd).toLocaleDateString('fr-FR',{day:'numeric',month:'short'})}`:''}</div>
+                  </div>
+                  <div style={{textAlign:'right'}}>
+                    <div style={{fontSize:18,fontWeight:800,color:'#5B4EE8',marginBottom:4}}>{b.total}€</div>
+                    <span className={`dsk-badge ${isOk?'ok':isPend?'warn':'info'}`}>{isPend?'En attente':isOk?'Confirmée':'Nouvelle'}</span>
+                  </div>
+                </div>
+              </div>
+              <div style={{padding:'16px',display:'flex',flexDirection:'column',gap:8,flexShrink:0,borderLeft:'1px solid #E6E5EF'}}>
+                <button className="dsk-btn ghost" style={{padding:'6px 14px',fontSize:12}} onClick={()=>setPage('messages')}>💬 Contacter</button>
+                {isOwner&&isPend&&<button className="dsk-btn primary" style={{padding:'6px 14px',fontSize:12}} onClick={()=>dispatch({type:'CONFIRM_BOOKING',id:b.id})}>✓ Confirmer</button>}
+              </div>
+            </div>
+          </div>;
+        })}
+      </div>}
+    </div>
+  </DesktopLayout>;
+}
+
 /* ========== MAIN APP ========== */
