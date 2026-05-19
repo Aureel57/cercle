@@ -75,18 +75,35 @@ function CreateListing({state,dispatch,setPage,mode,editItem}){
   };
 
   const canSubmit = f.title.trim() && f.price;
+  const catEmoji=CE[f.cat]||'📦';
+  const catColors=CC[f.cat]||['#5B4EE8','#3A30D8'];
+
   return <div className="cl-page">
     {/* Sticky header */}
     <div className="cl-header">
       <button onClick={()=>setPage("profile")} style={{background:'none',border:'none',padding:'4px',cursor:'pointer',display:'flex',alignItems:'center',color:'var(--dk)',borderRadius:10,flexShrink:0}}><I.Back/></button>
-      <div style={{flex:1}}>
-        <div style={{fontSize:16,fontWeight:800,fontFamily:'var(--fd)',color:'var(--dk)'}}>{editItem?"Modifier l'annonce":"Nouvelle annonce"}</div>
-        <div style={{fontSize:12,color:'var(--g)',marginTop:1}}>{editItem?"Mettez à jour votre annonce":"Proposez votre objet en quelques étapes"}</div>
+      {/* Desktop steps progress */}
+      <div className="cl-steps">
+        {[{n:'1',l:'Photos',done:photos.length>0},{n:'2',l:'Informations',done:!!f.title},{n:'3',l:'Prix',done:!!f.price},{n:'4',l:'Localisation',done:!!f.location},{n:'5',l:'Publier',done:false}].map((s,i)=>(
+          <React.Fragment key={s.n}>
+            {i>0&&<div className="cl-step-line"/>}
+            <div className={"cl-step"+(s.done?" done":(i===(!f.title?1:!f.price?2:!f.location?3:0))?" active":"")}>
+              <div className="cl-step-dot">{s.done?'✓':s.n}</div>
+              <span>{s.l}</span>
+            </div>
+          </React.Fragment>
+        ))}
       </div>
-      {saving&&<div style={{fontSize:12,color:'var(--p)',fontWeight:600}}>Enregistrement…</div>}
+      <div style={{display:'flex',alignItems:'center',gap:8,flexShrink:0}}>
+        {saving&&<div style={{fontSize:12,color:'var(--p)',fontWeight:600}}>Enregistrement…</div>}
+        {!saving&&<div style={{fontSize:13,fontWeight:700,fontFamily:'var(--fd)',color:'var(--dk)'}}>{editItem?"Modifier":"Nouvelle annonce"}</div>}
+      </div>
     </div>
 
-    <div className="cl-body">
+    {/* Two-column layout */}
+    <div className="cl-layout">
+      <div className="cl-form-col">
+      <div className="cl-body">
       {/* Section 1: Infos de base */}
       <div className="cl-section">
         <div className="cl-section-title"><span>📝</span> L'essentiel</div>
@@ -213,12 +230,37 @@ function CreateListing({state,dispatch,setPage,mode,editItem}){
       </div>
     </div>
 
-    {/* Sticky CTA */}
-    <div className="cl-submit">
-      <button className="cl-cta" onClick={go} disabled={saving||!canSubmit}>
-        {saving?<><span style={{animation:'spin 1s linear infinite',display:'inline-block'}}>⏳</span> Enregistrement…</>:editItem?<><span>💾</span> Enregistrer les modifications</>:<><span>🚀</span> Publier l'annonce</>}
-      </button>
-    </div>
+      </div>{/* end cl-body */}
+      {/* Sticky CTA */}
+      <div className="cl-submit">
+        <button className="cl-cta" onClick={go} disabled={saving||!canSubmit}>
+          {saving?<><span style={{animation:'spin 1s linear infinite',display:'inline-block'}}>⏳</span> Enregistrement…</>:editItem?<><span>💾</span> Enregistrer les modifications</>:<><span>🚀</span> Publier l'annonce</>}
+        </button>
+      </div>
+      </div>{/* end cl-form-col */}
+
+      {/* Desktop preview column */}
+      <div className="cl-preview-col">
+        <div className="cl-preview-label">👁 Aperçu de votre annonce</div>
+        <div className="cl-preview-card">
+          <div className="cl-preview-img" style={{background:`linear-gradient(135deg,${catColors[0]},${catColors[1]})`}}>
+            {catEmoji}
+          </div>
+          <div className="cl-preview-body">
+            {f.title?<div className="cl-preview-title">{f.title}</div>:<div className="cl-preview-title" style={{color:'var(--gl)',fontStyle:'italic'}}>Titre de l'annonce…</div>}
+            <div style={{fontSize:13,color:'var(--g)',marginBottom:12}}>📍 {f.location||'Localisation'} · {CATS.find(c=>c.id===f.cat)?.icon} {CATS.find(c=>c.id===f.cat)?.label}</div>
+            {f.price?<div className="cl-preview-price">{f.price}€<span style={{fontSize:14,fontWeight:400,color:'var(--g)'}}>/jour</span></div>:<div style={{fontSize:20,color:'var(--gl)',fontWeight:700}}>Prix/jour…</div>}
+            <div style={{marginTop:10,fontSize:12,color:'var(--g)',background:'var(--bg)',padding:'8px 12px',borderRadius:10}}>💡 Gains estimés : <strong style={{color:'var(--p)'}}>{f.price?Math.round(+f.price*.88)+'€':'-'}€/jour</strong> après commission</div>
+          </div>
+        </div>
+        <ul className="cl-tips">
+          <div className="cl-tips-title">✨ Conseils pour bien louer</div>
+          <li><span>📸</span>Ajoutez 3+ photos pour +40% de vues</li>
+          <li><span>💰</span>Regardez les prix similaires pour rester compétitif</li>
+          <li><span>✍️</span>Une description détaillée rassure les locataires</li>
+        </ul>
+      </div>
+    </div>{/* end cl-layout */}
   </div>
 }
 

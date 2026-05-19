@@ -219,6 +219,35 @@ html,body{overflow-x:hidden;width:100%}
 /* ── CreateListing Modern ── */
 .cl-page{min-height:100vh;background:var(--bg);padding-bottom:40px}
 .cl-header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,0.95);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--bd);padding:14px 20px;display:flex;align-items:center;gap:12px}
+/* Progress steps (desktop) */
+.cl-steps{display:none;align-items:center;gap:0;flex:1;justify-content:center}
+.cl-step{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:var(--g)}
+.cl-step.done .cl-step-dot{background:var(--acc);color:#fff}
+.cl-step.active .cl-step-dot{background:var(--p);color:#fff}
+.cl-step.active{color:var(--p)}
+.cl-step.done{color:var(--acc)}
+.cl-step-dot{width:26px;height:26px;border-radius:50%;background:var(--bg);border:2px solid var(--bd);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;transition:all .2s}
+.cl-step-line{width:32px;height:2px;background:var(--bd);margin:0 4px;flex-shrink:0}
+.cl-step.done+.cl-step .cl-step-line,.cl-step.done .cl-step-line{background:var(--acc)}
+/* Two-column layout on desktop */
+.cl-layout{display:flex;gap:0;align-items:flex-start}
+.cl-form-col{flex:1;min-width:0}
+.cl-preview-col{display:none;width:420px;flex-shrink:0;padding:24px;position:sticky;top:72px}
+.cl-preview-label{font-size:14px;font-weight:700;color:var(--dk);margin-bottom:16px}
+.cl-preview-card{background:var(--w);border-radius:24px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.1)}
+.cl-preview-img{height:200px;display:flex;align-items:center;justify-content:center;font-size:72px;background:linear-gradient(135deg,var(--p),var(--pd))}
+.cl-preview-body{padding:20px}
+.cl-preview-title{font-size:17px;font-weight:700;color:var(--dk);margin-bottom:8px;line-height:1.3}
+.cl-preview-price{font-size:22px;font-weight:800;color:var(--p)}
+.cl-tips{margin-top:20px;background:var(--ps,#EDEAFF);border-radius:20px;padding:18px;border:1.5px solid rgba(91,78,232,.2)}
+.cl-tips-title{font-size:13px;font-weight:700;color:var(--p);margin-bottom:12px}
+.cl-tips li{font-size:12px;color:var(--mid,#3D3A55);margin-bottom:8px;line-height:1.5;list-style:none;display:flex;align-items:flex-start;gap:6px}
+@media(min-width:1024px){
+  .cl-steps{display:flex}
+  .cl-preview-col{display:block}
+  .cl-body{max-width:100%;padding:24px 28px}
+  .cl-submit{max-width:100%}
+}
 .dark .cl-header{background:rgba(15,15,19,0.95)}
 .cl-prog{height:3px;background:var(--bd);border-radius:99;margin-top:0;overflow:hidden}
 .cl-prog-fill{height:100%;background:linear-gradient(90deg,var(--p),#FF8A5C);border-radius:99;transition:width .4s ease}
@@ -247,13 +276,14 @@ html,body{overflow-x:hidden;width:100%}
 .msg-header{flex-shrink:0;background:rgba(255,255,255,.97);backdrop-filter:blur(16px);border-bottom:1px solid var(--bd);padding:0 16px;display:flex;align-items:center;height:60px;gap:12px}
 .dark .msg-header{background:rgba(15,15,19,.97)}
 .msg-body{flex:1;display:flex;overflow:hidden}
-.conv-list{width:320px;flex-shrink:0;border-right:1px solid var(--bd);display:flex;flex-direction:column;background:var(--w);overflow:hidden}
+.conv-list{width:360px;flex-shrink:0;border-right:1px solid var(--bd);display:flex;flex-direction:column;background:var(--w);overflow:hidden;box-shadow:2px 0 12px rgba(0,0,0,.04)}
 .dark .conv-list{background:#111118}
-.conv-search{padding:12px 14px;border-bottom:1px solid var(--bd)}.conv-search input{width:100%;padding:9px 14px;border:1.5px solid var(--bd);border-radius:24px;font-size:13px;background:var(--bg);outline:none;box-sizing:border-box;color:var(--dk)}.conv-search input:focus{border-color:var(--p)}
+.conv-search{padding:14px 16px;border-bottom:1px solid var(--bd);background:var(--w)}.conv-search input{width:100%;padding:10px 16px 10px 40px;border:1.5px solid var(--bd);border-radius:100px;font-size:13px;background:var(--bg);outline:none;box-sizing:border-box;color:var(--dk);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238F8CA6' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:12px center}.conv-search input:focus{border-color:var(--p);box-shadow:0 0 0 3px rgba(91,78,232,.1)}
 .dark .conv-search input{background:#1a1a24;border-color:rgba(255,255,255,.1);color:#F5F5F5}
 .conv-items{flex:1;overflow-y:auto}
-.conv-item{display:flex;align-items:center;gap:12px;padding:13px 16px;cursor:pointer;transition:background .15s;border-bottom:1px solid rgba(0,0,0,.04);position:relative}
-.conv-item:hover,.conv-item.active{background:var(--bg);border-left:3px solid var(--p)}
+.conv-item{display:flex;align-items:center;gap:12px;padding:14px 18px;cursor:pointer;transition:all .15s;border-bottom:1px solid rgba(91,78,232,.06);position:relative;border-left:3px solid transparent}
+.conv-item:hover{background:var(--bg)}
+.conv-item.active{background:var(--ps,#EDEAFF);border-left-color:var(--p)}
 .dark .conv-item:hover,.dark .conv-item.active{background:#1a1a24}
 .conv-av{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,#EDEAFF,#D4CFFF);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;position:relative}
 .conv-av-online{position:absolute;bottom:1px;right:1px;width:12px;height:12px;border-radius:50%;background:#22c55e;border:2px solid var(--w)}
@@ -264,7 +294,7 @@ html,body{overflow-x:hidden;width:100%}
 .conv-time{font-size:11px;color:var(--gl)}
 .conv-badge{background:var(--p);color:#fff;border-radius:99px;font-size:10px;font-weight:700;padding:2px 7px;min-width:18px;text-align:center}
 .chat-area{flex:1;display:flex;flex-direction:column;overflow:hidden}
-.chat-header{flex-shrink:0;padding:14px 18px;border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:12px;background:var(--w)}
+.chat-header{flex-shrink:0;padding:14px 20px;border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:12px;background:var(--w);box-shadow:0 2px 8px rgba(0,0,0,.04)}
 .dark .chat-header{background:#111118}
 .chat-header-name{font-size:15px;font-weight:700;color:var(--dk)}
 .chat-header-sub{font-size:12px;color:var(--g);margin-top:1px}
@@ -3169,18 +3199,35 @@ function CreateListing({state,dispatch,setPage,mode,editItem}){
   };
 
   const canSubmit = f.title.trim() && f.price;
+  const catEmoji=CE[f.cat]||'📦';
+  const catColors=CC[f.cat]||['#5B4EE8','#3A30D8'];
+
   return <div className="cl-page">
     {/* Sticky header */}
     <div className="cl-header">
       <button onClick={()=>setPage("profile")} style={{background:'none',border:'none',padding:'4px',cursor:'pointer',display:'flex',alignItems:'center',color:'var(--dk)',borderRadius:10,flexShrink:0}}><I.Back/></button>
-      <div style={{flex:1}}>
-        <div style={{fontSize:16,fontWeight:800,fontFamily:'var(--fd)',color:'var(--dk)'}}>{editItem?"Modifier l'annonce":"Nouvelle annonce"}</div>
-        <div style={{fontSize:12,color:'var(--g)',marginTop:1}}>{editItem?"Mettez à jour votre annonce":"Proposez votre objet en quelques étapes"}</div>
+      {/* Desktop steps progress */}
+      <div className="cl-steps">
+        {[{n:'1',l:'Photos',done:photos.length>0},{n:'2',l:'Informations',done:!!f.title},{n:'3',l:'Prix',done:!!f.price},{n:'4',l:'Localisation',done:!!f.location},{n:'5',l:'Publier',done:false}].map((s,i)=>(
+          <React.Fragment key={s.n}>
+            {i>0&&<div className="cl-step-line"/>}
+            <div className={"cl-step"+(s.done?" done":(i===(!f.title?1:!f.price?2:!f.location?3:0))?" active":"")}>
+              <div className="cl-step-dot">{s.done?'✓':s.n}</div>
+              <span>{s.l}</span>
+            </div>
+          </React.Fragment>
+        ))}
       </div>
-      {saving&&<div style={{fontSize:12,color:'var(--p)',fontWeight:600}}>Enregistrement…</div>}
+      <div style={{display:'flex',alignItems:'center',gap:8,flexShrink:0}}>
+        {saving&&<div style={{fontSize:12,color:'var(--p)',fontWeight:600}}>Enregistrement…</div>}
+        {!saving&&<div style={{fontSize:13,fontWeight:700,fontFamily:'var(--fd)',color:'var(--dk)'}}>{editItem?"Modifier":"Nouvelle annonce"}</div>}
+      </div>
     </div>
 
-    <div className="cl-body">
+    {/* Two-column layout */}
+    <div className="cl-layout">
+      <div className="cl-form-col">
+      <div className="cl-body">
       {/* Section 1: Infos de base */}
       <div className="cl-section">
         <div className="cl-section-title"><span>📝</span> L'essentiel</div>
@@ -3307,12 +3354,37 @@ function CreateListing({state,dispatch,setPage,mode,editItem}){
       </div>
     </div>
 
-    {/* Sticky CTA */}
-    <div className="cl-submit">
-      <button className="cl-cta" onClick={go} disabled={saving||!canSubmit}>
-        {saving?<><span style={{animation:'spin 1s linear infinite',display:'inline-block'}}>⏳</span> Enregistrement…</>:editItem?<><span>💾</span> Enregistrer les modifications</>:<><span>🚀</span> Publier l'annonce</>}
-      </button>
-    </div>
+      </div>{/* end cl-body */}
+      {/* Sticky CTA */}
+      <div className="cl-submit">
+        <button className="cl-cta" onClick={go} disabled={saving||!canSubmit}>
+          {saving?<><span style={{animation:'spin 1s linear infinite',display:'inline-block'}}>⏳</span> Enregistrement…</>:editItem?<><span>💾</span> Enregistrer les modifications</>:<><span>🚀</span> Publier l'annonce</>}
+        </button>
+      </div>
+      </div>{/* end cl-form-col */}
+
+      {/* Desktop preview column */}
+      <div className="cl-preview-col">
+        <div className="cl-preview-label">👁 Aperçu de votre annonce</div>
+        <div className="cl-preview-card">
+          <div className="cl-preview-img" style={{background:`linear-gradient(135deg,${catColors[0]},${catColors[1]})`}}>
+            {catEmoji}
+          </div>
+          <div className="cl-preview-body">
+            {f.title?<div className="cl-preview-title">{f.title}</div>:<div className="cl-preview-title" style={{color:'var(--gl)',fontStyle:'italic'}}>Titre de l'annonce…</div>}
+            <div style={{fontSize:13,color:'var(--g)',marginBottom:12}}>📍 {f.location||'Localisation'} · {CATS.find(c=>c.id===f.cat)?.icon} {CATS.find(c=>c.id===f.cat)?.label}</div>
+            {f.price?<div className="cl-preview-price">{f.price}€<span style={{fontSize:14,fontWeight:400,color:'var(--g)'}}>/jour</span></div>:<div style={{fontSize:20,color:'var(--gl)',fontWeight:700}}>Prix/jour…</div>}
+            <div style={{marginTop:10,fontSize:12,color:'var(--g)',background:'var(--bg)',padding:'8px 12px',borderRadius:10}}>💡 Gains estimés : <strong style={{color:'var(--p)'}}>{f.price?Math.round(+f.price*.88)+'€':'-'}€/jour</strong> après commission</div>
+          </div>
+        </div>
+        <ul className="cl-tips">
+          <div className="cl-tips-title">✨ Conseils pour bien louer</div>
+          <li><span>📸</span>Ajoutez 3+ photos pour +40% de vues</li>
+          <li><span>💰</span>Regardez les prix similaires pour rester compétitif</li>
+          <li><span>✍️</span>Une description détaillée rassure les locataires</li>
+        </ul>
+      </div>
+    </div>{/* end cl-layout */}
   </div>
 }
 
