@@ -36,6 +36,10 @@ const PRO_USERS=[{id:"p1",name:"Loxam Express",email:"contact@loxam.fr",avatar:"
 const PRO_RAW=[{t:"Nacelle élévatrice 12m",c:"tools",p:120},{t:"Mini-pelle 1.5T",c:"tools",p:180},{t:"Groupe électrogène 5kVA",c:"tools",p:45},{t:"Échafaudage complet 10m",c:"tools",p:65},{t:"Compacteur de sol",c:"tools",p:85},{t:"Bétonnière 350L",c:"tools",p:40},{t:"Flotte 10 vélos élec.",c:"vehicles",p:150},{t:"Flotte 20 trottinettes",c:"vehicles",p:200},{t:"Camion benne 3.5T",c:"vehicles",p:95},{t:"Utilitaire frigorifique",c:"vehicles",p:110},{t:"Sono complète 2000W",c:"events",p:80},{t:"Structure alu 6x4m",c:"events",p:150},{t:"Pack éclairage LED pro",c:"events",p:60},{t:"Barnum 6x12m",c:"events",p:120},{t:"Canon R5 + optiques",c:"photo",p:95},{t:"Kit tournage complet",c:"photo",p:180}];
 const buildProItems=()=>PRO_RAW.map((r,i)=>{const uArr=UNSPLASH[r.c]||[];const uImg=uArr.length?uArr[(1000+i)%uArr.length]:null;return{id:1000+i,title:r.t,cat:r.c,price:r.p,images:uImg?[uImg,mkImg(r.c,1000+i,0),mkImg(r.c,1000+i,1)]:[mkImg(r.c,1000+i,0),mkImg(r.c,1000+i,1),mkImg(r.c,1000+i,2)],location:LOCS[(i+3)%LOCS.length],rating:+(4.7+Math.random()*.29).toFixed(2),reviews:Math.floor(20+Math.random()*200),owner:PRO_USERS[i%PRO_USERS.length],description:"Matériel professionnel certifié. Maintenance régulière. Livraison possible sur chantier/site.",deposit:Math.floor(r.p*5+Math.random()*200),condition:"Comme neuf",createdAt:"2025",available:true,isPro:true,lat:(LL[LOCS[(i+3)%LOCS.length]]||[48.86,2.35])[0]+(.01*Math.random()-.005),lng:(LL[LOCS[(i+3)%LOCS.length]]||[48.86,2.35])[1]+(.01*Math.random()-.005)}});
 
+/* ========== GEO UTILS ========== */
+function haversine(lat1,lng1,lat2,lng2){const R=6371;const dLat=(lat2-lat1)*Math.PI/180;const dLng=(lng2-lng1)*Math.PI/180;const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;return R*2*Math.asin(Math.sqrt(a))}
+function fmtDist(km){return km<1?Math.round(km*1000)+" m":km<10?km.toFixed(1).replace(/\.0$/,"")+" km":Math.round(km)+" km"}
+
 /* ========== REDUCER ========== */
 const init={user:null,items:buildItems(),proItems:buildProItems(),favorites:new Set(),bookings:[],messages:[],conversations:[],reviews:[],notifications:[],userItems:[],payments:[],referrals:[],disputes:[],wallet:0,badges:[]};
 function reducer(s,a){switch(a.type){
@@ -555,14 +559,16 @@ body,html,#root{font-family:var(--f);color:var(--tx);background:var(--bg);-webki
 /* ========== COMPONENTS ========== */
 function Carousel({images,onClick}){const[c,setC]=useState(0);return <div className="ciw"><img className="cimg" src={images[c]} alt="" loading="lazy" onClick={onClick} onError={e=>{const fb=images.find(img=>img.startsWith('data:'));if(fb&&e.target.src!==fb)e.target.src=fb;}}/>{images.length>1&&<><button className="nav l" onClick={e=>{e.stopPropagation();setC(x=>(x-1+images.length)%images.length)}}><I.Chv d="l"/></button><button className="nav r" onClick={e=>{e.stopPropagation();setC(x=>(x+1)%images.length)}}><I.Chv d="r"/></button><div className="dts">{images.map((_,i)=><div key={i} className={"dt"+(i===c?" on":"")}/>)}</div></>}</div>}
 
-function Card({item,onOpen,favs,dispatch}){return <div className={"card cb"+(item.isPro?" pro-card":"")}>
+function Card({item,onOpen,favs,dispatch,userPos}){
+  const dist=userPos&&item.lat&&item.lng?haversine(userPos.lat,userPos.lng,item.lat,item.lng):null;
+  return <div className={"card cb"+(item.isPro?" pro-card":"")}>
   <Carousel images={item.images} onClick={()=>onOpen(item)}/>
   <button className="cfav" onClick={e=>{e.stopPropagation();dispatch({type:"TOG_FAV",id:item.id})}}><I.Heart f={favs.has(item.id)}/></button>
   {item.isPro&&<div className="pro-badge">PRO</div>}
   {item.owner?.verified&&<div className="cbdg">✓</div>}
   <div className="cbo" onClick={()=>onOpen(item)}>
     <div className="cbt"><span className="cbn">{item.title}</span><span className="cbr"><I.Star/> {item.rating}</span></div>
-    <div className="cbl">{item.location}</div>
+    <div className="cbl">{dist!=null?<>📍 {fmtDist(dist)} · {item.location}</>:item.location}</div>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginTop:6}}>
       <div className="cbp"><strong>{item.price} €</strong><span> / jour</span></div>
       <span className="cond-badge">{item.condition}</span>
@@ -1549,8 +1555,13 @@ function FilterM({onClose,filters,setFilters,count}){
     <div className="mh"><button className="mx" onClick={onClose}><I.X/></button><h2>Filtres</h2></div>
     <div className="mb">
       <div style={{marginBottom:18}}><h3 style={{fontSize:14,fontWeight:700,fontFamily:"var(--fd)",marginBottom:8}}>Trier par</h3>
-        <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>{[["pertinence","Pertinence"],["price_asc","Prix ↑"],["price_desc","Prix ↓"],["rating","Note ↓"],["recent","Récent"]].map(([id,label])=>
+        <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>{[["pertinence","Pertinence"],["price_asc","Prix ↑"],["price_desc","Prix ↓"],["rating","Note ↓"],["recent","Récent"],["distance","📍 Plus proche"]].map(([id,label])=>
           <button key={id} className={"pill"+((l.sort||"pertinence")===id?" on":"")} onClick={()=>up("sort",id)}>{label}</button>
+        )}</div>
+      </div>
+      <div style={{marginBottom:18}}><h3 style={{fontSize:14,fontWeight:700,fontFamily:"var(--fd)",marginBottom:8}}>Distance maximale</h3>
+        <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>{[[null,"Toute distance"],[1,"< 1 km"],[2,"< 2 km"],[5,"< 5 km"],[10,"< 10 km"],[25,"< 25 km"],[50,"< 50 km"]].map(([v,label])=>
+          <button key={label} className={"pill"+((l.maxDist||null)===v?" on":"")} onClick={()=>up("maxDist",v)}>{label}</button>
         )}</div>
       </div>
       <div style={{marginBottom:18}}><h3 style={{fontSize:14,fontWeight:700,fontFamily:"var(--fd)",marginBottom:8}}>Prix / jour</h3><div style={{display:"flex",gap:10,alignItems:"center"}}><div className="fg" style={{flex:1,margin:0}}><label>Min €</label><input type="number" value={l.priceMin} onChange={e=>up("priceMin",+e.target.value)}/></div><span style={{color:"var(--gl)"}}>–</span><div className="fg" style={{flex:1,margin:0}}><label>Max €</label><input type="number" value={l.priceMax} onChange={e=>up("priceMax",+e.target.value)}/></div></div></div>
@@ -1563,7 +1574,7 @@ function FilterM({onClose,filters,setFilters,count}){
       </div>
       <div style={{marginBottom:18}}><h3 style={{fontSize:14,fontWeight:700,fontFamily:"var(--fd)",marginBottom:8}}>Options</h3><div style={{display:"flex",gap:5,flexWrap:"wrap"}}>{["Propriétaire vérifié","Livraison","Annulation flexible"].map(o=><button key={o} className={"pill"+((l.options||[]).includes(o)?" on":"")} onClick={()=>{const os=l.options||[];up("options",os.includes(o)?os.filter(x=>x!==o):[...os,o])}}>{o}</button>)}</div></div>
     </div>
-    <div className="mf"><button className="cl" onClick={()=>setL({priceMin:0,priceMax:500,condition:"Tous",options:[],sort:"pertinence",filterCat:"all",minRating:0})}>Effacer</button><button className="bd" onClick={()=>{setFilters(l);onClose()}}>Afficher {count} résultats</button></div>
+    <div className="mf"><button className="cl" onClick={()=>setL({priceMin:0,priceMax:500,condition:"Tous",options:[],sort:"pertinence",filterCat:"all",minRating:0,maxDist:null})}>Effacer</button><button className="bd" onClick={()=>{setFilters(l);onClose()}}>Afficher {count} résultats</button></div>
   </div></div>
 }
 
@@ -2115,7 +2126,9 @@ function App(){
   const[infoPage,setInfoPage]=useState(null);
   const[pushNotif,setPushNotif]=useState(null);
   const[lang,setLang]=useState('fr');
-  const[filters,setFilters]=useState({priceMin:0,priceMax:500,condition:"Tous",options:[],sort:"pertinence",filterCat:"all",minRating:0});
+  const[filters,setFilters]=useState({priceMin:0,priceMax:500,condition:"Tous",options:[],sort:"pertinence",filterCat:"all",minRating:0,maxDist:null});
+  const[userPos,setUserPos]=useState(null);
+  useEffect(()=>{if(!navigator.geolocation)return;navigator.geolocation.getCurrentPosition(p=>setUserPos({lat:p.coords.latitude,lng:p.coords.longitude}),()=>{})},[]);
 
   const allPerso=useMemo(()=>[...state.items,...state.userItems].filter(i=>!i.isPro),[state.items,state.userItems]);
   const allPro=useMemo(()=>[...state.proItems,...state.userItems.filter(i=>i.isPro)],[state.proItems,state.userItems]);
@@ -2132,12 +2145,14 @@ function App(){
     if(filters.condition!=="Tous")r=r.filter(i=>i.condition===filters.condition);
     if(filters.minRating>0)r=r.filter(i=>i.rating>=filters.minRating);
     if((filters.options||[]).includes("Propriétaire vérifié"))r=r.filter(i=>i.owner?.verified);
+    if(filters.maxDist&&userPos)r=r.filter(i=>i.lat&&i.lng&&haversine(userPos.lat,userPos.lng,i.lat,i.lng)<=filters.maxDist);
     // Sort
     if(filters.sort==="price_asc")r=[...r].sort((a,b)=>a.price-b.price);
     else if(filters.sort==="price_desc")r=[...r].sort((a,b)=>b.price-a.price);
     else if(filters.sort==="rating")r=[...r].sort((a,b)=>b.rating-a.rating);
+    else if(filters.sort==="distance"&&userPos)r=[...r].sort((a,b)=>(a.lat&&a.lng?haversine(userPos.lat,userPos.lng,a.lat,a.lng):999)-(b.lat&&b.lng?haversine(userPos.lat,userPos.lng,b.lat,b.lng):999));
     return r;
-  },[all,cat,q,lq,filters]);
+  },[all,cat,q,lq,filters,userPos]);
 
   const search=(query,loc)=>{setQ(query);setLq(loc||"");setCat("all");setPage("home")};
   useEffect(()=>{if(state.notifications.length){const l=state.notifications[0];if(!l.read){const type=l.kind==="badge"?"s":l.kind==="wallet"?"s":l.kind==="referral"?"w":l.kind==="dispute"?"e":"b";addToast(l.text,type);setPushNotif(l);setTimeout(()=>setPushNotif(null),4000)}}},[state.notifications.length]);
@@ -2202,7 +2217,7 @@ function App(){
       {mode==='pro'&&<div className="pro-banner"><h2 style={{fontFamily:"var(--fd)",fontSize:22,marginBottom:4}}>🏢 Espace Professionnel</h2><p style={{fontSize:13,opacity:.8}}>Matériel pro certifié · Grandes quantités · Livraison chantier · Facturation entreprise</p></div>}
       {q&&<div style={{padding:"6px 28px 0",fontSize:12,color:"var(--g)"}}>{filtered.length} résultat{filtered.length!==1?"s":""} pour <strong>"{q}"</strong>{lq&&<> à <strong>{lq}</strong></>}<button className="cl" style={{marginLeft:6}} onClick={()=>{setQ("");setLq("")}}>✕</button></div>}
       {filtered.length===0?<div className="empty"><span>🔍</span><h2>Aucun résultat trouvé</h2><p style={{maxWidth:320,margin:"6px auto 16px",lineHeight:1.5}}>Essayez d'élargir votre recherche ou de modifier vos filtres.</p><button className="bs" onClick={()=>{setQ("");setCat("all")}}>Réinitialiser la recherche</button></div>:
-      <div className="grid">{filtered.map(i=><Card key={i.id} item={i} onOpen={setSel} favs={state.favorites} dispatch={dispatch}/>)}</div>}
+      <div className="grid">{filtered.map(i=><Card key={i.id} item={i} onOpen={setSel} favs={state.favorites} dispatch={dispatch} userPos={userPos}/>)}</div>}
       {!q&&cat==="all"&&<div className="reco"><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}><h3 style={{fontFamily:"var(--fd)",fontSize:20,fontWeight:700,letterSpacing:"-.01em"}}>{mode==="pro"?"Sélection Pro":"Recommandé pour vous"}</h3><button className="cl" style={{color:"var(--p)"}}>Voir tout →</button></div>
         <div className="reco-sc">{all.sort(()=>Math.random()-.5).slice(0,8).map(i=><div key={i.id} className="reco-c" onClick={()=>setSel(i)}><img className="reco-ci" src={i.images[0]} alt=""/><div style={{fontSize:12,fontWeight:600,marginTop:4}}>{i.title}</div><div style={{fontSize:12,fontWeight:700,color:"var(--p)"}}>{i.price}€<span style={{fontWeight:400,color:"var(--g)"}}>/j</span></div></div>)}</div>
       </div>}
