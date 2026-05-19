@@ -335,13 +335,11 @@ html,body{overflow-x:hidden;width:100%}
 .msp-hd{flex-shrink:0;height:72px;background:#fff;box-shadow:0 2px 12px rgba(0,0,0,.05);display:flex;align-items:center;justify-content:space-between;padding:0 48px;border-bottom:1px solid #E6E5EF}
 .msp-body{flex:1;display:flex;overflow:hidden}
 .msp-list{width:360px;flex-shrink:0;background:#fff;border-right:1px solid #E6E5EF;display:flex;flex-direction:column;overflow:hidden}
-.msp-list.hidden{display:none}
 .msp-convs{flex:1;overflow-y:auto}
 .msp-cv{display:flex;align-items:center;gap:12px;padding:15px 16px;cursor:pointer;border-bottom:1px solid #E6E5EF;border-left:3px solid transparent;transition:background .15s}
 .msp-cv:hover{background:#FAFAFE}
 .msp-cv.active{background:#EFEEFE;border-left-color:#5B4EE8}
 .msp-chat{flex:1;display:flex;flex-direction:column;overflow:hidden;background:#F8F7FF}
-.msp-chat.hidden{display:none}
 .msp-ch-hd{flex-shrink:0;height:72px;background:#fff;border-bottom:1px solid #E6E5EF;display:flex;align-items:center;gap:14px;padding:0 24px}
 .msp-back-btn{display:none;background:none;border:none;cursor:pointer;padding:6px;color:var(--dk);border-radius:8px;flex-shrink:0}
 .msp-view-btn{flex-shrink:0;background:#EFEEFE;border:1.5px solid #5B4EE8;border-radius:100px;padding:0 18px;height:36px;font-size:12px;font-weight:600;color:#5B4EE8;cursor:pointer;white-space:nowrap;font-family:var(--f);transition:background .15s}
@@ -359,7 +357,9 @@ html,body{overflow-x:hidden;width:100%}
 @media(max-width:768px){
   .msp-hd{padding:0 16px}
   .msp-list{width:100%}
+  .msp-list.hidden{display:none}
   .msp-chat{width:100%}
+  .msp-chat.hidden{display:none}
   .msp-back-btn{display:flex!important;align-items:center;justify-content:center}
 }
 </style>
