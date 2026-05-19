@@ -1,4 +1,4 @@
-function Messages({state,dispatch,cid,setCid,setPage}){
+function Messages({state,dispatch,cid,setCid,setPage,openDetail}){
   const[msg,setMsg]=useState("");
   const[searchQ,setSearchQ]=useState("");
   const ref=useRef(null);
@@ -118,7 +118,7 @@ function Messages({state,dispatch,cid,setCid,setPage}){
               <div className="chat-header-name">{o.name}</div>
               {ac.itemTitle&&<div className="chat-header-sub" style={{color:'var(--p)',fontWeight:600}}>📦 {ac.itemTitle}</div>}
             </div>
-            {ac.itemTitle&&<button style={{flexShrink:0,background:'var(--bg)',border:'1.5px solid var(--bd)',borderRadius:100,padding:'8px 18px',fontSize:13,fontWeight:700,color:'var(--p)',cursor:'pointer',whiteSpace:'nowrap'}}>
+            {ac.itemTitle&&<button onClick={()=>{const all=[...state.items,...(state.userItems||[]),...(state.cloudItems||[])];const item=all.find(i=>i.id===ac.itemId);if(item&&openDetail)openDetail(item);else setPage("home");}} style={{flexShrink:0,background:'var(--bg)',border:'1.5px solid var(--bd)',borderRadius:100,padding:'8px 18px',fontSize:13,fontWeight:700,color:'var(--p)',cursor:'pointer',whiteSpace:'nowrap'}}>
               Voir l'annonce →
             </button>}
           </div>

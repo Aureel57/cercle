@@ -295,7 +295,7 @@ function App(){
 
     {page==="info"&&infoPage&&<InfoPage id={infoPage} setPage={p=>{setInfoPage(null);setPage(p);}}/>}
     {page==="profile"&&state.user&&<Profile state={state} dispatch={dispatch} setPage={setPage} setSelected={openDetail} initTab={profTab} onEditItem={(item)=>{setEditItem(item);setPage("create");}}/>}
-    {page==="messages"&&state.user&&<Messages state={state} dispatch={dispatch} cid={cid} setCid={setCid} setPage={setPage}/>}
+    {page==="messages"&&state.user&&<Messages state={state} dispatch={dispatch} cid={cid} setCid={setCid} setPage={setPage} openDetail={openDetail}/>}
     {page==="create"&&state.user&&<CreateListing state={state} dispatch={dispatch} setPage={(p)=>{setEditItem(null);setPage(p);}} mode={mode} editItem={editItem}/>}
     {(page==="create"||page==="profile"||page==="messages"||page==="dashboard"||page==="referral"||page==="verify"||page==="dispute"||page==="wallet"||page==="badges")&&!state.user&&<div className="empty" style={{paddingTop:100}}><span>🔒</span><h2>Connectez-vous</h2><p>Vous devez être connecté pour accéder à cette page.</p><button className="bp" style={{marginTop:14}} onClick={()=>setShowA("login")}>Se connecter</button></div>}
 
