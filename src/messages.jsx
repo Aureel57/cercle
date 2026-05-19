@@ -65,7 +65,7 @@ function Messages({state,dispatch,cid,setCid,setPage}){
         {ac&&<div style={{fontSize:12,color:'#22c55e',fontWeight:600}}>● En ligne</div>}
         {!ac&&<div style={{fontSize:12,color:'var(--g)'}}>{convs.length} conversation{convs.length!==1?'s':''}</div>}
       </div>
-      {ac&&<div style={{width:38,height:38,borderRadius:'50%',background:'linear-gradient(135deg,#e0dbff,#c7f0ee)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:18}}>{o.avatar}</div>}
+      {ac&&<div style={{width:38,height:38,borderRadius:'50%',background:'linear-gradient(135deg,#5B4EE8,#3A30D8)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,color:'#fff',fontWeight:800,flexShrink:0}}>{(o.name||'?')[0].toUpperCase()}</div>}
     </div>
 
     {/* Body */}
@@ -82,9 +82,11 @@ function Messages({state,dispatch,cid,setCid,setPage}){
             const o2=getO(c);
             const ub=unreadCount(c);
             const isActive=cid===c.id;
+            const avatarColors=[['#5B4EE8','#3A30D8'],['#10B972','#059669'],['#F59E0B','#D97706'],['#E85D4A','#C04A35'],['#8B5CF6','#7C3AED']];
+            const ci=Math.abs((o2.name||'?').charCodeAt(0))%5;
             return <div key={c.id} className={"conv-item"+(isActive?" active":"")} onClick={()=>openConv(c.id)}>
-              <div className="conv-av">
-                {o2.avatar}
+              <div className="conv-av" style={{background:`linear-gradient(135deg,${avatarColors[ci][0]},${avatarColors[ci][1]})`,color:'#fff',fontWeight:800,fontSize:17}}>
+                {(o2.name||'?')[0].toUpperCase()}
                 <span className="conv-av-online"/>
               </div>
               <div className="conv-info">
@@ -110,11 +112,16 @@ function Messages({state,dispatch,cid,setCid,setPage}){
         </div>:<>
           {/* Chat header */}
           <div className="chat-header">
-            <div style={{width:40,height:40,borderRadius:'50%',background:'linear-gradient(135deg,#e0dbff,#c7f0ee)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,flexShrink:0}}>{o.avatar}</div>
+            <div style={{width:44,height:44,borderRadius:'50%',background:'linear-gradient(135deg,#5B4EE8,#3A30D8)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,color:'#fff',fontWeight:800,flexShrink:0,boxShadow:'0 4px 14px rgba(91,78,232,.35)'}}>
+              {(o.name||'?')[0].toUpperCase()}
+            </div>
             <div style={{flex:1}}>
               <div className="chat-header-name">{o.name}</div>
-              {ac.itemTitle&&<div className="chat-header-sub">📦 {ac.itemTitle}</div>}
+              {ac.itemTitle&&<div className="chat-header-sub" style={{color:'var(--p)',fontWeight:600}}>📦 {ac.itemTitle}</div>}
             </div>
+            {ac.itemTitle&&<button style={{background:'var(--bg)',border:'1.5px solid var(--bd)',borderRadius:100,padding:'9px 20px',fontSize:13,fontWeight:700,color:'var(--p)',cursor:'pointer',flexShrink:0,whiteSpace:'nowrap'}}>
+              Voir l'annonce →
+            </button>}
           </div>
 
           {/* Messages */}
