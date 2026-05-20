@@ -447,27 +447,47 @@ function Profile({state, dispatch, setPage, setSelected, initTab, onEditItem}) {
 
       {/* ── Desktop sidebar ── */}
       <aside className="prf-sb">
-        <div className="prf-avc">
-          <div style={{width:64,height:64,borderRadius:'50%',background:'rgba(255,255,255,.25)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:26,fontWeight:800,color:'#fff',position:'relative',flexShrink:0}}>
-            {(profileData.name||'N')[0].toUpperCase()}
-            <div style={{position:'absolute',width:14,height:14,borderRadius:'50%',background:'#22C55E',border:'2.5px solid #fff',top:-1,right:-1}}/>
-          </div>
-          <div style={{fontSize:16,fontWeight:700,color:'#fff',textAlign:'center'}}>{profileData.name||'Utilisateur'}</div>
-          <div style={{background:'rgba(255,255,255,.2)',borderRadius:100,padding:'4px 16px',fontSize:11,fontWeight:700,color:'#fff'}}>{heroGrade.icon} {heroGrade.name}</div>
-          <div style={{fontSize:11,color:'rgba(255,255,255,.7)',textAlign:'center'}}>Membre depuis {user.since||'2024'}</div>
+        {/* Logo — ramène à l'accueil */}
+        <div className="dsk-logo" onClick={()=>setPage('home')}>
+          <img src={CERCLE_LOGO} alt="Cercle" style={{width:34,height:34,objectFit:'contain'}}/>
+          <span style={{fontFamily:'var(--fd)',fontSize:17,fontWeight:700,color:'var(--dk)'}}>Cercle</span>
         </div>
-        {[{num:listings.length,lbl:'Annonces'},{num:avgRating!=='-'?avgRating+' ⭐':'-',lbl:'Note moy.'},{num:(state.bookings?.filter(b=>b.userId===user.id)?.length||0)+' locations',lbl:'Réservations'}].map(s=>(
-          <div key={s.lbl} className="prf-stb">
-            <strong style={{fontSize:20,fontWeight:800,color:'#5B4EE8'}}>{s.num}</strong>
-            <span style={{fontSize:12,color:'#8F8CA6'}}>{s.lbl}</span>
+        {/* User card */}
+        <div className="dsk-ucard" style={{margin:'12px 12px 4px'}}>
+          <div style={{width:40,height:40,borderRadius:'50%',background:'linear-gradient(135deg,#5B4EE8,#2E1FC2)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,fontWeight:800,color:'#fff',flexShrink:0}}>
+            {(profileData.name||'N')[0].toUpperCase()}
+            <div style={{position:'absolute',width:11,height:11,borderRadius:'50%',background:'#22C55E',border:'2px solid #fff',marginLeft:26,marginTop:-28}}/>
           </div>
-        ))}
-        {[{id:'annonces',icon:'📋',lbl:'Mes annonces'},{id:'reservations',icon:'🗓',lbl:'Réservations'},{id:'avis',icon:'⭐',lbl:'Avis reçus'},{id:'favoris',icon:'❤️',lbl:'Favoris'},{id:'grade',icon:'🏅',lbl:'Mon Grade'},{id:'parametres',icon:'⚙️',lbl:'Paramètres'}].map(item=>(
-          <div key={item.id} className={'prf-nv'+(tab===item.id?' on':'')} onClick={()=>setTab(item.id)}>
-            <span style={{fontSize:18}}>{item.icon}</span>
-            <span>{item.lbl}</span>
+          <div style={{minWidth:0}}>
+            <div style={{fontSize:13,fontWeight:700,color:'var(--dk)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{profileData.name||'Utilisateur'}</div>
+            <div style={{fontSize:10,color:'#5B4EE8',fontWeight:600}}>{heroGrade.icon} {heroGrade.name}</div>
           </div>
-        ))}
+        </div>
+        {/* Stats */}
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:8,margin:'0 12px 8px'}}>
+          {[{num:listings.length,lbl:'Annonces'},{num:avgRating!=='-'?avgRating+'★':'-',lbl:'Note'},{num:state.bookings?.filter(b=>b.userId===user.id)?.length||0,lbl:'Locations'}].map(s=>(
+            <div key={s.lbl} style={{background:'#F8F7FF',borderRadius:10,padding:'8px 6px',textAlign:'center'}}>
+              <div style={{fontSize:15,fontWeight:800,color:'#5B4EE8'}}>{s.num}</div>
+              <div style={{fontSize:10,color:'var(--g)',fontWeight:500}}>{s.lbl}</div>
+            </div>
+          ))}
+        </div>
+        {/* Nav items — même design que le dashboard */}
+        <div style={{padding:'4px 0'}}>
+          {[{id:'annonces',icon:'📋',lbl:'Mes annonces'},{id:'reservations',icon:'🗓',lbl:'Réservations'},{id:'avis',icon:'⭐',lbl:'Avis reçus'},{id:'favoris',icon:'❤️',lbl:'Favoris'},{id:'grade',icon:'🏅',lbl:'Mon Grade'},{id:'parametres',icon:'⚙️',lbl:'Paramètres'}].map(item=>(
+            <button key={item.id} className={`dsk-ni${tab===item.id?' on':''}`} onClick={()=>setTab(item.id)}>
+              <span className="dsk-ni-ic">{item.icon}</span>
+              <span>{item.lbl}</span>
+            </button>
+          ))}
+        </div>
+        <div style={{flex:1}}/>
+        <div style={{borderTop:'1px solid #E6E5EF',padding:'8px 0',marginTop:8}}>
+          <button className="dsk-ni" style={{color:'#ef4444'}} onClick={()=>setPage('home')}>
+            <span className="dsk-ni-ic">🏠</span>
+            <span>Retour à l'accueil</span>
+          </button>
+        </div>
       </aside>
 
       {/* ── Main area ── */}
