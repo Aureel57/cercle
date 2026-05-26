@@ -14,9 +14,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Deploy to gh-pages branch
-        uses: JamesIves/github-pages-deploy-action@v4
-        with:
-          branch: gh-pages
-          folder: .
-          clean: true
+      - name: Push to gh-pages branch
+        run: |
+          git config user.email "action@github.com"
+          git config user.name "GitHub Action"
+          git push origin HEAD:gh-pages --force
