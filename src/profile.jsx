@@ -475,7 +475,7 @@ function Profile({state, dispatch, setPage, setSelected, initTab, onEditItem}) {
         {/* Nav items — même design que le dashboard */}
         <div style={{padding:'4px 0'}}>
           {[{id:'annonces',icon:'📋',lbl:'Mes annonces'},{id:'reservations',icon:'🗓',lbl:'Réservations'},{id:'avis',icon:'⭐',lbl:'Avis reçus'},{id:'favoris',icon:'❤️',lbl:'Favoris'},{id:'grade',icon:'🏅',lbl:'Mon Grade'},{id:'parametres',icon:'⚙️',lbl:'Paramètres'}].map(item=>(
-            <button key={item.id} className={`dsk-ni${tab===item.id?' on':''}`} onClick={()=>setTab(item.id)}>
+            <button key={item.id} className="dsk-ni" onClick={()=>setPage(item.id)}>
               <span className="dsk-ni-ic">{item.icon}</span>
               <span>{item.lbl}</span>
             </button>
