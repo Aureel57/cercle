@@ -77,11 +77,8 @@ function Messages({state,dispatch,cid,setCid,setPage,openDetail}){
         <span style={{fontSize:18,fontWeight:700,color:'var(--dk)',fontFamily:'var(--f)'}}>💬 Messages</span>
         {totalUnread>0&&<div style={{background:'#FF6B6B',borderRadius:100,minWidth:22,height:22,display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:700,color:'#fff',padding:'0 5px'}}>{totalUnread}</div>}
       </div>
-      <div style={{display:'flex',alignItems:'center',gap:12}}>
-        <button onClick={()=>setPage("home")} style={{background:'none',border:'none',cursor:'pointer',padding:'6px 10px',borderRadius:8,fontSize:13,fontWeight:600,color:'var(--g)',display:'flex',alignItems:'center',gap:6,fontFamily:'var(--f)'}}>
-          <I.Back/> Accueil
-        </button>
-        {state.user&&<div style={{width:40,height:40,borderRadius:'50%',background:'linear-gradient(135deg,#5B4EE8,#3A30D8)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,fontWeight:800,color:'#fff',flexShrink:0}}>{(state.user.name||'N')[0].toUpperCase()}</div>}
+      <div style={{display:'flex',alignItems:'center',gap:10}}>
+        {state.user&&<div style={{width:38,height:38,borderRadius:'50%',background:'linear-gradient(135deg,#5B4EE8,#3A30D8)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:15,fontWeight:800,color:'#fff',flexShrink:0}}>{(state.user.name||'N')[0].toUpperCase()}</div>}
       </div>
     </div>
 
@@ -191,5 +188,25 @@ function Messages({state,dispatch,cid,setCid,setPage,openDetail}){
         </>}
       </div>
     </div>
+
+    {/* Bottom nav bar */}
+    <nav className="msp-nav-bot">
+      <button className="msp-nav-btn" onClick={()=>setPage('home')}>
+        <span className="msp-nav-ic">🏠</span>
+        <span className="msp-nav-lbl">Accueil</span>
+      </button>
+      <button className="msp-nav-btn" onClick={()=>setPage('home')}>
+        <span className="msp-nav-ic">🔍</span>
+        <span className="msp-nav-lbl">Explorer</span>
+      </button>
+      <button className="msp-nav-btn active">
+        <span className="msp-nav-ic">💬</span>
+        <span className="msp-nav-lbl">Messages</span>
+      </button>
+      <button className="msp-nav-btn" onClick={()=>setPage('profile')}>
+        <span className="msp-nav-ic">👤</span>
+        <span className="msp-nav-lbl">Profil</span>
+      </button>
+    </nav>
   </div>;
 }

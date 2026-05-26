@@ -354,6 +354,13 @@ html,body{overflow-x:hidden;width:100%}
 .msp-send{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#5B4EE8,#2E1FC2);color:#fff;border:none;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;box-shadow:0 4px 14px rgba(91,79,232,.35);font-size:20px;font-weight:700;font-family:var(--f);transition:opacity .2s,transform .15s}
 .msp-send:disabled{opacity:.35;cursor:default}
 .msp-send:hover:not(:disabled){transform:scale(1.06)}
+.msp-nav-bot{flex-shrink:0;background:#fff;border-top:1px solid #E6E5EF;display:flex;align-items:center;justify-content:space-around;height:64px;padding:0 8px;box-shadow:0 -4px 20px rgba(0,0,0,.06)}
+.msp-nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;border:none;background:none;cursor:pointer;padding:8px 4px;border-radius:12px;transition:background .15s;font-family:var(--f)}
+.msp-nav-btn:hover{background:#F5F4FF}
+.msp-nav-btn.active .msp-nav-ic,.msp-nav-btn.active .msp-nav-lbl{color:#5B4EE8}
+.msp-nav-btn.active .msp-nav-lbl{font-weight:700}
+.msp-nav-ic{font-size:22px;line-height:1;color:#8F8CA6}
+.msp-nav-lbl{font-size:10px;font-weight:600;color:#8F8CA6;letter-spacing:.01em}
 @media(min-width:769px){
   .msp-list,.msp-list.hidden{display:flex!important}
   .msp-chat,.msp-chat.hidden{display:flex!important}
@@ -3638,11 +3645,8 @@ function Messages({state,dispatch,cid,setCid,setPage,openDetail}){
         <span style={{fontSize:18,fontWeight:700,color:'var(--dk)',fontFamily:'var(--f)'}}>💬 Messages</span>
         {totalUnread>0&&<div style={{background:'#FF6B6B',borderRadius:100,minWidth:22,height:22,display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:700,color:'#fff',padding:'0 5px'}}>{totalUnread}</div>}
       </div>
-      <div style={{display:'flex',alignItems:'center',gap:12}}>
-        <button onClick={()=>setPage("home")} style={{background:'none',border:'none',cursor:'pointer',padding:'6px 10px',borderRadius:8,fontSize:13,fontWeight:600,color:'var(--g)',display:'flex',alignItems:'center',gap:6,fontFamily:'var(--f)'}}>
-          <I.Back/> Accueil
-        </button>
-        {state.user&&<div style={{width:40,height:40,borderRadius:'50%',background:'linear-gradient(135deg,#5B4EE8,#3A30D8)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,fontWeight:800,color:'#fff',flexShrink:0}}>{(state.user.name||'N')[0].toUpperCase()}</div>}
+      <div style={{display:'flex',alignItems:'center',gap:10}}>
+        {state.user&&<div style={{width:38,height:38,borderRadius:'50%',background:'linear-gradient(135deg,#5B4EE8,#3A30D8)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:15,fontWeight:800,color:'#fff',flexShrink:0}}>{(state.user.name||'N')[0].toUpperCase()}</div>}
       </div>
     </div>
 
@@ -3752,6 +3756,26 @@ function Messages({state,dispatch,cid,setCid,setPage,openDetail}){
         </>}
       </div>
     </div>
+
+    {/* Bottom nav bar */}
+    <nav className="msp-nav-bot">
+      <button className="msp-nav-btn" onClick={()=>setPage('home')}>
+        <span className="msp-nav-ic">🏠</span>
+        <span className="msp-nav-lbl">Accueil</span>
+      </button>
+      <button className="msp-nav-btn" onClick={()=>setPage('home')}>
+        <span className="msp-nav-ic">🔍</span>
+        <span className="msp-nav-lbl">Explorer</span>
+      </button>
+      <button className="msp-nav-btn active">
+        <span className="msp-nav-ic">💬</span>
+        <span className="msp-nav-lbl">Messages</span>
+      </button>
+      <button className="msp-nav-btn" onClick={()=>setPage('profile')}>
+        <span className="msp-nav-ic">👤</span>
+        <span className="msp-nav-lbl">Profil</span>
+      </button>
+    </nav>
   </div>;
 }
 
