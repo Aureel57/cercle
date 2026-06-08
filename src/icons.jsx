@@ -321,11 +321,14 @@ html.dark,html.dark body,html.dark #root{background:#0f0f13 !important;color:#f1
 .card{animation:fadeIn .35s var(--ease) both}.card:nth-child(2){animation-delay:.04s}.card:nth-child(3){animation-delay:.08s}.card:nth-child(4){animation-delay:.12s}.card:nth-child(5){animation-delay:.16s}.card:nth-child(6){animation-delay:.2s}
 /* Fullscreen gallery */
 .gallery-fs{position:fixed;inset:0;background:rgba(0,0,0,.96);z-index:300;display:flex;align-items:center;justify-content:center;animation:fadeIn .2s ease}
-.gallery-fs img{max-width:90vw;max-height:85vh;object-fit:contain;border-radius:12px;animation:popIn .3s ease}
+.gallery-fs img{width:min(90vw,1200px);height:min(85vh,800px);object-fit:contain;border-radius:16px;animation:popIn .3s ease;background:rgba(255,255,255,.04)}
 .gallery-fs .gf-nav{position:absolute;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.1);backdrop-filter:blur(12px);border:none;color:#fff;width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px;transition:background .2s}.gallery-fs .gf-nav:hover{background:rgba(255,255,255,.2)}
 .gallery-fs .gf-nav.l{left:20px}.gallery-fs .gf-nav.r{right:20px}
 .gallery-fs .gf-close{position:absolute;top:20px;right:20px;background:rgba(255,255,255,.1);backdrop-filter:blur(12px);border:none;color:#fff;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .2s}.gallery-fs .gf-close:hover{background:rgba(255,255,255,.2)}
-.gallery-fs .gf-counter{position:absolute;bottom:24px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,.6);font-size:13px;font-weight:600}
+.gallery-fs .gf-counter{position:absolute;bottom:52px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,.6);font-size:13px;font-weight:600}
+.gallery-fs .gf-dots{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);display:flex;gap:6px;align-items:center}
+.gallery-fs .gf-dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.35);cursor:pointer;transition:all .2s;border:none;padding:0}
+.gallery-fs .gf-dot.on{background:#fff;width:20px;border-radius:4px}
 /* Chatbot */
 .chatbot-btn{position:fixed;bottom:84px;right:20px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--p),#FF8A5C);color:#fff;border:none;box-shadow:0 8px 28px rgba(255,90,95,.35);cursor:pointer;z-index:80;display:flex;align-items:center;justify-content:center;font-size:24px;transition:all .3s var(--ease);animation:popIn .5s ease}
 .chatbot-btn:hover{transform:scale(1.12);box-shadow:0 12px 36px rgba(255,90,95,.4)}
@@ -503,7 +506,7 @@ html.dark,html.dark body,html.dark #root{background:#0f0f13 !important;color:#f1
 .dv2-body{display:grid;grid-template-columns:1fr 390px;gap:40px;padding:28px 24px 72px;max-width:1520px;margin:0 auto;align-items:start}
 .dv2-sticky{position:sticky;top:68px}
 /* Booking card */
-.dv2-card{background:var(--w);border-radius:24px;border:1.5px solid var(--bd);box-shadow:0 8px 40px rgba(124,58,237,.09),0 2px 8px rgba(0,0,0,.05);padding:22px;overflow:hidden}
+.dv2-card{background:var(--w);border-radius:24px;border:1.5px solid var(--bd);box-shadow:0 8px 40px rgba(124,58,237,.09),0 2px 8px rgba(0,0,0,.05);padding:22px;overflow-y:auto;max-height:calc(100dvh - 100px);scrollbar-width:thin;scrollbar-color:var(--bd) transparent}
 .dv2-price-big{font-family:var(--fd);font-size:38px;font-weight:900;color:var(--green);letter-spacing:-.04em;line-height:1}
 .dv2-sep{height:1px;background:var(--bd);margin:16px 0}
 .dv2-date-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}

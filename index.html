@@ -746,11 +746,14 @@ html.dark,html.dark body,html.dark #root{background:#0f0f13 !important;color:#f1
 .card{animation:fadeIn .35s var(--ease) both}.card:nth-child(2){animation-delay:.04s}.card:nth-child(3){animation-delay:.08s}.card:nth-child(4){animation-delay:.12s}.card:nth-child(5){animation-delay:.16s}.card:nth-child(6){animation-delay:.2s}
 /* Fullscreen gallery */
 .gallery-fs{position:fixed;inset:0;background:rgba(0,0,0,.96);z-index:300;display:flex;align-items:center;justify-content:center;animation:fadeIn .2s ease}
-.gallery-fs img{max-width:90vw;max-height:85vh;object-fit:contain;border-radius:12px;animation:popIn .3s ease}
+.gallery-fs img{width:min(90vw,1200px);height:min(85vh,800px);object-fit:contain;border-radius:16px;animation:popIn .3s ease;background:rgba(255,255,255,.04)}
 .gallery-fs .gf-nav{position:absolute;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.1);backdrop-filter:blur(12px);border:none;color:#fff;width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px;transition:background .2s}.gallery-fs .gf-nav:hover{background:rgba(255,255,255,.2)}
 .gallery-fs .gf-nav.l{left:20px}.gallery-fs .gf-nav.r{right:20px}
 .gallery-fs .gf-close{position:absolute;top:20px;right:20px;background:rgba(255,255,255,.1);backdrop-filter:blur(12px);border:none;color:#fff;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .2s}.gallery-fs .gf-close:hover{background:rgba(255,255,255,.2)}
-.gallery-fs .gf-counter{position:absolute;bottom:24px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,.6);font-size:13px;font-weight:600}
+.gallery-fs .gf-counter{position:absolute;bottom:52px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,.6);font-size:13px;font-weight:600}
+.gallery-fs .gf-dots{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);display:flex;gap:6px;align-items:center}
+.gallery-fs .gf-dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.35);cursor:pointer;transition:all .2s;border:none;padding:0}
+.gallery-fs .gf-dot.on{background:#fff;width:20px;border-radius:4px}
 /* Chatbot */
 .chatbot-btn{position:fixed;bottom:84px;right:20px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--p),#FF8A5C);color:#fff;border:none;box-shadow:0 8px 28px rgba(255,90,95,.35);cursor:pointer;z-index:80;display:flex;align-items:center;justify-content:center;font-size:24px;transition:all .3s var(--ease);animation:popIn .5s ease}
 .chatbot-btn:hover{transform:scale(1.12);box-shadow:0 12px 36px rgba(255,90,95,.4)}
@@ -928,7 +931,7 @@ html.dark,html.dark body,html.dark #root{background:#0f0f13 !important;color:#f1
 .dv2-body{display:grid;grid-template-columns:1fr 390px;gap:40px;padding:28px 24px 72px;max-width:1520px;margin:0 auto;align-items:start}
 .dv2-sticky{position:sticky;top:68px}
 /* Booking card */
-.dv2-card{background:var(--w);border-radius:24px;border:1.5px solid var(--bd);box-shadow:0 8px 40px rgba(124,58,237,.09),0 2px 8px rgba(0,0,0,.05);padding:22px;overflow:hidden}
+.dv2-card{background:var(--w);border-radius:24px;border:1.5px solid var(--bd);box-shadow:0 8px 40px rgba(124,58,237,.09),0 2px 8px rgba(0,0,0,.05);padding:22px;overflow-y:auto;max-height:calc(100dvh - 100px);scrollbar-width:thin;scrollbar-color:var(--bd) transparent}
 .dv2-price-big{font-family:var(--fd);font-size:38px;font-weight:900;color:var(--green);letter-spacing:-.04em;line-height:1}
 .dv2-sep{height:1px;background:var(--bd);margin:16px 0}
 .dv2-date-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
@@ -1447,50 +1450,128 @@ function QRModal({item,onClose}){
   </div>
 }
 
-/* ===== MINI CALENDAR ===== */
-function MiniCal({value,onChange,label,minDate,blockedDates}){
-  const d=value?new Date(value):new Date();
-  const[viewY,setViewY]=useState(d.getFullYear());const[viewM,setViewM]=useState(d.getMonth());
-  const months=["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
-  const days=["Lu","Ma","Me","Je","Ve","Sa","Di"];
-  const firstDay=new Date(viewY,viewM,1).getDay()||7;
-  const daysInMonth=new Date(viewY,viewM+1,0).getDate();
+/* ===== RANGE CALENDAR ===== */
+const MONTHS_FR=["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
+const DAYS_FR=["Lu","Ma","Me","Je","Ve","Sa","Di"];
+
+function RangeCal({sd,setSd,ed,setEd,blockedDates,durType,timeSlot,setTimeSlot}){
   const today=new Date();today.setHours(0,0,0,0);
-  const minD=minDate?new Date(minDate):today;minD.setHours(0,0,0,0);
+  const initM=sd?new Date(sd):today;
+  const[viewY,setViewY]=useState(initM.getFullYear());
+  const[viewM,setViewM]=useState(initM.getMonth());
+  const[picking,setPicking]=useState("start");// "start" | "end"
+  const[hovered,setHovered]=useState(null);
   const blockedSet=new Set(blockedDates||[]);
+  const toKey=(y,m,d)=>`${y}-${String(m+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+  const startD=sd?new Date(sd):null;if(startD)startD.setHours(0,0,0,0);
+  const endD=ed?new Date(ed):null;if(endD)endD.setHours(0,0,0,0);
+  const hovD=hovered?new Date(hovered):null;if(hovD)hovD.setHours(0,0,0,0);
   const prev=()=>{if(viewM===0){setViewM(11);setViewY(viewY-1)}else setViewM(viewM-1)};
   const next=()=>{if(viewM===11){setViewM(0);setViewY(viewY+1)}else setViewM(viewM+1)};
-  const selDate=value?new Date(value):null;if(selDate)selDate.setHours(0,0,0,0);
-  const cells=[];for(let i=1;i<firstDay;i++)cells.push(null);for(let i=1;i<=daysInMonth;i++)cells.push(i);
-  return <div style={{background:"var(--w)",borderRadius:12,border:"1.5px solid var(--bd)",overflow:"hidden"}}>
-    <div style={{padding:"10px 12px",display:"flex",justifyContent:"space-between",alignItems:"center",background:"var(--bgw)"}}>
-      <button style={{background:"none",border:"none",fontSize:16,cursor:"pointer",padding:"2px 8px",borderRadius:6}} onClick={prev}>‹</button>
-      <span style={{fontSize:13,fontWeight:700,fontFamily:"var(--fd)"}}>{months[viewM]} {viewY}</span>
-      <button style={{background:"none",border:"none",fontSize:16,cursor:"pointer",padding:"2px 8px",borderRadius:6}} onClick={next}>›</button>
-    </div>
-    <div style={{padding:"6px 8px"}}>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:2,marginBottom:4}}>{days.map(d=><div key={d} style={{textAlign:"center",fontSize:10,fontWeight:700,color:"var(--gl)",padding:2}}>{d}</div>)}</div>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:2}}>
-        {cells.map((day,i)=>{if(!day)return <div key={i}/>;
-          const dt=new Date(viewY,viewM,day);dt.setHours(0,0,0,0);
-          const key=`${viewY}-${String(viewM+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
-          const isBlocked=blockedSet.has(key);
-          const isPast=dt<minD;const isSel=selDate&&dt.getTime()===selDate.getTime();const isToday=dt.getTime()===today.getTime();
-          const disabled=isPast||isBlocked;
-          return <button key={i} disabled={disabled} onClick={()=>{if(disabled)return;const m=String(viewM+1).padStart(2,"0");const dd=String(day).padStart(2,"0");onChange(`${viewY}-${m}-${dd}`)}}
-            title={isBlocked?"Indisponible":undefined}
-            style={{width:"100%",aspectRatio:"1",border:isBlocked?"1.5px solid #fecaca":"none",borderRadius:8,fontSize:12,fontWeight:isSel?700:isToday?600:400,
-              background:isSel?"var(--p)":isBlocked?"#fee2e2":isToday?"var(--bgw)":"transparent",
-              color:isSel?"#fff":isBlocked?"#ef4444":isPast?"var(--gl)":"var(--dk)",
-              cursor:disabled?"default":"pointer",transition:"all .1s",textDecoration:isBlocked?"line-through":"none"}}>
-            {day}
-          </button>
-        })}
+  const fmtDate=s=>{if(!s)return null;const[y,m,d]=s.split("-");return `${d}/${m}/${y.slice(2)}`;};
+
+  const handleDay=(y,m,day)=>{
+    const key=toKey(y,m,day);
+    const dt=new Date(y,m,day);dt.setHours(0,0,0,0);
+    if(dt<today||blockedSet.has(key))return;
+    if(picking==="start"){
+      setSd(key);
+      if(endD&&dt>endD){setEd(key);}
+      setPicking("end");
+    } else {
+      if(startD&&dt<startD){setSd(key);setEd(key);setPicking("end");}
+      else{setEd(key);setPicking("start");}
+    }
+  };
+
+  const daysInMonth=new Date(viewY,viewM+1,0).getDate();
+  const firstDay=(new Date(viewY,viewM,1).getDay()||7)-1;// 0=Mon
+  const cells=Array(firstDay).fill(null).concat(Array.from({length:daysInMonth},(_,i)=>i+1));
+
+  const previewEnd=picking==="end"&&hovD&&startD?hovD:endD;
+
+  return <div>
+    {/* Demi-journée slots */}
+    {durType==="demi"&&<div style={{display:"flex",gap:6,marginBottom:10}}>
+      {[["Matin (8h-12h)","☀️"],["Après-midi (14h-18h)","🌤️"]].map(([s,ic])=>
+        <button key={s} onClick={()=>setTimeSlot&&setTimeSlot(s)} style={{flex:1,padding:"10px 4px",borderRadius:12,border:"1.5px solid "+(timeSlot===s?"var(--p)":"var(--bd)"),background:timeSlot===s?"#f5f3ff":"var(--bgw)",color:timeSlot===s?"var(--p)":"var(--dk)",fontSize:11,fontWeight:700,cursor:"pointer",transition:"all .15s var(--ease)"}}>
+          <div style={{fontSize:18,marginBottom:3}}>{ic}</div>{s.split(" ")[0]}
+        </button>
+      )}
+    </div>}
+
+    {/* Calendrier */}
+    <div style={{background:"var(--w)",borderRadius:16,border:"1.5px solid var(--bd)",overflow:"hidden",boxShadow:"var(--sh)"}}>
+
+      {/* Sélecteur arrivée/départ */}
+      <div style={{display:"grid",gridTemplateColumns:"1fr auto 1fr",alignItems:"center",padding:"8px 10px",gap:4,borderBottom:"1px solid var(--bd)"}}>
+        <div onClick={()=>setPicking("start")} style={{padding:"6px 8px",borderRadius:9,border:"1.5px solid "+(picking==="start"?"var(--p)":"var(--bd)"),background:picking==="start"?"#f5f3ff":"var(--bgw)",cursor:"pointer",transition:"all .15s"}}>
+          <div style={{fontSize:8,fontWeight:800,color:picking==="start"?"var(--p)":"var(--g)",textTransform:"uppercase",letterSpacing:".07em",marginBottom:1}}>Arrivée</div>
+          <div style={{fontSize:12,fontWeight:700,color:"var(--dk)"}}>{sd?fmtDate(sd):<span style={{color:"var(--gl)"}}>—</span>}</div>
+        </div>
+        <span style={{fontSize:13,color:"var(--bd)"}}>→</span>
+        <div onClick={()=>sd&&setPicking("end")} style={{padding:"6px 8px",borderRadius:9,border:"1.5px solid "+(picking==="end"?"var(--p)":"var(--bd)"),background:picking==="end"?"#f5f3ff":"var(--bgw)",cursor:sd?"pointer":"default",transition:"all .15s"}}>
+          <div style={{fontSize:8,fontWeight:800,color:picking==="end"?"var(--p)":"var(--g)",textTransform:"uppercase",letterSpacing:".07em",marginBottom:1}}>Départ</div>
+          <div style={{fontSize:12,fontWeight:700,color:"var(--dk)"}}>{ed?fmtDate(ed):<span style={{color:"var(--gl)"}}>—</span>}</div>
+        </div>
+      </div>
+
+      {/* Navigation mois */}
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"7px 12px",background:"var(--bgw)"}}>
+        <button onClick={prev} style={{background:"var(--w)",border:"1.5px solid var(--bd)",borderRadius:7,width:26,height:26,cursor:"pointer",fontSize:14,display:"flex",alignItems:"center",justifyContent:"center",color:"var(--dk)"}}>‹</button>
+        <span style={{fontFamily:"var(--fd)",fontSize:13,fontWeight:700,color:"var(--dk)"}}>{MONTHS_FR[viewM]} {viewY}</span>
+        <button onClick={next} style={{background:"var(--w)",border:"1.5px solid var(--bd)",borderRadius:7,width:26,height:26,cursor:"pointer",fontSize:14,display:"flex",alignItems:"center",justifyContent:"center",color:"var(--dk)"}}>›</button>
+      </div>
+
+      {/* Grille jours */}
+      <div style={{padding:"4px 8px 8px"}}>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",marginBottom:1}}>
+          {DAYS_FR.map(d=><div key={d} style={{textAlign:"center",fontSize:9,fontWeight:700,color:"var(--gl)",padding:"2px 0"}}>{d}</div>)}
+        </div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)"}}>
+          {cells.map((day,i)=>{
+            if(!day)return <div key={i}/>;
+            const key=toKey(viewY,viewM,day);
+            const dt=new Date(viewY,viewM,day);dt.setHours(0,0,0,0);
+            const isBlocked=blockedSet.has(key);
+            const isPast=dt<today;
+            const isStart=sd===key;
+            const isEnd=ed===key;
+            const isTodayD=dt.getTime()===today.getTime();
+            const inRange=startD&&previewEnd&&dt>startD&&dt<previewEnd;
+            const isHovEnd=hovered===key&&picking==="end"&&startD&&dt>=startD;
+            const disabled=isPast||isBlocked;
+            let bg="transparent",color=isPast?"var(--gl)":"var(--dk)",fw=400,br="7px",outline="none";
+            if(isStart){bg="var(--p)";color="#fff";fw=700;br=isEnd?"7px":"7px 0 0 7px";}
+            else if(isEnd){bg="var(--p)";color="#fff";fw=700;br="0 7px 7px 0";}
+            else if(inRange){bg="rgba(124,58,237,.1)";color="var(--p)";br="0";}
+            else if(isHovEnd){bg="rgba(124,58,237,.06)";br=0;}
+            else if(isBlocked){bg="#fee2e2";color="#ef4444";}
+            else if(isTodayD){outline="1.5px solid var(--p)";}
+            return <div key={i} onMouseEnter={()=>!disabled&&setHovered(key)} onMouseLeave={()=>setHovered(null)}
+              onClick={()=>!disabled&&handleDay(viewY,viewM,day)}
+              style={{padding:"1px",cursor:disabled?"default":"pointer"}}>
+              <div style={{width:"100%",aspectRatio:"1",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:fw,background:bg,color,borderRadius:br,outline,transition:"background .1s",textDecoration:isBlocked?"line-through":"none",opacity:disabled?0.3:1}}>
+                {day}
+              </div>
+            </div>;
+          })}
+        </div>
+      </div>
+
+      {/* Légende compacte */}
+      <div style={{padding:"4px 10px 6px",borderTop:"1px solid var(--bd)",display:"flex",gap:8}}>
+        <span style={{display:"flex",alignItems:"center",gap:3,fontSize:9,color:"var(--g)"}}><span style={{width:8,height:8,borderRadius:2,background:"var(--p)",display:"inline-block"}}/> Sél.</span>
+        <span style={{display:"flex",alignItems:"center",gap:3,fontSize:9,color:"var(--g)"}}><span style={{width:8,height:8,borderRadius:2,background:"rgba(124,58,237,.1)",display:"inline-block"}}/> Période</span>
+        {blockedDates?.length>0&&<span style={{display:"flex",alignItems:"center",gap:3,fontSize:9,color:"var(--g)"}}><span style={{width:8,height:8,borderRadius:2,background:"#fee2e2",display:"inline-block"}}/> Indispo</span>}
       </div>
     </div>
-    {blockedDates&&blockedDates.length>0&&<div style={{padding:"4px 12px",fontSize:10,color:"#ef4444",display:"flex",alignItems:"center",gap:4}}><span style={{width:8,height:8,borderRadius:2,background:"#fee2e2",border:"1px solid #fca5a5",display:"inline-block"}}/>Jours indisponibles</div>}
-    {label&&<div style={{padding:"6px 12px",borderTop:"1px solid var(--bd)",fontSize:11,color:"var(--g)",textAlign:"center"}}>{label}: <strong>{value||"—"}</strong></div>}
-  </div>
+
+    {/* Hint */}
+    <div style={{textAlign:"center",fontSize:10,color:"var(--p)",fontWeight:600,marginTop:4,opacity:.8}}>
+      {picking==="start"?"📅 Date d'arrivée ?":"📅 Date de départ ?"}
+    </div>
+  </div>;
 }
 
 function DetailMap({item}){
@@ -1817,27 +1898,10 @@ function Detail({item,onClose,state,dispatch,setPage,setConvId,setShowShop,setPr
             </div>
           </div>
 
-          {/* Créneaux */}
-          {durType==="demi"&&<div style={{marginBottom:12}}>
-            <div style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:".06em",color:"var(--g)",marginBottom:6}}>Créneau</div>
-            <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
-              {["Matin (8h-12h)","Après-midi (14h-18h)"].map(s=>
-                <button key={s} onClick={()=>setTimeSlot(s)} style={{padding:"6px 10px",borderRadius:8,border:"1.5px solid "+(timeSlot===s?"var(--p)":"var(--bd)"),background:timeSlot===s?"#f5f3ff":"var(--bgw)",color:timeSlot===s?"var(--p)":"var(--dk)",fontSize:11,fontWeight:600,cursor:"pointer"}}>{s}</button>
-              )}
-            </div>
-          </div>}
-
-          {/* Dates — champs + mini calendriers */}
-          <div style={{marginBottom:12}}>
-            <div style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:".06em",color:"var(--g)",marginBottom:6}}>Dates · {days} jour{days>1?"s":""}</div>
-            <div className="dv2-date-grid">
-              <div className="dv2-date-field"><label>Début</label><input type="date" value={sd} onChange={e=>setSd(e.target.value)}/></div>
-              <div className="dv2-date-field"><label>Fin</label><input type="date" value={ed} min={sd} onChange={e=>setEd(e.target.value)}/></div>
-            </div>
-          </div>
-          <div style={{marginBottom:14,display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-            <MiniCal value={sd} onChange={setSd} label="Début" blockedDates={item.blockedDates}/>
-            <MiniCal value={ed} onChange={setEd} label="Fin" minDate={sd} blockedDates={item.blockedDates}/>
+          {/* Calendrier de plage unifié */}
+          <div style={{marginBottom:14}}>
+            <div style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:".06em",color:"var(--g)",marginBottom:8}}>Dates · {days} jour{days>1?"s":""}</div>
+            <RangeCal sd={sd} setSd={setSd} ed={ed} setEd={setEd} blockedDates={item.blockedDates} durType={durType} timeSlot={timeSlot} setTimeSlot={setTimeSlot}/>
           </div>
 
           {/* Retrait */}
@@ -4900,13 +4964,15 @@ function DisputePage({state,dispatch,setPage}){
 function Gallery({images,start,onClose}){
   const[idx,setIdx]=useState(start||0);
   useEffect(()=>{const h=e=>{if(e.key==="Escape")onClose();if(e.key==="ArrowRight")setIdx(i=>(i+1)%images.length);if(e.key==="ArrowLeft")setIdx(i=>(i-1+images.length)%images.length)};window.addEventListener("keydown",h);return()=>window.removeEventListener("keydown",h)},[]);
-  return <div className="gallery-fs" onClick={onClose}>
+  const content=<div className="gallery-fs" onClick={onClose}>
     <button className="gf-close" onClick={onClose}><I.X/></button>
     <button className="gf-nav l" onClick={e=>{e.stopPropagation();setIdx(i=>(i-1+images.length)%images.length)}}>‹</button>
     <img src={images[idx]} alt="" onClick={e=>e.stopPropagation()}/>
     <button className="gf-nav r" onClick={e=>{e.stopPropagation();setIdx(i=>(i+1)%images.length)}}>›</button>
     <div className="gf-counter">{idx+1} / {images.length}</div>
-  </div>
+    <div className="gf-dots">{images.map((_,i)=><div key={i} className={"gf-dot"+(i===idx?" on":"")} onClick={e=>{e.stopPropagation();setIdx(i)}}/>)}</div>
+  </div>;
+  return ReactDOM.createPortal(content,document.body);
 }
 
 /* ===== CHATBOT ===== */

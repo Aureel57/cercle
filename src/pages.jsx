@@ -1172,13 +1172,15 @@ function DisputePage({state,dispatch,setPage}){
 function Gallery({images,start,onClose}){
   const[idx,setIdx]=useState(start||0);
   useEffect(()=>{const h=e=>{if(e.key==="Escape")onClose();if(e.key==="ArrowRight")setIdx(i=>(i+1)%images.length);if(e.key==="ArrowLeft")setIdx(i=>(i-1+images.length)%images.length)};window.addEventListener("keydown",h);return()=>window.removeEventListener("keydown",h)},[]);
-  return <div className="gallery-fs" onClick={onClose}>
+  const content=<div className="gallery-fs" onClick={onClose}>
     <button className="gf-close" onClick={onClose}><I.X/></button>
     <button className="gf-nav l" onClick={e=>{e.stopPropagation();setIdx(i=>(i-1+images.length)%images.length)}}>‹</button>
     <img src={images[idx]} alt="" onClick={e=>e.stopPropagation()}/>
     <button className="gf-nav r" onClick={e=>{e.stopPropagation();setIdx(i=>(i+1)%images.length)}}>›</button>
     <div className="gf-counter">{idx+1} / {images.length}</div>
-  </div>
+    <div className="gf-dots">{images.map((_,i)=><div key={i} className={"gf-dot"+(i===idx?" on":"")} onClick={e=>{e.stopPropagation();setIdx(i)}}/>)}</div>
+  </div>;
+  return ReactDOM.createPortal(content,document.body);
 }
 
 /* ===== CHATBOT ===== */
