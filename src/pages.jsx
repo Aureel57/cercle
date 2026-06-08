@@ -15,61 +15,163 @@ function SearchM({onClose,onSearch,allItems,filters,setFilters}){
 function FilterM({onClose,filters,setFilters,count}){
   const[l,setL]=useState({...filters});const up=(k,v)=>setL(p=>({...p,[k]:v}));
   const[geoLoading,setGeoLoading]=useState(false);
+  const[starHover,setStarHover]=useState(0);
   const requestGeo=()=>{
-    if(!navigator.geolocation){return;}
+    if(!navigator.geolocation)return;
     setGeoLoading(true);
     navigator.geolocation.getCurrentPosition(
       pos=>{up('userLocation',{lat:pos.coords.latitude,lng:pos.coords.longitude});setGeoLoading(false);},
-      ()=>setGeoLoading(false),
-      {timeout:8000}
+      ()=>setGeoLoading(false),{timeout:8000}
     );
   };
-  return <div className="bk" onClick={onClose}><div className="md" onClick={e=>e.stopPropagation()} style={{maxWidth:520}}>
-    <div className="mh"><button className="mx" onClick={onClose}><I.X/></button><h2>Filtres</h2></div>
-    <div className="mb">
-      {/* ─ Proche de moi ─ */}
-      <div style={{marginBottom:18}}>
-        <h3 style={{fontSize:14,fontWeight:700,fontFamily:"var(--fd)",marginBottom:8}}>📍 Proche de moi</h3>
-        {!l.userLocation
-          ?<button className="pill" style={{display:'flex',alignItems:'center',gap:6}} onClick={requestGeo} disabled={geoLoading}>
-              {geoLoading?'Localisation…':'📍 Utiliser ma position'}
-            </button>
-          :<div>
-              <div style={{fontSize:12,color:'#10b981',fontWeight:600,marginBottom:12,display:'flex',alignItems:'center',gap:5}}>
-                ✓ Position obtenue
-                <button style={{marginLeft:'auto',fontSize:11,color:'var(--g)',background:'none',border:'none',cursor:'pointer',padding:0,textDecoration:'underline'}} onClick={()=>{up('userLocation',null);up('sort',l.sort==='nearest'?'pertinence':l.sort);}}>Retirer</button>
-              </div>
-              <div style={{display:'flex',justifyContent:'space-between',fontSize:13,marginBottom:6}}>
-                <span style={{fontWeight:600,color:'var(--dk)'}}>Distance maximale</span>
-                <span style={{fontWeight:700,color:'var(--p)'}}>{l.maxDistance||20} km</span>
-              </div>
-              <input type="range" className="range-sl" min="1" max="100" step="1" value={l.maxDistance||20} onChange={e=>up('maxDistance',+e.target.value)} style={{width:'100%'}}/>
-              <div style={{display:'flex',justifyContent:'space-between',fontSize:10,color:'var(--gl)',marginTop:4}}>
-                <span>1 km</span><span>25 km</span><span>50 km</span><span>100 km</span>
-              </div>
-            </div>
-        }
+  const OPTS=[
+    {key:"verified",label:"Propriétaire vérifié",ic:"🪪"},
+    {key:"delivery",label:"Livraison disponible",ic:"🚚"},
+    {key:"flexible",label:"Annulation flexible",ic:"🔄"},
+    {key:"instant",label:"Réservation instantanée",ic:"⚡"},
+  ];
+  const toggleOpt=o=>{const os=l.options||[];up("options",os.includes(o)?os.filter(x=>x!==o):[...os,o])};
+  const activeCount=[
+    l.filterCat&&l.filterCat!=="all"?1:0,
+    l.condition&&l.condition!=="Tous"?1:0,
+    l.minRating>0?1:0,
+    (l.priceMin>0||l.priceMax<500)?1:0,
+    (l.options||[]).length,
+    l.userLocation?1:0,
+    (l.sort&&l.sort!=="pertinence")?1:0,
+  ].reduce((a,b)=>a+b,0);
+
+  return <div className="fv2">
+    <div className="fv2-bg" onClick={onClose}/>
+    <div className="fv2-panel">
+
+      {/* ── En-tête ── */}
+      <div className="fv2-head">
+        <div>
+          <h2 style={{fontFamily:"var(--fd)",fontSize:18,fontWeight:800,color:"var(--dk)",margin:0}}>Filtres</h2>
+          {activeCount>0&&<span style={{fontSize:11,color:"var(--p)",fontWeight:700}}>{activeCount} actif{activeCount>1?"s":""}</span>}
+        </div>
+        <button className="dv2-icon-btn" onClick={onClose}><I.X/></button>
       </div>
-      <div style={{marginBottom:18}}><h3 style={{fontSize:14,fontWeight:700,fontFamily:"var(--fd)",marginBottom:8}}>Trier par</h3>
-        <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
-          {[["pertinence","Pertinence"],["price_asc","Prix ↑"],["price_desc","Prix ↓"],["rating","Note ↓"],["recent","Récent"]].map(([id,label])=>
-            <button key={id} className={"pill"+((l.sort||"pertinence")===id?" on":"")} onClick={()=>up("sort",id)}>{label}</button>
-          )}
-          {l.userLocation&&<button className={"pill"+(l.sort==="nearest"?" on":"")} onClick={()=>up("sort","nearest")}>📍 Le plus proche</button>}
+
+      {/* ── Corps ── */}
+      <div className="fv2-body">
+
+        {/* Trier par */}
+        <div className="fv2-sec">
+          <div className="fv2-lbl">Trier par</div>
+          <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+            {[["pertinence","Pertinence"],["price_asc","Prix croissant"],["price_desc","Prix décroissant"],["rating","Mieux notés"],["recent","Plus récents"]].map(([id,label])=>
+              <button key={id} className={"fv2-sort-btn"+((l.sort||"pertinence")===id?" on":"")} onClick={()=>up("sort",id)}>{label}</button>
+            )}
+            {l.userLocation&&<button className={"fv2-sort-btn"+(l.sort==="nearest"?" on":"")} onClick={()=>up("sort","nearest")}>📍 Plus proche</button>}
+          </div>
+        </div>
+
+        {/* Catégorie */}
+        <div className="fv2-sec">
+          <div className="fv2-lbl">Catégorie</div>
+          <div className="fv2-cat-grid">
+            {CATS.map(c=><button key={c.id} className={"fv2-cat-btn"+((l.filterCat||"all")===c.id?" on":"")} onClick={()=>up("filterCat",c.id)}>
+              <div style={{fontSize:22,marginBottom:4}}>{c.icon}</div>
+              <div style={{fontSize:10}}>{c.label}</div>
+            </button>)}
+          </div>
+        </div>
+
+        {/* État */}
+        <div className="fv2-sec">
+          <div className="fv2-lbl">État de l'objet</div>
+          <div className="fv2-cond">
+            {[["Tous","✦","Tous états"],["Comme neuf","✨","Impeccable"],["Très bon état","👍","Quelques traces"],["Bon état","👌","Usage normal"],["Usé mais fonctionnel","🔧","Fonctionnel"]].map(([v,ic,sub])=>
+              <button key={v} className={"fv2-cond-btn"+(l.condition===v?" on":"")} onClick={()=>up("condition",v)}>
+                <div style={{fontSize:20,marginBottom:3}}>{ic}</div>
+                <div style={{fontSize:10,fontWeight:700,marginBottom:1}}>{v==="Tous"?"Tous":v}</div>
+                <div style={{fontSize:9,color:l.condition===v?"var(--p)":"var(--g)",lineHeight:1.2}}>{sub}</div>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Prix */}
+        <div className="fv2-sec">
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+            <div className="fv2-lbl" style={{margin:0}}>Prix / jour</div>
+            <span style={{fontSize:11,fontWeight:700,color:"var(--p)"}}>{l.priceMin||0} € – {l.priceMax||500} €</span>
+          </div>
+          <input type="range" className="range-sl" min="0" max="500" value={l.priceMax||500} onChange={e=>up("priceMax",+e.target.value)} style={{width:"100%",marginBottom:10}}/>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+            <div className="fv2-pfield">
+              <div style={{fontSize:9,fontWeight:700,color:"var(--g)",textTransform:"uppercase",letterSpacing:".05em",marginBottom:3}}>Min</div>
+              <div style={{display:"flex",alignItems:"center",gap:3}}><input type="number" value={l.priceMin||0} onChange={e=>up("priceMin",+e.target.value)} style={{width:"100%",border:"none",background:"none",fontSize:14,fontWeight:700,outline:"none",color:"var(--dk)",fontFamily:"var(--f)"}}/><span style={{fontSize:11,color:"var(--g)"}}>€</span></div>
+            </div>
+            <div className="fv2-pfield">
+              <div style={{fontSize:9,fontWeight:700,color:"var(--g)",textTransform:"uppercase",letterSpacing:".05em",marginBottom:3}}>Max</div>
+              <div style={{display:"flex",alignItems:"center",gap:3}}><input type="number" value={l.priceMax||500} onChange={e=>up("priceMax",+e.target.value)} style={{width:"100%",border:"none",background:"none",fontSize:14,fontWeight:700,outline:"none",color:"var(--dk)",fontFamily:"var(--f)"}}/><span style={{fontSize:11,color:"var(--g)"}}>€</span></div>
+            </div>
+          </div>
+        </div>
+
+        {/* Note minimale */}
+        <div className="fv2-sec">
+          <div className="fv2-lbl">Note minimale</div>
+          <div style={{display:"flex",gap:0,marginBottom:8}}>
+            {[1,2,3,4,5].map(n=><button key={n} className={"fv2-star"+(n<=(starHover||l.minRating||0)?" lit":"")}
+              onMouseEnter={()=>setStarHover(n)} onMouseLeave={()=>setStarHover(0)}
+              onClick={()=>up("minRating",n===l.minRating?0:n)}>★</button>)}
+          </div>
+          <div style={{fontSize:11,color:"var(--g)"}}>
+            {l.minRating>0?`Minimum ${l.minRating} étoile${l.minRating>1?"s":""}`:starHover>0?`Minimum ${starHover} étoile${starHover>1?"s":""}`:"Toutes les notes"}
+          </div>
+        </div>
+
+        {/* Options */}
+        <div className="fv2-sec">
+          <div className="fv2-lbl">Options</div>
+          <div style={{display:"flex",flexDirection:"column",gap:10}}>
+            {OPTS.map(o=>{
+              const on=(l.options||[]).includes(o.label);
+              return <div key={o.key} style={{display:"flex",alignItems:"center",gap:12}}>
+                <div style={{width:38,height:38,borderRadius:10,background:on?"rgba(124,58,237,.12)":"var(--bgw)",border:"1.5px solid "+(on?"var(--p)":"var(--bd)"),display:"flex",alignItems:"center",justifyContent:"center",fontSize:17,flexShrink:0,transition:"all .15s"}}>{o.ic}</div>
+                <span style={{flex:1,fontSize:13,fontWeight:600,color:"var(--dk)"}}>{o.label}</span>
+                <button className={"fv2-tog "+(on?"on":"off")} onClick={()=>toggleOpt(o.label)}>
+                  <span style={{position:"absolute",top:3,left:on?22:3,width:20,height:20,borderRadius:"50%",background:"#fff",boxShadow:"0 1px 4px rgba(0,0,0,.2)",transition:"left .18s var(--ease)"}}/>
+                </button>
+              </div>;
+            })}
+          </div>
+        </div>
+
+        {/* Proximité */}
+        <div className="fv2-sec" style={{borderBottom:"none"}}>
+          <div className="fv2-lbl">📍 Position</div>
+          {!l.userLocation
+            ?<button onClick={requestGeo} disabled={geoLoading}
+                style={{width:"100%",padding:"12px 16px",borderRadius:14,border:"1.5px dashed var(--bd)",background:"var(--bgw)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8,fontSize:13,fontWeight:600,color:"var(--dk)",transition:"all .15s"}}>
+                {geoLoading?"⏳ Localisation…":"📍 Utiliser ma position"}
+              </button>
+            :<div>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+                  <span style={{fontSize:12,color:"#059669",fontWeight:700}}>✓ Position obtenue</span>
+                  <button onClick={()=>{up('userLocation',null);up('sort',l.sort==='nearest'?'pertinence':l.sort);}} style={{fontSize:11,color:"var(--g)",background:"none",border:"none",cursor:"pointer",textDecoration:"underline"}}>Retirer</button>
+                </div>
+                <div style={{display:"flex",justifyContent:"space-between",marginBottom:4,fontSize:12}}>
+                  <span style={{color:"var(--dk)",fontWeight:600}}>Rayon</span>
+                  <span style={{color:"var(--p)",fontWeight:700}}>{l.maxDistance||20} km</span>
+                </div>
+                <input type="range" className="range-sl" min="1" max="100" value={l.maxDistance||20} onChange={e=>up('maxDistance',+e.target.value)} style={{width:"100%"}}/>
+              </div>
+          }
         </div>
       </div>
-      <div style={{marginBottom:18}}><h3 style={{fontSize:14,fontWeight:700,fontFamily:"var(--fd)",marginBottom:8}}>Prix / jour</h3><div style={{display:"flex",gap:10,alignItems:"center"}}><div className="fg" style={{flex:1,margin:0}}><label>Min €</label><input type="number" value={l.priceMin} onChange={e=>up("priceMin",+e.target.value)}/></div><span style={{color:"var(--gl)"}}>–</span><div className="fg" style={{flex:1,margin:0}}><label>Max €</label><input type="number" value={l.priceMax} onChange={e=>up("priceMax",+e.target.value)}/></div></div></div>
-      <div style={{marginBottom:18}}><h3 style={{fontSize:14,fontWeight:700,fontFamily:"var(--fd)",marginBottom:8}}>Catégorie</h3>
-        <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>{CATS.map(c=><button key={c.id} className={"pill"+((l.filterCat||"all")===c.id?" on":"")} onClick={()=>up("filterCat",c.id)}>{c.icon} {c.label}</button>)}</div>
+
+      {/* ── Pied ── */}
+      <div className="fv2-foot">
+        <button className="cl" style={{flex:1}} onClick={()=>setL({priceMin:0,priceMax:500,condition:"Tous",options:[],sort:"pertinence",filterCat:"all",minRating:0,userLocation:null,maxDistance:20})}>Tout effacer</button>
+        <button className="bd" style={{flex:2}} onClick={()=>{setFilters(l);onClose()}}>Afficher {count} résultats</button>
       </div>
-      <div style={{marginBottom:18}}><h3 style={{fontSize:14,fontWeight:700,fontFamily:"var(--fd)",marginBottom:8}}>État</h3><div style={{display:"flex",gap:5,flexWrap:"wrap"}}>{["Tous","Comme neuf","Très bon état","Bon état"].map(c=><button key={c} className={"pill"+(l.condition===c?" on":"")} onClick={()=>up("condition",c)}>{c}</button>)}</div></div>
-      <div style={{marginBottom:18}}><h3 style={{fontSize:14,fontWeight:700,fontFamily:"var(--fd)",marginBottom:8}}>Note minimale</h3>
-        <div style={{display:"flex",gap:5}}>{[0,4,4.5,4.8].map(r=><button key={r} className={"pill"+((l.minRating||0)===r?" on":"")} onClick={()=>up("minRating",r)}>{r===0?"Toutes":"≥ "+r+" ★"}</button>)}</div>
-      </div>
-      <div style={{marginBottom:18}}><h3 style={{fontSize:14,fontWeight:700,fontFamily:"var(--fd)",marginBottom:8}}>Options</h3><div style={{display:"flex",gap:5,flexWrap:"wrap"}}>{["Propriétaire vérifié","Livraison","Annulation flexible"].map(o=><button key={o} className={"pill"+((l.options||[]).includes(o)?" on":"")} onClick={()=>{const os=l.options||[];up("options",os.includes(o)?os.filter(x=>x!==o):[...os,o])}}>{o}</button>)}</div></div>
     </div>
-    <div className="mf"><button className="cl" onClick={()=>setL({priceMin:0,priceMax:500,condition:"Tous",options:[],sort:"pertinence",filterCat:"all",minRating:0,userLocation:null,maxDistance:20})}>Effacer</button><button className="bd" onClick={()=>{setFilters(l);onClose()}}>Afficher {count} résultats</button></div>
-  </div></div>
+  </div>
 }
 
 
@@ -1222,6 +1324,137 @@ function BadgesPage({state,setPage}){
       </div>})}
     </div>
   </div>
+}
+
+
+/* ===== CERCLE+ — PAGE ABONNEMENT ===== */
+function PlusPage({state,dispatch,setPage,onAuthRequired}){
+  const sub=state.subscription;
+  const info=getPlusInfo(sub);
+  const user=state.user;
+  const userRentals=(user?.rentals||0)+state.bookings.filter(b=>b.userId===user?.id).length;
+  const userGrade=getGrade(userRentals);
+  const PLUS="#7C3AED";
+  // Simulateur : grade + années explorables
+  const[simGradeId,setSimGradeId]=useState(userGrade.id);
+  const[simYears,setSimYears]=useState(info.active?info.years:0);
+  const simGrade=GRADES.find(g=>g.id===simGradeId)||GRADES[0];
+  const simReduction=PLUS_BASE_REDUCTION+simYears*PLUS_YEARLY_REDUCTION;
+  const simEff=Math.max(PLUS_FEE_FLOOR,Math.round((simGrade.feeRate-simReduction)*1000)/1000);
+  const simFloorHit=simGrade.feeRate-simReduction<PLUS_FEE_FLOOR;
+  const subscribe=()=>{ if(!user){onAuthRequired&&onAuthRequired();return;} dispatch({type:"SUBSCRIBE_PLUS",method:"card"}); };
+  const cancel=()=>{ if(window.confirm("Résilier Cercle+ ? Vos réductions d'abonnement seront retirées.")) dispatch({type:"CANCEL_PLUS"}); };
+
+  const Bullet=({icon,title,desc})=>(
+    <div style={{display:"flex",gap:14,alignItems:"flex-start",padding:"14px 16px",background:"var(--w)",border:"1.5px solid var(--bd)",borderRadius:16}}>
+      <div style={{width:38,height:38,borderRadius:12,flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,background:`linear-gradient(135deg,${PLUS}22,${PLUS}11)`}}>{icon}</div>
+      <div><div style={{fontWeight:700,fontSize:14,marginBottom:2,color:"var(--dk)"}}>{title}</div><div style={{fontSize:12.5,color:"var(--g)",lineHeight:1.5}}>{desc}</div></div>
+    </div>
+  );
+
+  return <div style={{maxWidth:680,margin:"0 auto",padding:"24px 20px 60px"}}>
+    <button className="cl" style={{marginBottom:16,display:"flex",alignItems:"center",gap:5}} onClick={()=>setPage(user?"profile":"home")}><I.Back/> Retour</button>
+
+    {/* ── HERO ── */}
+    <div style={{position:"relative",overflow:"hidden",borderRadius:26,padding:"32px 26px",color:"#fff",marginBottom:18,background:"linear-gradient(135deg,#6C63FF 0%,#7C3AED 55%,#4ECDC4 130%)",boxShadow:"0 18px 50px rgba(124,58,237,.35)"}}>
+      <div style={{position:"absolute",inset:0,background:"linear-gradient(105deg,transparent 35%,rgba(255,255,255,0.14) 50%,transparent 65%)",backgroundSize:"200% 100%",animation:"shimmerCard 4s linear infinite",pointerEvents:"none"}}/>
+      <div style={{position:"relative",zIndex:1}}>
+        <div style={{display:"inline-flex",alignItems:"center",gap:7,background:"rgba(255,255,255,0.18)",padding:"5px 14px",borderRadius:20,fontSize:12,fontWeight:700,letterSpacing:".02em",marginBottom:14,backdropFilter:"blur(6px)"}}>✦ CERCLE+ {info.active&&<span style={{background:"#fff",color:PLUS,padding:"1px 8px",borderRadius:12,fontSize:10,fontWeight:800}}>ACTIF</span>}</div>
+        <h1 style={{fontFamily:"var(--fd)",fontSize:30,fontWeight:800,lineHeight:1.1,marginBottom:10,letterSpacing:"-.02em"}}>Moins de commission,<br/>plus vite.</h1>
+        <p style={{fontSize:14.5,opacity:.92,lineHeight:1.55,maxWidth:440}}>L'abonnement qui réduit vos frais de service de <strong>−1% immédiatement</strong>, puis <strong>−1% de plus chaque année</strong>. Cumulable avec votre grade.</p>
+        <div style={{display:"flex",alignItems:"baseline",gap:8,marginTop:18}}>
+          <span style={{fontFamily:"var(--fd)",fontSize:38,fontWeight:800,letterSpacing:"-.02em"}}>5,99&nbsp;€</span>
+          <span style={{fontSize:14,opacity:.85}}>/ mois · sans engagement</span>
+        </div>
+      </div>
+    </div>
+
+    {/* ── STATUT / CTA ── */}
+    {info.active?(
+      <div style={{borderRadius:20,padding:"20px 22px",marginBottom:18,border:`1.5px solid ${PLUS}40`,background:`linear-gradient(135deg,${PLUS}0d,${PLUS}05)`}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:10}}>
+          <div>
+            <div style={{fontSize:12,color:"var(--g)",fontWeight:600}}>Votre réduction Cercle+ actuelle</div>
+            <div style={{fontFamily:"var(--fd)",fontSize:32,fontWeight:800,color:PLUS,lineHeight:1.1}}>−{(info.reduction*100).toFixed(0)}%</div>
+            <div style={{fontSize:12,color:"var(--g)",marginTop:2}}>Membre depuis {info.months} mois · {info.years} an{info.years>1?"s":""} d'ancienneté</div>
+          </div>
+          <div style={{textAlign:"right"}}>
+            <div style={{fontSize:11,color:"var(--g)",fontWeight:600,marginBottom:2}}>Prochain palier</div>
+            <div style={{fontSize:13,fontWeight:700,color:"var(--dk)"}}>−{(info.nextReduction*100).toFixed(0)}% dans {info.monthsToNext} mois</div>
+          </div>
+        </div>
+        {/* progression vers le prochain -1% */}
+        <div style={{height:8,borderRadius:4,background:"var(--bd)",overflow:"hidden",margin:"14px 0 6px"}}>
+          <div style={{height:"100%",borderRadius:4,width:`${Math.round(((12-info.monthsToNext)/12)*100)}%`,background:`linear-gradient(90deg,${PLUS},#6C63FF)`,transition:"width .8s ease"}}/>
+        </div>
+        <div style={{display:"flex",gap:8,flexWrap:"wrap",marginTop:12}}>
+          <button onClick={cancel} style={{flex:"1 1 auto",padding:"11px",borderRadius:12,border:"1.5px solid var(--bd)",background:"var(--w)",color:"var(--g)",fontWeight:700,fontSize:13,cursor:"pointer"}}>Résilier l'abonnement</button>
+          <button onClick={()=>dispatch({type:"PLUS_SIMULATE_YEAR"})} style={{flex:"1 1 auto",padding:"11px",borderRadius:12,border:`1.5px dashed ${PLUS}66`,background:`${PLUS}0d`,color:PLUS,fontWeight:700,fontSize:12,cursor:"pointer"}}>⏩ Simuler +1 an (démo)</button>
+        </div>
+      </div>
+    ):(
+      <button onClick={subscribe} className="bp" style={{width:"100%",padding:"16px",fontSize:16,fontWeight:800,borderRadius:16,marginBottom:18,background:`linear-gradient(135deg,#6C63FF,${PLUS})`,boxShadow:"0 8px 28px rgba(124,58,237,.4)"}}>✦ Devenir membre Cercle+ · 5,99 €/mois</button>
+    )}
+
+    {/* ── SIMULATEUR ── */}
+    <div style={{borderRadius:20,padding:"20px 20px 22px",marginBottom:18,border:"1.5px solid var(--bd)",background:"var(--w)"}}>
+      <div style={{fontWeight:800,fontSize:15,marginBottom:4,fontFamily:"var(--fd)",color:"var(--dk)"}}>🧮 Simulateur de commission</div>
+      <div style={{fontSize:12.5,color:"var(--g)",marginBottom:16,lineHeight:1.5}}>Combinez votre grade et l'ancienneté de votre abonnement. La commission ne descend jamais sous <strong>2%</strong>.</div>
+
+      <div style={{fontSize:11,fontWeight:700,color:"var(--g)",textTransform:"uppercase",letterSpacing:".05em",marginBottom:7}}>Votre grade</div>
+      <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:16}}>
+        {GRADES.map(g=>(
+          <button key={g.id} onClick={()=>setSimGradeId(g.id)} style={{padding:"7px 11px",borderRadius:20,fontSize:12,fontWeight:700,cursor:"pointer",border:`1.5px solid ${simGradeId===g.id?PLUS:"var(--bd)"}`,background:simGradeId===g.id?`${PLUS}12`:"var(--w)",color:simGradeId===g.id?PLUS:"var(--g)"}}>{g.icon} {g.name} · {Math.round(g.feeRate*100)}%</button>
+        ))}
+      </div>
+
+      <div style={{fontSize:11,fontWeight:700,color:"var(--g)",textTransform:"uppercase",letterSpacing:".05em",marginBottom:7}}>Ancienneté Cercle+</div>
+      <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:18}}>
+        {[0,1,2,3,4,5].map(y=>(
+          <button key={y} onClick={()=>setSimYears(y)} style={{padding:"7px 13px",borderRadius:20,fontSize:12,fontWeight:700,cursor:"pointer",border:`1.5px solid ${simYears===y?PLUS:"var(--bd)"}`,background:simYears===y?`${PLUS}12`:"var(--w)",color:simYears===y?PLUS:"var(--g)"}}>{y===0?"Dès l'abo":`${y} an${y>1?"s":""}`}</button>
+        ))}
+      </div>
+
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,textAlign:"center"}}>
+        <div style={{padding:"14px 8px",borderRadius:14,background:"var(--bgw)"}}>
+          <div style={{fontSize:10,color:"var(--g)",fontWeight:600,marginBottom:3}}>Grade seul</div>
+          <div style={{fontFamily:"var(--fd)",fontSize:22,fontWeight:800,color:"var(--dk)"}}>{Math.round(simGrade.feeRate*100)}%</div>
+        </div>
+        <div style={{padding:"14px 8px",borderRadius:14,background:`${PLUS}12`,border:`1.5px solid ${PLUS}33`}}>
+          <div style={{fontSize:10,color:PLUS,fontWeight:700,marginBottom:3}}>+ Cercle+ (−{(simReduction*100).toFixed(0)}%)</div>
+          <div style={{fontFamily:"var(--fd)",fontSize:26,fontWeight:900,color:PLUS}}>{Math.round(simEff*100)}%</div>
+        </div>
+        <div style={{padding:"14px 8px",borderRadius:14,background:"#f0fdf4"}}>
+          <div style={{fontSize:10,color:"#10b981",fontWeight:700,marginBottom:3}}>Vous économisez</div>
+          <div style={{fontFamily:"var(--fd)",fontSize:22,fontWeight:800,color:"#10b981"}}>−{Math.round((simGrade.feeRate-simEff)*100)}%</div>
+        </div>
+      </div>
+      {simFloorHit&&<div style={{marginTop:12,fontSize:12,color:PLUS,fontWeight:600,textAlign:"center",background:`${PLUS}0d`,padding:"8px",borderRadius:10}}>🎉 Vous atteignez le plancher minimum de 2% de commission.</div>}
+    </div>
+
+    {/* ── COMMENT ÇA MARCHE ── */}
+    <div style={{fontWeight:800,fontSize:15,margin:"4px 0 12px",fontFamily:"var(--fd)",color:"var(--dk)"}}>Comment ça marche</div>
+    <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:22}}>
+      <Bullet icon="⚡" title="−1% dès le premier jour" desc="Dès votre abonnement, votre commission baisse de 1 point, en plus de la réduction de votre grade."/>
+      <Bullet icon="📅" title="−1% de plus chaque année" desc="À chaque année complète d'abonnement, vous gagnez 1 point de réduction supplémentaire, à vie tant que vous restez membre."/>
+      <Bullet icon="🛡️" title="Plancher garanti à 2%" desc="En cumulant grade et abonnement, votre commission ne descend jamais sous 2% — le taux le plus bas de Cercle."/>
+      <Bullet icon="🔓" title="Sans engagement" desc="Résiliable à tout moment. Vous gardez vos avantages jusqu'à la fin de la période en cours."/>
+    </div>
+
+    {/* ── EXEMPLE CONCRET ── */}
+    <div style={{borderRadius:20,padding:"18px 20px",marginBottom:22,background:"linear-gradient(135deg,#1a1a2e,#2d2150)",color:"#fff"}}>
+      <div style={{fontSize:12,opacity:.7,fontWeight:600,marginBottom:8}}>EXEMPLE</div>
+      <div style={{fontSize:13.5,lineHeight:1.7}}>
+        Un membre <strong>Légende</strong> (5% de commission) abonné à Cercle+ depuis <strong>2 ans</strong> :<br/>
+        5% − 1% (abo) − 2% (2 ans) = <strong style={{color:"#A78BFA"}}>2%</strong> de commission seulement.<br/>
+        <span style={{opacity:.7,fontSize:12.5}}>Soit le taux minimum, atteint bien plus tôt qu'avec le grade seul.</span>
+      </div>
+    </div>
+
+    {/* ── CTA bas ── */}
+    {!info.active&&<button onClick={subscribe} className="bp" style={{width:"100%",padding:"16px",fontSize:16,fontWeight:800,borderRadius:16,background:`linear-gradient(135deg,#6C63FF,${PLUS})`,boxShadow:"0 8px 28px rgba(124,58,237,.4)"}}>✦ Rejoindre Cercle+ maintenant</button>}
+    <p style={{textAlign:"center",fontSize:11,color:"var(--g)",marginTop:12,lineHeight:1.5}}>Paiement simulé pour la démo · Aucune carte réelle débitée.<br/>5,99 €/mois, sans engagement, résiliable en un clic.</p>
+  </div>;
 }
 
 

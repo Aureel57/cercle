@@ -150,10 +150,15 @@ function Detail({item,onClose,state,dispatch,setPage,setConvId,setShowShop,setPr
   const[showVerifModal,setShowVerifModal]=useState(false);
   const userRentals=(state.user?.rentals||0)+state.bookings.filter(b=>b.userId===state.user?.id).length;
   const userGrade=getGrade(userRentals);
+  const plusInfo=getPlusInfo(state.subscription);
+  const effRate=getEffectiveFeeRate(userRentals,state.subscription);
   const base=item.price*days;
-  const fee=Math.round(base*userGrade.feeRate*100)/100;
+  const fee=Math.round(base*effRate*100)/100;
   const feeBase=Math.round(base*0.12*100)/100;
-  const feeSaved=Math.round((feeBase-fee)*100)/100;
+  const feeAtGrade=Math.round(base*userGrade.feeRate*100)/100;
+  const gradeSaved=Math.round((feeBase-feeAtGrade)*100)/100;   // économie liée au grade (vs 12%)
+  const plusSaved=Math.round((feeAtGrade-fee)*100)/100;         // économie liée à Cercle+ (après plancher)
+  const feeSaved=Math.round((feeBase-fee)*100)/100;             // économie totale
   const tot=Math.round((base+fee)*100)/100;
   useEffect(()=>{if(sd&&ed){const d=Math.max(1,Math.round((new Date(ed)-new Date(sd))/864e5));setDays(d)}},[sd,ed]);
   const hasBlockedInRange=React.useMemo(()=>{
@@ -174,269 +179,293 @@ function Detail({item,onClose,state,dispatch,setPage,setConvId,setShowShop,setPr
   const startConv=()=>{if(!state.user)return;const cid=`c_${item.owner.id}_${state.user.id}_${item.id}`;dispatch({type:"MSG",payload:{id:uid(),cid,from:state.user.id,fromName:state.user.name||'',fromAvatar:state.user.avatar||'😊',to:item.owner.id,toName:item.owner.name||'',toAvatar:item.owner.avatar||'😊',itemId:item.id,itemTitle:item.title||'',text:`Bonjour ! "${item.title}" est-il disponible ?`,timestamp:new Date()}});onClose();setConvId(cid);setPage("messages")};
   const submitRev=()=>{if(!state.user||!rt)return;dispatch({type:"REVIEW",payload:{id:uid(),itemId:item.id,fromUserId:state.user.id,fromUserName:state.user.name,fromUserAvatar:state.user.avatar,rating:rr,text:rt,createdAt:new Date()}});setShowRF(false);setRt("")};
   const iRevs=state.reviews.filter(r=>r.itemId===item.id);
-  return <div className="ov">
+  const condC=item.condition==="Comme neuf"?{bg:"rgba(22,163,74,.1)",color:"var(--greend)",bd:"rgba(22,163,74,.2)"}:item.condition==="Très bon état"?{bg:"rgba(59,130,246,.1)",color:"#1e40af",bd:"rgba(59,130,246,.2)"}:{bg:"rgba(245,158,11,.1)",color:"#92400e",bd:"rgba(245,158,11,.2)"};
+  return <div className="ov" style={{background:"var(--bg)"}}>
     {gal&&<Gallery images={gal.imgs} start={gal.idx||0} onClose={()=>setGal(null)}/>}
+
+    {/* ── Vérif permis ── */}
     {showVerifModal&&<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.55)",zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
-      <div style={{background:"#fff",borderRadius:20,padding:28,maxWidth:380,width:"100%",boxShadow:"0 20px 60px rgba(0,0,0,.25)"}}>
+      <div style={{background:"#fff",borderRadius:22,padding:28,maxWidth:380,width:"100%",boxShadow:"0 20px 60px rgba(0,0,0,.25)"}}>
         <div style={{width:52,height:52,background:"#fef3c7",borderRadius:14,display:"flex",alignItems:"center",justifyContent:"center",fontSize:28,marginBottom:16}}>🚗</div>
-        <h2 style={{fontSize:18,fontWeight:700,color:"#111827",marginBottom:8,fontFamily:"DM Sans,system-ui,sans-serif"}}>Document requis</h2>
+        <h2 style={{fontSize:18,fontWeight:700,color:"#111827",marginBottom:8}}>Document requis</h2>
         <p style={{fontSize:14,color:"#6b7280",lineHeight:1.6,marginBottom:24}}>Pour louer ce type d'objet, vous devez ajouter votre permis de conduire dans votre profil.</p>
         <div style={{display:"flex",flexDirection:"column",gap:10}}>
-          <button onClick={()=>{setShowVerifModal(false);onClose();if(setProfTab)setProfTab("parametres");setPage("profile");}} style={{width:"100%",padding:"12px 0",background:"#6C63FF",color:"#fff",border:"none",borderRadius:12,fontSize:14,fontWeight:700,cursor:"pointer"}}>Compléter mon profil</button>
+          <button onClick={()=>{setShowVerifModal(false);onClose();if(setProfTab)setProfTab("parametres");setPage("profile");}} style={{width:"100%",padding:"12px 0",background:"var(--p)",color:"#fff",border:"none",borderRadius:12,fontSize:14,fontWeight:700,cursor:"pointer"}}>Compléter mon profil</button>
           <button onClick={()=>setShowVerifModal(false)} style={{width:"100%",padding:"12px 0",background:"#f9fafb",color:"#374151",border:"1.5px solid #e5e7eb",borderRadius:12,fontSize:14,fontWeight:600,cursor:"pointer"}}>Annuler</button>
         </div>
       </div>
     </div>}
-    <div style={{position:"absolute",top:12,left:12,right:12,display:"flex",justifyContent:"space-between",alignItems:"center",zIndex:10}}><button className="ov-close" onClick={onClose}>&#x2715;</button><div style={{display:"flex",gap:8}}><button className="ov-close" onClick={()=>{if(!state.user){onAuthRequired?.();return;}dispatch({type:"TOG_FAV",id:item.id,ownerId:item.owner?.id,title:item.title})}}><I.Heart f={state.favorites.has(item.id)}/></button><button className="ov-close"><I.Share/></button></div></div>
-    <div className="dimgs">
-      <img className="dimg0" src={item.images[0]} alt={item.title} onClick={()=>setGal({imgs:item.images,idx:0})} title="Voir toutes les photos"/>
-      {item.images[1]&&<img className="dimg1" src={item.images[1]} alt={item.title} onClick={()=>setGal({imgs:item.images,idx:1})}/>}
-      {item.images[2]&&<div className="dimg2" style={{position:"relative",overflow:"hidden",borderRadius:"0 0 var(--rl) 0",cursor:"pointer"}} onClick={()=>setGal({imgs:item.images,idx:2})}>
-        <img src={item.images[2]} alt={item.title} style={{width:"100%",height:"100%",objectFit:"cover",display:"block",transition:"filter .2s,transform .3s"}}/>
-        {item.images.length>3&&<div style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.45)",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontWeight:700,fontSize:15}}>+{item.images.length-3} photos</div>}
-      </div>}
-    </div>
-    <div className="dc"><div style={{minWidth:0}}>
 
-      {/* ── Titre + badges ── */}
-      <div style={{marginBottom:20}}>
-        <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:10}}>
-          <span style={{fontSize:10,fontWeight:700,letterSpacing:".06em",textTransform:"uppercase",padding:"4px 10px",borderRadius:8,background:"rgba(108,99,255,.1)",color:"var(--p)"}}>{CATS_FR[item.cat]||item.cat}</span>
-          <span style={{fontSize:10,fontWeight:700,padding:"4px 10px",borderRadius:8,background:item.condition==="Comme neuf"?"#d1fae5":item.condition==="Très bon état"?"#dbeafe":"#fef9c3",color:item.condition==="Comme neuf"?"#065f46":item.condition==="Très bon état"?"#1e40af":"#713f12"}}>{item.condition}</span>
-          {item.available!==false?<span style={{fontSize:10,fontWeight:700,padding:"4px 10px",borderRadius:8,background:"#d1fae5",color:"#065f46"}}>✅ Disponible</span>:<span style={{fontSize:10,fontWeight:700,padding:"4px 10px",borderRadius:8,background:"#fee2e2",color:"#991b1b"}}>❌ Indisponible</span>}
+    {/* ── Paiement overlay ── */}
+    {payStep===1&&<div style={{position:"fixed",inset:0,background:"rgba(20,14,40,.65)",zIndex:250,display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
+      <div style={{background:"var(--w)",borderRadius:24,padding:28,maxWidth:420,width:"100%",boxShadow:"0 24px 80px rgba(0,0,0,.3)",maxHeight:"90dvh",overflowY:"auto"}}>
+        <h3 style={{fontFamily:"var(--fd)",fontSize:17,fontWeight:800,marginBottom:16,color:"var(--dk)"}}>🔒 Paiement sécurisé</h3>
+        <div style={{display:"flex",gap:6,marginBottom:14,flexWrap:"wrap"}}>{[["card","💳 Carte"],["gpay","Google Pay"],["apple","🍎 Apple Pay"],["paypal","🅿️ PayPal"]].map(([id,label])=>
+          <button key={id} className={"pill"+(payMethod===id?" on":"")} onClick={()=>setPayMethod(id)}>{label}</button>
+        )}</div>
+        {payMethod==="card"&&<>
+          <div className="fg"><label>Numéro de carte</label><input value={cardNum} onChange={e=>setCardNum(e.target.value.replace(/\D/g,"").replace(/(.{4})/g,"$1 ").trim())} placeholder="4242 4242 4242 4242" maxLength={19}/></div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+            <div className="fg"><label>Expiration</label><input value={cardExp} onChange={e=>setCardExp(e.target.value)} placeholder="MM/AA" maxLength={5}/></div>
+            <div className="fg"><label>CVC</label><input value={cardCvc} onChange={e=>setCardCvc(e.target.value)} placeholder="123" maxLength={3} type="password"/></div>
+          </div>
+        </>}
+        <div style={{borderRadius:14,overflow:"hidden",marginTop:10,border:"1px solid var(--bd)",marginBottom:16}}>
+          <div style={{background:"var(--bgw)",padding:"12px 14px"}}>
+            <div style={{display:"flex",justifyContent:"space-between",marginBottom:5,fontSize:13}}><span style={{color:"var(--g)"}}>Location ({days}j)</span><strong>{base.toFixed(2)} €</strong></div>
+            <div style={{display:"flex",justifyContent:"space-between",marginBottom:5,fontSize:13}}><span style={{color:"var(--g)"}}>Frais ({(effRate*100).toFixed(0)}%){plusInfo.active?" · ✦ Cercle+":""}</span><strong>{fee.toFixed(2)} €</strong></div>
+            <div style={{borderTop:"1px solid var(--bd)",paddingTop:8,marginTop:6,display:"flex",justifyContent:"space-between",fontWeight:800,fontSize:15}}>
+              <span>Total</span><span style={{color:"var(--p)"}}>{tot.toFixed(2)} €</span>
+            </div>
+          </div>
+          <div style={{background:"#fffbeb",borderTop:"1px solid #fde68a",padding:"10px 14px",display:"flex",justifyContent:"space-between",alignItems:"center",fontSize:13}}>
+            <div><span style={{fontWeight:700,color:"#78350f"}}>🔒 Caution</span><span style={{fontSize:11,color:"#92400e",marginLeft:6}}>Libérée sous 48h</span></div>
+            <strong style={{color:"#78350f"}}>{item.deposit} €</strong>
+          </div>
         </div>
-        <h1 style={{fontFamily:"var(--fd)",fontSize:26,fontWeight:700,lineHeight:1.2,marginBottom:8,letterSpacing:"-.02em"}}>{item.title}</h1>
-        <div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
-          <div style={{display:"flex",alignItems:"center",gap:4,fontWeight:700,fontSize:13}}><span style={{color:"#f59e0b",fontSize:14}}>★</span>{item.rating}</div>
-          <span style={{color:"var(--gl)"}}>·</span>
-          <span style={{fontSize:13,textDecoration:"underline",cursor:"pointer",fontWeight:500}}>{item.reviews+iRevs.length} avis</span>
-          <span style={{color:"var(--gl)"}}>·</span>
-          <span style={{fontSize:13,color:"var(--g)",display:"flex",alignItems:"center",gap:3}}>📍 {item.location}</span>
+        <div style={{display:"flex",gap:8}}>
+          <button className="bs" style={{flex:1}} onClick={()=>setPayStep(0)}>← Retour</button>
+          <button className="bp" style={{flex:2}} onClick={book}>🔒 Confirmer {tot.toFixed(2)} €</button>
         </div>
       </div>
+    </div>}
 
-      {/* ── Propriétaire ── */}
-      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"20px 0",borderTop:"1px solid var(--bd)",borderBottom:"1px solid var(--bd)",marginBottom:24}}>
-        <div style={{display:"flex",alignItems:"center",gap:14}}>
-          <div style={{position:"relative",flexShrink:0}}>
-            <div style={{width:52,height:52,borderRadius:"50%",background:"linear-gradient(135deg,var(--bg),var(--bgw))",display:"flex",alignItems:"center",justifyContent:"center",fontSize:28,border:"2px solid var(--bd)"}}>{item.owner.avatar}</div>
-            {item.owner.verified&&<div style={{position:"absolute",bottom:-2,right:-2,width:18,height:18,borderRadius:"50%",background:"#10b981",border:"2px solid var(--w)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:9,color:"#fff",fontWeight:700}}>✓</div>}
+    {/* ══════════ HEADER STICKY ══════════ */}
+    <div className="dv2-hdr">
+      <button className="dv2-back" onClick={onClose}>← Retour</button>
+      <span className="dv2-hdr-title">{item.title}</span>
+      <div className="dv2-hdr-actions">
+        <button className={"dv2-icon-btn"+(state.favorites.has(item.id)?" on":"")}
+          onClick={()=>{if(!state.user){onAuthRequired?.();return;}dispatch({type:"TOG_FAV",id:item.id,ownerId:item.owner?.id,title:item.title})}}>
+          <I.Heart f={state.favorites.has(item.id)}/>
+        </button>
+        <button className="dv2-icon-btn"><I.Share/></button>
+      </div>
+    </div>
+
+    {/* ══════════ GALERIE ══════════ */}
+    <div className="dv2-gal">
+      <div className="dv2-gal-main" onClick={()=>setGal({imgs:item.images,idx:0})}>
+        <img src={item.images[0]} alt={item.title}/>
+        <div className="dv2-gal-badge">📷 {item.images.length} photo{item.images.length>1?"s":""}</div>
+      </div>
+      <div className="dv2-gal-thumbs">
+        {item.images[1]&&<div className="dv2-gal-thumb" onClick={()=>setGal({imgs:item.images,idx:1})}><img src={item.images[1]} alt=""/></div>}
+        {item.images[2]&&<div className="dv2-gal-thumb" onClick={()=>setGal({imgs:item.images,idx:2})}><img src={item.images[2]} alt=""/></div>}
+        {item.images[3]&&<div className="dv2-gal-thumb" onClick={()=>setGal({imgs:item.images,idx:3})}>
+          <img src={item.images[3]} alt=""/>
+          {item.images.length>4&&<div className="dv2-gal-more">+{item.images.length-3}</div>}
+        </div>}
+      </div>
+    </div>
+
+    {/* ══════════ BODY 2 COLONNES ══════════ */}
+    <div className="dv2-body">
+
+      {/* ── COLONNE GAUCHE ── */}
+      <div>
+        {/* Titre & badges */}
+        <div style={{marginBottom:26}}>
+          <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:12}}>
+            <span style={{fontSize:10,fontWeight:700,letterSpacing:".06em",textTransform:"uppercase",padding:"4px 10px",borderRadius:8,background:"rgba(124,58,237,.1)",color:"var(--p)"}}>{CATS_FR[item.cat]||item.cat}</span>
+            <span style={{fontSize:10,fontWeight:700,padding:"5px 12px",borderRadius:20,background:condC.bg,color:condC.color,border:"1px solid "+condC.bd}}>{item.condition}</span>
+            {item.available!==false
+              ?<span style={{fontSize:10,fontWeight:700,padding:"5px 12px",borderRadius:20,background:"rgba(22,163,74,.1)",color:"var(--greend)",border:"1px solid rgba(22,163,74,.2)"}}>✓ Disponible</span>
+              :<span style={{fontSize:10,fontWeight:700,padding:"5px 12px",borderRadius:20,background:"rgba(220,38,38,.08)",color:"#991b1b",border:"1px solid rgba(220,38,38,.15)"}}>Indisponible</span>}
           </div>
-          <div style={{flex:1}}>
-            <div style={{fontSize:11,color:"var(--g)",fontWeight:600,textTransform:"uppercase",letterSpacing:".04em",marginBottom:2}}>Proposé par</div>
-            <div style={{fontSize:15,fontWeight:700,cursor:"pointer"}} onClick={()=>{onClose();setShowShop&&setShowShop(item.owner)}}>{item.owner.name}</div>
-            <div style={{fontSize:11,color:"var(--g)",marginTop:1}}>Membre depuis {item.owner.since} · {item.owner.rentals} locations · ⏱ {item.owner.responseTime}</div>
+          <h1 style={{fontFamily:"var(--fd)",fontSize:28,fontWeight:800,lineHeight:1.15,marginBottom:10,letterSpacing:"-.03em",color:"var(--dk)"}}>{item.title}</h1>
+          <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
+            <span style={{display:"flex",alignItems:"center",gap:3,fontWeight:700,fontSize:14}}><span style={{color:"#f59e0b"}}>★</span>{item.rating}</span>
+            <span style={{color:"var(--gl)"}}>·</span>
+            <span style={{fontSize:13,textDecoration:"underline",cursor:"pointer",fontWeight:500}}>{item.reviews+iRevs.length} avis</span>
+            <span style={{color:"var(--gl)"}}>·</span>
+            <span style={{fontSize:13,color:"var(--g)",display:"flex",alignItems:"center",gap:3}}>📍 {item.location}</span>
+          </div>
+        </div>
+
+        {/* Propriétaire */}
+        <div className="dv2-owner" onClick={()=>{onClose();setShowShop&&setShowShop(item.owner)}}>
+          <div style={{position:"relative",flexShrink:0}}>
+            <div style={{width:54,height:54,borderRadius:"50%",background:"linear-gradient(135deg,var(--bgw),var(--bd))",display:"flex",alignItems:"center",justifyContent:"center",fontSize:28,border:"2px solid var(--bd)"}}>{item.owner.avatar}</div>
+            {item.owner.verified&&<div style={{position:"absolute",bottom:-2,right:-2,width:18,height:18,borderRadius:"50%",background:"var(--p)",border:"2.5px solid var(--w)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:9,color:"#fff",fontWeight:700}}>✓</div>}
+          </div>
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{fontSize:10,color:"var(--g)",fontWeight:700,textTransform:"uppercase",letterSpacing:".05em",marginBottom:2}}>Proposé par</div>
+            <div style={{fontSize:15,fontWeight:800,color:"var(--dk)",marginBottom:2}}>{item.owner.name}</div>
+            <div style={{fontSize:11,color:"var(--g)"}}>Membre {item.owner.since} · {item.owner.rentals} locations · ⏱ {item.owner.responseTime}</div>
             {state.user&&state.user.id!==item.owner.id&&(()=>{
-              const isFollowing=state.following?.some(f=>f.id===item.owner.id);
-              return <button onClick={()=>dispatch({type:isFollowing?"UNFOLLOW":"FOLLOW",userId:item.owner.id,userName:item.owner.name,userAvatar:item.owner.avatar,userSince:item.owner.since})} style={{marginTop:6,padding:"4px 14px",borderRadius:20,border:`1.5px solid ${isFollowing?"#e5e7eb":"var(--p)"}`,background:isFollowing?"var(--bg)":"var(--p)",color:isFollowing?"var(--g)":"#fff",fontSize:11,fontWeight:700,cursor:"pointer",transition:"all .15s"}}>{isFollowing?"✓ Abonné":"+ Suivre"}</button>;
+              const isF=state.following?.some(f=>f.id===item.owner.id);
+              return <button onClick={e=>{e.stopPropagation();dispatch({type:isF?"UNFOLLOW":"FOLLOW",userId:item.owner.id,userName:item.owner.name,userAvatar:item.owner.avatar,userSince:item.owner.since})}}
+                style={{marginTop:7,padding:"5px 14px",borderRadius:20,border:"1.5px solid "+(isF?"#e5e7eb":"var(--p)"),background:isF?"var(--bgw)":"var(--p)",color:isF?"var(--g)":"#fff",fontSize:11,fontWeight:700,cursor:"pointer",transition:"all .15s"}}>{isF?"✓ Abonné":"+ Suivre"}</button>;
             })()}
           </div>
+          <div style={{textAlign:"right",flexShrink:0}}>
+            <div style={{fontSize:18,fontWeight:800,color:"#f59e0b"}}>★ {item.owner.rating}</div>
+            <div style={{fontSize:10,color:"var(--g)"}}>proprio</div>
+          </div>
         </div>
-        <div style={{textAlign:"right",flexShrink:0}}>
-          <div style={{fontSize:18,fontWeight:700,color:"#f59e0b"}}>★ {item.owner.rating}</div>
-          <div style={{fontSize:10,color:"var(--g)"}}>Note propriétaire</div>
+
+        {/* Garanties */}
+        <div className="dv2-guar">
+          {[item.owner.verified&&{ic:"🪪",t:"Identité vérifiée",p:"Propriétaire vérifié par Cercle",c:"#7C3AED"},
+            {ic:"💬",t:"Messagerie sécurisée",p:"Chat intégré et chiffré",c:"#3B82F6"},
+            {ic:"🔄",t:"Annulation flexible",p:"Gratuite jusqu'à 24h avant",c:"#16A34A"},
+            {ic:"🛡️",t:"Caution sécurisée",p:"Restituée sous 48h après retour",c:"#F59E0B"}
+          ].filter(Boolean).map((g,i)=><div key={i} className="dv2-guar-item" style={{borderLeftColor:g.c}}>
+            <div style={{width:38,height:38,borderRadius:12,background:g.c+"18",display:"flex",alignItems:"center",justifyContent:"center",fontSize:19,flexShrink:0}}>{g.ic}</div>
+            <div><div style={{fontSize:12,fontWeight:700,color:"var(--dk)",marginBottom:2}}>{g.t}</div><div style={{fontSize:11,color:"var(--g)",lineHeight:1.4}}>{g.p}</div></div>
+          </div>)}
         </div>
-      </div>
 
-      {/* ── Garanties ── */}
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:24}}>
-        {[item.owner.verified&&{ic:"🪪",t:"Identité vérifiée",p:"Propriétaire vérifié par Cercle"},
-          {ic:"💬",t:"Messagerie sécurisée",p:"Chat intégré et sécurisé"},
-          {ic:"🔄",t:"Annulation flexible",p:"Gratuite jusqu'à 24h avant"},
-          {ic:"🛡️",t:"Caution sécurisée",p:"Restituée sous 48h après retour"}
-        ].filter(Boolean).map((g,i)=><div key={i} style={{display:"flex",gap:10,padding:14,background:"var(--bgw)",borderRadius:14,border:"1px solid var(--bd)"}}>
-          <span style={{fontSize:20,flexShrink:0,lineHeight:1}}>{g.ic}</span>
-          <div><div style={{fontSize:12,fontWeight:700,marginBottom:2}}>{g.t}</div><div style={{fontSize:11,color:"var(--g)",lineHeight:1.4}}>{g.p}</div></div>
-        </div>)}
-      </div>
+        {/* Description */}
+        <div style={{marginBottom:28,paddingBottom:28,borderBottom:"1px solid var(--bd)"}}>
+          <h3 className="dv2-sh">Description</h3>
+          <p style={{fontSize:14,lineHeight:1.78,color:"var(--tx)",margin:0}}>{item.description}</p>
+        </div>
 
-      {/* ── Description ── */}
-      <div style={{marginBottom:24,paddingBottom:24,borderBottom:"1px solid var(--bd)"}}>
-        <h3 style={{fontSize:15,fontWeight:700,fontFamily:"var(--fd)",marginBottom:10}}>Description</h3>
-        <p style={{fontSize:14,lineHeight:1.7,color:"var(--tx)"}}>{item.description}</p>
-      </div>
+        {/* Caractéristiques */}
+        <div style={{marginBottom:28,paddingBottom:28,borderBottom:"1px solid var(--bd)"}}>
+          <h3 className="dv2-sh">Caractéristiques</h3>
+          <div className="dv2-chars">
+            {[["📦","État",item.condition],["💰","Caution",item.deposit+" €"],["📍","Lieu",item.location],["🚚","Livraison","Disponible"],["📅","Publié","2025"],["⏱️","Durée min.","1 jour"]].map(([ic,l,v],i)=>
+              <div key={i} className="dv2-char">
+                <div style={{width:34,height:34,borderRadius:10,background:"var(--bg)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:17,marginBottom:8,border:"1px solid var(--bd)"}}>{ic}</div>
+                <div style={{fontSize:10,fontWeight:700,color:"var(--g)",textTransform:"uppercase",letterSpacing:".05em",marginBottom:3}}>{l}</div>
+                <div style={{fontSize:13,fontWeight:700,color:"var(--dk)"}}>{v}</div>
+              </div>
+            )}
+          </div>
+        </div>
 
-      {/* ── Caractéristiques ── */}
-      <div style={{marginBottom:24,paddingBottom:24,borderBottom:"1px solid var(--bd)"}}>
-        <h3 style={{fontSize:15,fontWeight:700,fontFamily:"var(--fd)",marginBottom:14}}>Caractéristiques</h3>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-          {[["📦","État",item.condition],["💰","Caution",item.deposit+" €"],["📍","Lieu",item.location],["🚚","Livraison","Disponible sur demande"],["📅","Publié","2025"],["⏱️","Durée min.","1 jour"]].map(([ic,l,v],i)=>
-            <div key={i} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 14px",background:"var(--bgw)",borderRadius:12,border:"1px solid var(--bd)"}}>
-              <span style={{fontSize:18}}>{ic}</span>
-              <div><div style={{fontSize:10,fontWeight:600,color:"var(--g)",textTransform:"uppercase",letterSpacing:".04em"}}>{l}</div><div style={{fontSize:13,fontWeight:600}}>{v}</div></div>
+        {/* Avis */}
+        <div style={{marginBottom:28,paddingBottom:28,borderBottom:"1px solid var(--bd)"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:18}}>
+            <h3 className="dv2-sh" style={{margin:0}}>⭐ {item.rating} · {item.reviews+iRevs.length} avis{item.likeCount>0?` · ❤️ ${item.likeCount}`:''}</h3>
+            {state.user&&<button className="bs" style={{fontSize:11,padding:"6px 14px"}} onClick={()=>setShowRF(!showRF)}>Laisser un avis</button>}
+          </div>
+          {showRF&&<div style={{padding:16,background:"var(--bgw)",borderRadius:16,border:"1px solid var(--bd)",marginBottom:16}}>
+            <div style={{display:"flex",gap:2,marginBottom:12}}>
+              {[1,2,3,4,5].map(n=><button key={n} className="dv2-star-pick" style={{color:n<=rr?"#f59e0b":"var(--bd)"}} onClick={()=>setRr(n)}>★</button>)}
             </div>
-          )}
+            <textarea value={rt} onChange={e=>setRt(e.target.value)} placeholder="Partagez votre expérience..." style={{width:"100%",padding:"10px 14px",border:"1.5px solid var(--bd)",borderRadius:12,fontSize:13,resize:"vertical",minHeight:80,fontFamily:"var(--f)",outline:"none",boxSizing:"border-box",background:"var(--w)"}}/>
+            <button className="bp" style={{marginTop:10,fontSize:12,padding:"8px 18px"}} onClick={submitRev}>Publier l'avis</button>
+          </div>}
+          {iRevs.length===0&&<p style={{fontSize:13,color:"var(--g)"}}>Aucun avis pour l'instant. Soyez le premier !</p>}
+          {iRevs.map(r=><div key={r.id} className="dv2-rev">
+            <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
+              <div style={{width:38,height:38,borderRadius:"50%",background:"linear-gradient(135deg,var(--bgw),var(--bd))",display:"flex",alignItems:"center",justifyContent:"center",fontSize:19,flexShrink:0,border:"1.5px solid var(--bd)"}}>{r.fromUserAvatar}</div>
+              <div style={{flex:1}}>
+                <div style={{fontSize:13,fontWeight:700,color:"var(--dk)"}}>{r.fromUserName}</div>
+                <div style={{fontSize:10,color:"var(--gl)"}}>{ds(r.createdAt)}</div>
+              </div>
+              <div style={{display:"flex",gap:1}}>
+                {[1,2,3,4,5].map(n=><span key={n} style={{fontSize:12,color:n<=r.rating?"#f59e0b":"var(--bd)"}}>★</span>)}
+              </div>
+            </div>
+            <p style={{fontSize:13,lineHeight:1.65,color:"var(--tx)",margin:0,paddingLeft:48}}>{r.text}</p>
+          </div>)}
         </div>
+
+        {/* Carte */}
+        <DetailMap item={item}/>
       </div>
 
-      {/* ── Avis ── */}
-      <div style={{marginBottom:24,paddingBottom:24,borderBottom:"1px solid var(--bd)"}}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
-          <h3 style={{fontSize:15,fontWeight:700,fontFamily:"var(--fd)"}}>⭐ {item.rating} · {item.reviews+iRevs.length} avis{item.likeCount>0?` · ❤️ ${item.likeCount}`:''}</h3>
-          {state.user&&<button className="bs" style={{fontSize:11,padding:"6px 14px"}} onClick={()=>setShowRF(!showRF)}>Laisser un avis</button>}
-        </div>
-        {showRF&&<div style={{padding:16,background:"var(--bgw)",borderRadius:14,border:"1px solid var(--bd)",marginBottom:16}}>
-          <div style={{display:"flex",gap:4,marginBottom:12}}>{[1,2,3,4,5].map(n=><button key={n} style={{background:"none",border:"none",fontSize:26,color:n<=rr?"#f59e0b":"var(--bd)",cursor:"pointer",padding:"0 2px"}} onClick={()=>setRr(n)}>★</button>)}</div>
-          <textarea value={rt} onChange={e=>setRt(e.target.value)} placeholder="Partagez votre expérience..." style={{width:"100%",padding:"10px 14px",border:"1.5px solid var(--bd)",borderRadius:12,fontSize:13,resize:"vertical",minHeight:80,fontFamily:"var(--f)",outline:"none"}}/>
-          <button className="bp" style={{marginTop:10,fontSize:12,padding:"8px 18px"}} onClick={submitRev}>Publier l'avis</button>
-        </div>}
-        {iRevs.length===0&&<p style={{fontSize:13,color:"var(--g)"}}>Aucun avis pour l'instant. Soyez le premier !</p>}
-        {iRevs.map(r=><div key={r.id} style={{padding:"14px 0",borderBottom:"1px solid var(--bd)"}}>
-          <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:6}}>
-            <div style={{width:34,height:34,borderRadius:"50%",background:"var(--bgw)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>{r.fromUserAvatar}</div>
-            <div><div style={{fontSize:13,fontWeight:600}}>{r.fromUserName}</div><div style={{fontSize:10,color:"var(--gl)"}}>{ds(r.createdAt)}</div></div>
-            <div style={{marginLeft:"auto",color:"#f59e0b",fontSize:13}}>{"★".repeat(r.rating)}{"☆".repeat(5-r.rating)}</div>
+      {/* ── COLONNE DROITE : Booking card ── */}
+      <div className="dv2-sticky">
+        <div className="dv2-card">
+
+          {/* Prix + note */}
+          <div style={{display:"flex",alignItems:"flex-end",justifyContent:"space-between",marginBottom:4}}>
+            <div>
+              <span className="dv2-price-big">{item.price} €</span>
+              <span style={{fontSize:14,color:"var(--g)",fontWeight:500,marginLeft:4}}>/ jour</span>
+            </div>
+            <div style={{background:"var(--bgw)",borderRadius:12,padding:"8px 12px",border:"1px solid var(--bd)",textAlign:"center",flexShrink:0}}>
+              <div style={{fontSize:16,fontWeight:800,color:"var(--dk)"}}><span style={{color:"#f59e0b"}}>★</span> {item.rating}</div>
+              <div style={{fontSize:10,color:"var(--g)"}}>{item.reviews+iRevs.length} avis</div>
+            </div>
           </div>
-          <p style={{fontSize:13,lineHeight:1.6,color:"var(--tx)"}}>{r.text}</p>
-        </div>)}
-      </div>
+          <div style={{fontSize:11,color:"var(--g)",marginBottom:14}}>Caution {item.deposit} € · Remboursée en 48h</div>
+          <div className="dv2-sep" style={{margin:"0 0 16px"}}/>
 
-      {/* ── Localisation ── */}
-      <DetailMap item={item}/>
-    </div>
-    <div><div className="bc">
-
-      {/* ── Prix & note ── */}
-      <div style={{display:"flex",alignItems:"baseline",justifyContent:"space-between",marginBottom:16,paddingBottom:16,borderBottom:"1px solid var(--bd)"}}>
-        <div>
-          <span style={{fontFamily:"var(--fd)",fontSize:30,fontWeight:800,letterSpacing:"-.03em"}}>{item.price} €</span>
-          <span style={{fontSize:13,color:"var(--g)",fontWeight:500,marginLeft:4}}>/ jour</span>
-        </div>
-        <div style={{textAlign:"right"}}>
-          <div style={{fontSize:13,fontWeight:700}}><span style={{color:"#f59e0b"}}>★</span> {item.rating}</div>
-          <div style={{fontSize:11,color:"var(--g)"}}>{item.reviews+iRevs.length} avis</div>
-        </div>
-      </div>
-
-      {payStep===0?<>
-        {/* ── Sélecteur de durée ── */}
-        <div style={{marginBottom:12}}>
-          <div style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:".06em",color:"var(--g)",marginBottom:6}}>Type de location</div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
-            {[["jour","📅 Journée"],["demi","☀️ Demi-journée"]].map(([id,l])=>
-              <button key={id} onClick={()=>setDurType(id)} style={{padding:"8px 4px",borderRadius:10,border:`1.5px solid ${durType===id?"var(--p)":"var(--bd)"}`,background:durType===id?"#f5f3ff":"var(--w)",color:durType===id?"var(--p)":"var(--dk)",fontSize:11,fontWeight:600,cursor:"pointer",transition:"all .15s"}}>{l}</button>
-            )}
+          {/* Type de location */}
+          <div style={{marginBottom:12}}>
+            <div style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:".06em",color:"var(--g)",marginBottom:6}}>Type</div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
+              {[["jour","📅 Journée"],["demi","☀️ Demi-journée"]].map(([id,l])=>
+                <button key={id} onClick={()=>setDurType(id)} style={{padding:"8px 4px",borderRadius:10,border:"1.5px solid "+(durType===id?"var(--p)":"var(--bd)"),background:durType===id?"#f5f3ff":"var(--bgw)",color:durType===id?"var(--p)":"var(--dk)",fontSize:11,fontWeight:600,cursor:"pointer",transition:"all .15s"}}>{l}</button>
+              )}
+            </div>
           </div>
-        </div>
 
-        {/* ── Créneaux horaires ── */}
-        {durType==="demi"&&<div style={{marginBottom:12}}>
-          <div style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:".06em",color:"var(--g)",marginBottom:6}}>Créneau</div>
-          <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
-            {["Matin (8h-12h)","Après-midi (14h-18h)"].map(s=>
-              <button key={s} onClick={()=>setTimeSlot(s)} style={{padding:"5px 10px",borderRadius:8,border:`1.5px solid ${timeSlot===s?"var(--p)":"var(--bd)"}`,background:timeSlot===s?"#f5f3ff":"var(--w)",color:timeSlot===s?"var(--p)":"var(--dk)",fontSize:11,fontWeight:600,cursor:"pointer"}}>{s}</button>
-            )}
+          {/* Créneaux */}
+          {durType==="demi"&&<div style={{marginBottom:12}}>
+            <div style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:".06em",color:"var(--g)",marginBottom:6}}>Créneau</div>
+            <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
+              {["Matin (8h-12h)","Après-midi (14h-18h)"].map(s=>
+                <button key={s} onClick={()=>setTimeSlot(s)} style={{padding:"6px 10px",borderRadius:8,border:"1.5px solid "+(timeSlot===s?"var(--p)":"var(--bd)"),background:timeSlot===s?"#f5f3ff":"var(--bgw)",color:timeSlot===s?"var(--p)":"var(--dk)",fontSize:11,fontWeight:600,cursor:"pointer"}}>{s}</button>
+              )}
+            </div>
+          </div>}
+
+          {/* Dates — champs + mini calendriers */}
+          <div style={{marginBottom:12}}>
+            <div style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:".06em",color:"var(--g)",marginBottom:6}}>Dates · {days} jour{days>1?"s":""}</div>
+            <div className="dv2-date-grid">
+              <div className="dv2-date-field"><label>Début</label><input type="date" value={sd} onChange={e=>setSd(e.target.value)}/></div>
+              <div className="dv2-date-field"><label>Fin</label><input type="date" value={ed} min={sd} onChange={e=>setEd(e.target.value)}/></div>
+            </div>
           </div>
-        </div>}
-
-        {/* ── Dates ── */}
-        <div style={{marginBottom:12}}>
-          <div style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:".06em",color:"var(--g)",marginBottom:6}}>Dates</div>
-          <div className="minical-row" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+          <div style={{marginBottom:14,display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
             <MiniCal value={sd} onChange={setSd} label="Début" blockedDates={item.blockedDates}/>
             <MiniCal value={ed} onChange={setEd} label="Fin" minDate={sd} blockedDates={item.blockedDates}/>
           </div>
-        </div>
 
-        {/* ── Mode de retrait ── */}
-        <div style={{marginBottom:16}}>
-          <div style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:".06em",color:"var(--g)",marginBottom:6}}>Retrait</div>
-          <select style={{width:"100%",padding:"10px 12px",border:"1.5px solid var(--bd)",borderRadius:12,fontSize:13,background:"var(--w)",color:"var(--dk)",outline:"none"}}>
-            <option>📍 En main propre</option>
-            <option>🚚 Livraison (+10 €)</option>
-          </select>
-        </div>
+          {/* Retrait */}
+          <div style={{marginBottom:14}}>
+            <div style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:".06em",color:"var(--g)",marginBottom:6}}>Retrait</div>
+            <select style={{width:"100%",padding:"10px 12px",border:"1.5px solid var(--bd)",borderRadius:12,fontSize:13,background:"var(--bgw)",color:"var(--dk)",outline:"none",fontFamily:"var(--f)"}}>
+              <option>📍 En main propre</option><option>🚚 Livraison (+10 €)</option>
+            </select>
+          </div>
 
-        {/* ── Récapitulatif prix ── */}
-        <div style={{borderRadius:14,overflow:"hidden",marginBottom:14,border:"1px solid var(--bd)"}}>
-          {/* Partie débitée */}
-          <div style={{background:"var(--bgw)",padding:"12px 16px"}}>
-            <div style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:".06em",color:"var(--g)",marginBottom:8}}>Débité maintenant</div>
-            <div style={{display:"flex",justifyContent:"space-between",padding:"4px 0",fontSize:13}}>
-              <span style={{color:"var(--tx)"}}>{item.price} € × {days} jour{days>1?"s":""}</span>
-              <span style={{fontWeight:600}}>{base.toFixed(2)} €</span>
-            </div>
-            <div style={{display:"flex",justifyContent:"space-between",padding:"4px 0",fontSize:13}}>
-              <span style={{color:"var(--tx)"}}>Frais de service ({(userGrade.feeRate*100).toFixed(0)}%)</span>
-              <span style={{fontWeight:600}}>{fee.toFixed(2)} €</span>
-            </div>
-            {state.user&&feeSaved>0&&<div style={{display:"flex",justifyContent:"space-between",padding:"4px 0",fontSize:12,color:"#10b981"}}>
-              <span>{userGrade.icon} Réduction {userGrade.name}</span>
-              <span style={{fontWeight:700}}>−{feeSaved.toFixed(2)} €</span>
-            </div>}
-            <div style={{borderTop:"1px solid var(--bd)",marginTop:8,paddingTop:10,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-              <span style={{fontWeight:700,fontSize:14}}>Total débité</span>
-              <span style={{fontWeight:800,fontSize:16,fontFamily:"var(--fd)",color:"var(--p)"}}>{tot.toFixed(2)} €</span>
-            </div>
+          {/* Résumé */}
+          <div className="dv2-summary">
+            <div className="dv2-sum-row"><span>{item.price} € × {days} jour{days>1?"s":""}</span><span style={{fontWeight:600}}>{base.toFixed(2)} €</span></div>
+            <div className="dv2-sum-row"><span>Frais de service ({(effRate*100).toFixed(0)}%)</span><span style={{fontWeight:600}}>{fee.toFixed(2)} €</span></div>
+            {state.user&&gradeSaved>0&&<div className="dv2-sum-sav" style={{color:"#059669"}}><span>{userGrade.icon} Réduction {userGrade.name}</span><span style={{fontWeight:700}}>−{gradeSaved.toFixed(2)} €</span></div>}
+            {state.user&&plusInfo.active&&plusSaved>0&&<div className="dv2-sum-sav" style={{color:"var(--p)"}}><span>✦ Cercle+ −{(plusInfo.reduction*100).toFixed(0)}%</span><span style={{fontWeight:700}}>−{plusSaved.toFixed(2)} €</span></div>}
+            <div className="dv2-sum-total"><span>Total</span><span style={{color:"var(--p)"}}>{tot.toFixed(2)} €</span></div>
           </div>
-          {/* Empreinte bancaire caution */}
-          <div style={{background:"#fffbeb",borderTop:"1px solid #fde68a",padding:"12px 16px"}}>
-            <div style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:".06em",color:"#92400e",marginBottom:6}}>Empreinte bancaire · non débitée</div>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-              <div>
-                <div style={{fontSize:13,fontWeight:700,color:"#78350f"}}>🔒 Caution bloquée</div>
-                <div style={{fontSize:11,color:"#92400e",marginTop:2}}>Libérée sous 48h après retour en bon état</div>
-              </div>
-              <span style={{fontWeight:800,fontSize:16,color:"#78350f"}}>{item.deposit} €</span>
-            </div>
-          </div>
-        </div>
 
-        {hasBlockedInRange&&<div style={{background:"#fee2e2",border:"1px solid #fca5a5",borderRadius:10,padding:"10px 14px",marginBottom:10,fontSize:12,color:"#dc2626",fontWeight:600}}>⛔ Ces dates contiennent des jours indisponibles. Veuillez choisir d'autres dates.</div>}
-        <button className="bp" style={{width:"100%",padding:"14px",fontSize:15,letterSpacing:"-.01em",background:booked?"#10b981":hasBlockedInRange?"#9ca3af":undefined,boxShadow:booked?"0 4px 16px rgba(16,185,129,.3)":hasBlockedInRange?"none":"0 4px 20px rgba(108,99,255,.3)"}} onClick={()=>state.user&&!hasBlockedInRange?(booked?null:handleReserveClick()):null} disabled={booked||!state.user||hasBlockedInRange}>
-          {!state.user?"🔐 Connectez-vous pour réserver":booked?"✓ Réservé !":hasBlockedInRange?"Dates indisponibles":"Réserver · "+tot.toFixed(2)+" €"}
-        </button>
-        {!state.user&&<p style={{textAlign:"center",fontSize:11,color:"var(--g)",marginTop:8}}>Pas encore de compte ? C'est gratuit.</p>}
-      </>:payStep===1?<>
-        <div style={{padding:"14px 0"}}>
-          <h3 style={{fontFamily:"var(--fd)",fontSize:15,fontWeight:600,marginBottom:10}}>🔒 Paiement sécurisé</h3>
-          <div style={{display:"flex",gap:6,marginBottom:14,flexWrap:"wrap"}}>{[["card","💳 Carte"],["gpay","Google Pay"],["apple","🍎 Apple Pay"],["paypal","🅿️ PayPal"]].map(([id,label])=>
-            <button key={id} className={"pill"+(payMethod===id?" on":"")} onClick={()=>setPayMethod(id)}>{label}</button>
-          )}</div>
-          {payMethod==="card"&&<>
-            <div className="fg"><label>Numéro de carte</label><input value={cardNum} onChange={e=>setCardNum(e.target.value.replace(/\D/g,"").replace(/(.{4})/g,"$1 ").trim())} placeholder="4242 4242 4242 4242" maxLength={19}/></div>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-              <div className="fg"><label>Expiration</label><input value={cardExp} onChange={e=>setCardExp(e.target.value)} placeholder="MM/AA" maxLength={5}/></div>
-              <div className="fg"><label>CVC</label><input value={cardCvc} onChange={e=>setCardCvc(e.target.value)} placeholder="123" maxLength={3} type="password"/></div>
-            </div>
-          </>}
-          {payMethod==="gpay"&&<button style={{width:"100%",padding:14,background:"#fff",border:"1.5px solid var(--bd)",borderRadius:10,display:"flex",alignItems:"center",justifyContent:"center",gap:8,cursor:"pointer",fontSize:14,fontWeight:600}} onClick={book}>
-            <svg width="40" height="18" viewBox="0 0 40 18"><path d="M19.22 8.69v4.97h-1.56V1.5h4.13a3.74 3.74 0 0 1 2.67 1.05 3.43 3.43 0 0 1 1.1 2.58 3.47 3.47 0 0 1-1.1 2.6 3.73 3.73 0 0 1-2.67 1.06h-2.57v-.1zm0-5.67v4.16h2.6a2.12 2.12 0 0 0 1.59-.64 2.13 2.13 0 0 0 .01-3.04 2.12 2.12 0 0 0-1.6-.64h-2.6v.16z" fill="#5F6368"/><path d="M28.18 5.59c1.15 0 2.06.31 2.73.93.67.62 1 1.47 1 2.55v5.16h-1.48v-1.16h-.07c-.65.96-1.5 1.43-2.57 1.43-.91 0-1.67-.27-2.28-.81a2.56 2.56 0 0 1-.93-2.01c0-.85.32-1.52.96-2.02.64-.5 1.5-.75 2.56-.75.91 0 1.66.17 2.24.5v-.35c0-.57-.22-1.05-.67-1.44a2.22 2.22 0 0 0-1.5-.59c-.87 0-1.56.37-2.07 1.1l-1.36-.86c.75-1.08 1.86-1.62 3.32-1.62v-.06zm-1.97 7.09c0 .43.18.79.55 1.07.37.29.8.43 1.28.43.7 0 1.32-.26 1.85-.79.53-.53.8-1.14.8-1.84-.47-.38-1.12-.57-1.96-.57-.61 0-1.12.15-1.53.45-.4.3-.6.66-.6 1.08l-.4.17z" fill="#5F6368"/><path d="M39.63 5.86l-5.15 11.84h-1.6l1.91-4.15-3.4-7.7h1.68l2.44 5.9h.03l2.38-5.9h1.6l.1.01z" fill="#5F6368"/><path d="M12.81 7.72a7.66 7.66 0 0 0-.1-1.27H6.55v2.4h3.51a3 3 0 0 1-1.3 1.97v1.64h2.11c1.24-1.14 1.95-2.82 1.95-4.74z" fill="#4285F4"/><path d="M6.55 12.36c1.76 0 3.24-.58 4.31-1.58l-2.11-1.64c-.58.39-1.33.62-2.2.62-1.7 0-3.13-1.14-3.64-2.68H.72v1.7A6.5 6.5 0 0 0 6.55 12.36z" fill="#34A853"/><path d="M2.91 7.08a3.9 3.9 0 0 1 0-2.5v-1.7H.72A6.5 6.5 0 0 0 0 5.83c0 1.05.25 2.05.72 2.94l2.19-1.7z" fill="#FBBC04"/><path d="M6.55 2.38c.96 0 1.81.33 2.49.97l1.87-1.87A6.26 6.26 0 0 0 6.55 0 6.5 6.5 0 0 0 .72 3.47l2.19 1.7c.5-1.53 1.94-2.68 3.64-2.68v-.11z" fill="#EA4335"/></svg>
-            Payer avec Google Pay
-          </button>}
-          {payMethod==="paypal"&&<button style={{width:"100%",padding:14,background:"#FFC439",border:"none",borderRadius:10,display:"flex",alignItems:"center",justifyContent:"center",gap:8,cursor:"pointer",fontSize:14,fontWeight:700,color:"#253B80"}} onClick={book}>
-            <svg width="20" height="22" viewBox="0 0 24 28" fill="#253B80"><path d="M20.4 6.4c.9-1 1.2-2.4 1-4C20 .8 18 0 15.4 0H5.8c-.5 0-1 .4-1 .9L1.4 24c0 .4.2.7.6.7h4.6l1.2-7.3v.2c.1-.5.5-.9 1-.9h2.2c4.3 0 7.6-1.7 8.6-6.7v-.4c-.1 0 .7-2.6.8-3.2z"/><path d="M9.7 6.8c.1-.3.3-.5.5-.7.2-.1.5-.2.7-.2h6.5c.8 0 1.5.1 2.1.2.2 0 .3.1.5.1.2.1.3.1.5.2.1 0 .1 0 .2.1.3.1.5.2.7.4.3-1.6 0-2.7-.9-3.7C19.3 1.9 17 1.2 14 1.2H6c-.5 0-.9.3-1 .8L1.6 25.1c0 .3.2.6.5.6h4.3l1.1-6.8L9.7 6.8z" fill="#179BD7"/></svg>
-            Payer avec PayPal
-          </button>}
-          {payMethod==="apple"&&<button style={{width:"100%",padding:14,background:"#000",border:"none",borderRadius:10,display:"flex",alignItems:"center",justifyContent:"center",gap:8,cursor:"pointer",fontSize:14,fontWeight:600,color:"#fff"}} onClick={book}>
-            <svg width="16" height="18" viewBox="0 0 17 20" fill="white"><path d="M13.34 10.05c-.02-2.14 1.75-3.17 1.83-3.22-1-1.46-2.55-1.66-3.1-1.68-1.32-.13-2.57.77-3.24.77-.67 0-1.7-.75-2.8-.73A4.13 4.13 0 0 0 2.54 7.6c-1.49 2.58-.38 6.4 1.07 8.49.71 1.02 1.56 2.17 2.67 2.13 1.07-.04 1.47-.69 2.77-.69 1.29 0 1.66.69 2.78.67 1.15-.02 1.88-1.05 2.58-2.08.81-1.19 1.15-2.34 1.17-2.4-.03-.01-2.24-.86-2.26-3.41zM11.24 3.9c.59-.71.99-1.7.88-2.69-.85.03-1.88.57-2.49 1.27-.55.63-1.03 1.64-.9 2.6.95.08 1.92-.48 2.51-1.18z"/></svg>
-            Payer avec Apple Pay
-          </button>}
-          <div style={{borderRadius:12,overflow:"hidden",marginTop:10,border:"1px solid var(--bd)"}}>
-            <div style={{background:"var(--bgw)",padding:"12px 14px",fontSize:13}}>
-              <div style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:".06em",color:"var(--g)",marginBottom:8}}>Débité maintenant</div>
-              <div style={{display:"flex",justifyContent:"space-between",marginBottom:5}}><span style={{color:"var(--g)"}}>Location ({days}j)</span><strong>{base.toFixed(2)} €</strong></div>
-              <div style={{display:"flex",justifyContent:"space-between",marginBottom:5}}><span style={{color:"var(--g)"}}>Frais ({(userGrade.feeRate*100).toFixed(0)}%)</span><strong>{fee.toFixed(2)} €</strong></div>
-              <div style={{borderTop:"1px solid var(--bd)",paddingTop:8,marginTop:6,display:"flex",justifyContent:"space-between",fontWeight:700,fontSize:14}}>
-                <span>Total débité</span><span style={{color:"var(--p)"}}>{tot.toFixed(2)} €</span>
-              </div>
-            </div>
-            <div style={{background:"#fffbeb",borderTop:"1px solid #fde68a",padding:"10px 14px"}}>
-              <div style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:".06em",color:"#92400e",marginBottom:4}}>Empreinte bancaire · non débitée</div>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",fontSize:13}}>
-                <div><span style={{fontWeight:700,color:"#78350f"}}>🔒 Caution</span><span style={{fontSize:11,color:"#92400e",marginLeft:6}}>Libérée sous 48h</span></div>
-                <strong style={{color:"#78350f"}}>{item.deposit} €</strong>
-              </div>
-            </div>
+          {/* Caution */}
+          <div style={{background:"#fffbeb",borderRadius:12,border:"1px solid #fde68a",padding:"10px 14px",marginBottom:14,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <div><div style={{fontSize:12,fontWeight:700,color:"#78350f"}}>🔒 Caution (empreinte)</div><div style={{fontSize:11,color:"#92400e",marginTop:1}}>Non débitée · Libérée sous 48h</div></div>
+            <span style={{fontWeight:800,fontSize:15,color:"#78350f"}}>{item.deposit} €</span>
           </div>
+
+          {hasBlockedInRange&&<div style={{background:"#fee2e2",border:"1px solid #fca5a5",borderRadius:10,padding:"10px 14px",marginBottom:10,fontSize:12,color:"#dc2626",fontWeight:600}}>⛔ Ces dates contiennent des jours indisponibles.</div>}
+
+          {/* CTA Réserver */}
+          <button className={"dv2-cta "+(booked?"dv2-cta-done":hasBlockedInRange||!state.user?"dv2-cta-dis":"dv2-cta-go")}
+            onClick={()=>state.user&&!hasBlockedInRange&&!booked&&handleReserveClick()}
+            disabled={booked||!state.user||hasBlockedInRange}>
+            {!state.user?"🔐 Connectez-vous":booked?"✓ Réservé !":hasBlockedInRange?"Dates indisponibles":"Réserver · "+tot.toFixed(2)+" €"}
+          </button>
+
+          {!state.user&&<p style={{textAlign:"center",fontSize:11,color:"var(--g)",marginBottom:10}}>Pas encore de compte ? C'est gratuit.</p>}
+
+          {/* Contacter */}
+          <button className="dv2-msg-btn" onClick={startConv} disabled={!state.user}><I.Msg/> Contacter {item.owner.name}</button>
+
+          {/* Trust */}
+          <div className="dv2-trust">🛡️ Paiement SSL · Fonds sécurisés · Caution restituable</div>
         </div>
-        <div style={{display:"flex",gap:8}}><button className="bs" style={{flex:1}} onClick={()=>setPayStep(0)}>← Retour</button><button className="bp" style={{flex:2}} onClick={book}>🔒 Confirmer le paiement</button></div>
-      </>:null}
-      <button className="bs" style={{width:"100%",marginTop:8,display:"flex",alignItems:"center",justifyContent:"center",gap:6}} onClick={startConv} disabled={!state.user}><I.Msg/> Contacter {item.owner.name}</button>
-      <div style={{display:"flex",alignItems:"center",gap:6,fontSize:10,color:"var(--g)",marginTop:12,paddingTop:10,borderTop:"1px solid var(--bd)"}}>🛡️ Paiement chiffré SSL · Fonds bloqués jusqu'au retour · Caution restituable</div>
-    </div></div></div>
+      </div>
+    </div>
   </div>
 }
+
 
 /* ========== GRADE SYSTEM ========== */
 const GRADES = [
@@ -449,6 +478,41 @@ const GRADES = [
 ];
 function getGrade(rentals) { return GRADES.find(g => rentals >= g.min && rentals <= g.max) || GRADES[0]; }
 function getNextGrade(rentals) { const i = GRADES.findIndex(g => rentals >= g.min && rentals <= g.max); return i < GRADES.length - 1 ? GRADES[i + 1] : null; }
+
+/* ========== CERCLE+ SUBSCRIPTION ========== */
+const PLUS_PRICE = 5.99;          // €/mois
+const PLUS_FEE_FLOOR = 0.02;      // plancher absolu : on ne descend jamais sous 2%
+const PLUS_BASE_REDUCTION = 0.01; // -1% dès l'abonnement
+const PLUS_YEARLY_REDUCTION = 0.01; // -1% supplémentaire à chaque année d'ancienneté
+// Nombre d'années complètes d'abonnement (>=0)
+function getPlusMonths(sub){
+  if(!sub||!sub.active||!sub.startDate)return 0;
+  const start=new Date(sub.startDate),now=new Date();
+  let m=(now.getFullYear()-start.getFullYear())*12+(now.getMonth()-start.getMonth());
+  if(now.getDate()<start.getDate())m--;
+  return Math.max(0,m);
+}
+function getPlusYears(sub){ return Math.floor(getPlusMonths(sub)/12); }
+// Réduction de commission apportée par l'abonnement (en points, ex: 0.02 = -2%)
+function getPlusReduction(sub){
+  if(!sub||!sub.active||!sub.startDate)return 0;
+  return PLUS_BASE_REDUCTION + getPlusYears(sub)*PLUS_YEARLY_REDUCTION;
+}
+// Taux de commission effectif = grade − abonnement, plancher à 2%
+function getEffectiveFeeRate(rentals, sub){
+  const gradeRate=getGrade(rentals).feeRate;
+  return Math.max(PLUS_FEE_FLOOR, Math.round((gradeRate-getPlusReduction(sub))*1000)/1000);
+}
+// Infos synthétiques pour l'UI
+function getPlusInfo(sub){
+  const active=!!(sub&&sub.active&&sub.startDate);
+  const months=getPlusMonths(sub);
+  const years=getPlusYears(sub);
+  const reduction=getPlusReduction(sub);
+  const monthsToNext=active?(12-(months%12)):null; // mois restants avant le prochain -1%
+  const nextReduction=active?(PLUS_BASE_REDUCTION+(years+1)*PLUS_YEARLY_REDUCTION):null;
+  return{active,months,years,reduction,monthsToNext,nextReduction,price:PLUS_PRICE,floor:PLUS_FEE_FLOOR};
+}
 function getDivision(rentals) {
   const g = getGrade(rentals);
   const div = g.divs.find(d => rentals >= d.min && rentals <= d.max) || g.divs[0];
