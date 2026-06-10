@@ -1,4 +1,4 @@
-function CreateListing({state,dispatch,setPage,mode,editItem}){
+function CreateListing({state,dispatch,setPage,goBack,mode,editItem}){
   const[f,setF]=useState(editItem?{title:editItem.title||"",cat:editItem.cat||"tools",price:editItem.price||"",location:editItem.location||state.user?.location||"Paris 11e",condition:editItem.condition||"Comme neuf",description:editItem.description||"",deposit:editItem.deposit||""}:{title:"",cat:"tools",price:"",location:state.user?.location||"Paris 11e",condition:"Comme neuf",description:"",deposit:""});
   const[photos,setPhotos]=useState(editItem?.images||[]);
   const[drag,setDrag]=useState(false);
@@ -78,7 +78,7 @@ function CreateListing({state,dispatch,setPage,mode,editItem}){
   return <div className="cl-page">
     {/* Sticky header */}
     <div className="cl-header">
-      <button onClick={()=>setPage("profile")} style={{background:'none',border:'none',padding:'4px',cursor:'pointer',display:'flex',alignItems:'center',color:'var(--dk)',borderRadius:10,flexShrink:0}}><I.Back/></button>
+      <button onClick={goBack} style={{background:'none',border:'none',padding:'4px',cursor:'pointer',display:'flex',alignItems:'center',color:'var(--dk)',borderRadius:10,flexShrink:0}}><I.Back/></button>
       <div style={{flex:1}}>
         <div style={{fontSize:16,fontWeight:800,fontFamily:'var(--fd)',color:'var(--dk)'}}>{editItem?"Modifier l'annonce":"Nouvelle annonce"}</div>
         <div style={{fontSize:12,color:'var(--g)',marginTop:1}}>{editItem?"Mettez à jour votre annonce":"Proposez votre objet en quelques étapes"}</div>

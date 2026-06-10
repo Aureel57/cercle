@@ -1,3 +1,19 @@
+// Avis de démonstration pour les annonces seedées (id numérique) — déterministes par item.
+const DEMO_REVIEWERS=[["Camille R.","👩‍🦱"],["Hugo P.","👨‍🦲"],["Inès B.","👧"],["Lucas M.","👦"],["Emma T.","👱‍♀️"],["Nathan D.","🧔"],["Chloé F.","👩"],["Louis G.","👨‍🦰"]];
+const DEMO_REV_TEXTS=["Très bon état, propriétaire arrangeant. Je recommande !","Remise en main propre super simple, objet conforme à l'annonce.","Impeccable, tout fonctionnait parfaitement. Merci !","Très bonne expérience, communication rapide et efficace.","Objet en parfait état, exactement comme sur les photos.","Location au top, je referai appel à ce voisin sans hésiter."];
+const demoRevsFor=(item)=>{
+  if(typeof item.id!=="number"||!item.reviews)return[];
+  const n=Math.min(3,item.reviews);const out=[];
+  for(let k=0;k<n;k++){
+    const seed=item.id*7+k*13;
+    const rv=DEMO_REVIEWERS[seed%DEMO_REVIEWERS.length];
+    const txt=DEMO_REV_TEXTS[(seed+3)%DEMO_REV_TEXTS.length];
+    const days=20+((seed*31)%300);
+    out.push({id:"demo_"+item.id+"_"+k,itemId:item.id,fromUserName:rv[0],fromUserAvatar:rv[1],rating:k===2?4:5,text:txt,createdAt:new Date(Date.now()-days*864e5)});
+  }
+  return out;
+};
+
 function QRModal({item,onClose}){
   const qrRef=useRef(null);
   const baseUrl=window.location.href.split('?')[0];
@@ -32,7 +48,7 @@ function QRModal({item,onClose}){
 const MONTHS_FR=["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
 const DAYS_FR=["Lu","Ma","Me","Je","Ve","Sa","Di"];
 
-function RangeCal({sd,setSd,ed,setEd,blockedDates,durType,timeSlot,setTimeSlot}){
+function RangeCal({sd,setSd,ed,setEd,blockedDates}){
   const today=new Date();today.setHours(0,0,0,0);
   const initM=sd?new Date(sd):today;
   const[viewY,setViewY]=useState(initM.getFullYear());
@@ -69,15 +85,6 @@ function RangeCal({sd,setSd,ed,setEd,blockedDates,durType,timeSlot,setTimeSlot})
   const previewEnd=picking==="end"&&hovD&&startD?hovD:endD;
 
   return <div>
-    {/* Demi-journée slots */}
-    {durType==="demi"&&<div style={{display:"flex",gap:6,marginBottom:10}}>
-      {[["Matin (8h-12h)","☀️"],["Après-midi (14h-18h)","🌤️"]].map(([s,ic])=>
-        <button key={s} onClick={()=>setTimeSlot&&setTimeSlot(s)} style={{flex:1,padding:"10px 4px",borderRadius:12,border:"1.5px solid "+(timeSlot===s?"var(--p)":"var(--bd)"),background:timeSlot===s?"#f5f3ff":"var(--bgw)",color:timeSlot===s?"var(--p)":"var(--dk)",fontSize:11,fontWeight:700,cursor:"pointer",transition:"all .15s var(--ease)"}}>
-          <div style={{fontSize:18,marginBottom:3}}>{ic}</div>{s.split(" ")[0]}
-        </button>
-      )}
-    </div>}
-
     {/* Calendrier */}
     <div style={{background:"var(--w)",borderRadius:16,border:"1.5px solid var(--bd)",overflow:"hidden",boxShadow:"var(--sh)"}}>
 
@@ -115,21 +122,19 @@ function RangeCal({sd,setSd,ed,setEd,blockedDates,durType,timeSlot,setTimeSlot})
             const isPast=dt<today;
             const isStart=sd===key;
             const isEnd=ed===key;
-            const isTodayD=dt.getTime()===today.getTime();
             const inRange=startD&&previewEnd&&dt>startD&&dt<previewEnd;
             const isHovEnd=hovered===key&&picking==="end"&&startD&&dt>=startD;
             const disabled=isPast||isBlocked;
-            let bg="transparent",color=isPast?"var(--gl)":"var(--dk)",fw=400,br="7px",outline="none";
+            let bg="transparent",color=isPast?"var(--gl)":"var(--dk)",fw=400,br="7px";
             if(isStart){bg="var(--p)";color="#fff";fw=700;br=isEnd?"7px":"7px 0 0 7px";}
             else if(isEnd){bg="var(--p)";color="#fff";fw=700;br="0 7px 7px 0";}
             else if(inRange){bg="rgba(124,58,237,.1)";color="var(--p)";br="0";}
             else if(isHovEnd){bg="rgba(124,58,237,.06)";br=0;}
             else if(isBlocked){bg="#fee2e2";color="#ef4444";}
-            else if(isTodayD){outline="1.5px solid var(--p)";}
             return <div key={i} onMouseEnter={()=>!disabled&&setHovered(key)} onMouseLeave={()=>setHovered(null)}
               onClick={()=>!disabled&&handleDay(viewY,viewM,day)}
               style={{padding:"1px",cursor:disabled?"default":"pointer"}}>
-              <div style={{width:"100%",aspectRatio:"1",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:fw,background:bg,color,borderRadius:br,outline,transition:"background .1s",textDecoration:isBlocked?"line-through":"none",opacity:disabled?0.3:1}}>
+              <div style={{width:"100%",aspectRatio:"1",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:fw,background:bg,color,borderRadius:br,transition:"background .1s",textDecoration:isBlocked?"line-through":"none",opacity:disabled?0.3:1}}>
                 {day}
               </div>
             </div>;
@@ -223,7 +228,7 @@ function DetailMap({item}){
 
 function Detail({item,onClose,state,dispatch,setPage,setConvId,setShowShop,setProfTab,onAuthRequired}){
   const[gal,setGal]=useState(null);
-  const[days,setDays]=useState(3);const[sd,setSd]=useState(()=>{const d=new Date();d.setDate(d.getDate()+1);return d.toISOString().split('T')[0]});const[ed,setEd]=useState(()=>{const d=new Date();d.setDate(d.getDate()+4);return d.toISOString().split('T')[0]});const[durType,setDurType]=useState("jour");const[timeSlot,setTimeSlot]=useState("");const[booked,setBooked]=useState(false);const[showRF,setShowRF]=useState(false);const[rt,setRt]=useState("");const[rr,setRr]=useState(5);
+  const[days,setDays]=useState(3);const[sd,setSd]=useState(()=>{const d=new Date();d.setDate(d.getDate()+1);return d.toISOString().split('T')[0]});const[ed,setEd]=useState(()=>{const d=new Date();d.setDate(d.getDate()+4);return d.toISOString().split('T')[0]});const[booked,setBooked]=useState(false);const[showRF,setShowRF]=useState(false);const[rt,setRt]=useState("");const[rr,setRr]=useState(5);
   const[payStep,setPayStep]=useState(0);const[showBid,setShowBid]=useState(false);const[bidAmt,setBidAmt]=useState('');const[payMethod,setPayMethod]=useState("card");const[cardNum,setCardNum]=useState("");const[cardExp,setCardExp]=useState("");const[cardCvc,setCardCvc]=useState("");
   const[showVerifModal,setShowVerifModal]=useState(false);
   const userRentals=(state.user?.rentals||0)+state.bookings.filter(b=>b.userId===state.user?.id).length;
@@ -256,9 +261,11 @@ function Detail({item,onClose,state,dispatch,setPage,setConvId,setShowShop,setPr
   const book=()=>{if(!state.user)return;dispatch({type:"BOOK",payload:{id:uid(),itemId:item.id,itemTitle:item.title,itemImg:item.images[0],ownerId:item.owner.id,ownerName:item.owner.name,userId:state.user.id,startDate:sd,endDate:ed,status:"confirmed",total:tot,deposit:item.deposit,days,createdAt:new Date(),payMethod}});setBooked(true);setPayStep(0)};
   const startConv=()=>{if(!state.user)return;const cid=`c_${item.owner.id}_${state.user.id}_${item.id}`;dispatch({type:"MSG",payload:{id:uid(),cid,from:state.user.id,fromName:state.user.name||'',fromAvatar:state.user.avatar||'😊',to:item.owner.id,toName:item.owner.name||'',toAvatar:item.owner.avatar||'😊',itemId:item.id,itemTitle:item.title||'',text:`Bonjour ! "${item.title}" est-il disponible ?`,timestamp:new Date()}});onClose();setConvId(cid);setPage("messages")};
   const submitRev=()=>{if(!state.user||!rt)return;dispatch({type:"REVIEW",payload:{id:uid(),itemId:item.id,fromUserId:state.user.id,fromUserName:state.user.name,fromUserAvatar:state.user.avatar,rating:rr,text:rt,createdAt:new Date()}});setShowRF(false);setRt("")};
-  const iRevs=state.reviews.filter(r=>r.itemId===item.id);
+  const iRevs=[...state.reviews.filter(r=>r.itemId===item.id),...demoRevsFor(item)];
   const condC=item.condition==="Comme neuf"?{bg:"rgba(22,163,74,.1)",color:"var(--greend)",bd:"rgba(22,163,74,.2)"}:item.condition==="Très bon état"?{bg:"rgba(59,130,246,.1)",color:"#1e40af",bd:"rgba(59,130,246,.2)"}:{bg:"rgba(245,158,11,.1)",color:"#92400e",bd:"rgba(245,158,11,.2)"};
-  return <div className="ov" style={{background:"var(--bg)"}}>
+  
+  const ovRef=useRef(null);
+  useEffect(()=>{const gsap=G();if(!gsap||!ovRef.current)return;gsap.from(ovRef.current,{autoAlpha:0,y:30,duration:.4,ease:'power3.out',clearProps:'opacity,visibility,transform'});},[]); return <div className="ov" ref={ovRef} style={{background:"var(--bg)"}}>
     {gal&&<Gallery images={gal.imgs} start={gal.idx||0} onClose={()=>setGal(null)}/>}
 
     {/* ── Vérif permis ── */}
@@ -466,20 +473,10 @@ function Detail({item,onClose,state,dispatch,setPage,setConvId,setShowShop,setPr
           <div style={{fontSize:11,color:"var(--g)",marginBottom:14}}>Caution {item.deposit} € · Remboursée en 48h</div>
           <div className="dv2-sep" style={{margin:"0 0 16px"}}/>
 
-          {/* Type de location */}
-          <div style={{marginBottom:12}}>
-            <div style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:".06em",color:"var(--g)",marginBottom:6}}>Type</div>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
-              {[["jour","📅 Journée"],["demi","☀️ Demi-journée"]].map(([id,l])=>
-                <button key={id} onClick={()=>setDurType(id)} style={{padding:"8px 4px",borderRadius:10,border:"1.5px solid "+(durType===id?"var(--p)":"var(--bd)"),background:durType===id?"#f5f3ff":"var(--bgw)",color:durType===id?"var(--p)":"var(--dk)",fontSize:11,fontWeight:600,cursor:"pointer",transition:"all .15s"}}>{l}</button>
-              )}
-            </div>
-          </div>
-
           {/* Calendrier de plage unifié */}
           <div style={{marginBottom:14}}>
             <div style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:".06em",color:"var(--g)",marginBottom:8}}>Dates · {days} jour{days>1?"s":""}</div>
-            <RangeCal sd={sd} setSd={setSd} ed={ed} setEd={setEd} blockedDates={item.blockedDates} durType={durType} timeSlot={timeSlot} setTimeSlot={setTimeSlot}/>
+            <RangeCal sd={sd} setSd={setSd} ed={ed} setEd={setEd} blockedDates={item.blockedDates}/>
           </div>
 
           {/* Retrait */}

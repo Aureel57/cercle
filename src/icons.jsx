@@ -347,10 +347,13 @@ html.dark,html.dark body,html.dark #root{background:#0f0f13 !important;color:#f1
 /* Badges */
 .badge-g{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:8px;font-size:10px;font-weight:700}
 /* Recommendations */
-.reco{padding:24px 28px;border-top:1px solid var(--bd);margin-top:12px;max-width:1520px;margin-left:auto;margin-right:auto;box-sizing:border-box}
-.reco-sc{display:flex;gap:16px;overflow-x:auto;padding-bottom:12px;scrollbar-width:none}
-.reco-sc::-webkit-scrollbar{display:none}
-.reco-c{min-width:200px;cursor:pointer;transition:all 0.3s cubic-bezier(0.34,1.56,0.64,1);border-radius:16px;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,.05);animation:fadeSlideIn 0.5s ease both;will-change:transform}
+.reco{padding:24px 28px 24px;border-top:1px solid var(--bd);margin-top:12px;max-width:1520px;margin-left:auto;margin-right:auto;box-sizing:border-box;position:relative;overflow:hidden}
+.reco::after{content:'';position:absolute;top:0;right:0;width:90px;height:100%;background:linear-gradient(to left,var(--bg) 0%,transparent 100%);pointer-events:none;z-index:2}
+.reco::before{content:'';position:absolute;top:0;left:0;width:90px;height:100%;background:linear-gradient(to right,var(--bg) 0%,transparent 100%);pointer-events:none;z-index:2}
+.dark .reco::after{background:linear-gradient(to left,#0f0f13 0%,transparent 100%)}
+.dark .reco::before{background:linear-gradient(to right,#0f0f13 0%,transparent 100%)}
+.reco-sc{display:flex;gap:16px;padding-bottom:12px;will-change:transform}
+.reco-c{min-width:200px;flex-shrink:0;cursor:pointer;transition:all 0.3s cubic-bezier(0.34,1.56,0.64,1);border-radius:16px;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,.05);animation:fadeSlideIn 0.5s ease both;will-change:transform}
 .reco-c:nth-child(1){animation-delay:0.05s}
 .reco-c:nth-child(2){animation-delay:0.1s}
 .reco-c:nth-child(3){animation-delay:0.15s}

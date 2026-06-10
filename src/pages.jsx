@@ -1,7 +1,9 @@
 function SearchM({onClose,onSearch,allItems,filters,setFilters}){
   const[q,setQ]=useState("");const[w,setW]=useState("");const[af,setAf]=useState("what");const[searchDate,setSearchDate]=useState(filters?.searchDate||"");
   const sugg=useMemo(()=>!q||q.length<2?[]:allItems.filter(i=>i.title.toLowerCase().includes(q.toLowerCase())).slice(0,5),[q,allItems]);
-  return <><div className="smbg" onClick={onClose}/><div className="sm"><div className="smin">
+  const smRef=useRef(null);
+  useEffect(()=>{const gsap=G();if(!gsap||!smRef.current)return;const ctx=gsap.context(()=>{gsap.from(smRef.current,{autoAlpha:0,y:-14,duration:.22,ease:'power2.out',clearProps:'opacity,visibility,transform'});},smRef);return()=>ctx.revert();},[]);
+  return <><div className="smbg" onClick={onClose}/><div className="sm" ref={smRef}><div className="smin">
     <div className="smr">
       <div className={"smf"+(af==="what"?" on":"")} onClick={()=>setAf("what")} style={{position:"relative"}}><label>Quoi ?</label><input placeholder="Perceuse, drone…" value={q} onChange={e=>setQ(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"){onSearch(q,w);onClose()}}} autoFocus/>{sugg.length>0&&af==="what"&&<div className="ac">{sugg.map(s=><div key={s.id} className="aci" onClick={()=>{onSearch(s.title,"");onClose()}}><span>{CE[s.cat]||"📦"}</span>{s.title}<span style={{marginLeft:"auto",fontSize:10,color:"var(--g)"}}>{s.price}€/j</span></div>)}</div>}</div>
       <div className={"smf"+(af==="where"?" on":"")} onClick={()=>setAf("where")} style={{position:"relative"}}><label>Où ?</label><input placeholder="Ville…" value={w} onChange={e=>setW(e.target.value)}/>{af==="where"&&w&&<div className="ac">{LOCS.filter(l=>l.toLowerCase().includes(w.toLowerCase())).slice(0,5).map(l=><div key={l} className="aci" onClick={()=>setW(l)}>📍 {l}</div>)}</div>}</div>
@@ -41,9 +43,11 @@ function FilterM({onClose,filters,setFilters,count}){
     (l.sort&&l.sort!=="pertinence")?1:0,
   ].reduce((a,b)=>a+b,0);
 
+  const fv2Ref=useRef(null);
+  useEffect(()=>{const gsap=G();if(!gsap||!fv2Ref.current)return;const ctx=gsap.context(()=>{gsap.from(fv2Ref.current,{autoAlpha:0,x:'100%',duration:.3,ease:'power3.out',clearProps:'opacity,visibility,transform'});},fv2Ref);return()=>ctx.revert();},[]);
   return <div className="fv2">
     <div className="fv2-bg" onClick={onClose}/>
-    <div className="fv2-panel">
+    <div className="fv2-panel" ref={fv2Ref}>
 
       {/* ── En-tête ── */}
       <div className="fv2-head">
@@ -196,14 +200,14 @@ const INFO_PAGES={
   careers:{title:"Carrières",icon:"💼",sections:[["Pourquoi nous rejoindre ?","Impact réel, équipe bienveillante, télétravail flexible, stock-options."],["Postes ouverts","Dev Full-Stack, Product Designer, Growth Manager, Customer Success, Data Engineer."],["Postuler","Envoyez CV et motivation à careers@cercle.fr"]]},
   press:{title:"Espace presse",icon:"📰",sections:[["Kit presse","Logo, photos, captures et chiffres clés sur demande à press@cercle.fr"],["Médias","Mentionné dans Les Echos, TechCrunch France, Maddyness, BFM Business."],["Contact","press@cercle.fr — Réponse sous 24h pour les journalistes."]]},
   partners:{title:"Partenariats",icon:"🤝",sections:[["Devenez partenaire","Entreprises, collectivités, associations : intégrez Cercle dans votre offre."],["Nos partenaires","Mairies, bailleurs, coworking, entreprises du CAC 40."],["Contact","partenariats@cercle.fr"]]},
-  newsletter:{title:"Newsletter",icon:"📧",sections:[["Restez informé","Recevez chaque semaine nos meilleures annonces et conseils."],["Contenu","Top 5 annonces, conseils, codes promo exclusifs, nouveautés."],["Inscription","Entrez votre email. Désabonnement en un clic."]]}
+  newsletter:{title:"Newsletter",icon:"📧",sections:[["Restez informé","Recevez chaque semaine nos meilleures annonces et conseils."],["Contenu","Top 5 annonces, conseils, codes promo exclusifs, nouveautés."],["Inscription","Entrez votre email. Désabonnement en un clic."]]},
+  cgu:{title:"Conditions Générales d'Utilisation",icon:"📜",sections:[["1. Objet","Cercle est une plateforme de mise en relation entre particuliers et professionnels pour la location d'objets. Les présentes CGU régissent l'utilisation du service."],["2. Inscription et compte","L'inscription est gratuite. L'utilisateur s'engage à fournir des informations exactes et à jour. Il est responsable de la confidentialité de ses identifiants. Cercle peut suspendre tout compte en cas de violation des CGU, d'abus ou de fraude."],["3. Annonces et locations","Les annonces doivent décrire fidèlement les objets proposés. Sont interdits : objets illégaux, dangereux, contrefaits ou soumis à réglementation spéciale. Toute réservation acceptée constitue un engagement contractuel entre les deux parties."],["4. Paiements et commissions","Cercle perçoit une commission sur chaque transaction selon le grade de l'utilisateur (de 3% à 12%). La caution est bloquée pendant la location et restituée sous 48h après confirmation de retour en bon état."],["5. Responsabilités","Cercle est une plateforme d'intermédiation et n'est pas partie aux contrats de location. Une protection jusqu'à 2 000 € est incluse pour les objets loués via Cercle."],["6. Résiliation","Vous pouvez supprimer votre compte à tout moment depuis les paramètres. Cercle peut résilier un compte sans préavis en cas de violation grave."],["7. Contact","Pour toute question relative aux CGU : support@cercle.fr"]]},
+  privacy:{title:"Politique de confidentialité",icon:"🔐",sections:[["1. Données collectées","Prénom, nom, email, date de naissance, adresse, téléphone, photo de profil, historique des transactions et préférences de communication. Ces données sont nécessaires au fonctionnement du service."],["2. Utilisation des données","Vos données servent exclusivement à gérer votre compte, traiter les transactions, vous notifier de votre activité et améliorer nos services. Elles ne sont jamais revendues à des tiers."],["3. Emails promotionnels","Vous ne recevez des emails promotionnels que si vous avez coché la case correspondante à l'inscription. Désabonnement possible à tout moment."],["4. Conservation","Vos données sont conservées pendant la durée de vie de votre compte, puis 3 ans après suppression pour des raisons légales et comptables."],["5. Vos droits (RGPD)","Vous disposez d'un droit d'accès, de rectification, d'effacement, de portabilité, de limitation et d'opposition. Ces droits s'exercent auprès de notre DPO."],["6. Contact DPO","dpo@cercle.fr — Réponse sous 30 jours maximum."]]},
+  legal:{title:"Mentions légales",icon:"⚖️",sections:[["Éditeur du site","Cercle — Plateforme de location d'objets entre particuliers et professionnels. Contact : support@cercle.fr"],["Directeur de la publication","Le représentant légal de Cercle."],["Hébergement","Site hébergé par Netlify, Inc. — 512 2nd Street, Suite 200, San Francisco, CA 94107, USA — netlify.com. Données stockées par Google Firebase (Google Ireland Ltd, Gordon House, Barrow Street, Dublin 4, Irlande)."],["Propriété intellectuelle","L'ensemble des contenus du site (logo, textes, design, code) est protégé par le droit d'auteur. Toute reproduction sans autorisation est interdite."],["Signalement","Pour signaler un contenu illicite : support@cercle.fr"]]},
+  cookies:{title:"Politique cookies",icon:"🍪",sections:[["Ce que nous utilisons","Cercle utilise uniquement le stockage local de votre navigateur (localStorage) et les services Google Firebase pour le fonctionnement du compte et la sauvegarde de vos données."],["Pas de cookies publicitaires","Aucun cookie publicitaire ou de pistage tiers n'est déposé. Aucune donnée n'est partagée avec des régies publicitaires."],["Cookies techniques","Firebase peut déposer des identifiants techniques strictement nécessaires à l'authentification et à la session. Ils ne sont pas utilisés à des fins commerciales."],["Gérer vos données locales","Vous pouvez effacer les données locales du site à tout moment via les réglages de votre navigateur (effacer les données de navigation)."]]}
 };
-function InfoPage({id,setPage}){
+function InfoPage({id,setPage,goBack}){
   const pg=INFO_PAGES[id];if(!pg)return null;
-  const goBack=()=>{
-    setPage("home");
-    setTimeout(()=>{const f=document.getElementById('site-footer');if(f)f.scrollIntoView({behavior:'smooth'});},80);
-  };
   return <div style={{minHeight:'100vh',background:'var(--bg)',paddingBottom:80}}>
     {/* Header sticky */}
     <div style={{position:'sticky',top:0,zIndex:50,background:'rgba(255,255,255,0.95)',backdropFilter:'blur(16px)',borderBottom:'1px solid var(--bd)',padding:'12px 20px',display:'flex',alignItems:'center',gap:12}}>
@@ -410,26 +414,67 @@ function MapPage({items,onOpen}){
 }
 
 /* ===== NOTIF CENTER ===== */
-function NotifCenter({state,dispatch,setPage}){
-  const kinds={booking:"📅",deposit:"🔒",listing:"📦",referral:"🎁",dispute:"⚖️",system:"⚙️"};
-  return <div className="nc">
-    <button className="cl" style={{marginBottom:14,display:"flex",alignItems:"center",gap:5}} onClick={()=>setPage("home")}><I.Back/> Retour</button>
-    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
-      <h1 style={{fontFamily:"var(--fd)",fontSize:22}}>🔔 Notifications</h1>
-      {state.notifications.some(n=>!n.read)&&<button className="cl" onClick={()=>dispatch({type:"READ_N"})}>Tout marquer lu</button>}
+function NotifCenter({state,dispatch,setPage,goBack}){
+  const[filter,setFilter]=useState('all');
+  const km={
+    booking:{ic:"📅",c:"#3B82F6",bg:"#dbeafe"},
+    deposit:{ic:"🔒",c:"#16A34A",bg:"#dcfce7"},
+    listing:{ic:"📦",c:"#6C63FF",bg:"#ede9fe"},
+    referral:{ic:"🎁",c:"#D97706",bg:"#fef3c7"},
+    dispute:{ic:"⚖️",c:"#ef4444",bg:"#fee2e2"},
+    badge:{ic:"🏅",c:"#D97706",bg:"#fef3c7"},
+    wallet:{ic:"💰",c:"#16A34A",bg:"#dcfce7"},
+    system:{ic:"⚙️",c:"#6b7280",bg:"#f3f4f6"},
+  };
+  const all=state.notifications||[];
+  const unread=all.filter(n=>!n.read).length;
+  const list=filter==='unread'?all.filter(n=>!n.read):all;
+  return <div style={{minHeight:'100vh',background:'var(--bg)',paddingBottom:90}}>
+    <div style={{maxWidth:680,margin:'0 auto',padding:'24px 20px'}}>
+      <button onClick={goBack} style={{display:'inline-flex',alignItems:'center',gap:6,background:'var(--w)',border:'1px solid var(--bd)',borderRadius:22,padding:'8px 14px',fontSize:13,fontWeight:600,cursor:'pointer',color:'var(--dk)',marginBottom:20}}><I.Back/> Retour</button>
+
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-end',marginBottom:18,gap:12,flexWrap:'wrap'}}>
+        <div>
+          <h1 style={{fontFamily:'var(--fd)',fontSize:26,fontWeight:800,color:'var(--dk)',letterSpacing:'-.02em',margin:0}}>Notifications</h1>
+          <p style={{fontSize:13,color:'var(--g)',margin:'4px 0 0'}}>{unread>0?`${unread} non lue${unread>1?'s':''}`:'Tout est à jour'}</p>
+        </div>
+        {unread>0&&<button onClick={()=>dispatch({type:"READ_N"})} style={{fontSize:13,fontWeight:700,color:'var(--p)',background:'#ede9fe',border:'none',borderRadius:22,padding:'8px 16px',cursor:'pointer'}}>Tout marquer lu</button>}
+      </div>
+
+      {/* Filtres */}
+      <div style={{display:'flex',gap:8,marginBottom:16}}>
+        {[['all','Toutes',all.length],['unread','Non lues',unread]].map(([k,lbl,n])=>(
+          <button key={k} onClick={()=>setFilter(k)} style={{display:'inline-flex',alignItems:'center',gap:6,padding:'7px 14px',borderRadius:22,fontSize:13,fontWeight:700,cursor:'pointer',border:'1px solid '+(filter===k?'var(--p)':'var(--bd)'),background:filter===k?'var(--p)':'var(--w)',color:filter===k?'#fff':'var(--dk)'}}>
+            {lbl}<span style={{fontSize:11,fontWeight:700,background:filter===k?'rgba(255,255,255,0.25)':'var(--bg)',color:filter===k?'#fff':'var(--g)',borderRadius:10,padding:'1px 7px'}}>{n}</span>
+          </button>
+        ))}
+      </div>
+
+      {list.length===0
+        ? <div style={{textAlign:'center',padding:'60px 20px',background:'var(--w)',border:'1px solid var(--bd)',borderRadius:20}}>
+            <div style={{fontSize:48,marginBottom:12,opacity:.5}}>🔔</div>
+            <div style={{fontSize:16,fontWeight:700,color:'var(--dk)',marginBottom:4}}>{filter==='unread'?'Aucune notification non lue':'Aucune notification'}</div>
+            <div style={{fontSize:13,color:'var(--g)'}}>Vos alertes apparaîtront ici.</div>
+          </div>
+        : <div style={{display:'flex',flexDirection:'column',gap:8}}>
+            {list.map(n=>{const m=km[n.kind]||{ic:'📌',c:'#6C63FF',bg:'#ede9fe'};return(
+              <div key={n.id} onClick={()=>dispatch({type:"READ_ONE",id:n.id})} style={{display:'flex',alignItems:'flex-start',gap:13,padding:'15px 16px',background:n.read?'var(--w)':'#faf8ff',border:'1px solid '+(n.read?'var(--bd)':'#ddd6fe'),borderRadius:14,cursor:'pointer',transition:'background .15s'}} onMouseEnter={e=>e.currentTarget.style.background=n.read?'var(--bg)':'#f3eeff'} onMouseLeave={e=>e.currentTarget.style.background=n.read?'var(--w)':'#faf8ff'}>
+                <div style={{width:40,height:40,borderRadius:11,background:m.bg,display:'flex',alignItems:'center',justifyContent:'center',fontSize:19,flexShrink:0}}>{m.ic}</div>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{fontSize:13.5,fontWeight:n.read?400:600,color:'var(--dk)',lineHeight:1.45}}>{n.text}</div>
+                  <div style={{fontSize:11,color:'var(--g)',marginTop:4}}>{ds(n.at)}</div>
+                </div>
+                {!n.read&&<div style={{width:9,height:9,borderRadius:'50%',background:'var(--p)',flexShrink:0,marginTop:6}}/>}
+              </div>
+            )})}
+          </div>}
     </div>
-    {state.notifications.length===0?<div className="empty"><span>🔔</span><h2>Aucune notification</h2></div>:
-    state.notifications.map(n=><div key={n.id} className={"nc-i"+(n.read?"":" unread")} onClick={()=>dispatch({type:"READ_ONE",id:n.id})}>
-      <div className="nc-ic" style={{background:n.read?"var(--bgw)":"#FEF2F2"}}>{kinds[n.kind]||"📌"}</div>
-      <div style={{flex:1}}><div style={{fontSize:13,fontWeight:n.read?400:600}}>{n.text}</div><div style={{fontSize:10,color:"var(--g)"}}>{ds(n.at)}</div></div>
-      {!n.read&&<div style={{width:8,height:8,borderRadius:"50%",background:"var(--p)",flexShrink:0}}/>}
-    </div>)}
   </div>
 }
 
 /* ===== DASHBOARD ===== */
 /* ========== GESTION PRO ========== */
-function GestionPro({state,dispatch,setPage}){
+function GestionPro({state,dispatch,setPage,goBack}){
   const u=state.user;
   const [gTab,setGTab]=useState('demandes');
   const [calMonth,setCalMonth]=useState(new Date().getMonth());
@@ -507,7 +552,7 @@ function GestionPro({state,dispatch,setPage}){
     <div style={{padding:'52px 20px 28px',position:'relative'}}>
       <div style={{position:'absolute',inset:0,backgroundImage:'radial-gradient(circle,rgba(255,255,255,0.1) 1px,transparent 1px)',backgroundSize:'22px 22px',pointerEvents:'none'}}/>
       <div style={{position:'relative',maxWidth:860,margin:'0 auto'}}>
-        <button onClick={()=>setPage('home')} style={{display:'inline-flex',alignItems:'center',gap:6,background:'rgba(255,255,255,0.15)',border:'1px solid rgba(255,255,255,0.3)',borderRadius:20,padding:'6px 14px',color:'white',fontSize:13,fontWeight:600,marginBottom:20,cursor:'pointer',backdropFilter:'blur(8px)'}}><I.Back/> Retour</button>
+        <button onClick={goBack} style={{display:'inline-flex',alignItems:'center',gap:6,background:'rgba(255,255,255,0.15)',border:'1px solid rgba(255,255,255,0.3)',borderRadius:20,padding:'6px 14px',color:'white',fontSize:13,fontWeight:600,marginBottom:20,cursor:'pointer',backdropFilter:'blur(8px)'}}><I.Back/> Retour</button>
         <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:8}}>
           <div style={{background:'rgba(255,255,255,0.2)',borderRadius:12,padding:'5px 12px',fontSize:11,fontWeight:800,color:'#fff',letterSpacing:1}}>⭐ PRO</div>
         </div>
@@ -677,7 +722,7 @@ function GestionPro({state,dispatch,setPage}){
   </div>;
 }
 
-function Dashboard({state,dispatch,setPage}){
+function Dashboard({state,dispatch,setPage,goBack,setProfTab}){
   const u=state.user;
   const[qrItem,setQrItem]=useState(null);
   const myItems=[...state.items.filter(i=>i.owner?.id===u.id||(u.email&&i.owner?.email===u.email)),...state.userItems.filter(i=>i.owner?.id===u.id||(u.email&&i.owner?.email===u.email))];
@@ -692,18 +737,14 @@ function Dashboard({state,dispatch,setPage}){
     const d=new Date(b.createdAt||b.date||Date.now());
     if(d.getFullYear()===new Date().getFullYear()) monthlyRevenue[d.getMonth()]+=b.total||0;
   });
-  const hasReal=monthlyRevenue.some(v=>v>0);
-  // If no real data yet, generate realistic demo data from seed
-  const seed=revenue||320;
-  const monthlyVals=hasReal?monthlyRevenue:months.map((_,i)=>Math.max(0,Math.floor(seed/12*(0.3+Math.sin(i*0.9+1)*0.5+0.2))));
+  // Revenus mensuels réels uniquement (pas de données factices)
+  const monthlyVals=monthlyRevenue;
   const maxVal=Math.max(...monthlyVals,1);
   const totalYear=monthlyVals.reduce((s,v)=>s+v,0);
   const catData=Object.entries(myItems.reduce((acc,it)=>{acc[it.cat]=(acc[it.cat]||0)+1;return acc},{}));
   const monthlyCounts=new Array(12).fill(0);
   myBookAsOwner.forEach(b=>{const d=new Date(b.createdAt||b.date||Date.now());if(d.getFullYear()===new Date().getFullYear())monthlyCounts[d.getMonth()]++;});
-  const hasRealCounts=monthlyCounts.some(v=>v>0);
-  const seedCnt=myBookAsOwner.filter(b=>b.status==="confirmed").length||8;
-  const monthlyCountVals=hasRealCounts?monthlyCounts:months.map((_,i)=>Math.max(0,Math.round(seedCnt/12*(0.4+Math.sin(i*0.9+1)*0.5))));
+  const monthlyCountVals=monthlyCounts;
   const cumulativeVals=monthlyVals.reduce((acc,v,i)=>{acc.push((acc[i-1]||0)+v);return acc;},[]);
   const barRef=useRef(null);const pieRef=useRef(null);
   const barInst=useRef(null);const pieInst=useRef(null);
@@ -908,205 +949,146 @@ function Dashboard({state,dispatch,setPage}){
     {icon:"⏳",val:pending,label:"En attente",sub:"à confirmer",color:"#f59e0b",bg:"linear-gradient(135deg,#fef3c7,#fde68a)"},
   ];
   const card={background:"var(--w)",borderRadius:18,boxShadow:"0 2px 20px rgba(0,0,0,0.07)",overflow:"hidden"};
+  const dnav=[
+    {ic:'📊',label:'Dashboard',active:true,on:null},
+    {ic:'🏷️',label:'Mes annonces',on:()=>{setProfTab&&setProfTab('annonces');setPage('profile');}},
+    {ic:'📅',label:'Réservations',on:()=>{setProfTab&&setProfTab('reservations');setPage('profile');}},
+    {ic:'💬',label:'Messages',on:()=>setPage('messages')},
+    {ic:'⭐',label:'Avis',on:()=>{setProfTab&&setProfTab('avis');setPage('profile');}},
+    {ic:'🏅',label:'Mon Grade',on:()=>{setProfTab&&setProfTab('grade');setPage('profile');}},
+    {ic:'🔔',label:'Notifications',on:()=>setPage('notifs')},
+    {ic:'⚙️',label:'Paramètres',on:()=>{setProfTab&&setProfTab('parametres');setPage('profile');}},
+  ];
+  const confirmedCount=myBookAsOwner.filter(b=>b.status==="confirmed").length;
+  const myItemIds=new Set(myItems.map(i=>i.id));
+  const myRevs=state.reviews.filter(r=>myItemIds.has(r.itemId));
+  const avgR=myRevs.length?(myRevs.reduce((s,r)=>s+r.rating,0)/myRevs.length).toFixed(1):'—';
+  const recentBk=[...myBookAsOwner].reverse().slice(0,6);
+  const dateStr=new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  const statCards=[
+    {label:'Locations réalisées',val:confirmedCount,accent:'#6C63FF',trend:confirmedCount>0?'↗ Ce mois-ci':'Aucune pour l\'instant'},
+    {label:'Revenu total',val:revenue+' €',accent:'#5A4FE0',trend:revenue>0?'↗ Confirmé':'Vos gains apparaîtront ici'},
+    {label:'Note moyenne',val:avgR+' ★',accent:'#F59E0B',trend:'Sur '+myRevs.length+' avis'},
+    {label:'Annonces actives',val:myItems.length,accent:'#3B82F6',trend:myItems.length+' en ligne'},
+  ];
+  const qa=[
+    {ic:'➕',title:'Publier une annonce',sub:'Mettez un objet en location',on:()=>setPage('create')},
+    {ic:'📅',title:'Réservations',sub:pending+' en attente',on:()=>{setProfTab&&setProfTab('reservations');setPage('profile');}},
+    {ic:'💬',title:'Messages',sub:'Voir mes conversations',on:()=>setPage('messages')},
+    {ic:'👤',title:'Mon profil',sub:'Gérer mon compte',on:()=>setPage('profile')},
+  ];
+  const stBadge=(s)=>s==='confirmed'?{t:'Confirmée',c:'#16A34A',bg:'#dcfce7'}:s==='pending'?{t:'En attente',c:'#D97706',bg:'#fef3c7'}:{t:'Nouvelle',c:'#2563EB',bg:'#dbeafe'};
+  const dcard={background:'var(--w)',border:'1px solid var(--bd)',borderRadius:18,boxShadow:'0 1px 8px rgba(0,0,0,0.05)'};
   return(
-  <div style={{minHeight:"100vh",background:"linear-gradient(160deg,#6C63FF 0%,#7c5ce7 28%,#5a7fff 62%,#4ECDC4 100%)",backgroundAttachment:"fixed",overflowX:"hidden",paddingBottom:90,animation:"fadeSlideUp 0.4s both"}}>
-    {/* ── Header ── */}
-    <div style={{padding:"52px 20px 28px",position:"relative"}}>
-      <div style={{position:"absolute",inset:0,backgroundImage:"radial-gradient(circle,rgba(255,255,255,0.1) 1px,transparent 1px)",backgroundSize:"22px 22px",pointerEvents:"none"}}/>
-      <div style={{position:"relative",maxWidth:860,margin:"0 auto"}}>
-        <button onClick={()=>setPage("home")} style={{display:"inline-flex",alignItems:"center",gap:6,background:"rgba(255,255,255,0.15)",border:"1px solid rgba(255,255,255,0.3)",borderRadius:20,padding:"6px 14px",color:"white",fontSize:13,fontWeight:600,marginBottom:20,cursor:"pointer",backdropFilter:"blur(8px)"}}>
-          <I.Back/> Retour
-        </button>
-        <div style={{display:"flex",alignItems:"flex-end",justifyContent:"space-between",flexWrap:"wrap",gap:12}}>
-          <div>
-            <div style={{fontSize:12,color:"rgba(255,255,255,0.65)",fontWeight:500,marginBottom:6,textTransform:"uppercase",letterSpacing:1,animation:"fadeSlideIn 0.5s both"}}>Tableau de bord</div>
-            <h1 style={{fontSize:28,fontWeight:800,color:"white",margin:0,letterSpacing:-0.5,lineHeight:1.1,animation:"fadeSlideIn 0.5s 0.08s both"}}>Bonjour {u.name.split(" ")[0]} 👋</h1>
-            <p style={{fontSize:13,color:"rgba(255,255,255,0.6)",margin:"8px 0 0"}}>
-              {totalYear>0?`${totalYear}€ générés cette année · `:""}
-              {myItems.length} annonce{myItems.length!==1?"s":""} en ligne
-            </p>
-          </div>
-          <button onClick={exportPDF} style={{display:"flex",alignItems:"center",gap:7,background:"rgba(255,255,255,0.18)",border:"1px solid rgba(255,255,255,0.3)",borderRadius:12,padding:"9px 16px",color:"white",fontSize:12,fontWeight:600,cursor:"pointer",backdropFilter:"blur(8px)"}}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{width:13,height:13}}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            PDF
+  <div style={{minHeight:'100vh',background:'var(--bg)',display:'flex'}}>
+    {/* ── Sidebar ── */}
+    <aside style={{width:240,flexShrink:0,background:'var(--w)',borderRight:'1px solid var(--bd)',display:'flex',flexDirection:'column',padding:'20px 14px',position:'sticky',top:0,height:'100vh'}}>
+      <a onClick={()=>setPage('home')} style={{display:'flex',alignItems:'center',gap:9,cursor:'pointer',textDecoration:'none',padding:'4px 6px',marginBottom:24}}>
+        <img src={LOGO} alt="Cercle" style={{height:34,width:34,objectFit:'contain'}}/>
+        <span style={{fontFamily:'var(--fd)',fontSize:20,fontWeight:700,color:'var(--dk)',letterSpacing:'-.02em'}}>Cercle</span>
+      </a>
+      <nav style={{display:'flex',flexDirection:'column',gap:2,flex:1}}>
+        {dnav.map(n=>(
+          <button key={n.label} onClick={n.on||undefined} style={{display:'flex',alignItems:'center',gap:11,padding:'11px 12px',borderRadius:11,fontSize:13.5,fontWeight:n.active?700:500,color:n.active?'var(--p)':'var(--dk)',background:n.active?'rgba(108,99,255,0.10)':'transparent',border:'none',cursor:'pointer',textAlign:'left',width:'100%'}}>
+            <span style={{fontSize:15}}>{n.ic}</span><span>{n.label}</span>
           </button>
+        ))}
+      </nav>
+      <button onClick={()=>{if(window.auth)window.auth.signOut().catch(()=>{});dispatch({type:"LOGOUT"});setPage('home');}} style={{display:'flex',alignItems:'center',gap:10,padding:'11px 12px',borderRadius:11,fontSize:13.5,fontWeight:600,color:'#ef4444',background:'transparent',border:'none',cursor:'pointer',textAlign:'left',width:'100%'}}><span style={{fontSize:15}}>🚪</span><span>Déconnexion</span></button>
+    </aside>
+
+    {/* ── Main ── */}
+    <main style={{flex:1,minWidth:0,padding:'28px 32px',overflowY:'auto',height:'100vh'}}>
+      {/* Header */}
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:24,gap:16,flexWrap:'wrap'}}>
+        <div>
+          <h1 style={{fontFamily:'var(--fd)',fontSize:26,fontWeight:800,color:'var(--dk)',letterSpacing:'-.02em',margin:0}}>Bonjour, {(u.name||'').split(' ')[0]||'vous'} 👋</h1>
+          <p style={{fontSize:13,color:'var(--g)',margin:'4px 0 0',textTransform:'capitalize'}}>{dateStr}</p>
+        </div>
+        <div style={{display:'flex',alignItems:'center',gap:12}}>
+          <button onClick={()=>setPage('notifs')} style={{width:42,height:42,borderRadius:'50%',background:'var(--w)',border:'1px solid var(--bd)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,cursor:'pointer'}}>🔔</button>
+          <div onClick={()=>setPage('profile')} style={{width:42,height:42,borderRadius:'50%',background:'linear-gradient(135deg,#7B6CFF,#4ECDC4)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,color:'#fff',cursor:'pointer'}}>{u.avatar||'👤'}</div>
         </div>
       </div>
-    </div>
 
-    <div style={{maxWidth:860,margin:"0 auto",padding:"0 14px",display:"flex",flexDirection:"column",gap:14}}>
-
-      {/* ── PRO EXTRA KPIs ── */}
-      {u.isPro&&<div style={{...card,padding:'16px 18px',background:'linear-gradient(135deg,#FFFBEB,#FEF3C7)',border:'1.5px solid #FDE68A'}}>
-        <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:14}}>
-          <span style={{background:'linear-gradient(135deg,#F59E0B,#D97706)',color:'#fff',fontSize:10,fontWeight:800,padding:'3px 10px',borderRadius:20,letterSpacing:'.04em'}}>⭐ PRO</span>
-          <div style={{fontSize:13,fontWeight:700,color:'#92400E'}}>Indicateurs Professionnels</div>
-        </div>
-        <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:10}}>
-          {[
-            {icon:'💛',val:monthlyVals[curMonth]+'€',label:'CA mensuel',sub:months[curMonth],col:'#D97706'},
-            {icon:'🔄',val:myBookAsOwner.filter(b=>b.status==='confirmed').length,label:'Locations actives',sub:'confirmées',col:'#059669'},
-            {icon:'📊',val:myItems.length>0?Math.min(100,Math.round(myBookAsOwner.filter(b=>b.status==='confirmed').length/Math.max(myItems.length,1)*100))+'%':'—',label:"Taux d'occupation",sub:'du parc',col:'#6C63FF'},
-            {icon:'⭐',val:myItems.length>0&&myItems.some(i=>i.rating>0)?(myItems.reduce((s,i)=>s+i.rating,0)/myItems.length).toFixed(1):'–',label:'Note moyenne',sub:'locataires',col:'#D97706'},
-          ].map((k,i)=>(
-            <div key={i} style={{textAlign:'center',padding:'10px 6px',background:'rgba(255,255,255,0.6)',borderRadius:12}}>
-              <div style={{fontSize:20,marginBottom:4}}>{k.icon}</div>
-              <div style={{fontSize:18,fontWeight:800,color:k.col,lineHeight:1,letterSpacing:-.5}}>{k.val}</div>
-              <div style={{fontSize:10,fontWeight:600,color:'#92400E',marginTop:3}}>{k.label}</div>
-              <div style={{fontSize:9,color:'#B45309',marginTop:1}}>{k.sub}</div>
-            </div>
-          ))}
-        </div>
-      </div>}
-
-      {/* ── KPIs ── */}
-      <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:12}}>
-        {kpis.map((k,i)=>(
-          <div key={i} style={{...card,padding:"16px"}}>
-            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
-              <div style={{width:40,height:40,borderRadius:12,background:k.bg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:19}}>{k.icon}</div>
-              <span style={{fontSize:10,fontWeight:700,color:k.color,background:k.bg,padding:"3px 8px",borderRadius:20}}>{k.sub}</span>
-            </div>
-            <div style={{fontSize:26,fontWeight:800,color:"var(--dk)",letterSpacing:-0.5,lineHeight:1}}>{k.val}</div>
-            <div style={{fontSize:12,color:"var(--g)",marginTop:4}}>{k.label}</div>
+      {/* Stat cards */}
+      <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:16,marginBottom:20}}>
+        {statCards.map(s=>(
+          <div key={s.label} style={{...dcard,padding:'18px 18px',borderLeft:'4px solid '+s.accent}}>
+            <div style={{fontSize:12,color:'var(--g)',fontWeight:500,marginBottom:8}}>{s.label}</div>
+            <div style={{fontSize:26,fontWeight:800,color:'var(--dk)',letterSpacing:'-.02em',lineHeight:1}}>{s.val}</div>
+            <div style={{fontSize:11,color:s.accent,fontWeight:600,marginTop:8}}>{s.trend}</div>
           </div>
         ))}
       </div>
 
-      {/* ── Revenue chart ── */}
-      <div style={{...card,padding:"18px 16px"}}>
-        <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:16}}>
-          <div>
-            <div style={{fontSize:14,fontWeight:700,color:"var(--dk)"}}>Revenus & activité</div>
-            <div style={{fontSize:11,color:"var(--g)",marginTop:2}}>{new Date().getFullYear()} · {hasReal?"données réelles":"données de démonstration"}</div>
-            <div style={{display:"flex",gap:4,marginTop:8,flexWrap:"wrap"}}>
-              {[{m:"monthly",label:"Par mois",icon:"📅"},{m:"revenue",label:"Revenus/catégorie",icon:"💰"},{m:"count",label:"Locations/catégorie",icon:"📦"}].map(({m,label,icon})=>(
-                <button key={m} onClick={()=>toggleMetric(m)} style={{display:"flex",alignItems:"center",gap:4,padding:"3px 10px",borderRadius:20,border:"1.5px solid",fontSize:10,fontWeight:600,cursor:"pointer",transition:"all 0.2s ease",outline:"none",borderColor:chartMetrics.includes(m)?"#6C63FF":dark?"rgba(255,255,255,0.15)":"rgba(0,0,0,0.12)",background:chartMetrics.includes(m)?"#6C63FF":"transparent",color:chartMetrics.includes(m)?"#fff":dark?"#a0a0b8":"#6b7280"}}>
-                  <span style={{fontSize:10}}>{icon}</span>{label}
-                </button>
-              ))}
-            </div>
-            {chartMetrics.includes('monthly')&&(
-              <div style={{display:"flex",gap:4,marginTop:6}}>
-                {[{t:"bar",label:"Barres",icon:"▬"},{t:"line",label:"Courbe",icon:"〜"}].map(({t,label,icon})=>(
-                  <button key={t} onClick={()=>setChartType(t)} style={{display:"flex",alignItems:"center",gap:4,padding:"3px 10px",borderRadius:20,border:"1.5px solid",fontSize:10,fontWeight:600,cursor:"pointer",transition:"all 0.2s ease",outline:"none",borderColor:chartType===t?"#6C63FF":dark?"rgba(255,255,255,0.15)":"rgba(0,0,0,0.12)",background:chartType===t?"rgba(108,99,255,0.15)":"transparent",color:chartType===t?"#6C63FF":dark?"#a0a0b8":"#6b7280"}}>
-                    <span style={{fontSize:11}}>{icon}</span>{label}
-                  </button>
-                ))}
-              </div>
-            )}
+      {/* Chart + Quick actions */}
+      <div style={{display:'grid',gridTemplateColumns:'1fr 320px',gap:16,marginBottom:20}}>
+        <div style={{...dcard,padding:'20px'}}>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline',marginBottom:4}}>
+            <div style={{fontSize:15,fontWeight:700,color:'var(--dk)'}}>Revenus mensuels</div>
+            <div style={{fontSize:12,color:'var(--g)'}}>Total {totalYear} €</div>
           </div>
-          <div style={{textAlign:"right"}}>
-            <div style={{fontSize:18,fontWeight:800,color:"#6C63FF",letterSpacing:-0.5}}>{monthlyVals[curMonth]}€</div>
-            <div style={{fontSize:10,color:"var(--g)"}}>ce mois</div>
-          </div>
+          <div style={{fontSize:12,color:'var(--g)',marginBottom:14}}>Les 12 derniers mois</div>
+          <div style={{height:240}}><canvas ref={barRef}/></div>
         </div>
-        {window.Chart
-          ? <div style={{height:170,position:"relative"}}><canvas ref={barRef}/></div>
-          : <div style={{height:170,display:"flex",alignItems:"flex-end",gap:3,padding:"8px 0 0"}}>
-              {monthlyVals.map((v,i)=>(
-                <div key={i} title={months[i]+": "+v+"€"} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:2,cursor:"pointer"}}>
-                  <div style={{width:"100%",borderRadius:"4px 4px 0 0",transition:"height .5s ease",
-                    background:i===curMonth?"#6C63FF":i<curMonth?"rgba(108,99,255,0.4)":"rgba(108,99,255,0.12)",
-                    height:Math.max(3,Math.round(v/maxVal*140))}}/>
-                  <div style={{fontSize:7,color:i===curMonth?"#6C63FF":"#9ca3af",fontWeight:i===curMonth?700:400}}>{months[i].slice(0,1)}</div>
-                </div>
-              ))}
-            </div>
-        }
-      </div>
-
-      {/* ── Category chart + Quick actions ── */}
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}} className="dboard-grid">
-        <div style={{...card,padding:"18px 16px"}}>
-          <div style={{fontSize:14,fontWeight:700,color:"var(--dk)",marginBottom:3}}>Par catégorie</div>
-          <div style={{fontSize:11,color:"var(--g)",marginBottom:12}}>Annonces par type</div>
-          {catData.length>0&&window.Chart
-            ? <div style={{height:150,position:"relative"}}><canvas ref={pieRef}/></div>
-            : catData.length===0
-              ? <div style={{height:140,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:6,color:"var(--g)"}}>
-                  <span style={{fontSize:28}}>📦</span><span style={{fontSize:12}}>Aucune annonce</span>
-                </div>
-              : <div style={{display:"flex",flexDirection:"column",gap:7}}>
-                  {catData.slice(0,5).map(([cat,cnt],i)=>(
-                    <div key={i} style={{display:"flex",alignItems:"center",gap:6}}>
-                      <div style={{width:8,height:8,borderRadius:"50%",background:chartColors[i%8],flexShrink:0}}/>
-                      <div style={{flex:1,fontSize:11,color:"var(--dk)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{cat}</div>
-                      <div style={{width:50,height:5,background:"var(--bgw)",borderRadius:3,overflow:"hidden"}}>
-                        <div style={{width:Math.round(cnt/myItems.length*100)+"%",height:"100%",background:chartColors[i%8],borderRadius:3}}/>
-                      </div>
-                      <div style={{fontSize:11,fontWeight:700,color:"var(--dk)",minWidth:14,textAlign:"right"}}>{cnt}</div>
-                    </div>
-                  ))}
-                </div>
-          }
-        </div>
-        <div style={{...card,padding:"18px 16px"}}>
-          <div style={{fontSize:14,fontWeight:700,color:"var(--dk)",marginBottom:14}}>Actions rapides</div>
-          <div style={{display:"flex",flexDirection:"column",gap:8}}>
-            {[
-              {icon:"➕",label:"Nouvelle annonce",color:"#6C63FF",bg:"#ede9fe",action:()=>setPage("create")},
-              {icon:"📅",label:"Réservations",color:"#0ea5e9",bg:"#e0f2fe",action:()=>setPage("profile")},
-              {icon:"🆔",label:"Vérifier identité",color:"#10b981",bg:"#d1fae5",action:()=>setPage("verify")},
-            ].map((a,i)=>(
-              <button key={i} onClick={a.action} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",border:"none",borderRadius:12,background:a.bg,cursor:"pointer",textAlign:"left",transition:"opacity .15s"}}
-                onMouseEnter={e=>e.currentTarget.style.opacity=".8"} onMouseLeave={e=>e.currentTarget.style.opacity="1"}>
-                <span style={{fontSize:16}}>{a.icon}</span>
-                <span style={{fontSize:12,fontWeight:600,color:a.color}}>{a.label}</span>
+        <div style={{...dcard,padding:'20px'}}>
+          <div style={{fontSize:15,fontWeight:700,color:'var(--dk)',marginBottom:14}}>Actions rapides</div>
+          <div style={{display:'flex',flexDirection:'column',gap:8}}>
+            {qa.map(a=>(
+              <button key={a.title} onClick={a.on} style={{display:'flex',alignItems:'center',gap:12,padding:'12px',borderRadius:13,background:'var(--bg)',border:'1px solid var(--bd)',cursor:'pointer',textAlign:'left',width:'100%',transition:'background .15s'}} onMouseEnter={e=>e.currentTarget.style.background='#f3f1ff'} onMouseLeave={e=>e.currentTarget.style.background='var(--bg)'}>
+                <div style={{width:36,height:36,borderRadius:10,background:'#ede9fe',display:'flex',alignItems:'center',justifyContent:'center',fontSize:17,flexShrink:0}}>{a.ic}</div>
+                <div style={{minWidth:0}}><div style={{fontSize:13.5,fontWeight:700,color:'var(--dk)'}}>{a.title}</div><div style={{fontSize:11.5,color:'var(--g)'}}>{a.sub}</div></div>
               </button>
             ))}
           </div>
         </div>
       </div>
 
-      {/* ── Listings ── */}
-      <div style={{...card,padding:"18px 16px"}}>
-        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
-          <div style={{fontSize:14,fontWeight:700,color:"var(--dk)"}}>Mes annonces</div>
-          <button onClick={()=>setPage("create")} style={{fontSize:12,fontWeight:600,color:"#6C63FF",background:"#ede9fe",border:"none",borderRadius:20,padding:"5px 12px",cursor:"pointer"}}>+ Ajouter</button>
-        </div>
-        {myItems.length===0
-          ? <div style={{textAlign:"center",padding:"24px 0",color:"var(--g)"}}>
-              <div style={{fontSize:28,marginBottom:6}}>📦</div>
-              <div style={{fontSize:13,fontWeight:600,color:"var(--dk)",marginBottom:4}}>Aucune annonce</div>
-              <button className="bp" style={{marginTop:10,fontSize:12,padding:"7px 18px"}} onClick={()=>setPage("create")}>Créer une annonce</button>
-            </div>
-          : <div style={{display:"flex",flexDirection:"column"}}>
-              {myItems.slice(0,6).map((it,idx)=>(
-                <div key={it.id} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 0",borderBottom:idx<Math.min(myItems.length,6)-1?"1px solid var(--bd)":"none",animation:`fadeSlideUp 0.4s ${0.55+idx*0.05}s both`}}>
-                  <img src={it.images[0]} alt="" style={{width:42,height:34,objectFit:"cover",borderRadius:8,flexShrink:0}}/>
-                  <div style={{flex:1,minWidth:0}}>
-                    <div style={{fontSize:13,fontWeight:600,color:"var(--dk)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{it.title}</div>
-                    <div style={{fontSize:11,color:"var(--g)",marginTop:1}}>{it.price}€/j · {CATS_FR[it.cat]||it.cat}</div>
-                  </div>
-                  <div style={{display:"flex",flexDirection:"column",gap:4,flexShrink:0}}>
-                    <button onClick={()=>dispatch({type:"TOGGLE_AVAIL",id:it.id})} style={{fontSize:11,fontWeight:700,padding:"5px 11px",borderRadius:20,border:"none",cursor:"pointer",
-                      background:it.available?"#d1fae5":"#f3f4f6",color:it.available?"#065f46":"#6b7280"}}>
-                      {it.available?"✓ Dispo":"Indispo"}
-                    </button>
-                    <button onClick={()=>setQrItem(it)} style={{fontSize:10,fontWeight:700,padding:"4px 8px",borderRadius:20,border:"1.5px solid #d1c9ff",background:"#f5f3ff",color:"#6C63FF",cursor:"pointer"}}>📱 QR</button>
-                  </div>
-                </div>
-              ))}
+      {/* Recent reservations */}
+      <div style={{...dcard,padding:'20px'}}>
+        <div style={{fontSize:15,fontWeight:700,color:'var(--dk)',marginBottom:16}}>Réservations récentes</div>
+        {recentBk.length===0
+          ? <div style={{textAlign:'center',padding:'30px 0',color:'var(--g)',fontSize:13}}>Aucune réservation pour l'instant.</div>
+          : <div style={{overflowX:'auto'}}>
+              <table style={{width:'100%',borderCollapse:'collapse',fontSize:13}}>
+                <thead><tr style={{textAlign:'left',color:'var(--g)',fontSize:11,textTransform:'uppercase',letterSpacing:'.05em'}}>
+                  <th style={{padding:'0 0 12px',fontWeight:600}}>Objet</th>
+                  <th style={{padding:'0 0 12px',fontWeight:600}}>Locataire</th>
+                  <th style={{padding:'0 0 12px',fontWeight:600}}>Dates</th>
+                  <th style={{padding:'0 0 12px',fontWeight:600}}>Montant</th>
+                  <th style={{padding:'0 0 12px',fontWeight:600}}>Statut</th>
+                </tr></thead>
+                <tbody>
+                  {recentBk.map(b=>{const sb=stBadge(b.status);return(
+                    <tr key={b.id} style={{borderTop:'1px solid var(--bg)'}}>
+                      <td style={{padding:'12px 0',fontWeight:700,color:'var(--dk)'}}>{b.itemTitle||'Objet'}</td>
+                      <td style={{padding:'12px 0',color:'var(--g)'}}>{b.userName||'Locataire'}</td>
+                      <td style={{padding:'12px 0',color:'var(--g)'}}>{b.startDate?new Date(b.startDate).toLocaleDateString('fr-FR',{day:'numeric',month:'short'}):'—'}{b.endDate?' – '+new Date(b.endDate).toLocaleDateString('fr-FR',{day:'numeric',month:'short'}):''}</td>
+                      <td style={{padding:'12px 0',fontWeight:700,color:'var(--dk)'}}>{b.total||0} €</td>
+                      <td style={{padding:'12px 0'}}><span style={{fontSize:11,fontWeight:700,color:sb.c,background:sb.bg,padding:'4px 10px',borderRadius:20}}>{sb.t}</span></td>
+                    </tr>
+                  )})}
+                </tbody>
+              </table>
             </div>
         }
       </div>
       {qrItem&&<QRModal item={qrItem} onClose={()=>setQrItem(null)}/>}
-
-    </div>
+    </main>
   </div>
   );
 }
 
 /* ===== REFERRAL ===== */
-function ReferralPage({state,dispatch,setPage}){
+function ReferralPage({state,dispatch,setPage,goBack}){
   const[copied,setCopied]=useState(false);const[friendName,setFriendName]=useState("");
   const code=state.user?.refCode||"CERCLE";
   const totalBonus=state.referrals.reduce((s,r)=>s+r.bonus,0);
   const copy=()=>{navigator.clipboard?.writeText(code).catch(()=>{});setCopied(true);setTimeout(()=>setCopied(false),2000)};
   const invite=()=>{if(!friendName)return;dispatch({type:"REFERRAL",name:friendName});setFriendName("")};
   return <div style={{maxWidth:540,margin:"0 auto",padding:28}}>
-    <button className="cl" style={{marginBottom:14,display:"flex",alignItems:"center",gap:5}} onClick={()=>setPage("home")}><I.Back/> Retour</button>
+    <button className="cl" style={{marginBottom:14,display:"flex",alignItems:"center",gap:5}} onClick={goBack}><I.Back/> Retour</button>
     <h1 style={{fontFamily:"var(--fd)",fontSize:22,marginBottom:6}}>⭐ Parrainage</h1>
     <p style={{fontSize:13,color:"var(--g)",marginBottom:16}}>Invitez vos amis et gagnez 5€ de crédit par filleul inscrit !</p>
     <div style={{background:"linear-gradient(135deg,#FEF3C7,#FFFBEB)",borderRadius:14,padding:20,textAlign:"center",marginBottom:16}}>
@@ -1125,11 +1107,11 @@ function ReferralPage({state,dispatch,setPage}){
 }
 
 /* ===== VERIFY ID ===== */
-function VerifyId({state,dispatch,setPage}){
+function VerifyId({state,dispatch,setPage,goBack}){
   const[step,setStep]=useState(state.user?.verified?3:0);const[doc,setDoc]=useState("cni");
   useEffect(()=>{if(step===1){const t=setTimeout(()=>setStep(2),1500);return()=>clearTimeout(t)}},[step]);
   return <div style={{maxWidth:500,margin:"0 auto",padding:28}}>
-    <button className="cl" style={{marginBottom:14,display:"flex",alignItems:"center",gap:5}} onClick={()=>setPage("profile")}><I.Back/> Retour</button>
+    <button className="cl" style={{marginBottom:14,display:"flex",alignItems:"center",gap:5}} onClick={goBack}><I.Back/> Retour</button>
     <h1 style={{fontFamily:"var(--fd)",fontSize:22,marginBottom:16}}>🆔 Vérification d'identité</h1>
     {step===3||state.user?.verified?<div style={{textAlign:"center",padding:30}}><span style={{fontSize:48}}>✅</span><h2 style={{fontFamily:"var(--fd)",marginTop:8}}>Identité vérifiée</h2><p style={{fontSize:13,color:"var(--g)",marginTop:4}}>Votre profil affiche maintenant le badge ✓</p></div>:
     step===0?<><p style={{fontSize:13,color:"var(--g)",marginBottom:14}}>Pour la sécurité de la communauté, vérifiez votre identité.</p>
@@ -1145,12 +1127,12 @@ function VerifyId({state,dispatch,setPage}){
 }
 
 /* ===== DISPUTE ===== */
-function DisputePage({state,dispatch,setPage}){
+function DisputePage({state,dispatch,setPage,goBack}){
   const[reason,setReason]=useState("");const[bookId,setBookId]=useState("");const[desc,setDesc]=useState("");
   const myBook=state.bookings.filter(b=>b.userId===state.user?.id||b.ownerId===state.user?.id);
   const submit=()=>{if(!reason||!bookId)return;dispatch({type:"DISPUTE",payload:{id:uid(),bookingId:bookId,reason,desc,status:"open",by:state.user.id,date:new Date()}});setReason("");setDesc("")};
   return <div style={{maxWidth:540,margin:"0 auto",padding:28}}>
-    <button className="cl" style={{marginBottom:14,display:"flex",alignItems:"center",gap:5}} onClick={()=>setPage("profile")}><I.Back/> Retour</button>
+    <button className="cl" style={{marginBottom:14,display:"flex",alignItems:"center",gap:5}} onClick={goBack}><I.Back/> Retour</button>
     <h1 style={{fontFamily:"var(--fd)",fontSize:22,marginBottom:6}}>⚖️ Litiges</h1>
     <p style={{fontSize:13,color:"var(--g)",marginBottom:16}}>Ouvrez un litige si un problème survient lors d'une location.</p>
     <div className="fg"><label>Réservation concernée</label><select value={bookId} onChange={e=>setBookId(e.target.value)} style={{width:"100%",padding:"10px 12px",border:"1.5px solid var(--bd)",borderRadius:9,fontSize:13}}><option value="">Sélectionner...</option>{myBook.map(b=><option key={b.id} value={b.id}>{b.itemTitle} ({b.startDate})</option>)}</select></div>
@@ -1223,7 +1205,7 @@ function Chatbot({items,onOpen,onClose}){
   return <div className="chatbot-w">
     <div className="chatbot-hd"><div style={{display:"flex",alignItems:"center",gap:8}}><span style={{fontSize:20}}>🤖</span><div><div style={{fontWeight:700,fontSize:14}}>Assistant Cercle</div><div style={{fontSize:10,opacity:.8}}>En ligne · Réponse instantanée</div></div></div><button style={{background:"none",border:"none",color:"#fff",fontSize:18,cursor:"pointer"}} onClick={onClose}>✕</button></div>
     <div className="chatbot-bd" ref={ref}>{msgs.map((m,i)=><div key={i}><div className={"chatbot-msg "+(m.from)} style={{whiteSpace:"pre-line"}}>{m.text}</div>
-      {m.items&&<div style={{display:"flex",flexDirection:"column",gap:4,marginTop:6}}>{m.items.map(it=><div key={it.id} style={{display:"flex",gap:8,padding:8,background:"var(--bg)",borderRadius:12,cursor:"pointer",fontSize:12,transition:"all .15s",border:"1px solid var(--bd)"}} onClick={()=>onOpen(it)} onMouseEnter={e=>{e.currentTarget.style.transform="scale(1.02)";e.currentTarget.style.borderColor="var(--p)"}} onMouseLeave={e=>{e.currentTarget.style.transform="scale(1)";e.currentTarget.style.borderColor="var(--bd)"}}><img src={it.images[0]} alt="" style={{width:48,height:36,objectFit:"cover",borderRadius:8,flexShrink:0}}/><div style={{flex:1,minWidth:0}}><div style={{fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{it.title}</div><div style={{display:"flex",justifyContent:"space-between",marginTop:2}}><span style={{color:"var(--p)",fontWeight:700}}>{it.price}€/j</span><span style={{color:"var(--g)"}}>★ {it.rating}</span></div></div></div>)}</div>}
+      {m.items&&<div style={{display:"flex",flexDirection:"column",gap:4,marginTop:6}}>{m.items.map(it=><div key={it.id} style={{display:"flex",gap:8,padding:8,background:"var(--bg)",borderRadius:12,cursor:"pointer",fontSize:12,transition:"all .15s",border:"1px solid var(--bd)"}} onClick={()=>onOpen(it)} onMouseEnter={e=>{e.currentTarget.style.transform="scale(1.02)";e.currentTarget.style.borderColor="var(--p)"}} onMouseLeave={e=>{e.currentTarget.style.transform="scale(1)";e.currentTarget.style.borderColor="var(--bd)"}}><img src={it.images[0]} alt="" style={{width:48,height:36,objectFit:"cover",borderRadius:8,flexShrink:0}}/><div style={{flex:1,minWidth:0}}><div style={{fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{it.title}</div><div style={{display:"flex",justifyContent:"space-between",marginTop:2}}><span style={{color:"var(--p)",fontWeight:700}}>{it.price}€/j</span><span style={{color:"var(--g)"}}>{it.reviews>0?"★ "+it.rating:"✨ Nouveau"}</span></div></div></div>)}</div>}
     </div>)}</div>
     <div className="chatbot-ft"><input value={input} onChange={e=>setInput(e.target.value)} placeholder="Que cherchez-vous à louer ?" onKeyDown={e=>e.key==="Enter"&&send()}/><button onClick={send}><I.Send/></button></div>
   </div>
@@ -1281,10 +1263,10 @@ function Shop({owner,items,onClose,onOpen,state,dispatch,onAuthRequired}){
 }
 
 /* ===== WALLET ===== */
-function WalletPage({state,dispatch,setPage}){
+function WalletPage({state,dispatch,setPage,goBack}){
   const[amount,setAmount]=useState("");
   return <div style={{maxWidth:540,margin:"0 auto",padding:28}}>
-    <button className="cl" style={{marginBottom:14,display:"flex",alignItems:"center",gap:5}} onClick={()=>setPage("profile")}><I.Back/> Retour</button>
+    <button className="cl" style={{marginBottom:14,display:"flex",alignItems:"center",gap:5}} onClick={goBack}><I.Back/> Retour</button>
     <h1 style={{fontFamily:"var(--fd)",fontSize:22,marginBottom:16}}>💳 Mon Wallet</h1>
     <div className="wallet-c">
       <div style={{fontSize:11,opacity:.7,marginBottom:4}}>Solde disponible</div>
@@ -1312,9 +1294,9 @@ const ALL_BADGES=[
   {id:"big_spender",name:"Gros client",icon:"💎",desc:"Dépensez 500€"},
   {id:"loyal",name:"Fidèle",icon:"🏆",desc:"Atteignez le grade Or"},
 ];
-function BadgesPage({state,setPage}){
+function BadgesPage({state,setPage,goBack}){
   return <div style={{maxWidth:540,margin:"0 auto",padding:28}}>
-    <button className="cl" style={{marginBottom:14,display:"flex",alignItems:"center",gap:5}} onClick={()=>setPage("profile")}><I.Back/> Retour</button>
+    <button className="cl" style={{marginBottom:14,display:"flex",alignItems:"center",gap:5}} onClick={goBack}><I.Back/> Retour</button>
     <h1 style={{fontFamily:"var(--fd)",fontSize:22,marginBottom:6}}>🏅 Mes Badges</h1>
     <p style={{fontSize:13,color:"var(--g)",marginBottom:16}}>{state.badges.length}/{ALL_BADGES.length} débloqués</p>
     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
@@ -1330,7 +1312,7 @@ function BadgesPage({state,setPage}){
 
 
 /* ===== CERCLE+ — PAGE ABONNEMENT ===== */
-function PlusPage({state,dispatch,setPage,onAuthRequired}){
+function PlusPage({state,dispatch,setPage,goBack,onAuthRequired}){
   const sub=state.subscription;
   const info=getPlusInfo(sub);
   const user=state.user;
@@ -1355,7 +1337,7 @@ function PlusPage({state,dispatch,setPage,onAuthRequired}){
   );
 
   return <div style={{maxWidth:680,margin:"0 auto",padding:"24px 20px 60px"}}>
-    <button className="cl" style={{marginBottom:16,display:"flex",alignItems:"center",gap:5}} onClick={()=>setPage(user?"profile":"home")}><I.Back/> Retour</button>
+    <button className="cl" style={{marginBottom:16,display:"flex",alignItems:"center",gap:5}} onClick={goBack}><I.Back/> Retour</button>
 
     {/* ── HERO ── */}
     <div style={{position:"relative",overflow:"hidden",borderRadius:26,padding:"32px 26px",color:"#fff",marginBottom:18,background:"linear-gradient(135deg,#6C63FF 0%,#7C3AED 55%,#4ECDC4 130%)",boxShadow:"0 18px 50px rgba(124,58,237,.35)"}}>

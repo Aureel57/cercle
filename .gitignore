@@ -6,3 +6,8 @@ push.py
 .claude-flow/
 .mcp.json
 index.backup.*.html
+.DS_Store
+.figma-ref/
+CLAUDE.md
+Cercle-App/
+design-preview.html

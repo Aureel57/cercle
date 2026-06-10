@@ -1,3 +1,4 @@
+const LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMgAAADICAIAAAAiOjnJAAAAAXNSR0IArs4c6QAAAUBlWElmTU0AKgAAAAgABgEaAAUAAAABAAAAVgEbAAUAAAABAAAAXgEoAAMAAAABAAIAAAExAAIAAACjAAAAZgE7AAIAAAAMAAABCodpAAQAAAABAAABFgAAAAAAAABgAAAAAQAAAGAAAAABQ2FudmEgKFJlbmRlcmVyKSBkb2M9REFISUpJRkJrQ28gdXNlcj1VQUdOUWlaNjZtdyBicmFuZD1CQUdOUXBwR21fZyB0ZW1wbGF0ZT1CbGFjayBXaGl0ZSBNaW5pbWFsIFNpbXBsZSBCb2xkICBNb2Rlcm4gUHJvZmVzc2lvbmFsIFBob3RvZ3JhcGh5IExldHRlciBLIE11c2V1bSBMb2dvAABjbGFyYV9zbjI5NQAAA6ABAAMAAAABAAEAAKACAAQAAAABAAAAyKADAAQAAAABAAAAyAAAAAAG+a/5AAAACXBIWXMAAA7EAAAOxAGVKw4bAAAEFGlUWHRYTUw6Y29tLmFkb2JlLnhtcAAAAAAAPHg6eG1wbWV0YSB4bWxuczp4PSJhZG9iZTpuczptZXRhLyIgeDp4bXB0az0iWE1QIENvcmUgNi4wLjAiPgogICA8cmRmOlJERiB4bWxuczpyZGY9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkvMDIvMjItcmRmLXN5bnRheC1ucyMiPgogICAgICA8cmRmOkRlc2NyaXB0aW9uIHJkZjphYm91dD0iIgogICAgICAgICAgICB4bWxuczp0aWZmPSJodHRwOi8vbnMuYWRvYmUuY29tL3RpZmYvMS4wLyIKICAgICAgICAgICAgeG1sbnM6ZGM9Imh0dHA6Ly9wdXJsLm9yZy9kYy9lbGVtZW50cy8xLjEvIgogICAgICAgICAgICB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iPgogICAgICAgICA8dGlmZjpSZXNvbHV0aW9uVW5pdD4yPC90aWZmOlJlc29sdXRpb25Vbml0PgogICAgICAgICA8dGlmZjpZUmVzb2x1dGlvbj45NjwvdGlmZjpZUmVzb2x1dGlvbj4KICAgICAgICAgPHRpZmY6WFJlc29sdXRpb24+OTY8L3RpZmY6WFJlc29sdXRpb24+CiAgICAgICAgIDxkYzp0aXRsZT4KICAgICAgICAgICAgPHJkZjpBbHQ+CiAgICAgICAgICAgICAgIDxyZGY6bGkgeG1sOmxhbmc9IngtZGVmYXVsdCI+QyAtIDE8L3JkZjpsaT4KICAgICAgICAgICAgPC9yZGY6QWx0PgogICAgICAgICA8L2RjOnRpdGxlPgogICAgICAgICA8ZGM6Y3JlYXRvcj4KICAgICAgICAgICAgPHJkZjpTZXE+CiAgICAgICAgICAgICAgIDxyZGY6bGk+Y2xhcmFfc24yOTU8L3JkZjpsaT4KICAgICAgICAgICAgPC9yZGY6U2VxPgogICAgICAgICA8L2RjOmNyZWF0b3I+CiAgICAgICAgIDx4bXA6Q3JlYXRvclRvb2w+Q2FudmEgKFJlbmRlcmVyKSBkb2M9REFISUpJRkJrQ28gdXNlcj1VQUdOUWlaNjZtdyBicmFuZD1CQUdOUXBwR21fZyB0ZW1wbGF0ZT1CbGFjayBXaGl0ZSBNaW5pbWFsIFNpbXBsZSBCb2xkICBNb2Rlcm4gUHJvZmVzc2lvbmFsIFBob3RvZ3JhcGh5IExldHRlciBLIE11c2V1bSBMb2dvPC94bXA6Q3JlYXRvclRvb2w+CiAgICAgIDwvcmRmOkRlc2NyaXB0aW9uPgogICA8L3JkZjpSREY+CjwveDp4bXBtZXRhPgq/FdbPAAAZp0lEQVR4Ae1dB1hUR9cWWLoiVVGIgn42jB2wB3vsgA2wYEMssfsnKraY2BONYkFEUEEsscQKohhFBSwUNQooUqyIFYN0wf9dN9lvP9hdF9iLnMvch4fncu/cM2fOeTlz5syZGZXs9xnV2MUkoGwJqCqbIKPHJCCUAAMWwwEnEmDA4kSsjCgDFsMAJxJgwOJErIwoAxbDACcSYMDiRKyMKAMWwwAnEmDA4kSsjCgDFsMAJxJgwOJErIwoAxbDACcSYMDiRKyMKAMWwwAnEmDA4kSsjCgDFsMAJxJgwOJErIwoAxbDACcSYMDiRKyMKAMWwwAnEmDA4kSsjCgDFsMAJxJgwOJErIwoAxbDACcSYMDiRKyMKAMWwwAnEmDA4kSsjCgDFsMAJxJgwOJErIwoAxbDACcSYMDiRKyMKAMWwwAnEmDA4kSsjCgDFsMAJxJgwOJErIwoAxbDACcSYMDiRKyMKAMWwwAnEmDA4kSsjCgDFsMAJxJgwOJErIwoAxbDACcSYMDiRKyMKAMWwwAnEhBwQpV3RFVUVNCmf35Xq/YRPx/x65/fvGuuEhrEgCVFiACQqqqqQCBQVVPD66LCwvz8/Ly8PPwuLCwsKipSU1PT1NTU1tbW0tIC3Ao/CC88l0KrTI/AgJgyKi0TjS/8kQo7Vk6sAYBJXV1dVaCWl5OblvY8MTExLj7hwYOkJ0+epD1/nvE2IzsnWwQgNTVBdV1dk1rGDRo0aNO6tY11u2bNmhoZGX0sKgL6RMZMTLa0N0DV+/dZp4OCUJelhUWXLp2B5tIS+eLlGbCEHZyGEE+CN2/exMTEnj//5+Ur4QnxCa/fvFFQPaBgaWnRo3v3oUMdO3fqWENPD/atzGiApUxMfPB1yzYAaPfu3c6FBFE0WlW6K4SJQo+GPi48IvLQ4aMhZ8/ev5+oIJgkiwEByckp+Nnp69e6dasxo0c5O4+oa1Y3P7cs8AJMc3Jz0NvCYmVkZIA98IkqJGus/PdVFFhQnpa2Fnq33w8d9vXbffnyFWV5SDdv3sLPJs/N7pPcxo9zrWtmlpebWyriaqqqL1++AqqAnncZ73Jzc3V1dckBqyqGG+AXo5/y89vd1a6H69gJYWGXSqV4RazFo0ePFy9Z1rHzN+vX/5aTkwM3H1BW5EOUUREI4uLiRYXxLcYMCn5YqYpVLWDBfUHfFxx8pleffhPdJt+5c5dTZQBe//f9fLvuvQ4c/F00kFSkuqIPH86dCxWVzC8QXoqDUhH6FVOmCgFLW0f72bNn4ydMGjjY8erVaxUjX9Ry+/ZfLiPH2DsOjYiMhLHU0NCQUzVsW0RE5MWwS6IyMKUfPyotiiGnXqW/qhKjQji/UOehw0d++GHhw0ePxEJs2LDBV+bmUN7jx09SUlPFzzm6AQ9OI4bNmT2rTZvWgEt+Xj5QI65LOJLQ1n786JG9/ZDYm7dEz40MDWOir5mampZ5jCmmX8E3/AcWQlNwU5Yu+/G3jZ4iFxjOzpAhjlOnuLdt26ZGjepQ7t+ZmTeu39iy1et0UDDXCtDV0XFwtHcdPcrW1qZmzZoIxaJGhFjfvH17/s8Ly5evSEhIEPNgWrt2dNQ1IyNDpXuB4io4uuE5sOBRPU9PnzRpSlDwGZEEa+rpbdu22cXZCX8iPiRSmMikwSrs238AXhEGZRyJW5Js40aNvm7R3MTYBAGFtOdp8fEJ8MkkC+De0tIi6nokRoUMWMUk8yX/hEOTcO/eyJGuN2/907PAegX473JydsnJyizJmTAGoaMTGx2DoeKdu9z69SVrl/oEUbHwyxeBexZukCqfL/AQYarYmzcHDnIQowpMuLg4OTmNkIoqvIXycrKyoMtTJ49Zt2v3BZguUWXt2rVgdMmhCu3g56gQtgpjsSFDRyQnp4iVBd952pTJhYXCwKOcCwHJr74yP3L4YKuWLeUUq5hXFhYWagKSQWweAktDUwNzbcOGOz98+N8BIHDQsmWLVq1aFuQXfBYTcHrMzc0O7N9raWnx2cKcFmjWtAmn9LkjzjdgIQT65vWbUaNdHzxIKia19rY2WjraCnYrwFbTpk0C9/obGhgUo1Nhf8Lna9miBZJ2KqxGJVbEK2BBExg9TZk6PSo6pqSMmjVtKszQU/jCdErHjh22b9+qoaGu8EfKLAgHC+BG5F2ZRCuKFq+ApaWtvXrNuqN/HJMqPdM6ptVKmYuXk509fPiwn39aLpUg1w8xgKhVuza5QINILPwBFhz2syHnACxZ+hZGgyQi3bKKFXuem5Mzb+5st4kTij2vgD8H9O+HGcYKqIiLKngCLCjg9evXs+fOk5MTp6pwfoGkoOGTIXC6YcMvPXt0l3zO9b2BgX6fPr0L8vO4rogj+jwBloam5qo16xC8liMm+ONlSxMAsJDcvmvXTiurZnLoK/fVoIEDLBtYfvhA0nOHKPgALKAqMiLSy8tbvmrfvfu7bMACWXjQ5mZmewN2165dW34tSnmLkNvUKZOJjgdFEiAPLPRvUMDyn1YgsClfqc/TnyO/XX4ZOW9BH1kJ/nv8MG8tp5hSXg0fNtS2va2cbl0ptXBKhDywNDW1zpw5e/bfzDg5wkpNfSjnrSKvcrJz4Pf47NiOaRZFypetjLGx0ZIlHqTNFRpOG1jo2pBjuf63jYqEPRGOR3bKZ5UNmrhkFUMAArONO7y3obeSVaacz1evWtGkCdXwlbjttIGF2Zuwi2FYCiFuj5ybB0nJcLNUVaWDBhkECFgg/QGuOojAJsmCF7Dl6jrGZ4eXjra2nOrK9uq7aVMmjB+HGEfZPq88X5Gc4JQUn89OXwVDiE+fPn38+HHz5lZFRcVj2YitZ2ZmHT5y9PLlcBTDvO+Afn1HjXZRVZGeryLClr6+/kQ391evXkvyU557LBr7Zd0aDBQUMcDlqagCviUMLEwL3ku4fybknIJiQrjh1q3bwnno/50kQaeGOIXH4qVIiIDFys7ORhz1xo2o3Py876ZOwVdS6QNbgwcPCj590s19CshKLVOqh1MmT1r/6zoE5EQms1TfVsLChLtCdU2N4ydOvn//XnGxXgkPLzYwhCKxgn7adzOvX4/CTGLbNq03/bZ+107v2rVq7d93EEFXObFvYAvJzWdDgtzd3WT1m4rwhrX527Zu3rJ5E29QhVZTBRYUmZud88ex44poTlwmIuJq5t//E82Cidrjv/fe/UR9/Zo/LlscGBiAmILfLn81AfpDAbo5WCy4X2IKxW7wVr9mTa9tm08cO2JrY13s7Wf/1NHRGes65tLF81OnToYdVbBP/yzZylBApsgqA3NyeIDW4+PjseZYTpmSr+4nJiYk3AOYxK+gSzj1BR8KRro4jZvgJlBXh7Iz32fCENatW2fipMlr1v4KQyLHIKHnysvNGzCgf2hoCPKesdsCBgFi+lJvgFQE8X/4ft6VSxd2+fk0btwIxo8HfpVkY6n6WEBAWNjl0oYQYRVCz/9p094W6yhEUgBi7L7pGhQUfOFimLb2GqBk+nfTFnssnL/Q49r1GwiKpqUdQELpZHc3+QFYvFUXCEaPGjli+LC4+Pgrl8OjY2IA2bdv32KNkLq6QFdH18TEuF69rzB6aNeubXMrq5r6+h8KCuSTlVQVrXuqq3Q0tTSHDB1x/PjJ0oq7U6eOf4aGYB3op+3ThFvNYMMrT88tBw4ewm4z/2nYcOKEcdt3+CD7tFYtkwaWlrf/uoMq1q5e6eAwKCfnM8F9lARBWFPgHin0wD36SoAVJgpmEqMEUZ4xwmn8GPrJET5JYEFPmZmZ1jYdJVefymmk5CsEqCKuhCFNWTw2BBSg9RcvXmKd9O49/qdOB+NP5NigK/Td6b1hwyY4Ycg1CNjjB9ce8VhJap+9B3FxGZ51duJ2Sb0h6WMJ1NQwP/P02TOpTZL/ECYEY0mBRNwc+gbIAB0fX7/jJ07B6Dg7DW/c+D8YJ3p4LJn/wzy4X4aGhnfuxmGDP0mgyK9I9BbExZci5XlThiSw0KHEJySINvopgyaOHP0j8907SYhA9/DQe3TvhphnUVFhrVq1Nm/aaGvTDmDKys4ZO3YMYLdq9dpdu/dwOktYhrZU2k/UFnksqLTMyWJMXVPz94OHsO+erALyn7969apz505IgZeEJoaHWO8FhF29dj0i8iqWx8ydM6tXrx6oBXbr3r37KIB7YA4LD/kRw5QvpXK+JWmxsNVnssSCwdKKAOjZ4x9Qcl0FekmM/rCoNSsra+XqtXDbN27cvHjxMvjgyE5etfIn2DPYLZgxgTrV0XRpZVXm8iSBhTEVHO0ytxkfYosshMEkA1p4CMDBFHks+GHYUEckXc2cNRcBWAwUMNlsbd2uY4cOiDtgW4eY6Bh1wX8jYeVhg8ff0gMWfKPc3DzFd56VqjxsS+zvv1dQYl0X+juEN2fOmJ6e/gI95vhxY21srNNfvJgz93t7x2ExMTctLS3s7L6ppiqMy0ulzB6KJEAv3FCeWIOk1uvUMb1xPdLE2Likw4SAU2Dg/qKPRdimduTosZGRV1EYgG7UqFGf3j0N9A3QaVpZNUXEPF+BddWSlVade5LAwtxwW+v2MCrl1NOa1SvmL5iPjUBK0kEvKdDQOh96DjsAwrU6dHDfw0ePd+/eA9/uxcuX7969gxe/dIkH4uyljf6XrIuXT0h2hXCGSr9AUIr6tnv7vEhPhwks+Q6RrcKCPOwFmpWV7WA/+OHDh7PnzLt0+Qq6RXNzM0dHh+rVq/+6fmNqairrE0tKD0+kyFRqucrzEJhCzAlX+VlClDUgYC82aJRKCtiaN3fO7wcCe3S3W7Tkx4wMoZVatnTR4UMHkDuFWb+0tDTMBiL2IRkSk0qqCj6kBywoCTZGTU05nG/esi09LU0qTIFgPb3qPXt/i3lDWCwzszq7fHeMG++mpaE5f/5CJFbAx0JuoMfCxfDSGLaK/fMoRz3FiHL850c4QMqKgAM03jt2ashIdBHuWVyYp6OrgxtjY2NsGZqaklhNpdoq4XqHxugEt3l5Y8YaWazw9zluNTHy9IAF7wparK6rtMV92NM2OSlJlquEAWDvXj37fts7OjoGu8P37NX32rXrOAIMex7HxQkXXs+eOb1rl87oN4lpnmN26Y0KIRBkPvXpN+DChTBlCWfa1Clbt3oi204qQXSU77OyTp08fS8xEVHU7Oyc4DMhCKQ1t2q2eNFC7OmAgSFwid4QKJRKoQo+pGexoCRkO9UxraNEbWF2+dq1a7K6V7hQ2EPbdZzrKBfnlJRU0TZJo1yc9u31B6pgq3B42LnQ8zt8fEXwUiJjdEnRDB+rqlpaWihR6Nhjbemyn04ePwqrIzWSgYi88CSS0NBPiabaTRo3Wrd2NcYQKIyY1ibPLYH7DmBKW0dH23XMaFBTIm9ESdHMbhAInjx9euzYCSUKPSkpGfmiNrY2mIiUShbQwk5o6enpyHR4/foNUNWpc+dLly7PmDkn5GwoRqm4YmJjGzSwxDZ8knkTUqnx/iFJHwvOe1RUdOeu3UrOxpRHYebm5uFXLtYxNZUFCzhbyE6e9t0M2C2MEOHUh5w9h64QB+As8piP8OmpU0EmJiY+3tuwelEWkfJwSOhbkj4WdGZpaYH5O+UKGgsMly1bLmt4iLqEzpauzrq1q5o2aYLUGiQMwi1D3AFrXJFjs/Ln5ViXkZSUtNVrO9GTlZQoT5JdITybGjVqnD9/4UGJrZHLKRrgo2WLr1u0bPGhQPr2IegQDY0MMZ+DJYrYFc3OrsuihQuweURQcIiZWV2kbSFZHqf06NXQk+qrlZM9Qp+TBBbkq6Gl+ejRI5xqpFxZAw1R0bHYngrQAYakEgfmsIQLkYUbUVFwuZCMitxlnLE7ePDA+vXrd+3aRc63Ugny8iFJHwuagJuFdX/f2PVQrpsl0vFY19F+fj4IgcqyOvDTUdJj0dLAffsRkffb6Y20LXTQuHiJkjI0iqSPhXbCZUaf1axZ0zK0+bOf+AcEBvgHYnNvWSVhzBCYwIR09252CDckJacAggxVkuKiarHQBm1dXY+Fi+Tsvy3ZztLeww5dOB/SzMoKS05lfQs3/9mztMdPnnRobwugyypWNZ8TBhamonG+V5euwhkVLpTXqWOH4KCTyFSW09siAIGLIwa4aFSF0aTaFUJAMBKtW7XCBDBHwsIisPkLFgG+clJigDlOUQWjKPLnOGojd2QJAwtCgdYnThzPnXS2e+/Yus0Lp2NyV4UcykBVSkoKNhNAAFZOscr5inBXCIHisInc/PzOXezu3o3jSL5QKs4u7Nevr6zcB47qhaGCLbTr1gtGcdGiBThPgKOKOCJL22IhDw9TK7NmzuBIOiCLGeUJE91jY2M/u+uVcnlAwrSv3244kbf/+mvdul8x6pTTIyu3aqVQo22xIAL8ZyNW2dWuB7KElSIRqUQwbxN06oSFRf2KybhCF4/8HEyGvnz5EnhClr2jgz2tnbRoWyyAACElPT09JNxx+g+NjAYn51HPn6cjMCsVeUp8iIbAPn0/fwFQBbL9+n47aODAigG0EltBHliQBf6V8Q89cGB/JcqlJKmo6Ggnl1EvX73iGlsYK2zd6nX8055yeno1Vq74CXvTA2olWarMT/gALKHQVaqtXrkCu1hxKusrV8KHDXOG3ZKVa1r+2rV1dELPhS5e+qOIFGa4W2O3N24CdeXnVg4FPgALzSvIL2j+dfOfly+T01SlvAqPiLB3GJqUnMxFCADjgzt37mDtNXJywG3fb/vMnDmd6CkVPAEW1AAFTHJ3Q2KCUgAkhwh2re3Xf1BERCTmlOQUK+0roCo5JQWeHNLC8G39+vW2bvFEKItcJyhqOH+AJVTAx48bN66vgOMqkcc8cJBDgH8A7BamdEqLoZLlQSch4Z6D47C4uHi8RVLXzh3bkeVMdwqSP8CCPpBfYGpae88uX2Mjo5LKU+6TtxkZY8dNnDlrDrqt8oS4MAaE5bt4MazfgEF37twFk0Cq56YNvfr0Ir0og1fAglawl7+1jfVOH+/yKFtBCMJGYoV+72/7i5buIPik4IfiYhgEAFibNnoOsh+CNdmi52vXrJowYXxOlvRFjuJvK/kN34AFcWPuxd5hsMhBqQDpY4V0334DJ7lPRf+IMR2CEcCK/HpRAJBC94ejoAY7DMU+NqITgfAcOyshv5mowy7ZavKRd8nGSN5Dxz4+vtOnzyztzuySREp1b2Bg4OI8AmfjYBN5xKKw7SS6Zsn8ZkwSCARqKmoC7MiFEQAWuB46dEQcT4efjjPlZs+agSdEHXZJcfEWWGgksBUQEDh12nTR6F2y2dzdo0Ns17ZNz549bKytGzZsgJO9tLSE5/zi4BPkxaekpoaHR2DZNOycZJoXZjy3bfUcOdIFtooHqEJ7+QwsNA/YOhN8ZoLbZOxlxR2YZFHW1tLCboDgARvnwg7hfFepEMdiMh8fry5dulRwAoUstpXynOfAgozgymBRl5ub+42oaKWITLlEEHjbsOEXs7p1xX2icul/KWo8dN6LiRKD9q+bWyHJ2H2SW7FXX/ZPTEBt9twYuHcPDt3kGaogWP4DC41EagAWuG732rJ/X4ClhcWXxZOo9iGODmEXQqdPnwZPi5fLe/jfFUrCCN0idhNZu/aXnb67vpSRgGvv4bFg8KCBCErweDfvqgUsgAwDfpwcePXqtbW//HrixCnJcIAkBLm4x+GXM2ZMc3F2QgIZYM2P0Z8sQVU5YIkEoampgW1Fwy5d9vLyPh0UzKn1QvgKp29OnDDOfvAgA0PDvNzcikSzLMVz/byKAutfeGnCbCCn+cDvh/44eizxwQPlihuzyP379cW4z9bWBlNMcPWqAqREMqzSwBKJACFN7D355vVrLCQ8fToYe6k9SEoqc24d3Dhs042dQpBN1bFDe2MTk6LCD/Cl+N3xlfyHZMD6RybosITTfKqq7zIykpNTbt2+HRMTezcuHnPDOK0Jc3mSgXKxHPEJsodxsEC9evWQroOzfbHlmkX9+tVr1MDZd0Bn1TFRYpmIbhiwignk39PCcbiXikpBfj4ghZPosTckfuPMMGAFCENmi5a2FkIYRoYGhkZGBvr6Ojo6woPEP50CjAJVzT4VFyLvp3RKNri0T7CQQQV27NOFO1wiCoAOLhgk0YX70lLmd3mauyZXoE4wePy0R2RhBdbJh6qqROSdD4qi1gYGLGoaI8IvAxYRRVFjkwGLmsaI8MuARURR1NhkwKKmMSL8MmARURQ1NhmwqGmMCL8MWEQURY1NBixqGiPCLwMWEUVRY5MBi5rGiPDLgEVEUdTYZMCipjEi/DJgEVEUNTYZsKhpjAi/DFhEFEWNTQYsahojwi8DFhFFUWOTAYuaxojwy4BFRFHU2GTAoqYxIvwyYBFRFDU2GbCoaYwIvwxYRBRFjU0GLGoaI8IvAxYRRVFjkwGLmsaI8MuARURR1NhkwKKmMSL8MmARURQ1NhmwqGmMCL8MWEQURY1NBixqGiPCLwMWEUVRY5MBi5rGiPDLgEVEUdTYZMCipjEi/DJgEVEUNTYZsKhpjAi/DFhEFEWNTQYsahojwi8DFhFFUWOTAYuaxojwy4BFRFHU2GTAoqYxIvwyYBFRFDU2GbCoaYwIvwxYRBRFjU0GLGoaI8IvAxYRRVFjkwGLmsaI8MuARURR1NhkwKKmMSL8MmARURQ1NhmwqGmMCL8MWEQURY1NBixqGiPCLwMWEUVRY5MBi5rGiPDLgEVEUdTYZMCipjEi/DJgEVEUNTYZsKhpjAi/DFhEFEWNTQYsahojwu//A47bM4VTUWXFAAAAAElFTkSuQmCC";
 const { useState, useEffect, useRef, useMemo, useReducer, createContext, useContext } = React;
 const Ctx=createContext();
 const LANGS={fr:"Français",en:"English",es:"Español"};
@@ -33,13 +34,19 @@ const _savedBadges   = _ls('cercle_badges',[]);
 const _savedWallet   = _ls('cercle_wallet',0);
 const _savedFavs     = (()=>{try{const d=localStorage.getItem('cercle_favs');return d?new Set(JSON.parse(d)):new Set();}catch(e){return new Set();}})();
 const _savedFollowing=_ls('cercle_following',[]);
-const init={user:null,items:buildItems(),proItems:buildProItems(),favorites:_savedFavs,bookings:_savedBookings,messages:[],conversations:[],reviews:_savedReviews,notifications:[],userItems:_savedItems,cloudItems:[],payments:_savedPayments,referrals:[],disputes:[],wallet:_savedWallet,badges:_savedBadges,following:_savedFollowing,profileCompletion:{identity:false,phone:false,drivingLicense:false,bankAccount:false}};
+const _savedSubscription=_ls('cercle_subscription',null);
+const init={user:null,items:buildItems(),proItems:buildProItems(),favorites:_savedFavs,bookings:_savedBookings,messages:[],conversations:[],reviews:_savedReviews,notifications:[],userItems:_savedItems,cloudItems:[],payments:_savedPayments,referrals:[],disputes:[],wallet:_savedWallet,badges:_savedBadges,following:_savedFollowing,subscription:_savedSubscription,profileCompletion:{identity:false,phone:false,drivingLicense:false,bankAccount:false}};
+// Écritures Firestore sûres : jamais d'exception synchrone dans le reducer
+// (doc() exige un id string, add/set rejettent les champs undefined).
+const fsClean=(o)=>JSON.parse(JSON.stringify(o));
+const fsSafe=(fn)=>{try{const r=fn();if(r&&typeof r.catch==='function')r.catch(e=>console.warn('[Firestore]',e&&e.message||e));}catch(e){console.warn('[Firestore]',e&&e.message||e);}};
 function reducer(s,a){switch(a.type){
-  case"LOGIN":{const u={...a.payload,refCode:a.payload.refCode||uid().toUpperCase().slice(0,6)};const fixedItems=s.userItems.map(i=>(!i.owner?.id||i.owner?.email===u.email)?{...i,owner:{...(i.owner||{}),id:u.id,email:u.email}}:i);try{localStorage.setItem('cercle_items',JSON.stringify(fixedItems));}catch(e){}return{...s,user:u,userItems:fixedItems};}
+  case"LOGIN":{const u={...a.payload,refCode:a.payload.refCode||Math.random().toString(36).slice(2,8).toUpperCase()};const fixedItems=s.userItems.map(i=>(!i.owner?.id||i.owner?.email===u.email)?{...i,owner:{...(i.owner||{}),id:u.id,email:u.email}}:i);try{localStorage.setItem('cercle_items',JSON.stringify(fixedItems));}catch(e){}return{...s,user:u,userItems:fixedItems};}
   case"LOGOUT":return{...s,user:null};
   case"UPD_PROF":return{...s,user:{...s.user,...a.payload}};
+  case"SET_FAV_CATS":return{...s,user:{...s.user,favCats:a.cats}};
   case"SET_AVATAR":return{...s,user:{...s.user,avatar:a.avatar,avatarUrl:a.url||null}};
-  case"TOG_FAV":{const f=new Set(s.favorites);const isAdding=!f.has(a.id);isAdding?f.add(a.id):f.delete(a.id);if(window.db){const delta=isAdding?1:-1;const inc=window.firebase&&window.firebase.firestore?window.firebase.firestore.FieldValue.increment(delta):null;if(inc)window.db.collection('items').doc(a.id).update({likeCount:inc}).catch(()=>{});}if(isAdding&&window.db&&s.user&&a.ownerId&&a.ownerId!==s.user.id){const notif={userId:a.ownerId,text:`❤️ ${s.user.name||'Quelqu\'un'} a aimé votre annonce "${a.title||''}"`,kind:'like',read:false,at:new Date().toISOString(),itemId:a.id};window.db.collection('notifications').add(notif).catch(()=>{});}return{...s,favorites:f}}
+  case"TOG_FAV":{const f=new Set(s.favorites);const isAdding=!f.has(a.id);isAdding?f.add(a.id):f.delete(a.id);if(window.db){const delta=isAdding?1:-1;const inc=window.firebase&&window.firebase.firestore?window.firebase.firestore.FieldValue.increment(delta):null;if(inc)fsSafe(()=>window.db.collection('items').doc(String(a.id)).update({likeCount:inc}));}if(isAdding&&window.db&&s.user&&a.ownerId&&a.ownerId!==s.user.id){const notif=fsClean({userId:a.ownerId,text:`❤️ ${s.user.name||'Quelqu\'un'} a aimé votre annonce "${a.title||''}"`,kind:'like',read:false,at:new Date().toISOString(),itemId:a.id===undefined?null:a.id});fsSafe(()=>window.db.collection('notifications').add(notif));}return{...s,favorites:f}}
   case"BOOK":{
     const b=a.payload;
     const n={id:uid(),text:`Réservation : ${b.itemTitle}`,read:false,at:new Date()};
@@ -58,13 +65,13 @@ function reducer(s,a){switch(a.type){
     const otherAvatar=m.from===s.user?.id?(m.toAvatar||'😊'):(m.fromAvatar||'😊');
     if(!cv){cv={id:m.cid,parts:[m.from,m.to],itemId:m.itemId,itemTitle:m.itemTitle||'',last:m.text,at:new Date().toISOString(),otherName,otherAvatar};cs.push(cv)}
     else cs=cs.map(c=>c.id===m.cid?{...c,last:m.text,at:new Date().toISOString()}:c);
-    if(window.db&&!m._fromCloud){const msgDoc={...m,_fromCloud:false,sentAt:new Date().toISOString(),timestamp:new Date().toISOString()};window.db.collection('messages').add(msgDoc).catch(e=>console.error('[MSG]',e));}
-    if(window.db&&!m._fromCloud&&m.to){const notif={userId:m.to,text:`💬 Nouveau message de ${m.fromName||'quelqu\'un'} sur "${m.itemTitle||'une annonce'}"`,kind:'message',read:false,at:new Date().toISOString(),itemId:m.itemId};window.db.collection('notifications').add(notif).catch(()=>{});}
+    try{if(window.db&&!m._fromCloud){const msgDoc=JSON.parse(JSON.stringify({...m,_fromCloud:false,sentAt:new Date().toISOString(),timestamp:new Date().toISOString()}));window.db.collection('messages').add(msgDoc).catch(e=>console.error('[MSG]',e));}}catch(e){console.error('[MSG]',e);}
+    try{if(window.db&&!m._fromCloud&&m.to){const notif=JSON.parse(JSON.stringify({userId:m.to,text:`💬 Nouveau message de ${m.fromName||'quelqu\'un'} sur "${m.itemTitle||'une annonce'}"`,kind:'message',read:false,at:new Date().toISOString(),itemId:m.itemId===undefined?null:m.itemId}));window.db.collection('notifications').add(notif).catch(()=>{});}}catch(e){console.error('[NOTIF]',e);}
     return{...s,messages:[...s.messages,m],conversations:cs}}
   case"PUSH_NOTIF":{const n=a.payload;if(s.notifications.find(x=>x.id===n.id))return s;return{...s,notifications:[{...n,read:false},...s.notifications]};}
   case"READ_N":return{...s,notifications:s.notifications.map(n=>({...n,read:true}))};
   case"REVIEW":{const r=a.payload;const items=s.items.map(i=>i.id===r.itemId?{...i,reviews:i.reviews+1,rating:+((i.rating*i.reviews+r.rating)/(i.reviews+1)).toFixed(2)}:i);return{...s,reviews:[...s.reviews,r],items}}
-  case"ADD_ITEM":{const owner={...s.user,id:window.firebase&&window.firebase.auth&&window.firebase.auth().currentUser?window.firebase.auth().currentUser.uid:s.user.id};const it={...a.payload,id:uid(),owner,rating:0,reviews:0,createdAt:new Date().toISOString(),isPro:a.payload.isPro||false};const newUserItems=[...s.userItems,it];try{localStorage.setItem('cercle_items',JSON.stringify(newUserItems));}catch(e){console.error('[Cercle] localStorage plein, annonce sauvegardée en mémoire seulement:',e.name);try{const light=newUserItems.map(i=>({...i,images:i.images?.map(im=>im.slice(0,200)+'...'),photos:[]}));localStorage.setItem('cercle_items',JSON.stringify(light));}catch(e2){}}if(window.db){const firestoreItem={...it,images:[],photos:[]};window.db.collection('items').doc(it.id).set(firestoreItem).catch(console.error);}return{...s,userItems:newUserItems,notifications:[{id:uid(),text:`"${it.title}" publiée ! ✅`,read:false,at:new Date()},...s.notifications]}}
+  case"ADD_ITEM":{const owner={...s.user,id:window.firebase&&window.firebase.auth&&window.firebase.auth().currentUser?window.firebase.auth().currentUser.uid:s.user.id};const it={...a.payload,id:uid(),owner,rating:0,reviews:0,createdAt:new Date().toISOString(),isPro:a.payload.isPro||false};const newUserItems=[...s.userItems,it];try{localStorage.setItem('cercle_items',JSON.stringify(newUserItems));}catch(e){console.error('[Cercle] localStorage plein, annonce sauvegardée en mémoire seulement:',e.name);try{const light=newUserItems.map(i=>({...i,images:i.images?.map(im=>im.slice(0,200)+'...'),photos:[]}));localStorage.setItem('cercle_items',JSON.stringify(light));}catch(e2){}}if(window.db){const firestoreItem=fsClean({...it,images:[],photos:[]});fsSafe(()=>window.db.collection('items').doc(String(it.id)).set(firestoreItem));}return{...s,userItems:newUserItems,notifications:[{id:uid(),text:`"${it.title}" publiée ! ✅`,read:false,at:new Date()},...s.notifications]}}
   case"READ_ONE":return{...s,notifications:s.notifications.map(n=>n.id===a.id?{...n,read:true}:n)};
   case"REFERRAL":{const n={id:uid(),text:`${a.name} a rejoint Cercle ! +5€`,read:false,at:new Date(),kind:"referral"};return{...s,referrals:[...s.referrals,{id:uid(),name:a.name,date:new Date(),bonus:5}],notifications:[n,...s.notifications]}}
   case"DISPUTE":return{...s,disputes:[...s.disputes,a.payload],notifications:[{id:uid(),text:"Litige ouvert",read:false,at:new Date(),kind:"dispute"},...s.notifications]};
@@ -76,13 +83,99 @@ function reducer(s,a){switch(a.type){
   case"TOGGLE_AVAIL":{const toggle=i=>i.id===a.id?{...i,available:!i.available}:i;return{...s,items:s.items.map(toggle),userItems:s.userItems.map(toggle)}};
   case"SET_PROFILE_COMPLETION":{const pc={...s.profileCompletion,...a.payload};const n={id:uid(),text:`Profil complété : ${a.label||"étape"}`,read:false,at:new Date(),kind:"system"};return{...s,profileCompletion:pc,notifications:[n,...s.notifications]}};
   case"SET_CLOUD_ITEMS":return{...s,cloudItems:a.payload};
-  case"FOLLOW":{const f={id:a.userId,name:a.userName,avatar:a.userAvatar,since:a.userSince,followedAt:new Date().toISOString()};const next=[...s.following.filter(u=>u.id!==a.userId),f];try{localStorage.setItem('cercle_following',JSON.stringify(next));}catch(e){}if(window.db&&s.user){const sendFollowNotif=(targetUid)=>{window.db.collection('follows').doc(`${s.user.id}_${targetUid}`).set({followerId:s.user.id,followerName:s.user.name,followerEmail:s.user.email||'',followedId:targetUid,followedEmail:a.ownerEmail||'',followedName:a.userName,at:new Date().toISOString()}).catch(()=>{});window.db.collection('notifications').add({userId:targetUid,text:`👤 ${s.user.name||'Quelqu\'un'} vous suit maintenant`,kind:'follow',read:false,at:new Date().toISOString(),fromId:s.user.id}).catch(()=>{});};if(a.ownerEmail){window.db.collection('users').where('email','==',a.ownerEmail).limit(1).get().then(snap=>{const uid=snap.docs.length>0?snap.docs[0].id:a.userId;sendFollowNotif(uid);}).catch(()=>sendFollowNotif(a.userId));}else{sendFollowNotif(a.userId);}}return{...s,following:next};}
-  case"UNFOLLOW":{const next=s.following.filter(u=>u.id!==a.userId);try{localStorage.setItem('cercle_following',JSON.stringify(next));}catch(e){}if(window.db&&s.user){window.db.collection('follows').doc(`${s.user.id}_${a.userId}`).delete().catch(()=>{})}return{...s,following:next};}
-  case"EDIT_ITEM":{const upd={...a.payload};const existing=s.userItems.find(i=>i.id===upd.id)||s.items.find(i=>i.id===upd.id)||{};const fullItem={...existing,...upd};const newUserItems=s.userItems.map(i=>i.id===upd.id?fullItem:i);try{localStorage.setItem('cercle_items',JSON.stringify(newUserItems));}catch(e){}if(window.db){const{images,photos,...firestoreItem}=fullItem;window.db.collection('items').doc(upd.id).set(firestoreItem).catch(console.error);}return{...s,userItems:newUserItems,items:s.items.map(i=>i.id===upd.id?fullItem:i)}}
-  case"DELETE_ITEM":{const next=s.userItems.filter(i=>i.id!==a.id);try{localStorage.setItem('cercle_items',JSON.stringify(next));}catch(e){}if(window.db){window.db.collection('items').doc(a.id).delete().catch(()=>{})}return{...s,userItems:next,items:s.items.filter(i=>i.id!==a.id)}}
-  case"SET_BLOCKED_DATES":{const newUserItems=s.userItems.map(i=>i.id===a.id?{...i,blockedDates:a.dates}:i);try{localStorage.setItem('cercle_items',JSON.stringify(newUserItems));}catch(e){}if(window.db){window.db.collection('items').doc(a.id).update({blockedDates:a.dates}).catch(()=>{})}return{...s,userItems:newUserItems}}
+  case"FOLLOW":{const f={id:a.userId,name:a.userName,avatar:a.userAvatar,since:a.userSince,followedAt:new Date().toISOString()};const next=[...s.following.filter(u=>u.id!==a.userId),f];try{localStorage.setItem('cercle_following',JSON.stringify(next));}catch(e){}if(window.db&&s.user&&s.user.id){const sendFollowNotif=(targetUid)=>{if(!targetUid)return;fsSafe(()=>window.db.collection('follows').doc(`${s.user.id}_${targetUid}`).set(fsClean({followerId:s.user.id,followerName:s.user.name||'',followerEmail:s.user.email||'',followedId:targetUid,followedEmail:a.ownerEmail||'',followedName:a.userName||'',at:new Date().toISOString()})));fsSafe(()=>window.db.collection('notifications').add(fsClean({userId:targetUid,text:`👤 ${s.user.name||'Quelqu\'un'} vous suit maintenant`,kind:'follow',read:false,at:new Date().toISOString(),fromId:s.user.id})));};if(a.ownerEmail){window.db.collection('users').where('email','==',a.ownerEmail).limit(1).get().then(snap=>{const uid=snap.docs.length>0?snap.docs[0].id:a.userId;sendFollowNotif(uid);}).catch(()=>sendFollowNotif(a.userId));}else{sendFollowNotif(a.userId);}}return{...s,following:next};}
+  case"UNFOLLOW":{const next=s.following.filter(u=>u.id!==a.userId);try{localStorage.setItem('cercle_following',JSON.stringify(next));}catch(e){}if(window.db&&s.user&&s.user.id&&a.userId){fsSafe(()=>window.db.collection('follows').doc(`${s.user.id}_${a.userId}`).delete())}return{...s,following:next};}
+  case"EDIT_ITEM":{const upd={...a.payload};const existing=s.userItems.find(i=>i.id===upd.id)||s.items.find(i=>i.id===upd.id)||{};const fullItem={...existing,...upd};const newUserItems=s.userItems.map(i=>i.id===upd.id?fullItem:i);try{localStorage.setItem('cercle_items',JSON.stringify(newUserItems));}catch(e){}if(window.db){const{images,photos,...firestoreItem}=fullItem;fsSafe(()=>window.db.collection('items').doc(String(upd.id)).set(fsClean(firestoreItem)));}return{...s,userItems:newUserItems,items:s.items.map(i=>i.id===upd.id?fullItem:i)}}
+  case"DELETE_ITEM":{const next=s.userItems.filter(i=>i.id!==a.id);try{localStorage.setItem('cercle_items',JSON.stringify(next));}catch(e){}if(window.db){fsSafe(()=>window.db.collection('items').doc(String(a.id)).delete())}return{...s,userItems:next,items:s.items.filter(i=>i.id!==a.id)}}
+  case"SET_BLOCKED_DATES":{const newUserItems=s.userItems.map(i=>i.id===a.id?{...i,blockedDates:a.dates}:i);try{localStorage.setItem('cercle_items',JSON.stringify(newUserItems));}catch(e){}if(window.db){fsSafe(()=>window.db.collection('items').doc(String(a.id)).update({blockedDates:fsClean(a.dates||[])}))}return{...s,userItems:newUserItems}}
+  case"SUBSCRIBE_PLUS":{
+    const now=new Date();
+    const sub={active:true,plan:"plus",price:5.99,startDate:now.toISOString(),renewedAt:now.toISOString(),method:a.method||"card"};
+    try{localStorage.setItem('cercle_subscription',JSON.stringify(sub));}catch(e){}
+    if(window.db&&s.user&&s.user.id){fsSafe(()=>window.db.collection('users').doc(String(s.user.id)).set({subscription:fsClean(sub)},{merge:true}));}
+    const pay={id:uid(),type:"subscription",amount:5.99,status:"completed",method:a.method||"card",date:now,label:"Abonnement Cercle+"};
+    const n={id:uid(),text:"✦ Bienvenue dans Cercle+ ! Vous bénéficiez de −1% de commission supplémentaire, et −1% de plus chaque année.",read:false,at:now,kind:"plus"};
+    return{...s,subscription:sub,payments:[...s.payments,pay],notifications:[n,...s.notifications]};
+  }
+  case"CANCEL_PLUS":{
+    const sub=s.subscription?{...s.subscription,active:false,cancelledAt:new Date().toISOString()}:null;
+    try{localStorage.setItem('cercle_subscription',JSON.stringify(sub));}catch(e){}
+    if(window.db&&s.user&&s.user.id){fsSafe(()=>window.db.collection('users').doc(String(s.user.id)).set({subscription:fsClean(sub)},{merge:true}));}
+    const n={id:uid(),text:"Votre abonnement Cercle+ a été résilié. Vos réductions s'arrêtent à la fin de la période en cours.",read:false,at:new Date(),kind:"plus"};
+    return{...s,subscription:sub,notifications:[n,...s.notifications]};
+  }
+  case"PLUS_SIMULATE_YEAR":{
+    if(!s.subscription||!s.subscription.active)return s;
+    const start=new Date(s.subscription.startDate);start.setFullYear(start.getFullYear()-1);
+    const sub={...s.subscription,startDate:start.toISOString()};
+    try{localStorage.setItem('cercle_subscription',JSON.stringify(sub));}catch(e){}
+    if(window.db&&s.user&&s.user.id){fsSafe(()=>window.db.collection('users').doc(String(s.user.id)).set({subscription:fsClean(sub)},{merge:true}));}
+    return{...s,subscription:sub};
+  }
   default:return s}}
 
 function haversine(lat1,lng1,lat2,lng2){const R=6371;const dLat=(lat2-lat1)*Math.PI/180;const dLng=(lng2-lng1)*Math.PI/180;const a=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)*Math.sin(dLng/2);return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));}
+
+/* ========== GSAP ANIMATION HOOKS ========== */
+// Safe accessor — returns gsap instance if loaded, null otherwise
+const G = () => window.gsap || null;
+
+// Hook: animate a mounted element in (fade + slide up). Pass a ref.
+function useEnterAnim(ref, deps = [], opts = {}) {
+  useEffect(() => {
+    const gsap = G(); if (!gsap || !ref.current) return;
+    const ctx = gsap.context(() => {
+      gsap.from(ref.current, {
+        autoAlpha: 0, y: opts.y ?? 16,
+        duration: opts.duration ?? 0.35,
+        ease: opts.ease ?? 'power2.out',
+        clearProps: 'opacity,visibility,transform',
+        ...opts,
+      });
+    }, ref);
+    return () => ctx.revert();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, deps);
+}
+
+// Hook: stagger-animate children matching selector on mount
+function useStaggerAnim(ref, selector = '.card', opts = {}) {
+  useEffect(() => {
+    const gsap = G(); if (!gsap || !ref.current) return;
+    const ctx = gsap.context(() => {
+      gsap.from(selector, {
+        autoAlpha: 0, y: opts.y ?? 20,
+        duration: opts.duration ?? 0.4,
+        stagger: opts.stagger ?? { each: 0.05, from: 'start' },
+        ease: opts.ease ?? 'power2.out',
+        clearProps: 'opacity,visibility,transform',
+        overwrite: 'auto',
+      });
+    }, ref);
+    return () => ctx.revert();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+}
+
+// Hook: infinite float loop on an element
+function useFloatAnim(ref) {
+  useEffect(() => {
+    const gsap = G(); if (!gsap || !ref.current) return;
+    const tween = gsap.to(ref.current, { y: -8, duration: 1.8, repeat: -1, yoyo: true, ease: 'sine.inOut' });
+    return () => tween.kill();
+  }, []);
+}
+
+// Hook: infinite glow pulse on an element
+function useGlowAnim(ref) {
+  useEffect(() => {
+    const gsap = G(); if (!gsap || !ref.current) return;
+    const tween = gsap.to(ref.current, {
+      boxShadow: '0 0 24px 6px rgba(108,99,255,0.35)',
+      duration: 1.25, repeat: -1, yoyo: true, ease: 'sine.inOut',
+    });
+    return () => tween.kill();
+  }, []);
+}
 
 /* ========== ICONS ========== */

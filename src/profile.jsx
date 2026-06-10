@@ -57,6 +57,8 @@ function Profile({state, dispatch, setPage, setSelected, initTab, onEditItem}) {
   const isHeroFondateur = heroGrade.id === 'fondateur';
   const reviewCount = state.reviews.length;
   const avgRating = reviewCount > 0 ? (state.reviews.reduce((s,r)=>s+r.rating,0)/reviewCount).toFixed(1) : '-';
+  const nbLoc = user.rentals || state.bookings.filter(b=>b.userId===user.id).length;
+  const eco = state.bookings.filter(b=>b.userId===user.id).reduce((s,b)=>s+(b.total||0),0) || nbLoc*13;
   const [followerCount, setFollowerCount] = React.useState(0);
   React.useEffect(()=>{
     if(!window.db)return;
@@ -94,8 +96,65 @@ function Profile({state, dispatch, setPage, setSelected, initTab, onEditItem}) {
 
   const S = {
     page: {
-      maxWidth: '100%', margin: '0 auto', paddingBottom: 100,
-      background: 'var(--bg)', minHeight: '100vh',
+      background: 'var(--bg)', minHeight: '100vh', paddingBottom: 100,
+    },
+    shell: {
+      maxWidth: 1240, margin: '0 auto', padding: '28px 24px',
+      display: 'grid', gridTemplateColumns: '280px 1fr', gap: 28, alignItems: 'start',
+    },
+    side: { position: 'sticky', top: 92, display: 'flex', flexDirection: 'column', gap: 16 },
+    sideCard: {
+      position: 'relative', overflow: 'hidden',
+      background: 'linear-gradient(160deg,#7B6CFF 0%,#6C63FF 45%,#5A4FE0 100%)',
+      borderRadius: 22, padding: '26px 20px', textAlign: 'center', color: '#fff',
+      boxShadow: '0 12px 32px rgba(108,99,255,0.32)',
+    },
+    sideAvatar: {
+      width: 76, height: 76, borderRadius: '50%', margin: '0 auto 12px',
+      background: 'rgba(255,255,255,0.18)', border: '3px solid rgba(255,255,255,0.55)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32,
+      position: 'relative', cursor: 'pointer',
+    },
+    sideName: { fontFamily: 'var(--fd)', fontSize: 18, fontWeight: 800, margin: '0 0 8px' },
+    sideGrade: {
+      display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(255,255,255,0.18)',
+      border: '1px solid rgba(255,255,255,0.3)', borderRadius: 20, padding: '4px 12px',
+      fontSize: 11, fontWeight: 700, marginBottom: 10,
+    },
+    sideMember: { fontSize: 11, color: 'rgba(255,255,255,0.82)' },
+    sideStats: { display: 'flex', flexDirection: 'column', gap: 8 },
+    sideStat: {
+      background: 'var(--w)', border: '1px solid var(--bd)', borderRadius: 14,
+      padding: '11px 14px', display: 'flex', flexDirection: 'column',
+    },
+    sideStatNum: { fontSize: 16, fontWeight: 800, color: 'var(--p)', lineHeight: 1.2 },
+    sideStatLbl: { fontSize: 11, color: 'var(--g)', fontWeight: 500 },
+    sideNav: {
+      background: 'var(--w)', border: '1px solid var(--bd)', borderRadius: 16,
+      padding: 8, display: 'flex', flexDirection: 'column', gap: 2,
+    },
+    navItem: (active) => ({
+      display: 'flex', alignItems: 'center', gap: 11, padding: '10px 12px',
+      borderRadius: 11, fontSize: 13.5, fontWeight: active ? 700 : 500,
+      color: active ? 'var(--p)' : 'var(--dk)',
+      background: active ? 'rgba(108,99,255,0.10)' : 'transparent',
+      border: 'none', cursor: 'pointer', textAlign: 'left', width: '100%',
+      transition: 'background .15s,color .15s',
+    }),
+    navDot: { marginLeft: 'auto', width: 6, height: 6, borderRadius: '50%', background: 'var(--p)' },
+    navCount: (active) => ({
+      marginLeft: 'auto', fontSize: 10.5, fontWeight: 700,
+      background: active ? 'rgba(108,99,255,0.15)' : 'var(--bgw)',
+      color: active ? 'var(--p)' : 'var(--g)', borderRadius: 10, padding: '1px 7px', minWidth: 18, textAlign: 'center',
+    }),
+    navSep: { height: 1, background: 'var(--bd)', margin: '6px 8px' },
+    main: { minWidth: 0 },
+    mainHead: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, gap: 12, flexWrap: 'wrap' },
+    mainTitle: { fontFamily: 'var(--fd)', fontSize: 24, fontWeight: 800, color: 'var(--dk)', letterSpacing: '-0.02em', margin: 0 },
+    mainAction: {
+      display: 'inline-flex', alignItems: 'center', gap: 7, padding: '10px 18px', borderRadius: 12,
+      background: 'linear-gradient(135deg,#6C63FF,#5A4FE0)', color: '#fff', border: 'none',
+      fontSize: 13, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 14px rgba(108,99,255,0.32)', whiteSpace: 'nowrap',
     },
 
     // Header block : dégradé pleine largeur avec fondu bas vers blanc
@@ -266,7 +325,7 @@ function Profile({state, dispatch, setPage, setSelected, initTab, onEditItem}) {
     }),
 
     // Content
-    content: { padding: '20px 16px', background: 'var(--bg)', minHeight: 300 },
+    content: { padding: 0, background: 'transparent', minHeight: 300 },
 
     // Cards
     card: {
@@ -444,102 +503,56 @@ function Profile({state, dispatch, setPage, setSelected, initTab, onEditItem}) {
 
   return (
     <div style={S.page} className="profile-page-grain">
+      <div style={S.shell}>
 
-      {/* ─── HEADER BLOCK ─── */}
-      <div style={S.headerBlock}>
-        <div style={S.headerDots}/>
-        {/* Ligne du haut : vide à gauche, boutons à droite */}
-        <div style={S.headerTopRow}>
-          <div/>
-          <div style={{display:'flex',gap:8}}>
-            <button onClick={() => setTab('parametres')} style={S.btnEdit}>✏️ Modifier</button>
-            <button style={{...S.btnShare,position:'relative'}} onClick={()=>{const url=window.location.href;if(navigator.share){navigator.share({title:'Cercle',url}).catch(()=>{})}else{navigator.clipboard.writeText(url).then(()=>{setShareCopied(true);setTimeout(()=>setShareCopied(false),2000);}).catch(()=>{});}}} title="Partager">{shareCopied?<span style={{fontSize:10,fontWeight:700,color:'#10b981'}}>Copié ✓</span>:'↗'}</button>
-          </div>
-        </div>
-
-        {/* Avatar centré */}
-        <div style={{position:'relative',zIndex:2,display:'flex',flexDirection:'column',alignItems:'center'}}>
-          <div style={S.avatarRing}>
+        {/* ─── SIDEBAR ─── */}
+        <aside style={S.side}>
+          {/* Carte profil */}
+          <div style={S.sideCard}>
+            <div style={S.headerDots}/>
             <input ref={avatarInputRef} type="file" accept="image/*" capture="user" style={{display:'none'}} onChange={handleAvatarChange}/>
-            <div className="avatar-edit-wrap" onClick={()=>avatarInputRef.current&&avatarInputRef.current.click()} title="Changer la photo de profil">
-              <div style={S.avatar}>
-                {user.avatarUrl
-                  ? <img src={user.avatarUrl} style={{width:'100%',height:'100%',borderRadius:'50%',objectFit:'cover'}} alt="avatar"/>
-                  : (userAvatar || '👤')}
-                <div style={S.verifiedBadge}>{isHeroFondateur?'👑':'✓'}</div>
-              </div>
-              <div className="avatar-edit-badge">📷</div>
+            <div style={S.sideAvatar} onClick={()=>avatarInputRef.current&&avatarInputRef.current.click()} title="Changer la photo">
+              {user.avatarUrl
+                ? <img src={user.avatarUrl} style={{width:'100%',height:'100%',borderRadius:'50%',objectFit:'cover'}} alt="avatar"/>
+                : (userAvatar || '👤')}
+              <div style={{position:'absolute',bottom:-2,right:-2,width:22,height:22,borderRadius:'50%',background:isHeroFondateur?'linear-gradient(135deg,#D4AF37,#FFD700)':'#10b981',border:'3px solid #6C63FF',display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,color:'#fff',fontWeight:900}}>{isHeroFondateur?'👑':'✓'}</div>
             </div>
-            {user.isPro && <div className="pro-avatar-badge">PRO</div>}
+            <h2 style={S.sideName}>{profileData.name||'Mon profil'}</h2>
+            <div style={S.sideGrade}><span>{heroGrade.icon}</span><span>{heroGrade.name}</span></div>
+            <div style={S.sideMember}>Membre depuis {user.since||new Date().getFullYear()}</div>
           </div>
 
-          <h2 style={S.name}>{profileData.name}</h2>
-
-          <div style={S.gradeBadge}>
-            <span>{heroGrade.icon}</span>
-            <span>{heroGrade.name}</span>
-            {isHeroFondateur && <span style={{marginLeft:2}}>👑</span>}
+          {/* Stats */}
+          <div style={S.sideStats}>
+            <div style={S.sideStat}><span style={S.sideStatNum}>{nbLoc}</span><span style={S.sideStatLbl}>Locations</span></div>
+            <div style={S.sideStat}><span style={S.sideStatNum}>{avgRating} ★</span><span style={S.sideStatLbl}>Note moyenne</span></div>
+            <div style={S.sideStat}><span style={S.sideStatNum}>{eco}€</span><span style={S.sideStatLbl}>Économies</span></div>
           </div>
 
-          <div style={S.ratingRow}>
-            <StarRow n={5}/>
-            <span style={{fontSize:14,fontWeight:800,color:'white'}}>{avgRating}</span>
-            <span style={{fontSize:13,color:'rgba(255,255,255,0.65)'}}>· {reviewCount} avis</span>
+          {/* Navigation */}
+          <nav style={S.sideNav}>
+            {tabs.map(t=>(
+              <button key={t.id} style={S.navItem(tab===t.id)} onClick={()=>setTab(t.id)}>
+                <span style={{fontSize:15}}>{t.icon}</span><span>{t.label}</span>
+                {t.count!==null ? <span style={S.navCount(tab===t.id)}>{t.count}</span> : (tab===t.id && <span style={S.navDot}/>)}
+              </button>
+            ))}
+            <div style={S.navSep}/>
+            <button style={S.navItem(false)} onClick={()=>setPage('messages')}><span style={{fontSize:15}}>💬</span><span>Messages</span></button>
+            <button style={S.navItem(false)} onClick={()=>setPage('notifs')}><span style={{fontSize:15}}>🔔</span><span>Notifications</span></button>
+            <button style={S.navItem(false)} onClick={()=>setPage('wallet')}><span style={{fontSize:15}}>👛</span><span>Portefeuille</span></button>
+            <div style={S.navSep}/>
+            <button style={{...S.navItem(false),color:'#ef4444'}} onClick={()=>{const url=window.location.href;if(navigator.share){navigator.share({title:'Cercle',url}).catch(()=>{})}else{navigator.clipboard.writeText(url).then(()=>{setShareCopied(true);setTimeout(()=>setShareCopied(false),2000);}).catch(()=>{});}}}><span style={{fontSize:15}}>↗</span><span>{shareCopied?'Lien copié ✓':'Partager mon profil'}</span></button>
+          </nav>
+        </aside>
+
+        {/* ─── MAIN ─── */}
+        <main style={S.main}>
+          <div style={S.mainHead}>
+            <h1 style={S.mainTitle}>{(tabs.find(t=>t.id===tab)||{}).label||'Profil'}</h1>
+            {tab==='annonces' && <button style={S.mainAction} onClick={()=>setPage('create')}>+ Nouvelle annonce</button>}
           </div>
-        </div>
-        <div style={S.headerFade}/>
-      </div>
 
-      {/* ─── STATS FLOTTANTES ─── */}
-      <div style={S.statsFloat}>
-        {[
-          {num: listings.length || 0, lbl: 'Annonces', icon: '🏷️'},
-          {num: reviewCount, lbl: 'Avis', icon: '⭐'},
-          {num: followerCount, lbl: 'Abonnés', icon: '👥'},
-        ].map(s => (
-          <div key={s.lbl} style={S.statCard}>
-            <span style={{fontSize:18,display:'block',marginBottom:4}}>{s.icon}</span>
-            <strong style={S.statNum}>{s.num}</strong>
-            <span style={S.statLbl}>{s.lbl}</span>
-          </div>
-        ))}
-      </div>
-
-      {/* ─── BADGES / PILLS ─── */}
-      <div style={S.pillsRow}>
-        {user.verified && <span style={S.pillGreen}>✓ Identité vérifiée</span>}
-        {(user.superHost || (state.reviews.length >= 10 && (state.reviews.reduce((s,r)=>s+r.rating,0)/state.reviews.length) >= 4.5)) && <span style={S.pillPurple}>🏅 Super hôte</span>}
-        {(user.city||user.location)&&<span style={S.pill}>📍 {user.city||user.location}</span>}
-        {user.since&&<span style={S.pill}>🗓️ Membre depuis {user.since}</span>}
-        {followerCount>0&&<span style={S.pill}>👥 {followerCount} abonné{followerCount>1?'s':''}</span>}
-      </div>
-
-      {/* ─── BIO ─── */}
-      {profileData.bio && <div style={S.bioCard}>{profileData.bio}</div>}
-
-      {/* ─── TRUST ─── */}
-      <div style={S.trustRow}>
-        <span style={S.pill}>⚡ Répond en &lt;1h</span>
-        <span style={S.pill}>🔒 Paiement sécurisé</span>
-        <span style={S.pill}>🛡️ Caution assurée</span>
-      </div>
-
-      {/* ─── TABS ─── */}
-      <div style={S.tabsWrap}>
-        <div style={S.tabsInner}>
-          {tabs.map(t => (
-            <button key={t.id} onClick={() => setTab(t.id)}
-              style={{...S.tab(tab===t.id), outline:'none',
-                borderTop:'none', borderLeft:'none', borderRight:'none'}}>
-              <span>{t.icon}</span>
-              <span>{t.label}</span>
-              {t.count !== null && <span style={S.tabCount(tab===t.id)}>{t.count}</span>}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* ─── CONTENT ─── */}
       <div key={tab} style={{...S.content, animation:'fadeSlideUp 0.35s cubic-bezier(0.34,1.56,0.64,1) both'}}>
 
         {/* ── Annonces ── */}
@@ -556,7 +569,7 @@ function Profile({state, dispatch, setPage, setSelected, initTab, onEditItem}) {
                 <div style={S.listingBody}>
                   <p style={S.listingTitle}>{l.title}</p>
                   <p style={S.listingPrice}>{l.price}€<span style={{fontWeight:400,fontSize:11,color:'var(--g)'}}>/jour</span></p>
-                  <div style={S.listingRating}>⭐ {l.rating || '4.8'} <span>· {l.reviews || 0} avis{(l.likeCount||0)>0?` · ❤️ ${l.likeCount}`:''}</span></div>
+                  <div style={S.listingRating}>{l.reviews>0?<>⭐ {l.rating} <span>· {l.reviews} avis{(l.likeCount||0)>0?` · ❤️ ${l.likeCount}`:''}</span></>:<><span style={{color:'var(--p)',fontWeight:700}}>✨ Nouveau</span>{(l.likeCount||0)>0&&<span> · ❤️ {l.likeCount}</span>}</>}</div>
                   <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:5,marginTop:8}}>
                     <button onClick={e=>{e.stopPropagation();onEditItem&&onEditItem(l);}} style={{padding:'6px 0',border:'1.5px solid #d1fae5',borderRadius:10,background:'#f0fdf4',color:'#059669',fontSize:11,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:3}}>✏️ Modifier</button>
                     <button onClick={e=>{e.stopPropagation();setCalItem(l);}} style={{padding:'6px 0',border:'1.5px solid #bfdbfe',borderRadius:10,background:'#eff6ff',color:'#2563eb',fontSize:11,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:3}}>📅 Dates</button>
@@ -750,6 +763,9 @@ function Profile({state, dispatch, setPage, setSelected, initTab, onEditItem}) {
           const isFondateur = grade.id === 'fondateur';
           const gc = GC[grade.id] || '#6C63FF';
           const gcLight = gc + '20';
+          const plus = getPlusInfo(state.subscription);
+          const effRate = getEffectiveFeeRate(rentals, state.subscription);
+          const PLUS_C = '#7C3AED';
           const fullLabel = `${grade.name} ${div.label}`;
           const nextLabel = nextDiv ? `${grade.name} ${nextDiv.label}` : (nextGrade ? `${nextGrade.name} I` : null);
           const nextMin = nextDiv ? nextDiv.min : (nextGrade ? nextGrade.min : null);
@@ -806,13 +822,26 @@ function Profile({state, dispatch, setPage, setSelected, initTab, onEditItem}) {
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:20}}>
                 <div style={{background:'#f8f7ff',borderRadius:16,padding:'16px 18px',border:'1.5px solid #f0eeff'}}>
                   <div style={{fontSize:11,color:'#9ca3af',fontWeight:600,marginBottom:4}}>Commission actuelle</div>
-                  <div style={{fontSize:26,fontWeight:900,color:gc}}>{Math.round(grade.feeRate*100)}%</div>
-                  <div style={{fontSize:11,color:'#9ca3af',marginTop:2}}>au lieu de 12%</div>
+                  <div style={{fontSize:26,fontWeight:900,color:plus.active?PLUS_C:gc}}>{Math.round(effRate*100)}%</div>
+                  <div style={{fontSize:11,color:'#9ca3af',marginTop:2}}>{plus.active?<>grade {Math.round(grade.feeRate*100)}% · <span style={{color:PLUS_C,fontWeight:700}}>✦ −{Math.round(plus.reduction*100)}%</span></>:'au lieu de 12%'}</div>
                 </div>
                 <div style={{background:'#f0fdf4',borderRadius:16,padding:'16px 18px',border:'1.5px solid #d1fae5'}}>
                   <div style={{fontSize:11,color:'#9ca3af',fontWeight:600,marginBottom:4}}>Économie sur les frais</div>
-                  <div style={{fontSize:26,fontWeight:900,color:'#10b981'}}>{Math.round((0.12 - grade.feeRate)*100)}%</div>
+                  <div style={{fontSize:26,fontWeight:900,color:'#10b981'}}>{Math.round((0.12 - effRate)*100)}%</div>
                   <div style={{fontSize:11,color:'#9ca3af',marginTop:2}}>par rapport au taux de base</div>
+                </div>
+              </div>
+
+              {/* Cercle+ */}
+              <div onClick={()=>setPage('plus')} style={{cursor:'pointer',borderRadius:18,padding:'18px 20px',marginBottom:20,position:'relative',overflow:'hidden',background:plus.active?`linear-gradient(135deg,#6C63FF,${PLUS_C})`:`linear-gradient(135deg,${PLUS_C}0d,${PLUS_C}05)`,border:plus.active?'none':`1.5px solid ${PLUS_C}33`,boxShadow:plus.active?'0 8px 28px rgba(124,58,237,.3)':'none'}}>
+                {plus.active&&<div style={{position:'absolute',inset:0,background:'linear-gradient(105deg,transparent 40%,rgba(255,255,255,0.12) 50%,transparent 60%)',backgroundSize:'200% 100%',animation:'shimmerCard 3.5s linear infinite',pointerEvents:'none'}}/>}
+                <div style={{position:'relative',zIndex:1,display:'flex',alignItems:'center',gap:14}}>
+                  <div style={{fontSize:28,flexShrink:0,color:plus.active?'#fff':PLUS_C}}>✦</div>
+                  <div style={{flex:1}}>
+                    <div style={{fontWeight:800,fontSize:15,color:plus.active?'#fff':'#1a1a2e',marginBottom:2}}>Cercle+ {plus.active&&<span style={{background:'rgba(255,255,255,0.25)',padding:'1px 8px',borderRadius:10,fontSize:10,fontWeight:800,verticalAlign:'middle'}}>ACTIF</span>}</div>
+                    <div style={{fontSize:12,color:plus.active?'rgba(255,255,255,0.85)':'#6b7280',lineHeight:1.45}}>{plus.active?`−${Math.round(plus.reduction*100)}% sur vos commissions · prochain −1% dans ${plus.monthsToNext} mois`:'Réduisez vos commissions de −1% par an, en plus de votre grade.'}</div>
+                  </div>
+                  <div style={{flexShrink:0,fontSize:12,fontWeight:700,padding:'7px 14px',borderRadius:20,background:plus.active?'rgba(255,255,255,0.2)':`linear-gradient(135deg,#6C63FF,${PLUS_C})`,color:'#fff'}}>{plus.active?'Gérer →':'Découvrir →'}</div>
                 </div>
               </div>
 
@@ -987,216 +1016,110 @@ function Profile({state, dispatch, setPage, setSelected, initTab, onEditItem}) {
         )}
 
         {/* ── Paramètres ── */}
-        {tab === 'parametres' && (
-          <div style={{paddingBottom:80}}>
+        {tab === 'parametres' && (() => {
+          const pc = state.profileCompletion || {identity:false,phone:false,drivingLicense:false,bankAccount:false};
+          const verifs = [
+            {key:'identity', icon:'🪪', label:'Identité', desc:'Pièce d\'identité officielle'},
+            {key:'phone', icon:'📱', label:'Téléphone', desc:'Vérifié par SMS'},
+            {key:'drivingLicense', icon:'🚗', label:'Permis de conduire', desc:'Requis pour louer un véhicule'},
+            {key:'bankAccount', icon:'🏦', label:'Compte bancaire', desc:'Pour recevoir vos paiements'},
+          ];
+          const doneCount = verifs.filter(v=>pc[v.key]).length;
+          const pct = Math.round(doneCount/verifs.length*100);
+          const handleComplete = (key)=>{ if(key==='phone') setVerifData(p=>({...p,phoneNum:profileData.phone||''})); setVerifModal(key); };
+          const card = {background:'var(--w)',borderRadius:18,border:'1px solid var(--bd)',boxShadow:'0 1px 8px rgba(0,0,0,0.05)',padding:'20px',marginBottom:16};
+          const secTitle = (t)=>(<div style={{fontSize:11,fontWeight:700,textTransform:'uppercase',letterSpacing:'.07em',color:'var(--g)',marginBottom:14}}>{t}</div>);
+          return (
+            <div style={{paddingBottom:80,maxWidth:680}}>
 
-            {/* ── Titre de page ── */}
-            <div style={{marginBottom:24,animation:'fadeSlideUp 0.35s cubic-bezier(0.34,1.56,0.64,1) both'}}>
-              <h2 style={{fontSize:22,fontWeight:800,color:'var(--dk)',letterSpacing:'-.03em',margin:0}}>Paramètres</h2>
-              <p style={{fontSize:13,color:'var(--g)',marginTop:4,margin:'4px 0 0'}}>Gérez votre compte et vos préférences</p>
-            </div>
+              {pct<100 && (
+                <div style={{...card,background:'linear-gradient(135deg,#f5f3ff,#faf5ff)',borderColor:'#ddd6fe'}}>
+                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:10}}>
+                    <div style={{fontSize:14,fontWeight:700,color:'var(--dk)'}}>Profil {pct}% complété</div>
+                    <div style={{fontSize:12,color:'var(--p)',fontWeight:700}}>{doneCount}/{verifs.length}</div>
+                  </div>
+                  <div style={{height:8,background:'#ede9fe',borderRadius:99,overflow:'hidden'}}>
+                    <div style={{height:'100%',width:pct+'%',background:'linear-gradient(90deg,#6C63FF,#a78bfa)',borderRadius:99,transition:'width .5s'}}/>
+                  </div>
+                  <div style={{fontSize:12,color:'var(--g)',marginTop:8}}>Complétez votre profil pour gagner la confiance des autres membres.</div>
+                </div>
+              )}
 
-            {/* ── Complétion du profil ── */}
-            {(()=>{
-              const pc = state.profileCompletion || {identity:false,phone:false,drivingLicense:false,bankAccount:false};
-              const steps = [
-                {key:'identity', label:'Identité', icon:'🪪', desc:'Pièce d\'identité officielle'},
-                {key:'phone', label:'Téléphone', icon:'📱', desc:'Numéro vérifié par SMS'},
-                {key:'drivingLicense', label:'Permis', icon:'🚗', desc:'Requis pour louer'},
-                {key:'bankAccount', label:'Bancaire', icon:'🏦', desc:'Pour vos paiements'},
-              ];
-              const doneCount = steps.filter(s=>pc[s.key]).length;
-              const pct = Math.round(doneCount/steps.length*100);
-              const circ = 188.5;
-              const handleComplete = (key)=>{
-                if(key==='phone') setVerifData(p=>({...p,phoneNum:profileData.phone||''}));
-                setVerifModal(key);
-              };
-              return (
-                <div style={{background:'var(--w)',borderRadius:20,border:'1px solid var(--bd)',boxShadow:'0 2px 16px rgba(0,0,0,0.06)',padding:'20px',marginBottom:16,animation:'fadeSlideUp 0.4s cubic-bezier(0.34,1.56,0.64,1) both',animationDelay:'0.04s'}}>
-                  <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:20}}>
-                    <div style={{width:38,height:38,borderRadius:12,background:'linear-gradient(135deg,#6C63FF,#8b5cf6)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:19,flexShrink:0}}>🧩</div>
-                    <div>
-                      <div style={{fontSize:15,fontWeight:700,color:'var(--dk)',lineHeight:1.2}}>Complétion du profil</div>
-                      <div style={{fontSize:12,color:'var(--g)'}}>Boostez votre visibilité</div>
-                    </div>
-                  </div>
-                  <div style={{display:'flex',alignItems:'center',gap:20,marginBottom:20}}>
-                    <div style={{position:'relative',flexShrink:0}}>
-                      <svg width="76" height="76" viewBox="0 0 76 76">
-                        <circle cx="38" cy="38" r="30" fill="none" stroke="#ede9fe" strokeWidth="7"/>
-                        <circle cx="38" cy="38" r="30" fill="none" stroke="url(#pgGrad)" strokeWidth="7"
-                          strokeLinecap="round"
-                          strokeDasharray={`${pct/100*circ} ${circ}`}
-                          transform="rotate(-90 38 38)"
-                        />
-                        <defs>
-                          <linearGradient id="pgGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                            <stop offset="0%" stopColor="#6C63FF"/>
-                            <stop offset="100%" stopColor="#a78bfa"/>
-                          </linearGradient>
-                        </defs>
-                      </svg>
-                      <div style={{position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center'}}>
-                        <span style={{fontSize:17,fontWeight:800,color:'var(--dk)',lineHeight:1}}>{pct}%</span>
-                      </div>
-                    </div>
-                    <div style={{flex:1}}>
-                      <div style={{fontSize:15,fontWeight:700,color:'var(--dk)',marginBottom:3}}>{pct===100?'Profil complet ✨':'Profil incomplet'}</div>
-                      <div style={{fontSize:13,color:'var(--g)',marginBottom:pct<100?8:0}}>{doneCount}/{steps.length} étapes complétées</div>
-                      {pct<100&&<div style={{fontSize:12,color:'#6C63FF',fontWeight:600,background:'#f5f3ff',padding:'5px 10px',borderRadius:8,display:'inline-block'}}>Complétez pour +50% de visibilité</div>}
-                    </div>
-                  </div>
-                  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
-                    {steps.map(step=>(
-                      <div key={step.key} onClick={!pc[step.key]?()=>handleComplete(step.key):undefined}
-                        style={{display:'flex',alignItems:'center',gap:9,padding:'11px 12px',background:pc[step.key]?'#f0fdf4':'var(--bg)',borderRadius:13,border:pc[step.key]?'1.5px solid #86efac':'1.5px solid var(--bd)',cursor:pc[step.key]?'default':'pointer',transition:'all .2s'}}>
-                        <span style={{fontSize:18}}>{pc[step.key]?'✅':step.icon}</span>
-                        <div style={{minWidth:0}}>
-                          <div style={{fontSize:12,fontWeight:600,color:pc[step.key]?'#15803d':'var(--dk)',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{step.label}</div>
-                          <div style={{fontSize:10,color:pc[step.key]?'#22c55e':'var(--g)'}}>{pc[step.key]?'Complété':'Ajouter →'}</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              );
-            })()}
-
-            {/* ── Mon profil ── */}
-            <div style={{background:'var(--w)',borderRadius:20,border:'1px solid var(--bd)',boxShadow:'0 2px 16px rgba(0,0,0,0.06)',padding:'20px',marginBottom:16,animation:'fadeSlideUp 0.4s cubic-bezier(0.34,1.56,0.64,1) both',animationDelay:'0.08s'}}>
-              <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:20}}>
-                <div style={{width:38,height:38,borderRadius:12,background:'linear-gradient(135deg,#3b82f6,#6C63FF)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:19,flexShrink:0}}>👤</div>
-                <div>
-                  <div style={{fontSize:15,fontWeight:700,color:'var(--dk)',lineHeight:1.2}}>Mon profil</div>
-                  <div style={{fontSize:12,color:'var(--g)'}}>Informations personnelles</div>
-                </div>
-              </div>
-              {[
-                {icon:'✏️',label:'Nom complet',key:'name',type:'text',placeholder:'Votre nom'},
-                {icon:'📧',label:'Email',key:'email',type:'email',placeholder:'votre@email.fr'},
-                {icon:'📱',label:'Téléphone',key:'phone',type:'tel',placeholder:'+33 6 00 00 00 00'},
-              ].map((f,i,arr)=>(
-                <div key={f.key} style={{display:'flex',alignItems:'center',gap:12,padding:'13px 0',borderBottom:i<arr.length-1?'1px solid var(--bg)':'none'}}>
-                  <span style={{fontSize:19,flexShrink:0,width:26,textAlign:'center'}}>{f.icon}</span>
-                  <div style={{flex:1,minWidth:0}}>
-                    <div style={{fontSize:10,fontWeight:700,color:'var(--gl)',textTransform:'uppercase',letterSpacing:'.06em',marginBottom:2}}>{f.label}</div>
-                    <input type={f.type} value={profileData[f.key]}
-                      onChange={e=>setProfileData({...profileData,[f.key]:e.target.value})}
-                      placeholder={f.placeholder}
-                      style={{border:'none',outline:'none',fontSize:14,color:'var(--dk)',background:'transparent',padding:0,width:'100%',fontFamily:'inherit',fontWeight:500}}/>
-                  </div>
-                </div>
-              ))}
-              <div style={{display:'flex',alignItems:'flex-start',gap:12,padding:'13px 0'}}>
-                <span style={{fontSize:19,flexShrink:0,width:26,textAlign:'center',marginTop:2}}>✍️</span>
-                <div style={{flex:1,minWidth:0}}>
-                  <div style={{fontSize:10,fontWeight:700,color:'var(--gl)',textTransform:'uppercase',letterSpacing:'.06em',marginBottom:4}}>Bio</div>
-                  <textarea rows={3} value={profileData.bio}
-                    onChange={e=>setProfileData({...profileData,bio:e.target.value})}
-                    placeholder="Décrivez-vous en quelques mots..."
-                    style={{border:'none',outline:'none',fontSize:14,color:'var(--dk)',background:'transparent',padding:0,width:'100%',fontFamily:'inherit',fontWeight:500,resize:'none',lineHeight:1.5}}/>
-                </div>
-              </div>
-            </div>
-
-            {/* ── Informations Pro ── */}
-            {user.isPro && (
-              <div style={{background:'var(--w)',borderRadius:20,border:'1px solid var(--bd)',boxShadow:'0 2px 16px rgba(0,0,0,0.06)',padding:'20px',marginBottom:16,animation:'fadeSlideUp 0.4s cubic-bezier(0.34,1.56,0.64,1) both',animationDelay:'0.12s'}}>
-                <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:20}}>
-                  <div style={{width:38,height:38,borderRadius:12,background:'linear-gradient(135deg,#F59E0B,#D97706)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:19,flexShrink:0}}>🏢</div>
-                  <div style={{flex:1}}>
-                    <div style={{fontSize:15,fontWeight:700,color:'var(--dk)',lineHeight:1.2}}>Informations Pro</div>
-                    <div style={{fontSize:12,color:'var(--g)'}}>Votre compte professionnel</div>
-                  </div>
-                  <span style={{background:'linear-gradient(135deg,#F59E0B,#D97706)',color:'#fff',fontSize:9,fontWeight:800,padding:'3px 8px',borderRadius:20,letterSpacing:'.04em',flexShrink:0}}>PRO</span>
-                </div>
-                {[
-                  {icon:'🏗️',label:'Entreprise',val:user.company||'—'},
-                  {icon:'🔢',label:'N° SIRET',val:user.siret||'—'},
-                  {icon:'💶',label:'N° TVA',val:user.tva||'—'},
-                  {icon:'📞',label:'Tél. pro',val:user.phone||'—'},
-                  {icon:'🌐',label:'Site web',val:user.website||'—'},
-                ].map((f,i,arr)=>(
-                  <div key={f.label} style={{display:'flex',alignItems:'center',gap:12,padding:'11px 0',borderBottom:i<arr.length-1?'1px solid var(--bg)':'none'}}>
-                    <span style={{fontSize:18,flexShrink:0,width:26,textAlign:'center'}}>{f.icon}</span>
+              {/* Compte */}
+              <div style={card}>
+                {secTitle('Compte')}
+                {[{icon:'👤',label:'Nom complet',key:'name',type:'text',ph:'Votre nom'},
+                  {icon:'📧',label:'Email',key:'email',type:'email',ph:'votre@email.fr'},
+                  {icon:'📱',label:'Téléphone',key:'phone',type:'tel',ph:'+33 6 00 00 00 00'}].map((f,i,a)=>(
+                  <div key={f.key} style={{display:'flex',alignItems:'center',gap:12,padding:'12px 0',borderBottom:i<a.length-1?'1px solid var(--bg)':'none'}}>
+                    <span style={{fontSize:18,width:24,textAlign:'center',flexShrink:0}}>{f.icon}</span>
                     <div style={{flex:1,minWidth:0}}>
-                      <div style={{fontSize:10,fontWeight:700,color:'var(--gl)',textTransform:'uppercase',letterSpacing:'.06em',marginBottom:1}}>{f.label}</div>
-                      <div style={{fontSize:14,color:'var(--dk)',fontWeight:500}}>{f.val}</div>
+                      <div style={{fontSize:10,fontWeight:700,color:'var(--gl)',textTransform:'uppercase',letterSpacing:'.05em',marginBottom:2}}>{f.label}</div>
+                      <input type={f.type} value={profileData[f.key]} onChange={e=>setProfileData({...profileData,[f.key]:e.target.value})} placeholder={f.ph} style={{border:'none',outline:'none',fontSize:14,color:'var(--dk)',background:'transparent',padding:0,width:'100%',fontFamily:'inherit',fontWeight:500}}/>
                     </div>
                   </div>
                 ))}
-                <div style={{marginTop:14,padding:'10px 14px',background:'#FFFBEB',borderRadius:12,border:'1px solid #FDE68A',fontSize:12,color:'#92400E',display:'flex',alignItems:'center',gap:8}}>
-                  <span>⭐</span> Compte Pro actif — Dashboard, Gestion, Facturation PDF
-                </div>
-              </div>
-            )}
-
-            {/* ── Notifications ── */}
-            <div style={{background:'var(--w)',borderRadius:20,border:'1px solid var(--bd)',boxShadow:'0 2px 16px rgba(0,0,0,0.06)',padding:'20px',marginBottom:16,animation:'fadeSlideUp 0.4s cubic-bezier(0.34,1.56,0.64,1) both',animationDelay:'0.16s'}}>
-              <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:20}}>
-                <div style={{width:38,height:38,borderRadius:12,background:'linear-gradient(135deg,#f59e0b,#ef4444)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:19,flexShrink:0}}>🔔</div>
-                <div>
-                  <div style={{fontSize:15,fontWeight:700,color:'var(--dk)',lineHeight:1.2}}>Notifications</div>
-                  <div style={{fontSize:12,color:'var(--g)'}}>Choisissez ce que vous recevez</div>
-                </div>
-              </div>
-              {[
-                {key:'notifEmail',icon:'📧',bg:'#FEF9C3',title:'Emails',sub:'Nouvelles réservations et messages'},
-                {key:'notifPush',icon:'📲',bg:'#DCFCE7',title:'Notifications push',sub:'Alertes en temps réel sur votre appareil'},
-              ].map((f,i,arr)=>(
-                <div key={f.key} style={{display:'flex',alignItems:'center',gap:12,padding:'12px 0',borderBottom:i<arr.length-1?'1px solid var(--bg)':'none'}}>
-                  <div style={{width:38,height:38,borderRadius:11,background:f.bg,display:'flex',alignItems:'center',justifyContent:'center',fontSize:19,flexShrink:0}}>{f.icon}</div>
-                  <div style={{flex:1}}>
-                    <div style={{fontSize:14,fontWeight:600,color:'var(--dk)'}}>{f.title}</div>
-                    <div style={{fontSize:12,color:'var(--g)',marginTop:1}}>{f.sub}</div>
-                  </div>
-                  <div style={S.toggle(profileData[f.key])} onClick={()=>setProfileData({...profileData,[f.key]:!profileData[f.key]})}>
-                    <div style={S.toggleKnob(profileData[f.key])}/>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* ── Confiance & Sécurité ── */}
-            <div style={{background:'var(--w)',borderRadius:20,border:'1px solid var(--bd)',boxShadow:'0 2px 16px rgba(0,0,0,0.06)',padding:'20px',marginBottom:16,animation:'fadeSlideUp 0.4s cubic-bezier(0.34,1.56,0.64,1) both',animationDelay:'0.20s'}}>
-              <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:20}}>
-                <div style={{width:38,height:38,borderRadius:12,background:'linear-gradient(135deg,#10b981,#059669)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:19,flexShrink:0}}>🛡️</div>
-                <div>
-                  <div style={{fontSize:15,fontWeight:700,color:'var(--dk)',lineHeight:1.2}}>Confiance &amp; Sécurité</div>
-                  <div style={{fontSize:12,color:'var(--g)'}}>Statut de vos vérifications</div>
-                </div>
-              </div>
-              {[
-                {icon:'✅',bg:'#d1fae5',label:'Identité vérifiée',value:'Confirmée',color:'#10b981'},
-                {icon:'📱',bg:'#dbeafe',label:'Numéro vérifié',value:profileData.phone||'—',color:'#3b82f6'},
-                {icon:'📧',bg:'#ede9fe',label:'Email vérifié',value:profileData.email||'—',color:'#6C63FF'},
-              ].map((item,i,arr)=>(
-                <div key={item.label} style={{display:'flex',alignItems:'center',gap:12,padding:'12px 0',borderBottom:i<arr.length-1?'1px solid var(--bg)':'none'}}>
-                  <div style={{width:38,height:38,borderRadius:11,background:item.bg,display:'flex',alignItems:'center',justifyContent:'center',fontSize:19,flexShrink:0}}>{item.icon}</div>
+                <div style={{display:'flex',alignItems:'flex-start',gap:12,padding:'12px 0 0'}}>
+                  <span style={{fontSize:18,width:24,textAlign:'center',flexShrink:0,marginTop:2}}>✍️</span>
                   <div style={{flex:1,minWidth:0}}>
-                    <div style={{fontSize:14,fontWeight:600,color:'var(--dk)'}}>{item.label}</div>
-                    <div style={{fontSize:12,color:'var(--g)',marginTop:1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{item.value}</div>
+                    <div style={{fontSize:10,fontWeight:700,color:'var(--gl)',textTransform:'uppercase',letterSpacing:'.05em',marginBottom:4}}>Bio</div>
+                    <textarea rows={2} value={profileData.bio} onChange={e=>setProfileData({...profileData,bio:e.target.value})} placeholder="Décrivez-vous en quelques mots..." style={{border:'none',outline:'none',fontSize:14,color:'var(--dk)',background:'transparent',padding:0,width:'100%',fontFamily:'inherit',fontWeight:500,resize:'none',lineHeight:1.5}}/>
                   </div>
-                  <span style={{fontSize:11,fontWeight:700,color:item.color,background:item.bg,padding:'4px 10px',borderRadius:20,flexShrink:0}}>Vérifié ✓</span>
                 </div>
-              ))}
+                <button onClick={()=>{dispatch({type:"UPD_PROF",payload:{name:profileData.name,email:profileData.email,bio:profileData.bio,phone:profileData.phone}});}} style={{marginTop:16,width:'100%',padding:'12px',borderRadius:12,background:'linear-gradient(135deg,#6C63FF,#5A4FE0)',border:'none',color:'#fff',fontSize:14,fontWeight:700,cursor:'pointer'}}>Enregistrer</button>
+              </div>
+
+              {/* Vérifications */}
+              <div style={card}>
+                {secTitle('Vérifications')}
+                {verifs.map((v,i,a)=>{
+                  const done=pc[v.key];
+                  return (
+                  <div key={v.key} onClick={!done?()=>handleComplete(v.key):undefined} style={{display:'flex',alignItems:'center',gap:12,padding:'13px 0',borderBottom:i<a.length-1?'1px solid var(--bg)':'none',cursor:done?'default':'pointer'}}>
+                    <div style={{width:38,height:38,borderRadius:11,background:done?'#d1fae5':'var(--bg)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,flexShrink:0}}>{done?'✅':v.icon}</div>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{fontSize:14,fontWeight:600,color:'var(--dk)'}}>{v.label}</div>
+                      <div style={{fontSize:12,color:'var(--g)',marginTop:1}}>{v.desc}</div>
+                    </div>
+                    {done
+                      ? <span style={{fontSize:11,fontWeight:700,color:'#10b981',background:'#d1fae5',padding:'4px 10px',borderRadius:20,flexShrink:0}}>Vérifié</span>
+                      : <span style={{fontSize:12.5,fontWeight:700,color:'var(--p)',flexShrink:0}}>Vérifier →</span>}
+                  </div>
+                )})}
+              </div>
+
+              {/* Notifications */}
+              <div style={card}>
+                {secTitle('Notifications')}
+                {[{key:'notifEmail',icon:'📧',title:'Emails',sub:'Réservations et messages'},
+                  {key:'notifPush',icon:'📲',title:'Notifications push',sub:'Alertes en temps réel'}].map((f,i,a)=>(
+                  <div key={f.key} style={{display:'flex',alignItems:'center',gap:12,padding:'12px 0',borderBottom:i<a.length-1?'1px solid var(--bg)':'none'}}>
+                    <span style={{fontSize:18,width:24,textAlign:'center',flexShrink:0}}>{f.icon}</span>
+                    <div style={{flex:1}}>
+                      <div style={{fontSize:14,fontWeight:600,color:'var(--dk)'}}>{f.title}</div>
+                      <div style={{fontSize:12,color:'var(--g)',marginTop:1}}>{f.sub}</div>
+                    </div>
+                    <div style={S.toggle(profileData[f.key])} onClick={()=>setProfileData({...profileData,[f.key]:!profileData[f.key]})}><div style={S.toggleKnob(profileData[f.key])}/></div>
+                  </div>
+                ))}
+              </div>
+
+              {user.isPro && (
+                <div style={card}>
+                  {secTitle('Compte professionnel')}
+                  {[{icon:'🏢',label:'Entreprise',val:user.company||'—'},{icon:'🔢',label:'SIRET',val:user.siret||'—'},{icon:'💶',label:'N° TVA',val:user.tva||'—'}].map((f,i,a)=>(
+                    <div key={f.label} style={{display:'flex',alignItems:'center',gap:12,padding:'11px 0',borderBottom:i<a.length-1?'1px solid var(--bg)':'none'}}>
+                      <span style={{fontSize:18,width:24,textAlign:'center',flexShrink:0}}>{f.icon}</span>
+                      <div style={{flex:1,minWidth:0}}><div style={{fontSize:10,fontWeight:700,color:'var(--gl)',textTransform:'uppercase',letterSpacing:'.05em'}}>{f.label}</div><div style={{fontSize:14,color:'var(--dk)',fontWeight:500}}>{f.val}</div></div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <button onClick={()=>{if(window.auth)window.auth.signOut().catch(()=>{});dispatch({type:"LOGOUT"});setPage('home');}} style={{width:'100%',padding:'14px',borderRadius:14,background:'var(--w)',border:'1.5px solid #fecaca',color:'#ef4444',fontSize:14,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:8}}>🚪 Se déconnecter</button>
             </div>
-
-            {/* ── Sauvegarder ── */}
-            <button style={{width:'100%',padding:'16px',borderRadius:16,background:'linear-gradient(135deg,#6C63FF,#8b5cf6)',border:'none',color:'white',fontSize:15,fontWeight:700,cursor:'pointer',boxShadow:'0 4px 20px rgba(108,99,255,0.35)',marginBottom:12,animation:'fadeSlideUp 0.4s cubic-bezier(0.34,1.56,0.64,1) both',animationDelay:'0.28s'}}
-              onClick={()=>dispatch({type:"UPD_PROF",payload:{name:profileData.name,email:profileData.email,bio:profileData.bio,phone:profileData.phone}})}>
-              Sauvegarder les modifications
-            </button>
-
-            {/* ── Déconnexion ── */}
-            <button style={{width:'100%',padding:'14px',borderRadius:16,background:'var(--w)',border:'1.5px solid #fecaca',color:'#ef4444',fontSize:14,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:8,animation:'fadeSlideUp 0.4s cubic-bezier(0.34,1.56,0.64,1) both',animationDelay:'0.32s'}}
-              onClick={()=>{dispatch({type:"LOGOUT"});setPage('home');}}>
-              🚪 Se déconnecter
-            </button>
-
-          </div>
-        )}
+          );
+        })()}
 
       </div>
 
@@ -1308,6 +1231,8 @@ function Profile({state, dispatch, setPage, setSelected, initTab, onEditItem}) {
       </div>
     )}
 
+        </main>
+      </div>
     </div>
   );
 }

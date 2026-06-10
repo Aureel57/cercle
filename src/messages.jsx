@@ -1,6 +1,8 @@
-function Messages({state,dispatch,cid,setCid,setPage}){
+function Messages({state,dispatch,cid,setCid,setPage,onOpenItem}){
   const[msg,setMsg]=useState("");
   const[searchQ,setSearchQ]=useState("");
+  const allItemsM=[...(state.items||[]),...(state.proItems||[]),...(state.userItems||[]),...(state.cloudItems||[])];
+  const openAnnonce=it=>{const found=allItemsM.find(x=>x.id===it);if(found&&onOpenItem)onOpenItem(found);};
   const ref=useRef(null);
   const inputRef=useRef(null);
   const[typing,setTyping]=useState(false);
@@ -33,12 +35,16 @@ function Messages({state,dispatch,cid,setCid,setPage}){
     dispatch({type:"MSG",payload:{id:uid(),cid,from:state.user.id,fromName:state.user.name||'',fromAvatar:state.user.avatar||'😊',to:other,toName:ac.otherName||'',toAvatar:ac.otherAvatar||'😊',itemId:ac.itemId||'',itemTitle:ac.itemTitle||'',text:msg.trim(),timestamp:new Date()}});
     setMsg("");
     if(inputRef.current)inputRef.current.focus();
-    setTyping(true);
-    setTimeout(()=>{
-      setTyping(false);
-      const reps=["Bonjour ! Oui c'est disponible 😊","Bien sûr, on s'arrange.","Super, quand voulez-vous le récupérer ?","Envoyez-moi une demande !","Merci pour votre intérêt !"];
-      dispatch({type:"MSG",payload:{id:uid(),cid,from:other,to:state.user.id,text:reps[Math.floor(Math.random()*reps.length)],timestamp:new Date()}});
-    },1200+Math.random()*2e3);
+    // Réponse simulée : uniquement pour les profils de démonstration (u1…u6, p1…p4).
+    // Les vrais utilisateurs répondent via Firestore — pas de faux messages en leur nom.
+    if(/^[up]\d+$/.test(String(other||''))){
+      setTyping(true);
+      setTimeout(()=>{
+        setTyping(false);
+        const reps=["Bonjour ! Oui c'est disponible 😊","Bien sûr, on s'arrange.","Super, quand voulez-vous le récupérer ?","Envoyez-moi une demande !","Merci pour votre intérêt !"];
+        dispatch({type:"MSG",payload:{id:uid(),cid,from:other,to:state.user.id,text:reps[Math.floor(Math.random()*reps.length)],timestamp:new Date(),_fromCloud:true}});
+      },1200+Math.random()*2e3);
+    }
   };
 
   const getO=cv=>{
@@ -52,20 +58,28 @@ function Messages({state,dispatch,cid,setCid,setPage}){
 
   const openConv=id=>{setCid(id);setShowList(false);};
   const backToList=()=>{setCid(null);setShowList(true);};
+  const fileRef=useRef(null);
+  const onAttach=e=>{
+    const f=e.target.files&&e.target.files[0];if(!f||!ac)return;
+    const other=ac.parts.find(p=>p!==state.user.id);
+    dispatch({type:"MSG",payload:{id:uid(),cid,from:state.user.id,fromName:state.user.name||'',fromAvatar:state.user.avatar||'😊',to:other,toName:ac.otherName||'',toAvatar:ac.otherAvatar||'😊',itemId:ac.itemId||'',itemTitle:ac.itemTitle||'',text:`📎 ${f.name}`,timestamp:new Date()}});
+    e.target.value="";
+  };
 
   const o=ac?getO(ac):null;
+
+  const totalUnread=convs.reduce((s,c)=>s+(unreadCount(c)>0?1:0),0);
 
   return <div className="msg-page">
     {/* Header */}
     <div className="msg-header">
       {ac&&<button className="chat-back-btn" onClick={backToList}><I.Back/></button>}
-      {!ac&&<button onClick={()=>setPage("home")} style={{background:'none',border:'none',padding:'4px',cursor:'pointer',display:'flex',alignItems:'center',color:'var(--dk)',borderRadius:10}}><I.Back/></button>}
-      <div style={{flex:1}}>
-        <div style={{fontSize:17,fontWeight:800,fontFamily:'var(--fd)',color:'var(--dk)'}}>{ac?o.name:'Messages'}</div>
-        {ac&&<div style={{fontSize:12,color:'#22c55e',fontWeight:600}}>● En ligne</div>}
-        {!ac&&<div style={{fontSize:12,color:'var(--g)'}}>{convs.length} conversation{convs.length!==1?'s':''}</div>}
-      </div>
-      {ac&&<div style={{width:38,height:38,borderRadius:'50%',background:'linear-gradient(135deg,#e0dbff,#c7f0ee)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:18}}>{o.avatar}</div>}
+      <a className="msg-logo" onClick={()=>setPage("home")}>
+        <img src={LOGO} alt="Cercle" style={{height:38,width:38,objectFit:'contain'}}/>
+        <span className="lt">Cercle</span>
+      </a>
+      <div className="msg-title">💬 Messages{totalUnread>0&&<span className="msg-title-badge">{totalUnread}</span>}</div>
+      <div className="msg-header-av">{state.user?.avatar||'😊'}</div>
     </div>
 
     {/* Body */}
@@ -89,7 +103,7 @@ function Messages({state,dispatch,cid,setCid,setPage}){
               </div>
               <div className="conv-info">
                 <div className="conv-name">{o2.name}</div>
-                {c.itemTitle&&<div style={{fontSize:11,color:'var(--p)',fontWeight:600,marginBottom:1}}>📦 {c.itemTitle}</div>}
+                {c.itemTitle&&<div className="conv-item-link">📦 {c.itemTitle}</div>}
                 <div className="conv-last">{c.last||'Démarrer la conversation'}</div>
               </div>
               <div className="conv-meta">
@@ -110,11 +124,15 @@ function Messages({state,dispatch,cid,setCid,setPage}){
         </div>:<>
           {/* Chat header */}
           <div className="chat-header">
-            <div style={{width:40,height:40,borderRadius:'50%',background:'linear-gradient(135deg,#e0dbff,#c7f0ee)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,flexShrink:0}}>{o.avatar}</div>
-            <div style={{flex:1}}>
+            <div className="chat-header-av">{o.avatar}<span className="conv-av-online"/></div>
+            <div style={{flex:1,minWidth:0}}>
               <div className="chat-header-name">{o.name}</div>
-              {ac.itemTitle&&<div className="chat-header-sub">📦 {ac.itemTitle}</div>}
+              <div className="chat-header-sub">
+                {ac.itemTitle&&<span style={{color:'var(--p)',fontWeight:600}}>📦 {ac.itemTitle}</span>}
+                <span style={{color:'#16A34A',fontWeight:600}}>● En ligne</span>
+              </div>
             </div>
+            {ac.itemId&&<button className="chat-voir" onClick={()=>openAnnonce(ac.itemId)}>Voir l'annonce →</button>}
           </div>
 
           {/* Messages */}
@@ -140,6 +158,8 @@ function Messages({state,dispatch,cid,setCid,setPage}){
 
           {/* Input */}
           <div className="chat-input-area">
+            <input ref={fileRef} type="file" style={{display:'none'}} onChange={onAttach}/>
+            <button className="chat-attach" title="Joindre un fichier" onClick={()=>fileRef.current&&fileRef.current.click()}>📎</button>
             <textarea
               ref={inputRef}
               className="chat-input"

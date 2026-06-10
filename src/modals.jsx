@@ -1,5 +1,7 @@
 function CGUModal({onClose}){
-  return <div className="bk" onClick={onClose}><div className="md" onClick={e=>e.stopPropagation()} style={{maxWidth:560}}>
+  const mdRef=useRef(null);
+  useEffect(()=>{const gsap=G();if(!gsap||!mdRef.current)return;gsap.from(mdRef.current,{autoAlpha:0,scale:.94,y:16,duration:.25,ease:'back.out(1.4)',clearProps:'opacity,visibility,transform'});},[]); 
+    return <div className="bk" onClick={onClose}><div className="md" ref={mdRef} onClick={e=>e.stopPropagation()} style={{maxWidth:560}}>
     <div className="mh"><button className="mx" onClick={onClose}><I.X/></button><h2>Conditions Générales d'Utilisation</h2></div>
     <div className="mb" style={{overflowY:'auto',maxHeight:'65vh',fontSize:13,lineHeight:1.75,color:'var(--tx)'}}>
       <p style={{color:'var(--g)',fontSize:11,marginBottom:16}}>Dernière mise à jour : 28 avril 2026</p>
@@ -23,7 +25,9 @@ function CGUModal({onClose}){
 }
 
 function PrivacyModal({onClose}){
-  return <div className="bk" onClick={onClose}><div className="md" onClick={e=>e.stopPropagation()} style={{maxWidth:560}}>
+  const mdRef=useRef(null);
+  useEffect(()=>{const gsap=G();if(!gsap||!mdRef.current)return;gsap.from(mdRef.current,{autoAlpha:0,scale:.94,y:16,duration:.25,ease:'back.out(1.4)',clearProps:'opacity,visibility,transform'});},[]);
+  return <div className="bk" onClick={onClose}><div className="md" ref={mdRef} onClick={e=>e.stopPropagation()} style={{maxWidth:560}}>
     <div className="mh"><button className="mx" onClick={onClose}><I.X/></button><h2>Politique de Confidentialité</h2></div>
     <div className="mb" style={{overflowY:'auto',maxHeight:'65vh',fontSize:13,lineHeight:1.75,color:'var(--tx)'}}>
       <p style={{color:'var(--g)',fontSize:11,marginBottom:16}}>Dernière mise à jour : 28 avril 2026 — Conforme RGPD</p>
@@ -44,7 +48,7 @@ function PrivacyModal({onClose}){
   </div></div>
 }
 
-function AuthModal({onClose,dispatch,mode:im}){
+function AuthModal({onClose,dispatch,mode:im,onRegisterDone}){
   const[mode,setMode]=useState(im||"login");const[step,setStep]=useState(0);const[acctType,setAcctType]=useState("perso");
   const[f,setF]=useState({firstName:"",lastName:"",dobDay:"",dobMonth:"",dobYear:"",email:"",password:"",city:"",address:"",postalCode:"",phone:"",bio:"",company:"",siret:"",sector:"",tva:"",website:""});
   const[avatarPreview,setAvatarPreview]=useState(null);
@@ -52,6 +56,8 @@ function AuthModal({onClose,dispatch,mode:im}){
   const[cguOk,setCguOk]=useState(false);const[privacyOk,setPrivacyOk]=useState(false);const[marketingOk,setMarketingOk]=useState(false);
   const[showCGU,setShowCGU]=useState(false);const[showPrivacy,setShowPrivacy]=useState(false);
   const[err,setErr]=useState("");const[loading,setLoading]=useState("");
+  const mdRef=useRef(null);
+  useEffect(()=>{const gsap=G();if(!gsap||!mdRef.current)return;gsap.from(mdRef.current,{autoAlpha:0,scale:.94,y:16,duration:.25,ease:'back.out(1.4)',clearProps:'opacity,visibility,transform'});},[]);
   const u=(k,v)=>setF(p=>({...p,[k]:v}));
   const go=()=>{
     if(mode==="login"){
@@ -78,7 +84,7 @@ function AuthModal({onClose,dispatch,mode:im}){
           const uid=cred.user.uid;
           const loadProfile=window.db
             ?window.db.collection('users').doc(uid).get().then(doc=>{
-                if(doc&&doc.exists)return doc.data();
+                if(doc&&doc.exists)return{...profileFromFirebaseUser(cred.user),...doc.data(),id:uid};
                 const ls=localStorage.getItem('cercle_user_'+f.email.toLowerCase())||localStorage.getItem('cercle_user_'+f.email);
                 if(ls){const{_pwd,...p}=JSON.parse(ls);return{...p,id:uid};}
                 return{id:uid,email:cred.user.email,name:cred.user.email.split('@')[0],avatar:'😊',verified:false,since:new Date().getFullYear(),rating:0,rentals:0,responseTime:'~1h',isPro:false};
@@ -113,6 +119,18 @@ function AuthModal({onClose,dispatch,mode:im}){
             setErr("Pas de connexion internet. Réessaie.");
           }else if(e.code==="auth/too-many-requests"){
             setErr("Trop de tentatives. Réessaie dans quelques minutes.");
+          }else if(String(e.code||"").indexOf("api-key")>=0||e.code==="auth/invalid-api-key"){
+            // Clé API Firebase HS → bascule en mode local (localStorage)
+            window.auth=null;window.db=null;
+            try{
+              const saved=localStorage.getItem('cercle_user_'+f.email.toLowerCase())||localStorage.getItem('cercle_user_'+f.email);
+              if(saved){
+                const u2=JSON.parse(saved);
+                if(u2._pwd===f.password){const{_pwd,...profile}=u2;dispatch({type:'LOGIN',payload:profile});onClose();return;}
+                setErr("Mot de passe incorrect");return;
+              }
+            }catch(le){}
+            setErr("Aucun compte trouvé avec cet email. Inscris-toi d'abord.");
           }else{setErr("Erreur de connexion ("+e.code+")");}
         });
     }else{
@@ -129,13 +147,19 @@ function AuthModal({onClose,dispatch,mode:im}){
               const u={...userData,id:cred.user.uid};
               if(window.db)window.db.collection('users').doc(cred.user.uid).set(u).catch(()=>{});
               try{localStorage.setItem('cercle_user_'+f.email,JSON.stringify(u));}catch(e){}
-              dispatch({type:"LOGIN",payload:u});setLoading("");onClose();
+              dispatch({type:"LOGIN",payload:u});setLoading("");(onRegisterDone||onClose)();
             })
             .catch(e=>{
               setLoading("");
               if(e.code==="auth/email-already-in-use")setErr("Cet email est déjà utilisé. Connecte-toi.");
               else if(e.code==="auth/weak-password")setErr("Mot de passe trop court (6 caractères minimum)");
-              else setErr("Erreur lors de la création du compte");
+              else if(String(e.code||"").indexOf("api-key")>=0||e.code==="auth/invalid-api-key"){
+                window.auth=null;window.db=null;
+                const newUser={...userData,id:uid()};
+                try{localStorage.setItem('cercle_user_'+f.email.toLowerCase(),JSON.stringify({...newUser,_pwd:f.password}));}catch(e2){}
+                dispatch({type:"LOGIN",payload:newUser});(onRegisterDone||onClose)();
+              }
+              else setErr("Erreur lors de la création du compte ("+(e.code||"inconnue")+")");
             });
         }else{
           // Fallback localStorage : vérifier si email déjà utilisé
@@ -143,7 +167,7 @@ function AuthModal({onClose,dispatch,mode:im}){
           if(existing){setErr("Cet email est déjà utilisé. Connecte-toi.");return;}
           const newUser={...userData,id:uid()};
           try{localStorage.setItem('cercle_user_'+f.email.toLowerCase(),JSON.stringify({...newUser,_pwd:f.password}));}catch(e){}
-          dispatch({type:"LOGIN",payload:newUser});onClose();
+          dispatch({type:"LOGIN",payload:newUser});(onRegisterDone||onClose)();
         }
       }else{
         if(!f.company||!f.siret||!f.email||!f.password){setErr("Remplissez les champs obligatoires");return}
@@ -155,48 +179,67 @@ function AuthModal({onClose,dispatch,mode:im}){
               const u={...userData,id:cred.user.uid};
               if(window.db)window.db.collection('users').doc(cred.user.uid).set(u).catch(()=>{});
               try{localStorage.setItem('cercle_user_'+f.email,JSON.stringify(u));}catch(e){}
-              dispatch({type:"LOGIN",payload:u});setLoading("");onClose();
+              dispatch({type:"LOGIN",payload:u});setLoading("");(onRegisterDone||onClose)();
             })
             .catch(e=>{
               setLoading("");
               if(e.code==="auth/email-already-in-use")setErr("Cet email est déjà utilisé. Connecte-toi.");
-              else setErr("Erreur lors de la création du compte");
+              else if(String(e.code||"").indexOf("api-key")>=0||e.code==="auth/invalid-api-key"){
+                window.auth=null;window.db=null;
+                const newUser={...userData,id:uid()};
+                try{localStorage.setItem('cercle_user_'+f.email.toLowerCase(),JSON.stringify({...newUser,_pwd:f.password}));}catch(e2){}
+                dispatch({type:"LOGIN",payload:newUser});(onRegisterDone||onClose)();
+              }
+              else setErr("Erreur lors de la création du compte ("+(e.code||"inconnue")+")");
             });
         }else{
           const existing=localStorage.getItem('cercle_user_'+f.email.toLowerCase());
           if(existing){setErr("Cet email est déjà utilisé. Connecte-toi.");return;}
           const newUser={...userData,id:uid()};
           try{localStorage.setItem('cercle_user_'+f.email.toLowerCase(),JSON.stringify({...newUser,_pwd:f.password}));}catch(e){}
-          dispatch({type:"LOGIN",payload:newUser});onClose();
+          dispatch({type:"LOGIN",payload:newUser});(onRegisterDone||onClose)();
         }
       }
     }
   };
-  const socialLogin=(provider,name,avatar)=>{
-    setLoading(provider);
-    setTimeout(()=>{
-      dispatch({type:"LOGIN",payload:{id:uid(),name,email:name.toLowerCase().replace(/ /g,".")+"@"+provider+".com",avatar,verified:true,since:2026,bio:"Connecté via "+provider,location:"Paris",rating:0,rentals:0,responseTime:"~30 min",isPro:false}});
-      onClose();
-    },800);
+  const profileFromFirebaseUser=(u)=>({id:u.uid,name:u.displayName||(u.email?u.email.split('@')[0]:"Utilisateur"),email:u.email||"",avatar:"😊",avatarUrl:u.photoURL||null,verified:!!u.emailVerified,since:new Date().getFullYear(),bio:"",location:"",rating:0,rentals:0,responseTime:"~1h",isPro:false});
+  const socialLogin=(provider)=>{
+    if(!window.auth||!window.firebase){setErr("Connexion "+provider+" momentanément indisponible. Utilisez votre email.");return;}
+    setLoading(provider);setErr("");
+    const p=new window.firebase.auth.GoogleAuthProvider();
+    window.auth.signInWithPopup(p)
+      .then(cred=>{
+        const fu=cred.user;const base=profileFromFirebaseUser(fu);
+        const loadProfile=window.db
+          ?window.db.collection('users').doc(fu.uid).get()
+            .then(doc=>{
+              if(doc&&doc.exists)return{...base,...doc.data(),id:fu.uid};
+              window.db.collection('users').doc(fu.uid).set(base).catch(()=>{});
+              return base;
+            }).catch(()=>base)
+          :Promise.resolve(base);
+        return loadProfile.then(profile=>{dispatch({type:"LOGIN",payload:profile});setLoading("");onClose();});
+      })
+      .catch(e=>{
+        setLoading("");
+        const code=String(e&&e.code||"");
+        if(code==="auth/popup-closed-by-user"||code==="auth/cancelled-popup-request"||code==="auth/user-cancelled")return;
+        if(code==="auth/operation-not-allowed")setErr("La connexion Google n'est pas encore activée. Utilisez votre email.");
+        else if(code==="auth/popup-blocked")setErr("Popup bloquée par le navigateur. Autorisez les popups ou utilisez votre email.");
+        else if(code.indexOf("api-key")>=0||code==="auth/invalid-api-key")setErr("Service momentanément indisponible. Utilisez votre email.");
+        else setErr("Échec de la connexion Google. Réessayez ou utilisez votre email.");
+      });
   };
   const sBtn={width:"100%",display:"flex",alignItems:"center",justifyContent:"center",gap:10,padding:"11px 16px",borderRadius:10,fontSize:13,fontWeight:600,border:"1.5px solid var(--bd)",background:"var(--w)",color:"var(--dk)",marginBottom:8,transition:"all .15s",cursor:"pointer",position:"relative"};
-  return <><div className="bk" onClick={onClose}><div className="md" onClick={e=>e.stopPropagation()} style={{maxWidth:440}}>
+  return <><div className="bk" onClick={onClose}><div className="md" ref={mdRef} onClick={e=>e.stopPropagation()} style={{maxWidth:440}}>
     <div className="mh"><button className="mx" onClick={onClose}><I.X/></button><h2>{mode==="login"?"Connexion":step===0?"Type de compte":"Inscription"}</h2></div>
     <div className="mb">
       {mode==="login"?<>
         <div style={{textAlign:"center",fontSize:36,marginBottom:10}}>👋</div>
         <p style={{textAlign:"center",fontSize:13,color:"var(--g)",marginBottom:16}}>Bon retour sur Cercle !</p>
-        <button style={{...sBtn,background:loading==="Google"?"var(--bgw)":undefined}} onClick={()=>socialLogin("Google","Marie Leclerc","👩‍🦰")}>
+        <button style={{...sBtn,background:loading==="Google"?"var(--bgw)":undefined,opacity:loading&&loading!=="Google"?.6:1}} disabled={!!loading} onClick={()=>socialLogin("Google")}>
           <svg width="18" height="18" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
           {loading==="Google"?"Connexion...":"Continuer avec Google"}
-        </button>
-        <button style={{...sBtn,background:loading==="Apple"?"#333":"#000",color:"#fff",borderColor:"#000"}} onClick={()=>socialLogin("Apple","Thomas Durand","👨")}>
-          <svg width="16" height="18" viewBox="0 0 17 20" fill="white"><path d="M13.34 10.05c-.02-2.14 1.75-3.17 1.83-3.22-1-1.46-2.55-1.66-3.1-1.68-1.32-.13-2.57.77-3.24.77-.67 0-1.7-.75-2.8-.73A4.13 4.13 0 0 0 2.54 7.6c-1.49 2.58-.38 6.4 1.07 8.49.71 1.02 1.56 2.17 2.67 2.13 1.07-.04 1.47-.69 2.77-.69 1.29 0 1.66.69 2.78.67 1.15-.02 1.88-1.05 2.58-2.08.81-1.19 1.15-2.34 1.17-2.4-.03-.01-2.24-.86-2.26-3.41zM11.24 3.9c.59-.71 .99-1.7.88-2.69-.85.03-1.88.57-2.49 1.27-.55.63-1.03 1.64-.9 2.6.95.08 1.92-.48 2.51-1.18z"/></svg>
-          {loading==="Apple"?"Connexion...":"Continuer avec Apple"}
-        </button>
-        <button style={{...sBtn,background:loading==="Facebook"?"#1877F2":"var(--w)",color:loading==="Facebook"?"#fff":"var(--dk)",borderColor:loading==="Facebook"?"#1877F2":"var(--bd)"}} onClick={()=>socialLogin("Facebook","Julie Martin","👩")}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="#1877F2"><path d="M24 12.07C24 5.41 18.63 0 12 0S0 5.41 0 12.07C0 18.1 4.39 23.1 10.13 24v-8.44H7.08v-3.49h3.04V9.41c0-3.02 1.79-4.69 4.53-4.69 1.31 0 2.68.24 2.68.24v2.97h-1.51c-1.49 0-1.95.93-1.95 1.87v2.26h3.32l-.53 3.49h-2.8V24C19.61 23.1 24 18.1 24 12.07z"/></svg>
-          {loading==="Facebook"?"Connexion...":"Continuer avec Facebook"}
         </button>
         <div style={{display:"flex",alignItems:"center",gap:12,margin:"14px 0"}}><div style={{flex:1,height:1,background:"var(--bd)"}}/><span style={{fontSize:11,color:"var(--gl)",fontWeight:600}}>OU</span><div style={{flex:1,height:1,background:"var(--bd)"}}/></div>
         <div className="fg"><label>Email</label><input type="email" value={f.email} onChange={e=>u("email",e.target.value)} placeholder="jean@email.com"/></div>
@@ -346,6 +389,8 @@ function Onboarding({onClose}){
     {icon:"🛡️",title:"Louer en toute sécurité",desc:"Paiement sécurisé SSL, caution automatique et protection jusqu'à 2 000 €. Vous êtes protégé à chaque location."},
   ];
   const s=steps[step];
+  const mdRef=useRef(null);
+  useEffect(()=>{const gsap=G();if(!gsap||!mdRef.current)return;gsap.from(mdRef.current,{autoAlpha:0,scale:.94,y:16,duration:.25,ease:'back.out(1.4)',clearProps:'opacity,visibility,transform'});},[]);
   return <div className="bk" style={{zIndex:600}} onClick={onClose}>
     <div className="md" style={{maxWidth:440,textAlign:"center"}} onClick={e=>e.stopPropagation()}>
       <div style={{padding:"36px 28px 12px"}} className="ob-step" key={step}>
