@@ -1,0 +1,15 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Annonces partagées de la v2 « Quartier Libre »
+    match /v2_listings/{doc} {
+      allow read: if true;                       // tout le monde voit les annonces
+      allow create: if request.auth != null;     // seul un membre connecté publie
+      allow update, delete: if request.auth != null
+        && request.auth.uid == resource.data.uid; // chacun gère ses propres annonces
+    }
+
+    // ⚠️ Laissez ci-dessous vos règles existantes du site v1 intactes.
+  }
+}
