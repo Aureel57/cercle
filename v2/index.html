@@ -19,6 +19,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-functions-compat.js"></script>
 <script>
 /* Firebase — projet cercle-92d7c (le même que le site v1). Clé web publique. */
 window.__fbOK=false;
@@ -505,6 +506,16 @@ const fbUserToUser=fu=>({uid:fu.uid,name:fu.displayName||(fu.email||"Voisin").sp
 const FB_ERR={"auth/invalid-credential":"Email ou mot de passe incorrect.","auth/wrong-password":"Email ou mot de passe incorrect.","auth/user-not-found":"Aucun compte avec cet email — rejoignez le cercle !","auth/email-already-in-use":"Un compte existe déjà avec cet email — connectez-vous.","auth/weak-password":"Mot de passe trop court (6 caractères minimum).","auth/invalid-email":"Cet email ne semble pas valide.","auth/too-many-requests":"Trop d'essais — réessayez dans quelques minutes.","auth/popup-closed-by-user":"Fenêtre Google fermée avant la fin.","auth/popup-blocked":"Popup bloquée par le navigateur — autorisez les popups."};
 const fbMsg=e=>FB_ERR[e&&e.code]||"Petit souci de connexion — réessayez.";
 const VERIF_SETTINGS={url:"https://aureel57.github.io/cercle/v2/",handleCodeInApp:false};
+/* Envoie l'email de vérif : email DA via Cloud Function si déployée, sinon email Firebase standard */
+async function sendVerif(user,name,email){
+  try{
+    if(window.__fbOK&&firebase.functions){
+      await firebase.functions().httpsCallable("sendVerifEmail")({email,name});
+      return;
+    }
+  }catch(e){/* fonction non déployée / erreur → repli */}
+  try{await user.sendEmailVerification(VERIF_SETTINGS)}catch(_){}
+}
 const NOTIFS0=[
  {id:1,k:"resa",txt:"Léa a accepté votre demande — la perceuse vous attend samedi.",when:"il y a 2 h",unread:true},
  {id:2,k:"msg",txt:"Nouveau message de Maxime : « Le casque est dans la sacoche avant. »",when:"il y a 5 h",unread:true},
@@ -1184,7 +1195,7 @@ function Auth({onDone,toast}){
       try{
         const res=await fbAuth().createUserWithEmailAndPassword(email,pw);
         try{await res.user.updateProfile({displayName:name})}catch(_){}
-        try{await res.user.sendEmailVerification(VERIF_SETTINGS)}catch(_){}
+        await sendVerif(res.user,name,email);
         setForm({name,email,phone:"",quartier:"Metz Sablon"});setStep(9);
       }catch(err){toast(fbMsg(err))}
       setBusy(false);
@@ -1207,7 +1218,7 @@ function Auth({onDone,toast}){
     if(FB){const em=prompt("Votre email :");if(em){try{await fbAuth().sendPasswordResetEmail(em);toast("Email de réinitialisation envoyé à "+em)}catch(e){toast(fbMsg(e))}}}
     else toast("Email de réinitialisation envoyé (démo)");
   };
-  const resendVerif=async()=>{const u=fbAuth()&&fbAuth().currentUser;if(u){try{await u.sendEmailVerification(VERIF_SETTINGS);toast("Email de vérification renvoyé")}catch(e){toast(fbMsg(e))}}};
+  const resendVerif=async()=>{const u=fbAuth()&&fbAuth().currentUser;if(u){try{await sendVerif(u,u.displayName||"voisin",u.email);toast("Email de vérification renvoyé")}catch(e){toast(fbMsg(e))}}};
   const finishFb=()=>{const u=fbAuth()&&fbAuth().currentUser;onDone(u?fbUserToUser(u):{...form,verified:false,phoneVerified:false});};
   const checkEmail=c=>{if(c!==code){toast("Code incorrect — regardez l'encart jaune");return}setStep(2);};
   const sendSms=e=>{e.preventDefault();const f=new FormData(e.target);

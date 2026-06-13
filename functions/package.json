@@ -1,0 +1,12 @@
+{
+  "name": "cercle-functions",
+  "description": "Cloud Functions Cercle — email de vérification aux couleurs de la DA",
+  "main": "index.js",
+  "engines": { "node": "20" },
+  "dependencies": {
+    "firebase-admin": "^12.6.0",
+    "firebase-functions": "^4.9.0",
+    "nodemailer": "^6.9.14"
+  },
+  "private": true
+}
