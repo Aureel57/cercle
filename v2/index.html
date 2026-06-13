@@ -16,6 +16,33 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script>
+/* Firebase — projet cercle-92d7c (le même que le site v1). Clé web publique. */
+window.__fbOK=false;
+try{
+  firebase.initializeApp({
+    apiKey:"AIzaSyDo-VdCQ70MVU-xo9-VLVeGlOjqHhPOv5M",
+    authDomain:"cercle-92d7c.firebaseapp.com",
+    projectId:"cercle-92d7c",
+    storageBucket:"cercle-92d7c.firebasestorage.app",
+    messagingSenderId:"691327151080",
+    appId:"1:691327151080:web:de513d38f8c75a4801525d"
+  });
+  firebase.auth();firebase.firestore();
+  window.__fbOK=true;
+  /* Sonde : clé morte → mode démo local, sans crash */
+  firebase.auth().fetchSignInMethodsForEmail("healthcheck@cercle.app").catch(function(e){
+    var c=String(e&&e.code||"");
+    if(c.indexOf("api-key")>=0||c==="auth/invalid-api-key"){
+      console.warn("[Cercle] Clé Firebase invalide — mode démo local.");
+      window.__fbOK=false;
+    }
+  });
+}catch(e){window.__fbOK=false}
+</script>
 <style>
 :root{
   --bg:#F7F3EA;--bgw:#F0EADB;--w:#FFFFFF;
@@ -470,6 +497,12 @@ const LSKEY="cercle_v2";
 const loadLS=()=>{try{return JSON.parse(localStorage.getItem(LSKEY))||{}}catch(e){return{}}};
 const saveLS=o=>{try{localStorage.setItem(LSKEY,JSON.stringify(o))}catch(e){}};
 const AUTO_REPLIES=["Pas de souci, à bientôt !","Ça marche, je vous le mets de côté.","Parfait — remise en main propre devant la boulangerie ?","Top, à tout à l'heure !","Avec plaisir, c'est ça le cercle."];
+/* Firebase helpers */
+const fbAuth=()=>{try{return window.__fbOK?firebase.auth():null}catch(e){return null}};
+const fbDb=()=>{try{return window.__fbOK?firebase.firestore():null}catch(e){return null}};
+const fbUserToUser=fu=>({uid:fu.uid,name:fu.displayName||(fu.email||"Voisin").split("@")[0],email:fu.email||"",phone:fu.phoneNumber||"",quartier:"Metz Sablon",verified:!!fu.emailVerified,phoneVerified:!!fu.phoneNumber,photo:fu.photoURL||null});
+const FB_ERR={"auth/invalid-credential":"Email ou mot de passe incorrect.","auth/wrong-password":"Email ou mot de passe incorrect.","auth/user-not-found":"Aucun compte avec cet email — rejoignez le cercle !","auth/email-already-in-use":"Un compte existe déjà avec cet email — connectez-vous.","auth/weak-password":"Mot de passe trop court (6 caractères minimum).","auth/invalid-email":"Cet email ne semble pas valide.","auth/too-many-requests":"Trop d'essais — réessayez dans quelques minutes.","auth/popup-closed-by-user":"Fenêtre Google fermée avant la fin.","auth/popup-blocked":"Popup bloquée par le navigateur — autorisez les popups."};
+const fbMsg=e=>FB_ERR[e&&e.code]||"Petit souci de connexion — réessayez.";
 const NOTIFS0=[
  {id:1,k:"resa",txt:"Léa a accepté votre demande — la perceuse vous attend samedi.",when:"il y a 2 h",unread:true},
  {id:2,k:"msg",txt:"Nouveau message de Maxime : « Le casque est dans la sacoche avant. »",when:"il y a 5 h",unread:true},
@@ -1098,11 +1131,21 @@ function Legal({id}){
 /* ═══════════ INSCRIPTION / CONNEXION ═══════════ */
 const GIcon=()=><svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M23.5 12.27c0-.85-.08-1.66-.22-2.45H12v4.64h6.45a5.52 5.52 0 0 1-2.39 3.62v3h3.87c2.26-2.09 3.57-5.16 3.57-8.81z"/><path fill="#34A853" d="M12 24c3.24 0 5.96-1.07 7.93-2.91l-3.87-3a7.18 7.18 0 0 1-10.8-3.77H1.27v3.1A12 12 0 0 0 12 24z"/><path fill="#FBBC05" d="M5.26 14.32a7.2 7.2 0 0 1 0-4.62V6.6H1.27a12 12 0 0 0 0 10.8l3.99-3.08z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.43-3.43A11.97 11.97 0 0 0 1.27 6.6l3.99 3.1A7.17 7.17 0 0 1 12 4.75z"/></svg>;
 const AIcon=()=><svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.05 20.28c-.96.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8.88-.18 2.05-.86 3.46-.73 1.7.14 2.97.81 3.81 2.04-3.5 2.1-2.94 6.71.45 8.06-.64 1.67-1.47 2.32-2.8 2.8zM12.03 7.25c-.17-2.5 1.86-4.56 4.19-4.75.32 2.89-2.62 5.04-4.19 4.75z"/></svg>;
-function SocialBtns({onDone}){
-  const demo=prov=>onDone({name:"Noah",email:"noah@"+prov+".demo",phone:"",quartier:"Metz Sablon",verified:true,phoneVerified:false});
+function SocialBtns({onDone,toast}){
+  const google=async()=>{
+    const a=fbAuth();
+    if(!a){onDone({name:"Noah",email:"noah@google.demo",phone:"",quartier:"Metz Sablon",verified:true,phoneVerified:false});return}
+    try{const res=await a.signInWithPopup(new firebase.auth.GoogleAuthProvider());onDone(fbUserToUser(res.user));}
+    catch(e){if(e.code!=="auth/popup-closed-by-user"&&e.code!=="auth/cancelled-popup-request")toast(fbMsg(e));}
+  };
+  const apple=()=>{
+    const a=fbAuth();
+    if(!a){onDone({name:"Noah",email:"noah@apple.demo",phone:"",quartier:"Metz Sablon",verified:true,phoneVerified:false});return}
+    toast("Connexion Apple — à activer dans la console Firebase");
+  };
   return <div className="social-btns">
-    <button type="button" onClick={()=>demo("google")}><GIcon/>Continuer avec Google</button>
-    <button type="button" onClick={()=>demo("apple")}><AIcon/>Continuer avec Apple</button>
+    <button type="button" onClick={google}><GIcon/>Continuer avec Google</button>
+    <button type="button" onClick={apple}><AIcon/>Continuer avec Apple</button>
   </div>;
 }
 function CodeInput({onFull,autoFocus}){
@@ -1123,16 +1166,47 @@ function CodeInput({onFull,autoFocus}){
   </div>;
 }
 function Auth({onDone,toast}){
+  const FB=!!fbAuth();
   const[mode,setMode]=useState("signup");
   const[step,setStep]=useState(0);
   const[form,setForm]=useState({});
   const[code,setCode]=useState("");
   const[phoneSent,setPhoneSent]=useState(false);
   const[phoneOk,setPhoneOk]=useState(false);
+  const[busy,setBusy]=useState(false);
   const genCode=()=>String(Math.floor(100000+Math.random()*900000));
-  const start=e=>{e.preventDefault();const f=new FormData(e.target);
-    setForm({name:f.get("n"),email:f.get("e"),phone:"",quartier:"Metz Sablon"});
-    setCode(genCode());setStep(1);};
+  const start=async e=>{e.preventDefault();const f=new FormData(e.target);
+    const name=f.get("n"),email=f.get("e"),pw=f.get("p");
+    if(FB){
+      setBusy(true);
+      try{
+        const res=await fbAuth().createUserWithEmailAndPassword(email,pw);
+        try{await res.user.updateProfile({displayName:name})}catch(_){}
+        try{await res.user.sendEmailVerification()}catch(_){}
+        setForm({name,email,phone:"",quartier:"Metz Sablon"});setStep(9);
+      }catch(err){toast(fbMsg(err))}
+      setBusy(false);
+    }else{
+      setForm({name,email,phone:"",quartier:"Metz Sablon"});setCode(genCode());setStep(1);
+    }
+  };
+  const login=async e=>{e.preventDefault();const f=new FormData(e.target);
+    const email=f.get("e"),pw=f.get("p");
+    if(FB){
+      setBusy(true);
+      try{const res=await fbAuth().signInWithEmailAndPassword(email,pw);onDone(fbUserToUser(res.user));}
+      catch(err){toast(fbMsg(err))}
+      setBusy(false);
+    }else{
+      onDone({name:(email||"Voisin").split("@")[0],email,phone:"",quartier:"Metz Sablon",verified:true,phoneVerified:false});
+    }
+  };
+  const forgot=async()=>{
+    if(FB){const em=prompt("Votre email :");if(em){try{await fbAuth().sendPasswordResetEmail(em);toast("Email de réinitialisation envoyé à "+em)}catch(e){toast(fbMsg(e))}}}
+    else toast("Email de réinitialisation envoyé (démo)");
+  };
+  const resendVerif=async()=>{const u=fbAuth()&&fbAuth().currentUser;if(u){try{await u.sendEmailVerification();toast("Email de vérification renvoyé")}catch(e){toast(fbMsg(e))}}};
+  const finishFb=()=>{const u=fbAuth()&&fbAuth().currentUser;onDone(u?fbUserToUser(u):{...form,verified:false,phoneVerified:false});};
   const checkEmail=c=>{if(c!==code){toast("Code incorrect — regardez l'encart jaune");return}setStep(2);};
   const sendSms=e=>{e.preventDefault();const f=new FormData(e.target);
     setForm(o=>({...o,phone:f.get("ph")}));setCode(genCode());setPhoneSent(true);};
@@ -1142,39 +1216,45 @@ function Auth({onDone,toast}){
     <h1>Bon retour</h1>
     <p className="lead">Le quartier ne vous a pas oublié.</p>
     <div className="panel">
-      <SocialBtns onDone={onDone}/>
+      <SocialBtns onDone={onDone} toast={toast}/>
       <div className="or-sep">OU PAR EMAIL</div>
-      <form onSubmit={e=>{e.preventDefault();const f=new FormData(e.target);
-        onDone({name:(f.get("e")||"Voisin").split("@")[0],email:f.get("e"),phone:"",quartier:"Metz Sablon",verified:true,phoneVerified:false});}}>
+      <form onSubmit={login}>
         <div className="fg"><label>Email</label><input name="e" type="email" required autoFocus placeholder="vous@exemple.fr"/></div>
-        <div className="fg"><label>Mot de passe</label><input type="password" required placeholder="••••••••"/></div>
-        <button className="btn btn-p" style={{width:"100%",padding:13}}>Se connecter</button>
+        <div className="fg"><label>Mot de passe</label><input name="p" type="password" required placeholder="••••••••"/></div>
+        <button className="btn btn-p" disabled={busy} style={{width:"100%",padding:13,opacity:busy?.6:1}}>{busy?"Connexion…":"Se connecter"}</button>
       </form>
       <p style={{textAlign:"center",fontSize:13,color:"var(--g)",marginTop:12}}>
-        <a style={{color:"var(--g)",cursor:"pointer",textDecoration:"underline"}} onClick={()=>toast("Email de réinitialisation envoyé (démo)")}>Mot de passe oublié ?</a>
-        {" · "}Pas de compte ? <a style={{color:"var(--p)",fontWeight:700,cursor:"pointer"}} onClick={()=>setMode("signup")}>Rejoindre le cercle</a>
+        <a style={{color:"var(--g)",cursor:"pointer",textDecoration:"underline"}} onClick={forgot}>Mot de passe oublié ?</a>
+        {" · "}Pas de compte ? <a style={{color:"var(--p)",fontWeight:700,cursor:"pointer"}} onClick={()=>{setMode("signup");setStep(0)}}>Rejoindre le cercle</a>
       </p>
     </div>
   </div>;
   return <div className="page auth-wrap">
     <h1>Rejoindre le cercle</h1>
     <p className="lead">Un clic suffit — ou trois petits champs.</p>
-    <div className="stepper">
+    {!FB&&<div className="stepper">
       {["Compte","Email","Téléphone","Bienvenue"].map((l,i)=><React.Fragment key={l}>
         {i>0&&<div className={"sline"+(step>=i?" done":"")}/>}
         <div className={"step"+(step===i?" on":step>i?" done":"")}><span className="sdot">{step>i?"✓":i+1}</span>{l}{i===2&&<span style={{fontSize:8.5,color:"var(--gl)",textTransform:"none",letterSpacing:0}}>optionnel</span>}</div>
       </React.Fragment>)}
-    </div>
+    </div>}
     {step===0&&<div className="panel">
-      <SocialBtns onDone={onDone}/>
+      <SocialBtns onDone={onDone} toast={toast}/>
       <div className="or-sep">OU PAR EMAIL</div>
       <form onSubmit={start}>
         <div className="fg"><label>Prénom</label><input name="n" required autoFocus placeholder="Noah"/></div>
         <div className="fg"><label>Email</label><input name="e" type="email" required placeholder="vous@exemple.fr"/></div>
-        <div className="fg"><label>Mot de passe</label><input type="password" required minLength={6} placeholder="6 caractères minimum"/></div>
-        <button className="btn btn-ter" style={{width:"100%",padding:13}}>Continuer</button>
+        <div className="fg"><label>Mot de passe</label><input name="p" type="password" required minLength={6} placeholder="6 caractères minimum"/></div>
+        <button className="btn btn-ter" disabled={busy} style={{width:"100%",padding:13,opacity:busy?.6:1}}>{busy?"Création…":"Continuer"}</button>
         <p style={{textAlign:"center",fontSize:13,color:"var(--g)",marginTop:12}}>Déjà membre ? <a style={{color:"var(--p)",fontWeight:700,cursor:"pointer"}} onClick={()=>setMode("login")}>Se connecter</a></p>
       </form>
+    </div>}
+    {step===9&&<div className="panel" style={{textAlign:"center",padding:34}}>
+      <div className="stamp" style={{position:"static",width:84,height:84,fontSize:9,margin:"0 auto 16px",transform:"rotate(-8deg)"}}><span className="ck" style={{fontSize:22}}>✉</span><span>ENVOYÉ</span></div>
+      <h3 style={{fontFamily:"var(--fd)",fontSize:22}}>Compte créé, {form.name} !</h3>
+      <p style={{fontSize:13.5,color:"var(--g)",margin:"6px 0 18px"}}>On vous a envoyé un lien de vérification à <b style={{color:"var(--dk)"}}>{form.email}</b>. Cliquez dessus quand vous voulez — vous pouvez déjà explorer le quartier.</p>
+      <button className="btn btn-green" style={{width:"100%",padding:13}} onClick={finishFb}>Explorer le quartier</button>
+      <p style={{fontSize:12,color:"var(--gl)",marginTop:12}}>Rien reçu ? <a style={{color:"var(--p)",cursor:"pointer"}} onClick={resendVerif}>Renvoyer l'email</a> · pensez aux spams.</p>
     </div>}
     {step===1&&<div className="panel" style={{textAlign:"center"}}>
       <h3 style={{fontFamily:"var(--fd)",fontSize:20,marginBottom:4}}>Vérifions votre email</h3>
@@ -1228,14 +1308,31 @@ function App(){
   const[resas,setResas]=useState(P.resas||RESAS);
   const[convs,setConvs]=useState(P.convs||CONVS);
   const[plus,setPlus]=useState(P.plus||false);
-  const[user,setUser]=useState(P.user||null);
+  const[user,setUser]=useState(fbAuth()?null:(P.user||null));
   const[openConv,setOpenConv]=useState(null);
-  const items=useMemo(()=>[...myItems,...ITEMS],[myItems]);
+  const[fbItems,setFbItems]=useState([]);
+  const items=useMemo(()=>fbDb()?[...fbItems,...myItems,...ITEMS]:[...myItems,...ITEMS],[fbItems,myItems]);
   const itemsRef=useRef(items);useEffect(()=>{itemsRef.current=items},[items]);
 
   /* persistance */
   useEffect(()=>{saveLS({fav:[...fav],dark,notifs,myItems,resas,convs,plus,user})},[fav,dark,notifs,myItems,resas,convs,plus,user]);
   useEffect(()=>{document.documentElement.classList.toggle("dark",dark)},[dark]);
+  /* Firebase : restauration de session */
+  useEffect(()=>{
+    const a=fbAuth();if(!a)return;
+    return a.onAuthStateChanged(fu=>{ if(fu)setUser(u=>u||fbUserToUser(fu)); else setUser(null); });
+  },[]);
+  /* Firebase : annonces partagées (Firestore) */
+  useEffect(()=>{
+    const d=fbDb();if(!d)return;
+    try{
+      return d.collection("v2_listings").orderBy("createdAt","desc").limit(40).onSnapshot(snap=>{
+        const arr=[];snap.forEach(doc=>{const x=doc.data();const sd=x.seed||"voisin1";
+          arr.push({id:doc.id,t:x.t,c:x.c,p:x.p,d:x.d,img:[sd,sd+"b",sd+"c"],own:x.own||"Voisin",city:x.city||"rue du Sablon",note:x.note||5,rev:x.rev||0});});
+        setFbItems(arr);
+      },err=>console.warn("[Cercle] Firestore lecture indisponible:",err&&err.code));
+    }catch(e){console.warn("[Cercle] Firestore off:",e&&e.code)}
+  },[]);
 
   /* actions */
   const toast=m=>{setToastMsg(m);setTimeout(()=>setToastMsg(null),2600)};
@@ -1247,9 +1344,18 @@ function App(){
   const markAll=()=>setNotifs(ns=>ns.map(n=>({...n,unread:false})));
   const openLegal=id=>{setLegal(id);setPage("legal")};
   const unread=notifs.filter(n=>n.unread).length;
-  const addItem=({t,c,p,d,img})=>{
+  const addItem=async({t,c,p,d,img})=>{
     const sd=img||("voisin"+(Date.now()%9973));
-    const it={id:"u"+Date.now(),t,c,p,img:[sd,sd+"b",sd+"c"],own:"Vous",city:"rue du Sablon",note:5,rev:0,d};
+    const dd=d||"Proposé par un voisin du Sablon, avec soin.";
+    const db=fbDb();
+    if(db&&user){
+      try{
+        await db.collection("v2_listings").add({t,c,p,d:dd,seed:sd,own:user.name||"Voisin",uid:user.uid||"",city:"rue du Sablon",note:5,rev:0,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+        addNotif({k:"info",txt:`Votre annonce « ${t} » est en ligne dans le cercle.`});
+        return;
+      }catch(e){console.warn("[Cercle] écriture Firestore échouée, repli local:",e&&e.code);}
+    }
+    const it={id:"u"+Date.now(),t,c,p,img:[sd,sd+"b",sd+"c"],own:"Vous",city:"rue du Sablon",note:5,rev:0,d:dd};
     setMyItems(m=>[it,...m]);
     addNotif({k:"info",txt:`Votre annonce « ${t} » est en ligne dans le cercle.`});
   };
@@ -1272,7 +1378,7 @@ function App(){
   };
   const go=p=>{if(p!=="messages")setOpenConv(null);setPage(p)};
   const onAuth=u=>{setUser(u);addNotif({k:"info",txt:`Bienvenue dans le cercle, ${u.name} — profil vérifié ✓`});toast("Bienvenue, "+u.name+" !");go("home")};
-  const logout=()=>{setUser(null);toast("À bientôt dans le quartier");go("home")};
+  const logout=()=>{const a=fbAuth();if(a)try{a.signOut()}catch(e){}setUser(null);toast("À bientôt dans le quartier");go("home")};
   const need=fn=>(...a)=>{if(!user){toast("Rejoignez le cercle pour continuer");go("auth");return}return fn(...a)};
 
   /* filtre grille */
