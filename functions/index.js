@@ -18,7 +18,7 @@ const transporter = nodemailer.createTransport({
   auth: { user: GMAIL_EMAIL, pass: GMAIL_PASSWORD },
 });
 
-const SITE_URL = "https://aureel57.github.io/cercle/v2/";
+const SITE_URL = "https://aureel57.github.io/cercle/";
 
 // Échappe le prénom pour éviter toute injection HTML
 function esc(s) {
