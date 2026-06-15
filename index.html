@@ -554,8 +554,10 @@ const getNextGrade=n=>GRADES[GRADES.indexOf(getGrade(n))+1]||null;
 const feeRate=(n,plus)=>Math.max(0.02,getGrade(n).fee/100-(plus?0.01:0));
 const LEGALS={
  cgu:{t:"Conditions générales",p:["Cercle met en relation des voisins pour la location d'objets du quotidien. En créant un compte, vous acceptez de prêter et d'emprunter avec le soin que vous porteriez à vos propres affaires.","Chaque location donne lieu à une caution séquestrée, restituée sous 48 h après le retour de l'objet en bon état.","La commission de service est de 11 %, réduite par votre grade et votre abonnement Cercle+ (plancher : 2 %)."]},
+ assurance:{t:"Assurance & caution",lead:"Comment vous êtes protégé, des deux côtés du prêt.",p:["Chaque location sur Cercle est couverte jusqu'à 2 000 € : si un objet prêté est cassé, perdu ou volé pendant la location, le propriétaire est indemnisé — sans avance de frais.","La caution est séquestrée par Cercle au moment de la réservation : ni vous ni le propriétaire ne la touchez. Elle est bloquée, jamais débitée tant que tout se passe bien.","Au retour de l'objet en bon état, la caution est libérée automatiquement sous 48 h. En cas de litige, notre équipe regarde les preuves (photos avant/après, échanges) avant toute retenue.","Le montant de la caution est fixé par le propriétaire, en général autour de 6× le prix journalier. Il est toujours affiché avant que vous confirmiez."],mail:"assurance@cercle.fr",mailLabel:"Une question sur l'assurance ?"},
  conf:{t:"Confidentialité",p:["Vos données restent dans le cercle : nous ne vendons rien à personne. Votre adresse exacte n'est jamais affichée — seulement une distance à pied.","Vous pouvez exporter ou supprimer vos données à tout moment depuis les paramètres."]},
  cookies:{t:"Cookies",p:["Cercle utilise le strict minimum : un cookie de session et vos préférences (mode nuit, quartier). Pas de traceurs publicitaires, promis."]},
+ contact:{t:"Nous écrire",lead:"Une question, un souci, une idée ? On lit tout.",p:["Pour toute question sur une location, un litige, votre compte ou l'assurance, écrivez-nous : on répond en général sous 24 h ouvrées.","Besoin d'aide en pleine location ? Précisez le nom de l'objet et la date — ça nous aide à vous répondre vite."],mail:"support@cercle.fr",mailLabel:"Écrire au support"},
 };
 
 /* ═══════════ ICÔNES ═══════════ */
@@ -1181,8 +1183,9 @@ function Legal({id}){
   const L=LEGALS[id]||LEGALS.cgu;
   return <div className="page legal">
     <h1>{L.t}</h1>
-    <p className="lead">Version courte, écrite pour être lue.</p>
+    <p className="lead">{L.lead||"Version courte, écrite pour être lue."}</p>
     <div className="panel">{L.p.map((p,i)=><p key={i}>{p}</p>)}</div>
+    {L.mail&&<a className="btn btn-ter" href={"mailto:"+L.mail} style={{marginTop:18,display:"inline-flex"}}><I.msg size={14}/>{L.mailLabel||"Nous écrire"} · {L.mail}</a>}
   </div>;
 }
 
@@ -1593,8 +1596,8 @@ function App(){
             <button className="logo" onClick={goHome} style={{marginBottom:10}}><Logo size={32}/><span className="lt" style={{fontSize:19}}>Cercle</span></button>
             <p style={{fontSize:13,color:"var(--g)",maxWidth:"24ch"}}>Location entre voisins — simple, assurée, à deux rues.</p>
           </div>
-          <div><h4>Explorer</h4><a onClick={goHome}>Toutes les annonces</a><a onClick={()=>go("create")}>Proposer un objet</a><a onClick={()=>go("favs")}>Mes favoris</a></div>
-          <div><h4>Aide</h4><a onClick={()=>openLegal("cgu")}>Assurance & caution</a><a onClick={()=>go("carte")}>Carte du quartier</a><a onClick={()=>go("messages")}>Nous écrire</a></div>
+          <div><h4>Explorer</h4><a onClick={goHome}>Toutes les annonces</a><a onClick={()=>go("carte")}>Carte du quartier</a><a onClick={()=>go("create")}>Proposer un objet</a><a onClick={()=>go("favs")}>Mes favoris</a></div>
+          <div><h4>Aide</h4><a onClick={()=>openLegal("assurance")}>Assurance & caution</a><a onClick={()=>openLegal("cgu")}>Conditions générales</a><a onClick={()=>openLegal("contact")}>Nous écrire</a></div>
           <div><h4>Cercle</h4><a onClick={()=>go("grade")}>Les grades</a><a style={{color:"var(--plus)"}} onClick={()=>go("plus")}>✦ Cercle+</a></div>
         </div>
         <div className="f-low"><span>© 2026 Cercle · Tout est à deux rues.</span><span><a style={{display:"inline",cursor:"pointer"}} onClick={()=>openLegal("cgu")}>CGU</a> · <a style={{display:"inline",cursor:"pointer"}} onClick={()=>openLegal("conf")}>Confidentialité</a> · <a style={{display:"inline",cursor:"pointer"}} onClick={()=>openLegal("cookies")}>Cookies</a></span></div>
