@@ -503,8 +503,10 @@ const AUTO_REPLIES=["Pas de souci, à bientôt !","Ça marche, je vous le mets d
 const fbAuth=()=>{try{return window.__fbOK?firebase.auth():null}catch(e){return null}};
 const fbDb=()=>{try{return window.__fbOK?firebase.firestore():null}catch(e){return null}};
 const fbUserToUser=fu=>({uid:fu.uid,name:fu.displayName||(fu.email||"Voisin").split("@")[0],email:fu.email||"",phone:fu.phoneNumber||"",quartier:"Metz Sablon",verified:!!fu.emailVerified,phoneVerified:!!fu.phoneNumber,photo:fu.photoURL||null});
-const FB_ERR={"auth/invalid-credential":"Email ou mot de passe incorrect.","auth/wrong-password":"Email ou mot de passe incorrect.","auth/user-not-found":"Aucun compte avec cet email — rejoignez le cercle !","auth/email-already-in-use":"Un compte existe déjà avec cet email — connectez-vous.","auth/weak-password":"Mot de passe trop court (6 caractères minimum).","auth/invalid-email":"Cet email ne semble pas valide.","auth/too-many-requests":"Trop d'essais — réessayez dans quelques minutes.","auth/popup-closed-by-user":"Fenêtre Google fermée avant la fin.","auth/popup-blocked":"Popup bloquée par le navigateur — autorisez les popups."};
+const FB_ERR={"auth/invalid-credential":"Email ou mot de passe incorrect.","auth/wrong-password":"Email ou mot de passe incorrect.","auth/user-not-found":"Aucun compte avec cet email — rejoignez le cercle !","auth/email-already-in-use":"Un compte existe déjà avec cet email — connectez-vous.","auth/weak-password":"Mot de passe trop court (6 caractères minimum).","auth/password-does-not-meet-requirements":"Mot de passe trop simple : 6 caractères min, avec une majuscule, un chiffre et un caractère spécial (ex. ! ? @).","auth/invalid-email":"Cet email ne semble pas valide.","auth/missing-password":"Entrez votre mot de passe.","auth/too-many-requests":"Trop d'essais — réessayez dans quelques minutes.","auth/operation-not-allowed":"L'inscription par email n'est pas activée pour le moment.","auth/network-request-failed":"Connexion internet interrompue — réessayez.","auth/internal-error":"Petit souci côté serveur — réessayez dans un instant.","auth/popup-closed-by-user":"Fenêtre Google fermée avant la fin.","auth/popup-blocked":"Popup bloquée par le navigateur — autorisez les popups.","auth/account-exists-with-different-credential":"Un compte existe déjà avec cet email — connectez-vous."};
 const fbMsg=e=>FB_ERR[e&&e.code]||"Petit souci de connexion — réessayez.";
+/* Détecte « cet email a déjà un compte » même si le code varie (protection anti-énumération) */
+const isExistingAccount=e=>{const c=(e&&e.code)||"";const m=((e&&e.message)||"").toLowerCase();return c==="auth/email-already-in-use"||c==="auth/account-exists-with-different-credential"||m.includes("already in use")||m.includes("email-already")||m.includes("already exists");};
 const VERIF_SETTINGS={url:"https://aureel57.github.io/cercle/",handleCodeInApp:false};
 /* Envoie l'email de vérif : email DA via Cloud Function si déployée, sinon email Firebase standard */
 async function sendVerif(user,name,email){
@@ -1229,6 +1231,7 @@ function CodeInput({onFull,autoFocus}){
 function Auth({onDone,toast}){
   const FB=!!fbAuth();
   const[mode,setMode]=useState("signup");
+  const[prefill,setPrefill]=useState("");
   const[step,setStep]=useState(0);
   const[form,setForm]=useState({});
   const[code,setCode]=useState("");
@@ -1246,7 +1249,11 @@ function Auth({onDone,toast}){
         try{const d=fbDb();if(d)await d.collection("users").doc(res.user.uid).set({name,email,quartier},{merge:true})}catch(_){}
         await sendVerif(res.user,name,email);
         onDone({...fbUserToUser(res.user),quartier});
-      }catch(err){toast(fbMsg(err))}
+      }catch(err){
+        console.warn("[Cercle] inscription échouée:",err&&err.code,err&&err.message);
+        if(isExistingAccount(err)){setPrefill(email);setStep(0);setMode("login");toast("Vous avez déjà un compte avec cet email — connectez-vous.");}
+        else toast(fbMsg(err));
+      }
       setBusy(false);
     }else{
       setForm({name,email,phone:"",quartier:quartier||"Metz Sablon"});setCode(genCode());setStep(1);
@@ -1281,8 +1288,8 @@ function Auth({onDone,toast}){
       <SocialBtns onDone={onDone} toast={toast}/>
       <div className="or-sep">OU PAR EMAIL</div>
       <form onSubmit={login}>
-        <div className="fg"><label>Email</label><input name="e" type="email" required autoFocus placeholder="vous@exemple.fr"/></div>
-        <div className="fg"><label>Mot de passe</label><input name="p" type="password" required placeholder="••••••••"/></div>
+        <div className="fg"><label>Email</label><input name="e" type="email" required autoFocus={!prefill} defaultValue={prefill} placeholder="vous@exemple.fr"/></div>
+        <div className="fg"><label>Mot de passe</label><input name="p" type="password" required autoFocus={!!prefill} placeholder="••••••••"/></div>
         <button className="btn btn-p" disabled={busy} style={{width:"100%",padding:13,opacity:busy?.6:1}}>{busy?"Connexion…":"Se connecter"}</button>
       </form>
       <p style={{textAlign:"center",fontSize:13,color:"var(--g)",marginTop:12}}>
@@ -1307,7 +1314,7 @@ function Auth({onDone,toast}){
         <div className="fg"><label>Prénom</label><input name="n" required autoFocus autoComplete="given-name" placeholder="Noah"/></div>
         <div className="fg"><label>Email</label><input name="e" type="email" required autoComplete="email" placeholder="vous@exemple.fr"/></div>
         <div className="fg"><label>Votre quartier</label><input name="q" required autoComplete="address-level2" placeholder="Ex. rue du Sablon, Metz"/><div className="hint">Pour vous montrer les objets près de chez vous — jamais affiché aux autres, seulement la distance.</div></div>
-        <div className="fg"><label>Mot de passe</label><input name="p" type="password" required minLength={6} autoComplete="new-password" placeholder="6 caractères minimum"/></div>
+        <div className="fg"><label>Mot de passe</label><input name="p" type="password" required minLength={6} autoComplete="new-password" placeholder="6 caractères minimum"/><div className="hint">6 caractères min, avec une majuscule, un chiffre et un caractère spécial (ex. ! ? @).</div></div>
         <button className="btn btn-ter" disabled={busy} style={{width:"100%",padding:13,opacity:busy?.6:1}}>{busy?"Création…":"Créer mon compte"}</button>
         <p style={{fontSize:11.5,color:"var(--gl)",textAlign:"center",marginTop:9,lineHeight:1.5}}>Un email de confirmation vous sera envoyé. <b style={{color:"var(--g)"}}>Vous devrez le valider</b> pour entrer dans le cercle.</p>
         <p style={{textAlign:"center",fontSize:13,color:"var(--g)",marginTop:10}}>Déjà membre ? <a style={{color:"var(--p)",fontWeight:700,cursor:"pointer"}} onClick={()=>setMode("login")}>Se connecter</a></p>
