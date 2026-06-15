@@ -598,7 +598,7 @@ function useReveal(deps){
 }
 
 /* ═══════════ HERO RADAR ═══════════ */
-function Hero({items,open,onSearch}){
+function Hero({items,open,onSearch,user}){
   const ref=useRef(null);
   const picks=useMemo(()=>items.slice(0,5),[items]);
   const POS=[{x:20,y:16},{x:79,y:22},{x:86,y:64},{x:22,y:72},{x:58,y:90}];
@@ -616,7 +616,7 @@ function Hero({items,open,onSearch}){
   },[]);
   return <div className="hero" ref={ref}>
     <div>
-      <div className="eyebrow h-el"><span className="dot"/>Metz Sablon · {ITEMS.length*18} objets autour de vous</div>
+      <div className="eyebrow h-el"><span className="dot"/>{(user&&user.quartier)||"Metz Sablon"} · {ITEMS.length*18} objets autour de vous</div>
       <h1>
         <span className="h-el" style={{display:"block"}}>Arrêtez d'acheter.</span>
         <span className="h-el" style={{display:"block"}}>Tout dort déjà</span>
@@ -872,33 +872,56 @@ function Profile({dark,setDark,toast,go,plus,user,logout}){
 }
 
 /* ═══════════ CARTE DU QUARTIER (Leaflet + OSM) ═══════════ */
-const CENTER=[49.0975,6.1844]; /* Metz Sablon */
-function posFor(id){
-  const d=distFor(id);
-  const h=String(id).split("").reduce((a,c)=>(a*37+c.charCodeAt(0))%997,13);
-  const rad=((h*137.508)%360)*Math.PI/180;
-  return [CENTER[0]+(d.m*Math.cos(rad))/111111, CENTER[1]+(d.m*Math.sin(rad))/(111111*Math.cos(CENTER[0]*Math.PI/180))];
+const CENTER=[49.0975,6.1844]; /* Metz Sablon (défaut) */
+const __geoCache={};
+async function geocode(q){
+  if(!q)return null;
+  if(__geoCache[q])return __geoCache[q];
+  try{
+    const r=await fetch("https://nominatim.openstreetmap.org/search?format=json&limit=1&q="+encodeURIComponent(q+", France"));
+    const a=await r.json();
+    if(a&&a[0]){const c=[+a[0].lat,+a[0].lon];__geoCache[q]=c;return c;}
+  }catch(e){}
+  return null;
 }
-function Carte({open,items,dark}){
+function posFor(id,c){
+  c=c||CENTER;
+  const d=distFor(id);
+  const h=String(id).split("").reduce((a,ch)=>(a*37+ch.charCodeAt(0))%997,13);
+  const rad=((h*137.508)%360)*Math.PI/180;
+  return [c[0]+(d.m*Math.cos(rad))/111111, c[1]+(d.m*Math.sin(rad))/(111111*Math.cos(c[0]*Math.PI/180))];
+}
+function Carte({open,items,dark,user}){
   const[cc,setCc]=useState("all");
   const[ray,setRay]=useState(1000);
   const[hl,setHl]=useState(null);
-  const mapEl=useRef(null),mapRef=useRef(null),tileRef=useRef(null),layerRef=useRef(null),elsRef=useRef({});
+  const[ctr,setCtr]=useState(CENTER);
+  const mapEl=useRef(null),mapRef=useRef(null),tileRef=useRef(null),layerRef=useRef(null),elsRef=useRef({}),circlesRef=useRef([]),youRef=useRef(null);
+  const quartier=(user&&user.quartier)||"Metz Sablon";
   const list=useMemo(()=>items
     .filter(i=>(cc==="all"||i.c===cc)&&distFor(i.id).m<=ray)
     .map(i=>({it:i,d:distFor(i.id)}))
     .sort((a,b)=>a.d.m-b.d.m).slice(0,20),[items,cc,ray]);
+  /* géocodage de l'adresse du membre → centre de la carte */
+  useEffect(()=>{let ok=true;geocode(quartier).then(c=>{if(ok&&c)setCtr(c)});return()=>{ok=false}},[quartier]);
   /* init */
   useEffect(()=>{
     if(typeof L==="undefined"||!mapEl.current||mapRef.current)return;
-    const map=L.map(mapEl.current,{scrollWheelZoom:false,zoomControl:true,attributionControl:true}).setView(CENTER,14.8);
+    const map=L.map(mapEl.current,{scrollWheelZoom:false,zoomControl:true,attributionControl:true}).setView(ctr,14.8);
     map.on("click",()=>map.scrollWheelZoom.enable());
     mapRef.current=map;
-    [[250,"2 7"],[500,null],[1000,"2 7"]].forEach(([r,dash])=>L.circle(CENTER,{radius:r,fill:false,color:"#A39B89",weight:1.5,dashArray:dash,opacity:.7}).addTo(map));
-    L.marker(CENTER,{icon:L.divIcon({className:"lf-wrap",html:'<div class="lf-you">Chez vous</div>',iconSize:[86,28],iconAnchor:[43,14]}),interactive:false,zIndexOffset:1000}).addTo(map);
+    circlesRef.current=[[250,"2 7"],[500,null],[1000,"2 7"]].map(([r,dash])=>L.circle(ctr,{radius:r,fill:false,color:"#A39B89",weight:1.5,dashArray:dash,opacity:.7}).addTo(map));
+    youRef.current=L.marker(ctr,{icon:L.divIcon({className:"lf-wrap",html:'<div class="lf-you">Chez vous</div>',iconSize:[86,28],iconAnchor:[43,14]}),interactive:false,zIndexOffset:1000}).addTo(map);
     layerRef.current=L.layerGroup().addTo(map);
     return()=>{map.remove();mapRef.current=null};
   },[]);
+  /* recentrage quand l'adresse géocode */
+  useEffect(()=>{
+    const map=mapRef.current;if(!map)return;
+    circlesRef.current.forEach(c=>c.setLatLng(ctr));
+    if(youRef.current)youRef.current.setLatLng(ctr);
+    map.flyTo(ctr,ray===250?16.4:ray===500?15.6:14.8,{duration:.6});
+  },[ctr]);
   /* fond de carte jour/nuit */
   useEffect(()=>{
     const map=mapRef.current;if(!map)return;
@@ -907,13 +930,13 @@ function Carte({open,items,dark}){
       {attribution:'© <a href="https://www.openstreetmap.org/copyright">OSM</a> © <a href="https://carto.com/">CARTO</a>',subdomains:"abcd",maxZoom:19}).addTo(map);
   },[dark]);
   /* zoom selon rayon */
-  useEffect(()=>{const m=mapRef.current;if(m)m.flyTo(CENTER,ray===250?16.4:ray===500?15.6:14.8,{duration:.6})},[ray]);
+  useEffect(()=>{const m=mapRef.current;if(m)m.flyTo(ctr,ray===250?16.4:ray===500?15.6:14.8,{duration:.6})},[ray]);
   /* markers */
   useEffect(()=>{
     const lg=layerRef.current;if(!lg)return;
     lg.clearLayers();elsRef.current={};
     list.forEach(({it,d})=>{
-      const mk=L.marker(posFor(it.id),{icon:L.divIcon({className:"lf-wrap",
+      const mk=L.marker(posFor(it.id,ctr),{icon:L.divIcon({className:"lf-wrap",
         html:`<div class="lf-ping" data-id="${it.id}"><span class="ph"><img src="${seed(it.img[0],120,120)}" alt=""/></span><span class="lbl"><b>${it.p} €/j</b> · ${d.m} m</span></div>`,
         iconSize:[120,80],iconAnchor:[60,40]})});
       mk.on("click",()=>open(it));
@@ -921,7 +944,7 @@ function Carte({open,items,dark}){
       mk.on("add",()=>{const el=mk.getElement()?.querySelector(".lf-ping");if(el)elsRef.current[it.id]=el;});
       lg.addLayer(mk);
     });
-  },[list,open]);
+  },[list,open,ctr]);
   /* surlignage liste ↔ carte */
   useEffect(()=>{
     Object.entries(elsRef.current).forEach(([id,el])=>el.classList.toggle("hl",id===hl));
@@ -937,7 +960,7 @@ function Carte({open,items,dark}){
     </div>
     <div className="carte-grid">
       <div className="bigradar">
-        <div className="legend" style={{zIndex:500}}>Metz Sablon · {list.length} objet{list.length>1?"s":""} dans votre rayon</div>
+        <div className="legend" style={{zIndex:500}}>{quartier} · {list.length} objet{list.length>1?"s":""} dans votre rayon</div>
         <div className="lmap" ref={mapEl} aria-label="Carte du quartier"/>
       </div>
       <aside className="side-list" aria-label="Objets triés par distance">
@@ -1102,31 +1125,53 @@ function Plus({toast,plus,subscribe}){
 }
 
 /* ═══════════ PARAMÈTRES ═══════════ */
-function Params({dark,setDark,toast}){
+function Params({dark,setDark,toast,user,plus,logout,saveQuartier}){
+  const u=user||{name:"Voisin",email:"",quartier:"Metz Sablon",verified:false};
+  const[q,setQ]=useState(u.quartier||"");
   const[t1,setT1]=useState(true);
   const[t2,setT2]=useState(false);
+  useEffect(()=>{setQ(u.quartier||"")},[u.quartier]);
+  const SectionT=({children})=><div style={{fontFamily:"var(--fd)",fontSize:17,color:"var(--dk)",margin:"22px 0 10px"}}>{children}</div>;
   return <div className="page">
     <h1>Paramètres</h1>
     <p className="lead">Votre compte, vos préférences.</p>
-    <div className="panel" style={{marginBottom:14}}>
-      <form onSubmit={e=>{e.preventDefault();toast("Profil mis à jour (démo)")}}>
-        <div className="fr">
-          <div className="fg"><label>Nom affiché</label><input defaultValue="Noah M."/></div>
-          <div className="fg"><label>Email</label><input type="email" defaultValue="noah@cercle.app"/></div>
-        </div>
-        <div className="fg"><label>Quartier</label><input defaultValue="rue du Sablon, Metz"/></div>
-        <button className="btn btn-p" type="submit">Enregistrer</button>
-      </form>
+
+    <div className="panel" style={{display:"flex",alignItems:"center",gap:14}}>
+      <div className="avat" style={{width:54,height:54,fontSize:21}}>{(u.name||"V")[0].toUpperCase()}</div>
+      <div style={{flex:1,minWidth:0}}>
+        <div style={{fontWeight:700,color:"var(--dk)",fontSize:16}}>{u.name}</div>
+        <div style={{fontSize:12.5,color:"var(--g)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{u.email}</div>
+      </div>
+      <span className="badge" style={u.verified?{background:"color-mix(in srgb,var(--green) 14%,transparent)",color:"var(--green)"}:{background:"color-mix(in srgb,var(--ter) 14%,transparent)",color:"var(--ter)"}}>{u.verified?"✓ Vérifié":"Non vérifié"}</span>
     </div>
-    <div className="panel" style={{marginBottom:14}}>
+
+    <SectionT>Mon quartier</SectionT>
+    <div className="panel">
+      <div className="fg" style={{marginBottom:8}}><label>Adresse / quartier</label>
+        <input value={q} onChange={e=>setQ(e.target.value)} placeholder="Ex. rue du Sablon, Metz"/>
+        <div className="hint">Centre votre carte et calcule la distance des objets. Jamais affiché aux autres voisins.</div>
+      </div>
+      <button className="btn btn-p" disabled={!q.trim()||q.trim()===(u.quartier||"")} style={{opacity:(!q.trim()||q.trim()===(u.quartier||""))?.5:1}} onClick={()=>saveQuartier(q.trim())}>Enregistrer mon quartier</button>
+    </div>
+
+    <SectionT>Préférences</SectionT>
+    <div className="panel">
       <div className="set-row"><div><b style={{color:"var(--dk)"}}>Notifications du cercle</b><div style={{fontSize:12.5,color:"var(--g)"}}>Réservations, messages, nouveaux objets à 500 m</div></div><button className={"tgl"+(t1?" on":"")} onClick={()=>setT1(!t1)} aria-label="Notifications"><i/></button></div>
       <div className="set-row"><div><b style={{color:"var(--dk)"}}>Nuit automatique</b><div style={{fontSize:12.5,color:"var(--g)"}}>Suivre le coucher du soleil</div></div><button className={"tgl"+(t2?" on":"")} onClick={()=>setT2(!t2)} aria-label="Nuit automatique"><i/></button></div>
       <div className="set-row"><div><b style={{color:"var(--dk)"}}>Nuit de quartier</b><div style={{fontSize:12.5,color:"var(--g)"}}>Encre bleue, jamais de noir pur</div></div><button className={"tgl"+(dark?" on":"")} onClick={()=>setDark(!dark)} aria-label="Mode nuit"><i/></button></div>
     </div>
-    <div className="panel" style={{borderColor:"color-mix(in srgb,var(--ter) 45%,transparent)"}}>
-      <b style={{color:"var(--ter)"}}>Quitter le cercle</b>
-      <p style={{fontSize:12.5,color:"var(--g)",margin:"4px 0 10px"}}>Supprime votre compte et vos annonces. Vos voisins vous regretteront.</p>
-      <button className="btn btn-ghost" style={{borderColor:"var(--ter)",color:"var(--ter)"}} onClick={()=>toast("On ne supprime personne en démo ☺")}>Supprimer mon compte</button>
+
+    <SectionT>Abonnement</SectionT>
+    <div className="plus-line" style={{margin:0}}>{plus?"✦ Cercle+ actif — frais de service réduits":"✦ Cercle+ — réduisez votre commission"}<span style={{marginLeft:"auto",fontSize:12.5,fontWeight:700}}>{plus?"Membre":"Non abonné"}</span></div>
+
+    <SectionT>Compte</SectionT>
+    <div className="panel" style={{display:"flex",flexDirection:"column",gap:10}}>
+      <button className="btn btn-ghost" onClick={logout}>Se déconnecter</button>
+      <div style={{borderTop:"1px dashed var(--bd)",paddingTop:12}}>
+        <b style={{color:"var(--ter)",fontSize:14}}>Quitter le cercle</b>
+        <p style={{fontSize:12.5,color:"var(--g)",margin:"4px 0 10px"}}>Supprime votre compte et vos annonces. Vos voisins vous regretteront.</p>
+        <button className="btn btn-ghost" style={{borderColor:"var(--ter)",color:"var(--ter)"}} onClick={()=>toast("Suppression de compte : à brancher (démo)")}>Supprimer mon compte</button>
+      </div>
     </div>
   </div>;
 }
@@ -1189,18 +1234,19 @@ function Auth({onDone,toast}){
   const[busy,setBusy]=useState(false);
   const genCode=()=>String(Math.floor(100000+Math.random()*900000));
   const start=async e=>{e.preventDefault();const f=new FormData(e.target);
-    const name=f.get("n"),email=f.get("e"),pw=f.get("p");
+    const name=f.get("n"),email=f.get("e"),pw=f.get("p"),quartier=(f.get("q")||"").trim();
     if(FB){
       setBusy(true);
       try{
         const res=await fbAuth().createUserWithEmailAndPassword(email,pw);
         try{await res.user.updateProfile({displayName:name})}catch(_){}
+        try{const d=fbDb();if(d)await d.collection("users").doc(res.user.uid).set({name,email,quartier},{merge:true})}catch(_){}
         await sendVerif(res.user,name,email);
-        setForm({name,email,phone:"",quartier:"Metz Sablon"});setStep(9);
+        onDone({...fbUserToUser(res.user),quartier});
       }catch(err){toast(fbMsg(err))}
       setBusy(false);
     }else{
-      setForm({name,email,phone:"",quartier:"Metz Sablon"});setCode(genCode());setStep(1);
+      setForm({name,email,phone:"",quartier:quartier||"Metz Sablon"});setCode(genCode());setStep(1);
     }
   };
   const login=async e=>{e.preventDefault();const f=new FormData(e.target);
@@ -1255,11 +1301,13 @@ function Auth({onDone,toast}){
       <SocialBtns onDone={onDone} toast={toast}/>
       <div className="or-sep">OU PAR EMAIL</div>
       <form onSubmit={start}>
-        <div className="fg"><label>Prénom</label><input name="n" required autoFocus placeholder="Noah"/></div>
-        <div className="fg"><label>Email</label><input name="e" type="email" required placeholder="vous@exemple.fr"/></div>
-        <div className="fg"><label>Mot de passe</label><input name="p" type="password" required minLength={6} placeholder="6 caractères minimum"/></div>
-        <button className="btn btn-ter" disabled={busy} style={{width:"100%",padding:13,opacity:busy?.6:1}}>{busy?"Création…":"Continuer"}</button>
-        <p style={{textAlign:"center",fontSize:13,color:"var(--g)",marginTop:12}}>Déjà membre ? <a style={{color:"var(--p)",fontWeight:700,cursor:"pointer"}} onClick={()=>setMode("login")}>Se connecter</a></p>
+        <div className="fg"><label>Prénom</label><input name="n" required autoFocus autoComplete="given-name" placeholder="Noah"/></div>
+        <div className="fg"><label>Email</label><input name="e" type="email" required autoComplete="email" placeholder="vous@exemple.fr"/></div>
+        <div className="fg"><label>Votre quartier</label><input name="q" required autoComplete="address-level2" placeholder="Ex. rue du Sablon, Metz"/><div className="hint">Pour vous montrer les objets près de chez vous — jamais affiché aux autres, seulement la distance.</div></div>
+        <div className="fg"><label>Mot de passe</label><input name="p" type="password" required minLength={6} autoComplete="new-password" placeholder="6 caractères minimum"/></div>
+        <button className="btn btn-ter" disabled={busy} style={{width:"100%",padding:13,opacity:busy?.6:1}}>{busy?"Création…":"Créer mon compte"}</button>
+        <p style={{fontSize:11.5,color:"var(--gl)",textAlign:"center",marginTop:9,lineHeight:1.5}}>Un email de confirmation vous sera envoyé. <b style={{color:"var(--g)"}}>Vous devrez le valider</b> pour entrer dans le cercle.</p>
+        <p style={{textAlign:"center",fontSize:13,color:"var(--g)",marginTop:10}}>Déjà membre ? <a style={{color:"var(--p)",fontWeight:700,cursor:"pointer"}} onClick={()=>setMode("login")}>Se connecter</a></p>
       </form>
     </div>}
     {step===9&&<div className="panel" style={{textAlign:"center",padding:34}}>
@@ -1306,6 +1354,28 @@ function Auth({onDone,toast}){
 
 /* ═══════════ APP ═══════════ */
 const ROUTES=["home","carte","favs","messages","profile","create","activite","notifs","avis","grade","plus","params","legal","detail","auth"];
+/* ═══════════ BLOCAGE TANT QUE L'EMAIL N'EST PAS VÉRIFIÉ ═══════════ */
+function VerifyGate({user,onRefresh,onResend,onLogout}){
+  return <>
+    <header className="hdr"><div className="wrap">
+      <button className="logo"><Logo/><span className="lt">Cercle</span></button>
+    </div></header>
+    <div className="page auth-wrap">
+      <div className="panel" style={{textAlign:"center",padding:34}}>
+        <div className="stamp" style={{position:"static",width:88,height:88,fontSize:9,margin:"0 auto 18px",transform:"rotate(-8deg)"}}><span className="ck" style={{fontSize:24}}>✉</span><span>À VÉRIFIER</span></div>
+        <h1 style={{fontSize:26}}>Confirmez votre adresse</h1>
+        <p style={{fontSize:14,color:"var(--g)",margin:"8px 0 6px",lineHeight:1.6}}>On a envoyé un email à <b style={{color:"var(--dk)"}}>{user.email}</b>. Cliquez sur le lien <b>Confirmer mon adresse</b> pour entrer dans le cercle.</p>
+        <p style={{fontSize:12.5,color:"var(--gl)",marginBottom:20}}>Pensez à regarder dans les spams. Le voisinage, c'est la confiance — on vérifie qui rejoint.</p>
+        <button className="btn btn-green" style={{width:"100%",padding:14}} onClick={onRefresh}>J'ai confirmé — entrer</button>
+        <div style={{display:"flex",gap:10,marginTop:10}}>
+          <button className="btn btn-ghost" style={{flex:1}} onClick={onResend}>Renvoyer l'email</button>
+          <button className="btn btn-ghost" style={{flex:1}} onClick={onLogout}>Se déconnecter</button>
+        </div>
+      </div>
+    </div>
+  </>;
+}
+
 function App(){
   const P=useMemo(loadLS,[]);
   const[page,setPage]=useState("home");
@@ -1335,6 +1405,26 @@ function App(){
     const a=fbAuth();if(!a)return;
     return a.onAuthStateChanged(fu=>{ if(fu)setUser(u=>u||fbUserToUser(fu)); else setUser(null); });
   },[]);
+  /* Firebase : récupère le quartier du membre depuis Firestore */
+  useEffect(()=>{
+    const d=fbDb();if(!d||!user||!user.uid)return;
+    d.collection("users").doc(user.uid).get().then(doc=>{
+      if(doc.exists&&doc.data().quartier)setUser(u=>(u&&u.uid===user.uid&&u.quartier!==doc.data().quartier)?{...u,quartier:doc.data().quartier}:u);
+    }).catch(()=>{});
+  },[user&&user.uid]);
+  /* met à jour le quartier (paramètres) */
+  const saveQuartier=async q=>{
+    setUser(u=>u?{...u,quartier:q}:u);
+    const d=fbDb();if(d&&user&&user.uid){try{await d.collection("users").doc(user.uid).set({quartier:q},{merge:true})}catch(_){}}
+    toast("Quartier mis à jour");
+  };
+  /* recharge l'état de vérification email */
+  const refreshVerif=async()=>{
+    const a=fbAuth();const fu=a&&a.currentUser;if(!fu)return;
+    try{await fu.reload()}catch(_){}
+    if(fu.emailVerified){setUser(u=>u?{...u,verified:true}:u);toast("Adresse confirmée — bienvenue !");}
+    else toast("Pas encore confirmée — cliquez le lien reçu par email");
+  };
   /* Firebase : annonces partagées (Firestore) */
   useEffect(()=>{
     const d=fbDb();if(!d)return;
@@ -1429,6 +1519,9 @@ function App(){
   },[page]);
 
   const NavBtn=({id,label})=><button className={page===id?"on":""} onClick={()=>go(id)}>{label}</button>;
+  if(user&&fbAuth()&&user.verified===false)
+    return <VerifyGate user={user} onRefresh={refreshVerif} onLogout={logout}
+      onResend={async()=>{const fu=fbAuth().currentUser;if(fu){await sendVerif(fu,user.name||"voisin",user.email);toast("Email de confirmation renvoyé");}}}/>;
   return <>
     <header className="hdr">
       <div className="wrap">
@@ -1455,7 +1548,7 @@ function App(){
 
     <div id="pagewrap">
     {page==="home"&&<>
-      <Hero items={items} open={open} onSearch={v=>{setQ(v);document.getElementById("grille")?.scrollIntoView({behavior:reduced()?"instant":"smooth"})}}/>
+      <Hero items={items} user={user} open={open} onSearch={v=>{setQ(v);document.getElementById("grille")?.scrollIntoView({behavior:reduced()?"instant":"smooth"})}}/>
       <div className="cats" role="tablist" aria-label="Catégories">
         {CATS.map(c=><button key={c.id} role="tab" aria-selected={cat===c.id} className={"cat"+(cat===c.id?" on":"")} onClick={()=>setCat(c.id)}>{c.label}</button>)}
       </div>
@@ -1496,13 +1589,13 @@ function App(){
     {page==="messages"&&(user?<Messages convs={convs} setConvs={setConvs} openId={openConv} setOpenId={setOpenConv}/>:<Auth onDone={onAuth} toast={toast}/>)}
     {page==="favs"&&<Favs items={items} open={open} fav={fav} togFav={togFav}/>}
     {page==="profile"&&(user?<Profile dark={dark} setDark={setDark} toast={toast} go={go} plus={plus} user={user} logout={logout}/>:<Auth onDone={onAuth} toast={toast}/>)}
-    {page==="carte"&&<Carte open={open} items={items} dark={dark}/>}
+    {page==="carte"&&<Carte open={open} items={items} dark={dark} user={user}/>}
     {page==="activite"&&<Activite toast={toast} resas={resas} myItems={myItems}/>}
     {page==="notifs"&&<Notifs notifs={notifs} markRead={markRead} markAll={markAll}/>}
     {page==="avis"&&<Avis/>}
     {page==="grade"&&<Grade plus={plus}/>}
     {page==="plus"&&<Plus toast={toast} plus={plus} subscribe={need(subscribe)}/>}
-    {page==="params"&&<Params dark={dark} setDark={setDark} toast={toast}/>}
+    {page==="params"&&<Params dark={dark} setDark={setDark} toast={toast} user={user} plus={plus} logout={logout} saveQuartier={saveQuartier}/>}
     {page==="legal"&&<Legal id={legal}/>}
     {page==="auth"&&<Auth onDone={onAuth} toast={toast}/>}
     </div>
