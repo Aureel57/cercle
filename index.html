@@ -410,6 +410,14 @@ footer .wrap{padding:46px 24px 28px}
 .photo-pick button:hover{border-color:var(--dk)}
 .photo-pick button.on{border-color:var(--ter);box-shadow:2px 2px 0 color-mix(in srgb,var(--dk) 28%,transparent);transform:translate(-1px,-1px)}
 .hint{font-size:12px;color:var(--g);margin-top:5px}
+.pwm{margin-top:8px}
+.pwm-bar{display:flex;gap:4px;margin-bottom:6px}
+.pwm-seg{flex:1;height:5px;border-radius:3px;background:var(--bd);transition:background .25s}
+.pwm-lvl{font-size:12px;font-weight:700;display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.pwm-checks{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:11.5px;color:var(--g)}
+.pwm-checks span{display:inline-flex;align-items:center;gap:4px;transition:color .2s}
+.pwm-checks span.ok{color:var(--green);font-weight:600}
+.pwm-checks span b{font-size:11px}
 .gain{display:flex;align-items:center;gap:10px;background:color-mix(in srgb,var(--green) 9%,transparent);border:1px solid color-mix(in srgb,var(--green) 28%,transparent);border-radius:12px;padding:11px 14px;font-size:13px;color:var(--greend);font-weight:600;margin-top:6px}
 .reveal{opacity:0;transform:translateY(22px)}
 .toast{position:fixed;bottom:84px;left:50%;transform:translateX(-50%);background:var(--dk);color:var(--bg);padding:12px 22px;border-radius:999px;font-size:13.5px;font-weight:600;z-index:300;box-shadow:0 10px 30px rgba(0,0,0,.25)}
@@ -507,6 +515,21 @@ const FB_ERR={"auth/invalid-credential":"Email ou mot de passe incorrect.","auth
 const fbMsg=e=>FB_ERR[e&&e.code]||"Petit souci de connexion — réessayez.";
 /* Détecte « cet email a déjà un compte » même si le code varie (protection anti-énumération) */
 const isExistingAccount=e=>{const c=(e&&e.code)||"";const m=((e&&e.message)||"").toLowerCase();return c==="auth/email-already-in-use"||c==="auth/account-exists-with-different-credential"||m.includes("already in use")||m.includes("email-already")||m.includes("already exists");};
+/* Règles de mot de passe du projet : longueur, majuscule, chiffre, caractère spécial */
+const pwChecks=p=>({len:(p||"").length>=6,upper:/[A-Z]/.test(p||""),digit:/[0-9]/.test(p||""),special:/[^A-Za-z0-9]/.test(p||"")});
+const pwScore=p=>{const c=pwChecks(p);return c.len+c.upper+c.digit+c.special;};
+const PW_LVL=[{t:"",c:"var(--bd)"},{t:"Très faible",c:"var(--ter)"},{t:"Faible",c:"var(--sun)"},{t:"Correct",c:"var(--sun)"},{t:"Solide",c:"var(--green)"}];
+/* Indicateur de force en direct (4 critères = 4 segments) */
+function PwMeter({value}){
+  if(!value)return <div className="hint">6 caractères min, avec une majuscule, un chiffre et un caractère spécial (ex. ! ? @).</div>;
+  const c=pwChecks(value),s=pwScore(value),lvl=PW_LVL[s]||PW_LVL[0];
+  const item=(ok,label)=><span className={ok?"ok":""}><b>{ok?"✓":"○"}</b>{label}</span>;
+  return <div className="pwm">
+    <div className="pwm-bar">{[0,1,2,3].map(i=><div key={i} className="pwm-seg" style={{background:i<s?lvl.c:"var(--bd)"}}/>)}</div>
+    <div className="pwm-lvl" style={{color:lvl.c}}><span>{lvl.t}</span></div>
+    <div className="pwm-checks">{item(c.len,"6 caractères")}{item(c.upper,"Une majuscule")}{item(c.digit,"Un chiffre")}{item(c.special,"Un caractère spécial")}</div>
+  </div>;
+}
 const VERIF_SETTINGS={url:"https://aureel57.github.io/cercle/",handleCodeInApp:false};
 /* Envoie l'email de vérif : email DA via Cloud Function si déployée, sinon email Firebase standard */
 async function sendVerif(user,name,email){
@@ -1232,6 +1255,7 @@ function Auth({onDone,toast}){
   const FB=!!fbAuth();
   const[mode,setMode]=useState("signup");
   const[prefill,setPrefill]=useState("");
+  const[pwVal,setPwVal]=useState("");
   const[step,setStep]=useState(0);
   const[form,setForm]=useState({});
   const[code,setCode]=useState("");
@@ -1314,7 +1338,7 @@ function Auth({onDone,toast}){
         <div className="fg"><label>Prénom</label><input name="n" required autoFocus autoComplete="given-name" placeholder="Noah"/></div>
         <div className="fg"><label>Email</label><input name="e" type="email" required autoComplete="email" placeholder="vous@exemple.fr"/></div>
         <div className="fg"><label>Votre quartier</label><input name="q" required autoComplete="address-level2" placeholder="Ex. rue du Sablon, Metz"/><div className="hint">Pour vous montrer les objets près de chez vous — jamais affiché aux autres, seulement la distance.</div></div>
-        <div className="fg"><label>Mot de passe</label><input name="p" type="password" required minLength={6} autoComplete="new-password" placeholder="6 caractères minimum"/><div className="hint">6 caractères min, avec une majuscule, un chiffre et un caractère spécial (ex. ! ? @).</div></div>
+        <div className="fg"><label>Mot de passe</label><input name="p" type="password" required minLength={6} autoComplete="new-password" placeholder="6 caractères minimum" value={pwVal} onChange={e=>setPwVal(e.target.value)}/><PwMeter value={pwVal}/></div>
         <button className="btn btn-ter" disabled={busy} style={{width:"100%",padding:13,opacity:busy?.6:1}}>{busy?"Création…":"Créer mon compte"}</button>
         <p style={{fontSize:11.5,color:"var(--gl)",textAlign:"center",marginTop:9,lineHeight:1.5}}>Un email de confirmation vous sera envoyé. <b style={{color:"var(--g)"}}>Vous devrez le valider</b> pour entrer dans le cercle.</p>
         <p style={{textAlign:"center",fontSize:13,color:"var(--g)",marginTop:10}}>Déjà membre ? <a style={{color:"var(--p)",fontWeight:700,cursor:"pointer"}} onClick={()=>setMode("login")}>Se connecter</a></p>
