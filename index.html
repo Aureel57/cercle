@@ -1568,20 +1568,6 @@ function App(){
           <button className="btn btn-ter" style={{padding:"13px 24px"}} onClick={()=>user?go("create"):go("auth")}>Proposer la mienne</button>
         </div>
       </main>
-      <footer>
-        <div className="wrap">
-          <div className="f-grid">
-            <div>
-              <button className="logo" onClick={goHome} style={{marginBottom:10}}><Logo size={32}/><span className="lt" style={{fontSize:19}}>Cercle</span></button>
-              <p style={{fontSize:13,color:"var(--g)",maxWidth:"24ch"}}>Location entre voisins — simple, assurée, à deux rues.</p>
-            </div>
-            <div><h4>Explorer</h4><a onClick={goHome}>Toutes les annonces</a><a onClick={()=>go("create")}>Proposer un objet</a><a onClick={()=>go("favs")}>Mes favoris</a></div>
-            <div><h4>Aide</h4><a onClick={()=>openLegal("cgu")}>Assurance & caution</a><a onClick={()=>go("carte")}>Carte du quartier</a><a onClick={()=>go("messages")}>Nous écrire</a></div>
-            <div><h4>Cercle</h4><a onClick={()=>go("grade")}>Les grades</a><a style={{color:"var(--plus)"}} onClick={()=>go("plus")}>✦ Cercle+</a></div>
-          </div>
-          <div className="f-low"><span>© 2026 Cercle · Tout est à deux rues.</span><span><a style={{display:"inline",cursor:"pointer"}} onClick={()=>openLegal("cgu")}>CGU</a> · <a style={{display:"inline",cursor:"pointer"}} onClick={()=>openLegal("conf")}>Confidentialité</a> · <a style={{display:"inline",cursor:"pointer"}} onClick={()=>openLegal("cookies")}>Cookies</a></span></div>
-        </div>
-      </footer>
     </>}
 
     {page==="detail"&&sel&&<Detail it={sel} backHome={goHome} fav={fav.has(sel.id)} togFav={togFav} toast={toast} reserve={need(reserve)} openChat={need(openChat)} plus={plus}/>}
@@ -1599,6 +1585,21 @@ function App(){
     {page==="legal"&&<Legal id={legal}/>}
     {page==="auth"&&<Auth onDone={onAuth} toast={toast}/>}
     </div>
+
+    <footer>
+      <div className="wrap">
+        <div className="f-grid">
+          <div>
+            <button className="logo" onClick={goHome} style={{marginBottom:10}}><Logo size={32}/><span className="lt" style={{fontSize:19}}>Cercle</span></button>
+            <p style={{fontSize:13,color:"var(--g)",maxWidth:"24ch"}}>Location entre voisins — simple, assurée, à deux rues.</p>
+          </div>
+          <div><h4>Explorer</h4><a onClick={goHome}>Toutes les annonces</a><a onClick={()=>go("create")}>Proposer un objet</a><a onClick={()=>go("favs")}>Mes favoris</a></div>
+          <div><h4>Aide</h4><a onClick={()=>openLegal("cgu")}>Assurance & caution</a><a onClick={()=>go("carte")}>Carte du quartier</a><a onClick={()=>go("messages")}>Nous écrire</a></div>
+          <div><h4>Cercle</h4><a onClick={()=>go("grade")}>Les grades</a><a style={{color:"var(--plus)"}} onClick={()=>go("plus")}>✦ Cercle+</a></div>
+        </div>
+        <div className="f-low"><span>© 2026 Cercle · Tout est à deux rues.</span><span><a style={{display:"inline",cursor:"pointer"}} onClick={()=>openLegal("cgu")}>CGU</a> · <a style={{display:"inline",cursor:"pointer"}} onClick={()=>openLegal("conf")}>Confidentialité</a> · <a style={{display:"inline",cursor:"pointer"}} onClick={()=>openLegal("cookies")}>Cookies</a></span></div>
+      </div>
+    </footer>
 
     <nav className="mnav" aria-label="Navigation mobile">
       <button className={page==="home"?"on":""} onClick={goHome}><I.home size={20}/>Autour</button>
