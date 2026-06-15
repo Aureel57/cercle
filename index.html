@@ -409,6 +409,11 @@ footer .wrap{padding:46px 24px 28px}
 .photo-pick button img{width:100%;height:100%;object-fit:cover;display:block}
 .photo-pick button:hover{border-color:var(--dk)}
 .photo-pick button.on{border-color:var(--ter);box-shadow:2px 2px 0 color-mix(in srgb,var(--dk) 28%,transparent);transform:translate(-1px,-1px)}
+.photo-up{border:2px dashed var(--p)!important;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;aspect-ratio:1;cursor:pointer;color:var(--p);background:color-mix(in srgb,var(--p) 6%,transparent);font-size:9px;font-weight:700;text-align:center;line-height:1.1;transition:all .15s var(--ease);position:relative;overflow:hidden}
+.photo-up:hover{background:color-mix(in srgb,var(--p) 12%,transparent)}
+.photo-up.on{border-style:solid!important;border-color:var(--ter)!important}
+.photo-up img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.photo-up input{display:none}
 .hint{font-size:12px;color:var(--g);margin-top:5px}
 .pwm{margin-top:8px}
 .pwm-bar{display:flex;gap:4px;margin-bottom:6px}
@@ -480,7 +485,16 @@ const CATS=[
  {id:"jardin",label:"Jardin"},
  {id:"cuisine",label:"Cuisine & maison"},
 ];
-const seed=(s,w=560,h=420)=>`https://picsum.photos/seed/${s}/${w}/${h}`;
+/* seed → image. Les vraies photos (data:/http/blob) passent telles quelles, les graines de démo deviennent une image picsum stable. */
+const isUrl=s=>/^(data:|https?:|blob:)/.test(String(s||""));
+const seed=(s,w=560,h=420)=>isUrl(s)?String(s):`https://picsum.photos/seed/${s}/${w}/${h}`;
+/* Galerie à partir d'une graine/photo : une vraie photo se répète, une graine de démo donne 3 vues distinctes. */
+const imgsFromSeed=sd=>isUrl(sd)?[sd,sd,sd]:[sd,sd+"b",sd+"c"];
+/* Redimensionne une photo choisie (côté navigateur) en JPEG compact pour le stockage/affichage. */
+function fileToDataURL(file,max=900,q=0.72){return new Promise((res,rej)=>{const u=URL.createObjectURL(file),im=new Image();
+  im.onload=()=>{let w=im.width,h=im.height;if(w>h&&w>max){h=Math.round(h*max/w);w=max;}else if(h>=w&&h>max){w=Math.round(w*max/h);h=max;}
+    const cv=document.createElement("canvas");cv.width=w;cv.height=h;cv.getContext("2d").drawImage(im,0,0,w,h);URL.revokeObjectURL(u);res(cv.toDataURL("image/jpeg",q));};
+  im.onerror=e=>{URL.revokeObjectURL(u);rej(e);};im.src=u;});}
 const ITEMS=[
  {id:"p1",t:"Perceuse visseuse Bosch Pro 18V",c:"brico",p:12,img:["atelier","outils2","etabli3"],own:"Léa",city:"rue de Charonne",note:4.9,rev:42,d:"Perceuse professionnelle 18V, 2 batteries + coffret 34 embouts. Elle dort dans mon garage 360 jours par an — autant qu'elle serve. Remise en main propre devant la boulangerie Petit."},
  {id:"p2",t:"Vélo cargo électrique",c:"velo",p:18,img:["velo22","rue4","cargo7"],own:"Maxime",city:"rue Haute",note:4.8,rev:31,d:"Vélo cargo électrique, idéal courses et enfants. Casque et antivol fournis. Autonomie 60 km."},
@@ -746,7 +760,7 @@ function Detail({it,backHome,fav,togFav,toast,reserve,openChat,plus}){
       <aside className="ticket">
         <div className="th">
           <span className="prix">{it.p} € <small>/jour</small></span>
-          <span className="caution">CAUTION {it.p*6} €</span>
+          <span className="caution">CAUTION {it.cau||it.p*6} €</span>
         </div>
         <div className="perfo"/>
         <div className="tb" style={{paddingTop:18}}>
@@ -775,34 +789,48 @@ function Detail({it,backHome,fav,togFav,toast,reserve,openChat,plus}){
 
 /* ═══════════ PAGES ═══════════ */
 function Create({toast,backHome,addItem}){
-  const SEEDS=["atelier","velo22","camp4","jardin5","cine2","table9"];
+  const SEEDS=["atelier","velo22","camp4","jardin5","cine2"];
   const HINTS={brico:"les outils du quartier se louent 8–15 €/j",photo:"photo & son : 15–45 €/j",velo:"vélos & mobilité : 12–20 €/j",sport:"sport & plein air : 10–18 €/j",jardin:"jardin : 8–14 €/j",cuisine:"cuisine & maison : 5–10 €/j"};
   const[t,setT]=useState("");
   const[c,setC]=useState("brico");
   const[pr,setPr]=useState("");
   const[d,setD]=useState("");
   const[ph,setPh]=useState(SEEDS[0]);
+  const[cau,setCau]=useState("");
+  const[upBusy,setUpBusy]=useState(false);
   const price=Math.max(0,+pr||0);
-  const prev={id:"prev",t:t||"Votre objet",c,p:price||8,img:[ph],own:"Vous",city:"rue du Sablon",note:5,rev:0,d};
+  const cauVal=cau===""?(price?price*6:""):Math.max(0,+cau||0);
+  const prev={id:"prev",t:t||"Votre objet",c,p:price||8,img:imgsFromSeed(ph),own:"Vous",city:"rue du Sablon",note:5,rev:0,d,cau:+cauVal||0};
+  const onUpload=async e=>{const f=e.target.files&&e.target.files[0];if(!f)return;
+    if(!/^image\//.test(f.type)){toast("Choisissez un fichier image");return;}
+    if(f.size>12*1024*1024){toast("Photo trop lourde (12 Mo max)");return;}
+    setUpBusy(true);try{const u=await fileToDataURL(f);setPh(u);}catch(_){toast("Impossible de lire cette photo");}setUpBusy(false);};
   return <div className="page" style={{maxWidth:1180}}>
     <h1>Proposer un objet</h1>
     <p className="lead">Il dort chez vous ? Il peut servir à deux rues. Photo, prix — en ligne en 2 minutes.</p>
     <div className="create-grid">
       <div className="panel">
         <form onSubmit={e=>{e.preventDefault();
-          addItem({t,c,p:price||5,d:d||"Proposé par un voisin du Sablon, avec soin.",img:ph});
+          addItem({t,c,p:price||5,d:d||"Proposé par un voisin du Sablon, avec soin.",img:ph,cau:+cauVal||0});
           toast("Annonce publiée — bienvenue dans le cercle !");backHome();}}>
           <div className="fg"><label>Titre de l'annonce</label><input required value={t} onChange={e=>setT(e.target.value)} placeholder="Ex. Perceuse visseuse Bosch Pro 18V"/></div>
           <div className="fr">
             <div className="fg"><label>Catégorie</label><select value={c} onChange={e=>setC(e.target.value)}>{CATS.filter(x=>x.id!=="all").map(x=><option key={x.id} value={x.id}>{x.label}</option>)}</select></div>
             <div className="fg"><label>Prix par jour (€)</label><input type="number" min="1" required value={pr} onChange={e=>setPr(e.target.value)} placeholder="12"/><div className="hint">{HINTS[c]}</div></div>
           </div>
+          <div className="fg"><label>Caution (€)</label><input type="number" min="0" value={cau} onChange={e=>setCau(e.target.value)} placeholder={price?String(price*6):"Ex. 72"}/><div className="hint">Séquestrée par Cercle, rendue sous 48 h. {price>0&&cau===""?`Suggéré : ${price*6} € (6× le prix/jour).`:"Laissez vide pour la suggestion automatique (6× le prix/jour)."}</div></div>
           <div className="fg"><label>Description</label><textarea value={d} onChange={e=>setD(e.target.value)} placeholder="État, accessoires fournis, lieu de remise en main propre…"/></div>
-          <div className="fg"><label>Photo d'illustration</label>
-            <div className="photo-pick">{SEEDS.map(sd=><button type="button" key={sd} className={ph===sd?"on":""} onClick={()=>setPh(sd)} aria-label={"Choisir la photo "+sd}><img src={seed(sd,120,120)} alt=""/></button>)}</div>
-            <div className="hint">Démo — l'upload de vos vraies photos arrivera avec le branchement Firebase.</div>
+          <div className="fg"><label>Photo de l'objet</label>
+            <div className="photo-pick">
+              <label className={"photo-up"+(isUrl(ph)?" on":"")} title="Importer une photo">
+                {isUrl(ph)?<img src={ph} alt="Votre photo"/>:<><I.plus size={16}/><span>{upBusy?"…":"Ma photo"}</span></>}
+                <input type="file" accept="image/*" onChange={onUpload}/>
+              </label>
+              {SEEDS.map(sd=><button type="button" key={sd} className={ph===sd?"on":""} onClick={()=>setPh(sd)} aria-label={"Choisir la photo "+sd}><img src={seed(sd,120,120)} alt=""/></button>)}
+            </div>
+            <div className="hint">{isUrl(ph)?"Votre photo est prête. Touchez une vignette pour revenir à une image de démo.":"Importez votre photo (recadrée et allégée automatiquement) ou choisissez une image de démo."}</div>
           </div>
-          {price>0&&<div className="gain"><I.star size={14}/>Louée 2 week-ends par mois ≈ {price*4} €/mois dans votre poche · caution conseillée : {price*6} €</div>}
+          {price>0&&<div className="gain"><I.star size={14}/>Louée 2 week-ends par mois ≈ {price*4} €/mois dans votre poche · caution : {cauVal||price*6} €</div>}
           <button type="submit" className="btn btn-ter" style={{width:"100%",padding:14,fontSize:15,marginTop:12}}>Publier mon annonce</button>
         </form>
       </div>
@@ -1465,7 +1493,7 @@ function App(){
     try{
       return d.collection("v2_listings").orderBy("createdAt","desc").limit(40).onSnapshot(snap=>{
         const arr=[];snap.forEach(doc=>{const x=doc.data();const sd=x.seed||"voisin1";
-          arr.push({id:doc.id,t:x.t,c:x.c,p:x.p,d:x.d,img:[sd,sd+"b",sd+"c"],own:x.own||"Voisin",city:x.city||"rue du Sablon",note:x.note||5,rev:x.rev||0});});
+          arr.push({id:doc.id,t:x.t,c:x.c,p:x.p,d:x.d,img:imgsFromSeed(sd),own:x.own||"Voisin",city:x.city||"rue du Sablon",note:x.note||5,rev:x.rev||0,cau:x.cau||0,uid:x.uid||""});});
         setFbItems(arr);
       },err=>console.warn("[Cercle] Firestore lecture indisponible:",err&&err.code));
     }catch(e){console.warn("[Cercle] Firestore off:",e&&e.code)}
@@ -1481,18 +1509,19 @@ function App(){
   const markAll=()=>setNotifs(ns=>ns.map(n=>({...n,unread:false})));
   const openLegal=id=>{setLegal(id);setPage("legal")};
   const unread=notifs.filter(n=>n.unread).length;
-  const addItem=async({t,c,p,d,img})=>{
+  const addItem=async({t,c,p,d,img,cau})=>{
     const sd=img||("voisin"+(Date.now()%9973));
     const dd=d||"Proposé par un voisin du Sablon, avec soin.";
+    const cc=Math.max(0,+cau||0);
     const db=fbDb();
     if(db&&user){
       try{
-        await db.collection("v2_listings").add({t,c,p,d:dd,seed:sd,own:user.name||"Voisin",uid:user.uid||"",city:"rue du Sablon",note:5,rev:0,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+        await db.collection("v2_listings").add({t,c,p,d:dd,seed:sd,cau:cc,own:user.name||"Voisin",uid:user.uid||"",city:"rue du Sablon",note:5,rev:0,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
         addNotif({k:"info",txt:`Votre annonce « ${t} » est en ligne dans le cercle.`});
         return;
       }catch(e){console.warn("[Cercle] écriture Firestore échouée, repli local:",e&&e.code);}
     }
-    const it={id:"u"+Date.now(),t,c,p,img:[sd,sd+"b",sd+"c"],own:"Vous",city:"rue du Sablon",note:5,rev:0,d:dd};
+    const it={id:"u"+Date.now(),t,c,p,img:imgsFromSeed(sd),own:"Vous",city:"rue du Sablon",note:5,rev:0,d:dd,cau:cc,uid:user&&user.uid||""};
     setMyItems(m=>[it,...m]);
     addNotif({k:"info",txt:`Votre annonce « ${t} » est en ligne dans le cercle.`});
   };
