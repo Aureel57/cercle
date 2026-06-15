@@ -19,3 +19,5 @@ design-preview-v6.html
 node_modules/
 v2/email-preview.html
 functions/node_modules/
+functions/.env
+.env

@@ -10,12 +10,12 @@ const nodemailer = require("nodemailer");
 
 admin.initializeApp();
 
-// Identifiants Gmail définis via :
-//   firebase functions:config:set gmail.email="..." gmail.password="MOT_DE_PASSE_APPLICATION"
-const GMAIL = (functions.config().gmail || {});
+// Identifiants Gmail lus depuis functions/.env (GMAIL_EMAIL, GMAIL_PASSWORD)
+const GMAIL_EMAIL = process.env.GMAIL_EMAIL;
+const GMAIL_PASSWORD = process.env.GMAIL_PASSWORD;
 const transporter = nodemailer.createTransport({
   service: "gmail",
-  auth: { user: GMAIL.email, pass: GMAIL.password },
+  auth: { user: GMAIL_EMAIL, pass: GMAIL_PASSWORD },
 });
 
 const SITE_URL = "https://aureel57.github.io/cercle/v2/";
@@ -101,13 +101,18 @@ exports.sendVerifEmail = functions.https.onCall(async (data) => {
   if (!email) {
     throw new functions.https.HttpsError("invalid-argument", "Adresse e-mail manquante.");
   }
-  // Lien de vérification officiel Firebase (retour sur le site après clic)
-  const link = await admin.auth().generateEmailVerificationLink(email, { url: SITE_URL });
-  await transporter.sendMail({
-    from: `Cercle <${GMAIL.email}>`,
-    to: email,
-    subject: "Bienvenue dans le cercle — confirmez votre adresse ✦",
-    html: emailHTML(name, link),
-  });
-  return { ok: true };
+  try {
+    // Lien de vérification officiel Firebase (retour sur le site après clic)
+    const link = await admin.auth().generateEmailVerificationLink(email, { url: SITE_URL });
+    await transporter.sendMail({
+      from: `Cercle <${GMAIL_EMAIL}>`,
+      to: email,
+      subject: "Bienvenue dans le cercle — confirmez votre adresse ✦",
+      html: emailHTML(name, link),
+    });
+    return { ok: true };
+  } catch (err) {
+    console.error("sendVerifEmail error:", err);
+    throw new functions.https.HttpsError("internal", String(err && (err.code || err.message) || "inconnue"));
+  }
 });
