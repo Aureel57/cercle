@@ -766,8 +766,10 @@ function Detail({it,backHome,fav,togFav,toast,reserve,openChat,plus,reviews=[],r
   const[days,setDays]=useState(3);
   const myGrade=getGrade(rentals);
   const rate=feeRate(rentals,plus);
+  const base=+(it.p*days).toFixed(2);
   const fee=+(it.p*days*rate).toFixed(2);
-  const tot=(it.p*days+fee).toFixed(2).replace(".",",");
+  const totNum=+(base+fee).toFixed(2);
+  const tot=totNum.toFixed(2).replace(".",",");
   useEffect(()=>{window.scrollTo({top:0,behavior:"instant"});
     if(typeof gsap!=="undefined"&&!reduced()){
       gsap.from(".gal, .det-body > div",{y:20,autoAlpha:0,duration:.6,stagger:.12,ease:"power3.out"});
@@ -838,7 +840,7 @@ function Detail({it,backHome,fav,togFav,toast,reserve,openChat,plus,reviews=[],r
             {plus&&<div className="row" style={{color:"var(--plus)"}}><span>✦ Cercle+ inclus</span><b style={{color:"var(--plus)"}}>−1 %</b></div>}
             <div className="tot"><span>Total</span><b>{tot} €</b></div>
           </div>
-          <button className="btn btn-green" onClick={()=>reserve(it,days,tot)}><I.lock size={15}/>Réserver — {tot} €</button>
+          <button className="btn btn-green" onClick={()=>reserve(it,days,totNum,base,fee)}><I.lock size={15}/>Réserver — {tot} €</button>
           <p className="note">Débité seulement à la confirmation de {it.own}</p>
           <button className={"btn btn-ghost"} style={{width:"100%",marginTop:8,fontSize:13}} onClick={()=>togFav(it.id)}>{fav?"♥ Retiré des favoris ?":"♡ Ajouter aux favoris"}</button>
         </div>
@@ -1008,6 +1010,7 @@ function Profile({dark,setDark,toast,go,plus,user,logout,stats={}}){
         ["notifs","Notifications","Ce qui bouge dans le cercle",I.bell],
         ["avis","Mes avis",stats.avisCount?`${noteStr} — ${stats.avisCount} avis reçu${stats.avisCount>1?"s":""}`:"Pas encore d'avis reçu",I.star],
         ["grade","Mon grade",g.nom+" · "+(stats.rentals||0)+" location"+((stats.rentals||0)>1?"s":"")+" · "+g.fee+" %",I.shield],
+        ["revenus","Revenus & justificatifs","Relevé annuel, reçus à télécharger",I.clock],
         ["params","Paramètres","Compte & préférences",I.user],
       ].map(([id,t,s,Ic])=><button key={id} onClick={()=>go(id)}><span className="ic"><Ic size={17}/></span><span>{t}<small>{s}</small></span></button>)}
     </div>
@@ -1416,6 +1419,69 @@ function Legal({id}){
   </div>;
 }
 
+/* ═══════════ JUSTIFICATIFS (relevé / reçu imprimable → PDF) ═══════════ */
+const escH=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const docDate=ca=>{const t=ca&&ca.seconds?new Date(ca.seconds*1000):new Date();return t.toLocaleDateString("fr-FR",{day:"2-digit",month:"long",year:"numeric"});};
+const eurF=n=>(+n||0).toFixed(2).replace(".",",")+" €";
+function openDoc(filename,inner){
+  const css="@page{margin:18mm}*{box-sizing:border-box}body{font-family:Georgia,'Times New Roman',serif;color:#20242F;background:#fff;margin:0;padding:32px;line-height:1.5}"
+   +".bd{max-width:680px;margin:0 auto}.brand{display:flex;align-items:center;gap:10px;border-bottom:2px solid #20242F;padding-bottom:14px;margin-bottom:22px}"
+   +".ring{width:26px;height:26px;border:5px solid #2C50C8;border-radius:50%;border-right-color:transparent}.bn{font-size:22px;font-weight:bold}.bn span{color:#DA6740}"
+   +"h1{font-size:21px;margin:0 0 4px}.sub{color:#6A7078;font-size:13px;margin:0 0 20px}"
+   +"table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13.5px}th{text-align:left;border-bottom:2px solid #20242F;padding:8px 6px;font-size:11px;text-transform:uppercase;letter-spacing:.05em}"
+   +"td{padding:8px 6px;border-bottom:1px solid #E8E1D2}.r{text-align:right}.c{text-align:center}"
+   +".tot{margin-top:16px;font-size:16px;background:#F7F3EA;border:1.5px solid #20242F;border-radius:10px;padding:12px 16px}"
+   +".kv td:first-child{color:#6A7078;width:42%}.note{font-size:11px;color:#A39B89;line-height:1.6;margin-top:24px;border-top:1px solid #E8E1D2;padding-top:12px}";
+  const html="<!doctype html><html lang=fr><head><meta charset=utf-8><title>"+escH(filename)+"</title><style>"+css+"</style></head><body><div class=bd><div class=brand><div class=ring></div><div class=bn>cercle<span>.</span></div></div>"+inner+"</div></body></html>";
+  const w=window.open("","_blank","width=840,height=920");
+  if(w){w.document.write(html);w.document.close();w.focus();setTimeout(()=>{try{w.print()}catch(e){}},500);}
+  else{const blob=new Blob([html],{type:"text/html"});const u=URL.createObjectURL(blob);const a=document.createElement("a");a.href=u;a.download=filename+".html";a.click();URL.revokeObjectURL(u);}
+}
+const ownerGain=r=>+r.base||((+r.total||0)-(+r.fee||0))||0;
+function Revenus({user,stats={}}){
+  const year=new Date().getFullYear();
+  const conf=(stats.confirmed||[]).filter(r=>{const t=r.createdAt&&r.createdAt.seconds?new Date(r.createdAt.seconds*1000):null;return t?t.getFullYear()===year:true;});
+  const total=conf.reduce((s,r)=>s+ownerGain(r),0);
+  const owner=(user&&user.name)||"Voisin";
+  const NOTE="Document fourni à titre indicatif pour vous aider à déclarer vos revenus de location entre particuliers. Les montants correspondent aux sommes perçues, hors commission de service prélevée par Cercle. Cercle est un intermédiaire de mise en relation ; l'identité de l'éditeur figure dans les mentions légales.";
+  const annual=()=>openDoc("Releve-revenus-Cercle-"+year,
+    "<h1>Relevé annuel de revenus "+year+"</h1><p class=sub>Établi pour <b>"+escH(owner)+"</b> · locations confirmées sur Cercle</p>"
+    +"<table><thead><tr><th>Date</th><th>Objet</th><th>Locataire</th><th class=c>Jours</th><th class=r>Montant perçu</th></tr></thead><tbody>"
+    +conf.map(r=>"<tr><td>"+docDate(r.createdAt)+"</td><td>"+escH(r.it.t)+"</td><td>"+escH(r.renterName)+"</td><td class=c>"+(r.days||"–")+"</td><td class=r>"+eurF(ownerGain(r))+"</td></tr>").join("")
+    +"</tbody></table><div class=tot>Total perçu en "+year+" : <b>"+eurF(total)+"</b> · "+conf.length+" location"+(conf.length>1?"s":"")+"</div><p class=note>"+NOTE+"</p>");
+  const receipt=r=>openDoc("Recu-Cercle-"+r.id.slice(0,6),
+    "<h1>Reçu de location</h1><p class=sub>Reçu n° "+r.id.slice(0,8).toUpperCase()+" · émis le "+docDate(r.createdAt)+"</p>"
+    +"<table class=kv><tbody>"
+    +"<tr><td>Bénéficiaire</td><td><b>"+escH(owner)+"</b></td></tr>"
+    +"<tr><td>Objet loué</td><td>"+escH(r.it.t)+"</td></tr>"
+    +"<tr><td>Locataire</td><td>"+escH(r.renterName)+"</td></tr>"
+    +"<tr><td>Période</td><td>"+escH(r.range||"–")+"</td></tr>"
+    +"<tr><td>Durée</td><td>"+(r.days||"–")+" jour"+((r.days||0)>1?"s":"")+"</td></tr>"
+    +(r.pricePerDay?"<tr><td>Prix par jour</td><td>"+eurF(r.pricePerDay)+"</td></tr>":"")
+    +"</tbody></table><div class=tot>Montant perçu : <b>"+eurF(ownerGain(r))+"</b></div><p class=note>"+NOTE+"</p>");
+  return <div className="page">
+    <h1>Revenus &amp; justificatifs</h1>
+    <p className="lead">Vos documents pour déclarer vos revenus de location.</p>
+    <div className="panel" style={{display:"flex",alignItems:"center",gap:16,flexWrap:"wrap"}}>
+      <div style={{flex:1,minWidth:180}}>
+        <div style={{fontSize:12.5,color:"var(--g)"}}>Total perçu en {year}</div>
+        <div style={{fontFamily:"var(--fd)",fontSize:28,color:"var(--dk)"}}>{eurF(total)}</div>
+        <div style={{fontSize:12.5,color:"var(--gl)"}}>{conf.length} location{conf.length>1?"s":""} confirmée{conf.length>1?"s":""}</div>
+      </div>
+      <button className="btn btn-ter" style={{padding:"12px 18px"}} disabled={!conf.length} onClick={annual}>Télécharger le relevé {year}</button>
+    </div>
+    <div className="sec-t" style={{fontSize:18,margin:"6px 0 10px"}}>Détail des locations</div>
+    {conf.length===0
+      ?<div className="empty" style={{padding:"26px 12px"}}><div className="big">Aucune location confirmée</div>Vos justificatifs apparaîtront ici dès qu'une location de vos objets sera confirmée.</div>
+      :<div className="rows">{conf.map(r=><div key={r.id} className="row-card">
+        <img src={seed(r.it.img[0],120,120)} alt=""/>
+        <div style={{flex:1,minWidth:0}}><div className="ti">{r.it.t}</div><div className="su">{docDate(r.createdAt)} · {r.renterName} · {eurF(ownerGain(r))}</div></div>
+        <button className="btn btn-ghost" style={{minHeight:34,padding:"7px 14px",fontSize:12}} onClick={()=>receipt(r)}>Reçu</button>
+      </div>)}</div>}
+    <p style={{fontSize:12,color:"var(--gl)",marginTop:14,lineHeight:1.6}}>Les montants correspondent aux sommes perçues (hors commission). Cercle est un intermédiaire ; vous restez responsable de votre déclaration. Voir la <b>politique de confidentialité</b> et les <b>mentions légales</b>.</p>
+  </div>;
+}
+
 function CookieBanner({onChoice,openLegal}){
   return <div className="ckb" role="dialog" aria-label="Consentement aux cookies">
     <p>Cercle utilise le strict minimum pour fonctionner (connexion, préférences) — <b style={{color:"var(--dk)"}}>aucun traceur publicitaire</b>. <a onClick={()=>openLegal("cookies")}>En savoir plus</a></p>
@@ -1599,7 +1665,7 @@ function Auth({onDone,toast}){
 }
 
 /* ═══════════ APP ═══════════ */
-const ROUTES=["home","carte","favs","messages","profile","create","activite","notifs","avis","grade","plus","params","legal","detail","auth"];
+const ROUTES=["home","carte","favs","messages","profile","create","activite","notifs","avis","grade","plus","params","revenus","legal","detail","auth"];
 /* ═══════════ BLOCAGE TANT QUE L'EMAIL N'EST PAS VÉRIFIÉ ═══════════ */
 function VerifyGate({user,onRefresh,onResend,onLogout}){
   return <>
@@ -1659,16 +1725,18 @@ function App(){
   /* statistiques réelles dérivées des données live */
   const stats=useMemo(()=>{
     const confirmed=fbRequests.filter(r=>r.status==="confirmed");
-    const revenus=confirmed.reduce((s,r)=>s+(+r.total||0),0);
+    const gain=r=>(+r.base||((+r.total||0)-(+r.fee||0))||0); // montant perçu par le propriétaire
+    const revenus=Math.round(confirmed.reduce((s,r)=>s+gain(r),0));
     const myIds=new Set(myListings.map(i=>i.id));
     const recv=allReviews.filter(r=>myIds.has(r.itemId));
     const note=recv.length?recv.reduce((s,r)=>s+(r.note||0),0)/recv.length:0;
     const now=new Date(),months=[];
     for(let k=5;k>=0;k--){const dt=new Date(now.getFullYear(),now.getMonth()-k,1);months.push({key:dt.getFullYear()+"-"+dt.getMonth(),m:dt.toLocaleDateString("fr-FR",{month:"short"}).replace(".",""),v:0});}
-    confirmed.forEach(r=>{const t=r.createdAt&&r.createdAt.seconds?new Date(r.createdAt.seconds*1000):null;if(!t)return;const key=t.getFullYear()+"-"+t.getMonth();const b=months.find(x=>x.key===key);if(b)b.v+=(+r.total||0);});
+    confirmed.forEach(r=>{const t=r.createdAt&&r.createdAt.seconds?new Date(r.createdAt.seconds*1000):null;if(!t)return;const key=t.getFullYear()+"-"+t.getMonth();const b=months.find(x=>x.key===key);if(b)b.v+=gain(r);});
+    months.forEach(m=>m.v=Math.round(m.v));
     if(months.length)months[months.length-1].cur=true;
     const perItem={};confirmed.forEach(r=>{perItem[r.it.id]=(perItem[r.it.id]||0)+1;});
-    return {revenus,locations:confirmed.length,annonces:myListings.length,avisCount:recv.length,note,months,rentals:confirmed.length,perItem};
+    return {revenus,locations:confirmed.length,annonces:myListings.length,avisCount:recv.length,note,months,rentals:confirmed.length,perItem,confirmed};
   },[fbRequests,myListings,allReviews]);
   const itemsRef=useRef(items);useEffect(()=>{itemsRef.current=items},[items]);
 
@@ -1726,8 +1794,9 @@ function App(){
   /* mapping doc réservation → objet d'affichage */
   const resaView=(id,x)=>{const st=x.status==="declined"?"fini":"a-venir";
     const lbl=x.status==="confirmed"?"✓ Confirmée":x.status==="declined"?"Refusée":"⏳ En attente";
+    const total=+x.total||0,fee=+x.fee||0,base=+x.base||(total-fee)||total;
     return {id,fs:true,status:x.status,it:{id:x.itemId,t:x.itemTitle,img:imgsFromSeed(x.itemSeed||"voisin1"),own:x.ownerName||"Voisin"},
-      range:x.range||"",total:+x.total||0,days:x.days||0,createdAt:x.createdAt,renterName:x.renterName||"Voisin",renterUid:x.renterUid,st,lbl};};
+      range:x.range||"",total,base,fee,pricePerDay:+x.pricePerDay||0,days:x.days||0,createdAt:x.createdAt,renterName:x.renterName||"Voisin",renterUid:x.renterUid,st,lbl};};
   /* Firebase : mes réservations (côté locataire) */
   useEffect(()=>{
     const d=fbDb();if(!d||!user||!user.uid)return;
@@ -1798,13 +1867,14 @@ function App(){
     setMyItems(m=>[it,...m]);
     addNotif({k:"info",txt:`Votre annonce « ${t} » est en ligne dans le cercle.`});
   };
-  const reserve=(it,days,tot)=>{
+  const reserve=(it,days,tot,base,fee)=>{
     const range=`12 → ${12+days} juin`;
+    base=+base||+it.p*days||0;fee=+fee||0;tot=+tot||base+fee;
     const db=fbDb();
     if(db&&user){
       db.collection("v2_reservations").add({itemId:it.id,itemTitle:it.t,itemSeed:it.img&&it.img[0]||"voisin1",
         ownerName:it.own||"Voisin",ownerUid:it.uid||"",renterUid:user.uid||"",renterName:user.name||"Voisin",
-        days,total:tot,range,status:"pending",createdAt:firebase.firestore.FieldValue.serverTimestamp()})
+        days,pricePerDay:+it.p||0,base,fee,total:tot,range,status:"pending",createdAt:firebase.firestore.FieldValue.serverTimestamp()})
         .catch(e=>{console.warn("[Cercle] réservation Firestore échouée, repli local:",e&&e.code);
           setResas(rs=>[{id:Date.now(),it,range,st:"a-venir",lbl:"⏳ En attente"},...rs]);});
     }else{
@@ -1984,6 +2054,7 @@ function App(){
     {page==="notifs"&&<Notifs notifs={allNotifs} markRead={markRead} markAll={markAll}/>}
     {page==="avis"&&<Avis reviews={allReviews} user={user} myListings={myListings}/>}
     {page==="grade"&&<Grade plus={plus} rentals={stats.rentals}/>}
+    {page==="revenus"&&(user?<Revenus user={user} stats={stats}/>:<Auth onDone={onAuth} toast={toast}/>)}
     {page==="plus"&&<Plus toast={toast} plus={plus} subscribe={need(subscribe)}/>}
     {page==="params"&&<Params dark={dark} setDark={setDark} toast={toast} user={user} plus={plus} logout={logout} saveQuartier={saveQuartier} exportData={exportData} deleteAccount={deleteAccount} openLegal={openLegal}/>}
     {page==="legal"&&<Legal id={legal}/>}
