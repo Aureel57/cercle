@@ -183,6 +183,15 @@ footer .wrap{padding:46px 24px 28px}
 .det-gal .g0{aspect-ratio:16/10;position:relative}
 .det-gal .gcol{display:grid;grid-template-rows:1fr 1fr;gap:10px}
 .det-gal img{width:100%;height:100%;object-fit:cover;border-radius:12px;border:1.5px solid color-mix(in srgb,var(--dk) 12%,transparent)}
+/* galerie multi-photos : image principale + miniatures */
+.gal{margin-bottom:24px}
+.gal .g0{aspect-ratio:16/10;position:relative;border-radius:var(--rl);overflow:hidden}
+.gal .g0 img{width:100%;height:100%;object-fit:cover;border-radius:var(--rl);border:1.5px solid color-mix(in srgb,var(--dk) 12%,transparent)}
+.gthumbs{display:flex;gap:8px;margin-top:10px;overflow-x:auto;padding-bottom:2px}
+.gth{flex:0 0 auto;width:88px;height:62px;border-radius:10px;overflow:hidden;border:2px solid transparent;padding:0;background:none;cursor:pointer;transition:border-color .15s}
+.gth img{width:100%;height:100%;object-fit:cover;display:block}
+.gth.on{border-color:var(--ter)}
+.gth:hover{border-color:color-mix(in srgb,var(--dk) 30%,transparent)}
 .det-body{display:grid;grid-template-columns:1fr 390px;gap:36px;align-items:start}
 .det h1{font-size:clamp(26px,3vw,34px);font-weight:800;letter-spacing:-.02em;margin:6px 0 10px}
 .det .meta{display:flex;align-items:center;gap:10px;font-size:13.5px;color:var(--g);flex-wrap:wrap}
@@ -421,6 +430,13 @@ footer .wrap{padding:46px 24px 28px}
 .photo-up.on{border-style:solid!important;border-color:var(--ter)!important}
 .photo-up img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .photo-up input{display:none}
+.photo-up.full{opacity:.4;pointer-events:none}
+/* photos sélectionnées (Proposer) */
+.photo-sel{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.psel{position:relative;width:84px;height:84px;border-radius:10px;overflow:hidden;border:2px solid var(--bd)}
+.psel img{width:100%;height:100%;object-fit:cover;display:block}
+.psel .cov{position:absolute;bottom:0;left:0;right:0;background:var(--ter);color:#fff;font-size:8.5px;font-weight:800;text-align:center;letter-spacing:.06em;padding:2px 0;text-transform:uppercase}
+.psel .prm{position:absolute;top:3px;right:3px;width:18px;height:18px;border-radius:50%;border:none;background:rgba(0,0,0,.6);color:#fff;font-size:12px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .hint{font-size:12px;color:var(--g);margin-top:5px}
 .pwm{margin-top:8px}
 .pwm-bar{display:flex;gap:4px;margin-bottom:6px}
@@ -495,8 +511,8 @@ const CATS=[
 /* seed → image. Les vraies photos (data:/http/blob) passent telles quelles, les graines de démo deviennent une image picsum stable. */
 const isUrl=s=>/^(data:|https?:|blob:)/.test(String(s||""));
 const seed=(s,w=560,h=420)=>isUrl(s)?String(s):`https://picsum.photos/seed/${s}/${w}/${h}`;
-/* Galerie à partir d'une graine/photo : une vraie photo se répète, une graine de démo donne 3 vues distinctes. */
-const imgsFromSeed=sd=>isUrl(sd)?[sd,sd,sd]:[sd,sd+"b",sd+"c"];
+/* Galerie à partir d'une graine/photo : une vraie photo unique = 1 image, une graine de démo = 3 vues distinctes. */
+const imgsFromSeed=sd=>isUrl(sd)?[sd]:[sd,sd+"b",sd+"c"];
 /* Redimensionne une photo choisie (côté navigateur) en JPEG compact pour le stockage/affichage. */
 function fileToDataURL(file,max=900,q=0.72){return new Promise((res,rej)=>{const u=URL.createObjectURL(file),im=new Image();
   im.onload=()=>{let w=im.width,h=im.height;if(w>h&&w>max){h=Math.round(h*max/w);w=max;}else if(h>=w&&h>max){w=Math.round(w*max/h);h=max;}
@@ -721,6 +737,8 @@ function Card({it,open,fav,togFav}){
 /* ═══════════ DÉTAIL ═══════════ */
 function Detail({it,backHome,fav,togFav,toast,reserve,openChat,plus,reviews=[]}){
   const d=distFor(it.id);
+  const[main,setMain]=useState(0);
+  useEffect(()=>{setMain(0)},[it.id]);
   const itemReviews=reviews.filter(r=>r.itemId===it.id);
   const[days,setDays]=useState(3);
   const myGrade=getGrade(RENTALS);
@@ -729,19 +747,18 @@ function Detail({it,backHome,fav,togFav,toast,reserve,openChat,plus,reviews=[]})
   const tot=(it.p*days+fee).toFixed(2).replace(".",",");
   useEffect(()=>{window.scrollTo({top:0,behavior:"instant"});
     if(typeof gsap!=="undefined"&&!reduced()){
-      gsap.from(".det-gal, .det-body > div",{y:20,autoAlpha:0,duration:.6,stagger:.12,ease:"power3.out"});
+      gsap.from(".gal, .det-body > div",{y:20,autoAlpha:0,duration:.6,stagger:.12,ease:"power3.out"});
     }
   },[it.id]);
   return <div className="det">
     <button className="back" onClick={backHome}><I.back size={14}/>Retour</button>
-    <div className="det-gal">
-      <div className="g0"><img src={seed(it.img[0],900,560)} alt={it.t}/>
+    <div className="gal">
+      <div className="g0"><img src={seed(it.img[main]||it.img[0],900,560)} alt={it.t}/>
         <div className="stamp" style={{width:56,height:56,fontSize:7.5}}><span className="ck" style={{fontSize:13}}>✓</span><span>VÉRIFIÉ</span></div>
       </div>
-      <div className="gcol">
-        <img src={seed(it.img[1],450,280)} alt=""/>
-        <img src={seed(it.img[2],450,280)} alt=""/>
-      </div>
+      {it.img.length>1&&<div className="gthumbs">
+        {it.img.map((im,i)=><button key={i} type="button" className={"gth"+(i===main?" on":"")} onClick={()=>setMain(i)} aria-label={"Photo "+(i+1)}><img src={seed(im,200,140)} alt=""/></button>)}
+      </div>}
     </div>
     <div className="det-body">
       <div>
@@ -811,27 +828,32 @@ function Detail({it,backHome,fav,togFav,toast,reserve,openChat,plus,reviews=[]})
 function Create({toast,backHome,addItem}){
   const SEEDS=["atelier","velo22","camp4","jardin5","cine2"];
   const HINTS={brico:"les outils du quartier se louent 8–15 €/j",photo:"photo & son : 15–45 €/j",velo:"vélos & mobilité : 12–20 €/j",sport:"sport & plein air : 10–18 €/j",jardin:"jardin : 8–14 €/j",cuisine:"cuisine & maison : 5–10 €/j"};
+  const MAXP=4;
   const[t,setT]=useState("");
   const[c,setC]=useState("brico");
   const[pr,setPr]=useState("");
   const[d,setD]=useState("");
-  const[ph,setPh]=useState(SEEDS[0]);
+  const[photos,setPhotos]=useState([SEEDS[0]]);
   const[cau,setCau]=useState("");
   const[upBusy,setUpBusy]=useState(false);
   const price=Math.max(0,+pr||0);
   const cauVal=cau===""?(price?price*6:""):Math.max(0,+cau||0);
-  const prev={id:"prev",t:t||"Votre objet",c,p:price||8,img:imgsFromSeed(ph),own:"Vous",city:"rue du Sablon",note:5,rev:0,d,cau:+cauVal||0};
-  const onUpload=async e=>{const f=e.target.files&&e.target.files[0];if(!f)return;
+  const imgs=photos.length?photos:["atelier"];
+  const prev={id:"prev",t:t||"Votre objet",c,p:price||8,img:imgs,own:"Vous",city:"rue du Sablon",note:5,rev:0,d,cau:+cauVal||0};
+  const addPhoto=p=>setPhotos(ps=>ps.length>=MAXP||ps.includes(p)?ps:[...ps,p]);
+  const removePhoto=i=>setPhotos(ps=>ps.filter((_,j)=>j!==i));
+  const onUpload=async e=>{const f=e.target.files&&e.target.files[0];if(!f){return;}e.target.value="";
     if(!/^image\//.test(f.type)){toast("Choisissez un fichier image");return;}
     if(f.size>12*1024*1024){toast("Photo trop lourde (12 Mo max)");return;}
-    setUpBusy(true);try{const u=await fileToDataURL(f);setPh(u);}catch(_){toast("Impossible de lire cette photo");}setUpBusy(false);};
+    if(photos.length>=MAXP){toast("4 photos maximum");return;}
+    setUpBusy(true);try{const u=await fileToDataURL(f);addPhoto(u);}catch(_){toast("Impossible de lire cette photo");}setUpBusy(false);};
   return <div className="page" style={{maxWidth:1180}}>
     <h1>Proposer un objet</h1>
     <p className="lead">Il dort chez vous ? Il peut servir à deux rues. Photo, prix — en ligne en 2 minutes.</p>
     <div className="create-grid">
       <div className="panel">
         <form onSubmit={e=>{e.preventDefault();
-          addItem({t,c,p:price||5,d:d||"Proposé par un voisin du Sablon, avec soin.",img:ph,cau:+cauVal||0});
+          addItem({t,c,p:price||5,d:d||"Proposé par un voisin du Sablon, avec soin.",imgs,cau:+cauVal||0});
           toast("Annonce publiée — bienvenue dans le cercle !");backHome();}}>
           <div className="fg"><label>Titre de l'annonce</label><input required value={t} onChange={e=>setT(e.target.value)} placeholder="Ex. Perceuse visseuse Bosch Pro 18V"/></div>
           <div className="fr">
@@ -840,15 +862,22 @@ function Create({toast,backHome,addItem}){
           </div>
           <div className="fg"><label>Caution (€)</label><input type="number" min="0" value={cau} onChange={e=>setCau(e.target.value)} placeholder={price?String(price*6):"Ex. 72"}/><div className="hint">Séquestrée par Cercle, rendue sous 48 h. {price>0&&cau===""?`Suggéré : ${price*6} € (6× le prix/jour).`:"Laissez vide pour la suggestion automatique (6× le prix/jour)."}</div></div>
           <div className="fg"><label>Description</label><textarea value={d} onChange={e=>setD(e.target.value)} placeholder="État, accessoires fournis, lieu de remise en main propre…"/></div>
-          <div className="fg"><label>Photo de l'objet</label>
+          <div className="fg"><label>Photos de l'objet <small style={{fontWeight:500,color:"var(--gl)"}}>· jusqu'à {MAXP}</small></label>
+            {photos.length>0&&<div className="photo-sel">
+              {photos.map((p,i)=><div key={i} className="psel">
+                <img src={seed(p,160,160)} alt=""/>
+                {i===0&&<span className="cov">Couverture</span>}
+                <button type="button" className="prm" onClick={()=>removePhoto(i)} aria-label="Retirer la photo">×</button>
+              </div>)}
+            </div>}
             <div className="photo-pick">
-              <label className={"photo-up"+(isUrl(ph)?" on":"")} title="Importer une photo">
-                {isUrl(ph)?<img src={ph} alt="Votre photo"/>:<><I.plus size={16}/><span>{upBusy?"…":"Ma photo"}</span></>}
-                <input type="file" accept="image/*" onChange={onUpload}/>
+              <label className={"photo-up"+(photos.length>=MAXP?" full":"")} title="Importer une photo">
+                <I.plus size={16}/><span>{upBusy?"…":"Importer"}</span>
+                <input type="file" accept="image/*" onChange={onUpload} disabled={photos.length>=MAXP}/>
               </label>
-              {SEEDS.map(sd=><button type="button" key={sd} className={ph===sd?"on":""} onClick={()=>setPh(sd)} aria-label={"Choisir la photo "+sd}><img src={seed(sd,120,120)} alt=""/></button>)}
+              {SEEDS.map(sd=><button type="button" key={sd} className={photos.includes(sd)?"on":""} onClick={()=>photos.includes(sd)?removePhoto(photos.indexOf(sd)):addPhoto(sd)} aria-label={"Photo démo "+sd}><img src={seed(sd,120,120)} alt=""/></button>)}
             </div>
-            <div className="hint">{isUrl(ph)?"Votre photo est prête. Touchez une vignette pour revenir à une image de démo.":"Importez votre photo (recadrée et allégée automatiquement) ou choisissez une image de démo."}</div>
+            <div className="hint">Importez vos photos (recadrées et allégées) ou piochez des images de démo. La première est la couverture.</div>
           </div>
           {price>0&&<div className="gain"><I.star size={14}/>Louée 2 week-ends par mois ≈ {price*4} €/mois dans votre poche · caution : {cauVal||price*6} €</div>}
           <button type="submit" className="btn btn-ter" style={{width:"100%",padding:14,fontSize:15,marginTop:12}}>Publier mon annonce</button>
@@ -1602,7 +1631,8 @@ function App(){
     try{
       return d.collection("v2_listings").orderBy("createdAt","desc").limit(40).onSnapshot(snap=>{
         const arr=[];snap.forEach(doc=>{const x=doc.data();const sd=x.seed||"voisin1";
-          arr.push({id:doc.id,t:x.t,c:x.c,p:x.p,d:x.d,img:imgsFromSeed(sd),own:x.own||"Voisin",city:x.city||"rue du Sablon",note:x.note||5,rev:x.rev||0,cau:x.cau||0,uid:x.uid||""});});
+          const img=(x.imgs&&x.imgs.length)?x.imgs:imgsFromSeed(sd);
+          arr.push({id:doc.id,t:x.t,c:x.c,p:x.p,d:x.d,img,own:x.own||"Voisin",city:x.city||"rue du Sablon",note:x.note||5,rev:x.rev||0,cau:x.cau||0,uid:x.uid||""});});
         setFbItems(arr);
       },err=>console.warn("[Cercle] Firestore lecture indisponible:",err&&err.code));
     }catch(e){console.warn("[Cercle] Firestore off:",e&&e.code)}
@@ -1675,19 +1705,20 @@ function App(){
   const markAll=()=>{setReadNotifs(s=>{const n=new Set(s);realNotifs.forEach(r=>n.add(r.id));return n});setNotifs(ns=>ns.map(n=>({...n,unread:false})));};
   const openLegal=id=>{setLegal(id);setPage("legal")};
   const unread=allNotifs.filter(n=>n.unread).length;
-  const addItem=async({t,c,p,d,img,cau})=>{
-    const sd=img||("voisin"+(Date.now()%9973));
+  const addItem=async({t,c,p,d,imgs,img,cau})=>{
+    const arr=(imgs&&imgs.length?imgs:[img||("voisin"+(Date.now()%9973))]).slice(0,4);
+    const sd=arr[0];
     const dd=d||"Proposé par un voisin du Sablon, avec soin.";
     const cc=Math.max(0,+cau||0);
     const db=fbDb();
     if(db&&user){
       try{
-        await db.collection("v2_listings").add({t,c,p,d:dd,seed:sd,cau:cc,own:user.name||"Voisin",uid:user.uid||"",city:"rue du Sablon",note:5,rev:0,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+        await db.collection("v2_listings").add({t,c,p,d:dd,seed:sd,imgs:arr,cau:cc,own:user.name||"Voisin",uid:user.uid||"",city:"rue du Sablon",note:5,rev:0,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
         addNotif({k:"info",txt:`Votre annonce « ${t} » est en ligne dans le cercle.`});
         return;
       }catch(e){console.warn("[Cercle] écriture Firestore échouée, repli local:",e&&e.code);}
     }
-    const it={id:"u"+Date.now(),t,c,p,img:imgsFromSeed(sd),own:"Vous",city:"rue du Sablon",note:5,rev:0,d:dd,cau:cc,uid:user&&user.uid||""};
+    const it={id:"u"+Date.now(),t,c,p,img:arr,own:"Vous",city:"rue du Sablon",note:5,rev:0,d:dd,cau:cc,uid:user&&user.uid||""};
     setMyItems(m=>[it,...m]);
     addNotif({k:"info",txt:`Votre annonce « ${t} » est en ligne dans le cercle.`});
   };
