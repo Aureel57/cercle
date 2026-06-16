@@ -884,7 +884,7 @@ function Messages({convs,setConvs,openId,setOpenId,user}){
       const d=fbDb();if(!d)return;
       const cref=d.collection("v2_conversations").doc(c.id);
       cref.collection("messages").add({from:myUid,text:txt,at:firebase.firestore.FieldValue.serverTimestamp()}).catch(e=>console.warn("[Cercle] envoi message échoué:",e&&e.code));
-      cref.set({last:txt,lastAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true}).catch(()=>{});
+      cref.set({last:txt,lastAt:firebase.firestore.FieldValue.serverTimestamp(),lastFrom:myUid},{merge:true}).catch(()=>{});
       return;
     }
     setConvs(cs=>cs.map(x=>x.id===cid?{...x,msgs:[...x.msgs,["me",txt]],last:txt,when:"maintenant"}:x));
@@ -1546,6 +1546,7 @@ function App(){
   const[toastMsg,setToastMsg]=useState(null);
   const[legal,setLegal]=useState("cgu");
   const[notifs,setNotifs]=useState(P.notifs||NOTIFS0);
+  const[readNotifs,setReadNotifs]=useState(()=>new Set(P.readNotifs||[])); // ids de notifs réelles déjà lues
   const[myItems,setMyItems]=useState(P.myItems||[]);
   const[resas,setResas]=useState(P.resas||RESAS);
   const[reviews,setReviews]=useState(P.reviews||[]);
@@ -1568,7 +1569,7 @@ function App(){
   const itemsRef=useRef(items);useEffect(()=>{itemsRef.current=items},[items]);
 
   /* persistance */
-  useEffect(()=>{saveLS({fav:[...fav],dark,notifs,myItems,resas,reviews,convs,plus,user})},[fav,dark,notifs,myItems,resas,reviews,convs,plus,user]);
+  useEffect(()=>{saveLS({fav:[...fav],dark,notifs,readNotifs:[...readNotifs],myItems,resas,reviews,convs,plus,user})},[fav,dark,notifs,readNotifs,myItems,resas,reviews,convs,plus,user]);
   useEffect(()=>{document.documentElement.classList.toggle("dark",dark)},[dark]);
   /* Firebase : restauration de session */
   useEffect(()=>{
@@ -1648,7 +1649,7 @@ function App(){
     try{
       return d.collection("v2_conversations").where("members","array-contains",user.uid).onSnapshot(snap=>{
         const arr=[];snap.forEach(doc=>{const x=doc.data();const other=(x.members||[]).find(u=>u!==user.uid)||"";
-          arr.push({id:doc.id,fs:true,who:(x.names&&x.names[other])||"Voisin",otherUid:other,last:x.last||"Nouvelle conversation",when:"",lastAt:x.lastAt});});
+          arr.push({id:doc.id,fs:true,who:(x.names&&x.names[other])||"Voisin",otherUid:other,last:x.last||"Nouvelle conversation",when:"",lastAt:x.lastAt,lastFrom:x.lastFrom||""});});
         arr.sort((a,b)=>((b.lastAt&&b.lastAt.seconds||0)-(a.lastAt&&a.lastAt.seconds||0)));setFbConvs(arr);
       },err=>console.warn("[Cercle] conversations indisponibles:",err&&err.code));
     }catch(e){console.warn("[Cercle] conversations off:",e&&e.code)}
@@ -1660,10 +1661,20 @@ function App(){
   const open=it=>{setSel(it);setPage("detail")};
   const goHome=()=>{setPage("home");setSel(null)};
   const addNotif=n=>setNotifs(ns=>[{id:Date.now(),when:"à l'instant",unread:true,...n},...ns]);
-  const markRead=id=>setNotifs(ns=>ns.map(n=>n.id===id?{...n,unread:false}:n));
-  const markAll=()=>setNotifs(ns=>ns.map(n=>({...n,unread:false})));
+  /* notifications RÉELLES dérivées des données live (aucune collection/règle en plus) */
+  const realNotifs=useMemo(()=>{
+    const out=[];const uid=user&&user.uid;
+    fbRequests.forEach(r=>{if(r.status==="pending")out.push({id:"req-"+r.id,k:"resa",txt:`${r.renterName} souhaite réserver « ${r.it.t} » (${r.total} €).`,when:"récemment"});});
+    fbResas.forEach(r=>{if(r.status==="confirmed")out.push({id:"resa-"+r.id+"-c",k:"resa",txt:`Votre réservation de « ${r.it.t} » est confirmée ✓`,when:"récemment"});
+      else if(r.status==="declined")out.push({id:"resa-"+r.id+"-d",k:"info",txt:`Votre demande pour « ${r.it.t} » a été déclinée.`,when:"récemment"});});
+    fbConvs.forEach(c=>{if(c.lastFrom&&c.lastFrom!==uid)out.push({id:"msg-"+c.id+"-"+((c.lastAt&&c.lastAt.seconds)||0),k:"msg",txt:`Nouveau message de ${c.who} : « ${c.last} »`,when:"récemment"});});
+    return out.map(n=>({...n,unread:!readNotifs.has(n.id),real:true}));
+  },[fbRequests,fbResas,fbConvs,readNotifs,user&&user.uid]);
+  const allNotifs=useMemo(()=>[...realNotifs,...notifs],[realNotifs,notifs]);
+  const markRead=id=>{setReadNotifs(s=>{const n=new Set(s);n.add(id);return n});setNotifs(ns=>ns.map(n=>n.id===id?{...n,unread:false}:n));};
+  const markAll=()=>{setReadNotifs(s=>{const n=new Set(s);realNotifs.forEach(r=>n.add(r.id));return n});setNotifs(ns=>ns.map(n=>({...n,unread:false})));};
   const openLegal=id=>{setLegal(id);setPage("legal")};
-  const unread=notifs.filter(n=>n.unread).length;
+  const unread=allNotifs.filter(n=>n.unread).length;
   const addItem=async({t,c,p,d,img,cau})=>{
     const sd=img||("voisin"+(Date.now()%9973));
     const dd=d||"Proposé par un voisin du Sablon, avec soin.";
@@ -1834,7 +1845,7 @@ function App(){
     {page==="profile"&&(user?<Profile dark={dark} setDark={setDark} toast={toast} go={go} plus={plus} user={user} logout={logout}/>:<Auth onDone={onAuth} toast={toast}/>)}
     {page==="carte"&&<Carte open={open} items={items} dark={dark} user={user}/>}
     {page==="activite"&&<Activite toast={toast} resas={allResas} requests={fbRequests} answerRequest={answerRequest} myItems={myItems} reviews={allReviews} addReview={addReview}/>}
-    {page==="notifs"&&<Notifs notifs={notifs} markRead={markRead} markAll={markAll}/>}
+    {page==="notifs"&&<Notifs notifs={allNotifs} markRead={markRead} markAll={markAll}/>}
     {page==="avis"&&<Avis reviews={allReviews} user={user}/>}
     {page==="grade"&&<Grade plus={plus}/>}
     {page==="plus"&&<Plus toast={toast} plus={plus} subscribe={need(subscribe)}/>}
