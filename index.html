@@ -1423,18 +1423,29 @@ function Legal({id}){
 const escH=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const docDate=ca=>{const t=ca&&ca.seconds?new Date(ca.seconds*1000):new Date();return t.toLocaleDateString("fr-FR",{day:"2-digit",month:"long",year:"numeric"});};
 const eurF=n=>(+n||0).toFixed(2).replace(".",",")+" €";
-function openDoc(filename,inner){
-  const css="@page{margin:18mm}*{box-sizing:border-box}body{font-family:Georgia,'Times New Roman',serif;color:#20242F;background:#fff;margin:0;padding:32px;line-height:1.5}"
-   +".bd{max-width:680px;margin:0 auto}.brand{display:flex;align-items:center;gap:10px;border-bottom:2px solid #20242F;padding-bottom:14px;margin-bottom:22px}"
-   +".ring{width:26px;height:26px;border:5px solid #2C50C8;border-radius:50%;border-right-color:transparent}.bn{font-size:22px;font-weight:bold}.bn span{color:#DA6740}"
-   +"h1{font-size:21px;margin:0 0 4px}.sub{color:#6A7078;font-size:13px;margin:0 0 20px}"
-   +"table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13.5px}th{text-align:left;border-bottom:2px solid #20242F;padding:8px 6px;font-size:11px;text-transform:uppercase;letter-spacing:.05em}"
-   +"td{padding:8px 6px;border-bottom:1px solid #E8E1D2}.r{text-align:right}.c{text-align:center}"
-   +".tot{margin-top:16px;font-size:16px;background:#F7F3EA;border:1.5px solid #20242F;border-radius:10px;padding:12px 16px}"
-   +".kv td:first-child{color:#6A7078;width:42%}.note{font-size:11px;color:#A39B89;line-height:1.6;margin-top:24px;border-top:1px solid #E8E1D2;padding-top:12px}";
-  const html="<!doctype html><html lang=fr><head><meta charset=utf-8><title>"+escH(filename)+"</title><style>"+css+"</style></head><body><div class=bd><div class=brand><div class=ring></div><div class=bn>cercle<span>.</span></div></div>"+inner+"</div></body></html>";
-  const w=window.open("","_blank","width=840,height=920");
-  if(w){w.document.write(html);w.document.close();w.focus();setTimeout(()=>{try{w.print()}catch(e){}},500);}
+function openDoc(filename,kind,inner){
+  const css="@page{margin:12mm}*{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}"
+   +"body{font-family:'Instrument Sans',system-ui,sans-serif;color:#20242F;background:#F7F3EA;margin:0;padding:30px 22px;line-height:1.55}"
+   +".bd{max-width:680px;margin:0 auto;background:#fff;border:2px solid #20242F;border-radius:18px;box-shadow:6px 6px 0 rgba(32,36,47,.13);padding:30px 32px;position:relative;overflow:hidden}"
+   +".brand{display:flex;align-items:center;gap:11px;margin-bottom:20px}"
+   +".ring{width:30px;height:30px;border:5px solid #2C50C8;border-radius:50%;border-right-color:transparent}"
+   +".bn{font-family:'Bricolage Grotesque',Georgia,serif;font-size:23px;font-weight:800;letter-spacing:-.5px}.bn span{color:#DA6740}"
+   +".pill{margin-left:auto;background:#DA6740;color:#fff;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:5px 12px;border-radius:20px}"
+   +"h1{font-family:'Bricolage Grotesque',Georgia,serif;font-size:23px;line-height:1.15;margin:0 0 4px;letter-spacing:-.4px;max-width:78%}"
+   +".sub{color:#6A7078;font-size:13px;margin:0 0 18px}"
+   +"table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13.5px}"
+   +"th{text-align:left;border-bottom:2px solid #20242F;padding:9px 6px;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:#6A7078}"
+   +"td{padding:9px 6px;border-bottom:1px solid #E8E1D2}.r{text-align:right}.c{text-align:center}"
+   +".tot{margin-top:18px;font-family:'Bricolage Grotesque',Georgia,serif;font-size:18px;background:#F7F3EA;border:2px solid #20242F;border-radius:12px;box-shadow:4px 4px 0 rgba(32,36,47,.12);padding:14px 18px}.tot b{color:#1F8150}"
+   +".kv td:first-child{color:#6A7078;width:42%}"
+   +".note{font-size:11px;color:#A39B89;line-height:1.6;margin-top:22px;border-top:1px solid #E8E1D2;padding-top:12px}"
+   +".tampon{position:absolute;top:74px;right:28px;width:74px;height:74px;border:2.5px solid #1F8150;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#1F8150;transform:rotate(-9deg);font-size:8px;font-weight:800;letter-spacing:.07em;text-align:center;line-height:1.15;opacity:.92}";
+  const fonts="<link rel=preconnect href='https://fonts.googleapis.com'><link rel=preconnect href='https://fonts.gstatic.com' crossorigin><link href='https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=Instrument+Sans:wght@400;500;600;700&display=swap' rel=stylesheet>";
+  const tampon="<div class=tampon><span style='font-size:17px;line-height:1'>✓</span><span>ÉMIS PAR<br>CERCLE</span></div>";
+  const head="<div class=brand><div class=ring></div><div class=bn>cercle<span>.</span></div><div class=pill>"+escH(kind||"Justificatif")+"</div></div>";
+  const html="<!doctype html><html lang=fr><head><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'><title>"+escH(filename)+"</title>"+fonts+"<style>"+css+"</style></head><body><div class=bd>"+tampon+head+inner+"</div></body></html>";
+  const w=window.open("","_blank","width=840,height=940");
+  if(w){w.document.write(html);w.document.close();w.focus();setTimeout(()=>{try{w.print()}catch(e){}},850);}
   else{const blob=new Blob([html],{type:"text/html"});const u=URL.createObjectURL(blob);const a=document.createElement("a");a.href=u;a.download=filename+".html";a.click();URL.revokeObjectURL(u);}
 }
 const ownerGain=r=>+r.base||((+r.total||0)-(+r.fee||0))||0;
@@ -1444,12 +1455,12 @@ function Revenus({user,stats={}}){
   const total=conf.reduce((s,r)=>s+ownerGain(r),0);
   const owner=(user&&user.name)||"Voisin";
   const NOTE="Document fourni à titre indicatif pour vous aider à déclarer vos revenus de location entre particuliers. Les montants correspondent aux sommes perçues, hors commission de service prélevée par Cercle. Cercle est un intermédiaire de mise en relation ; l'identité de l'éditeur figure dans les mentions légales.";
-  const annual=()=>openDoc("Releve-revenus-Cercle-"+year,
+  const annual=()=>openDoc("Releve-revenus-Cercle-"+year,"Relevé "+year,
     "<h1>Relevé annuel de revenus "+year+"</h1><p class=sub>Établi pour <b>"+escH(owner)+"</b> · locations confirmées sur Cercle</p>"
     +"<table><thead><tr><th>Date</th><th>Objet</th><th>Locataire</th><th class=c>Jours</th><th class=r>Montant perçu</th></tr></thead><tbody>"
     +conf.map(r=>"<tr><td>"+docDate(r.createdAt)+"</td><td>"+escH(r.it.t)+"</td><td>"+escH(r.renterName)+"</td><td class=c>"+(r.days||"–")+"</td><td class=r>"+eurF(ownerGain(r))+"</td></tr>").join("")
     +"</tbody></table><div class=tot>Total perçu en "+year+" : <b>"+eurF(total)+"</b> · "+conf.length+" location"+(conf.length>1?"s":"")+"</div><p class=note>"+NOTE+"</p>");
-  const receipt=r=>openDoc("Recu-Cercle-"+r.id.slice(0,6),
+  const receipt=r=>openDoc("Recu-Cercle-"+r.id.slice(0,6),"Reçu",
     "<h1>Reçu de location</h1><p class=sub>Reçu n° "+r.id.slice(0,8).toUpperCase()+" · émis le "+docDate(r.createdAt)+"</p>"
     +"<table class=kv><tbody>"
     +"<tr><td>Bénéficiaire</td><td><b>"+escH(owner)+"</b></td></tr>"
