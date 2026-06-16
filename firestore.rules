@@ -2,7 +2,12 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Annonces partagées de la v2 « Quartier Libre »
+    // ⚠️ NE PAS DÉPLOYER CE FICHIER TEL QUEL : il ne contient PAS les règles
+    // du site v1 (users, items) déjà en ligne. Ajoutez seulement les blocs
+    // ci-dessous DANS vos règles existantes via la console Firebase, sans
+    // rien retirer. Sinon le site v1 casserait.
+
+    // ── Annonces partagées de la v2 « Quartier Libre » ──
     match /v2_listings/{doc} {
       allow read: if true;                       // tout le monde voit les annonces
       allow create: if request.auth != null;     // seul un membre connecté publie
@@ -10,6 +15,39 @@ service cloud.firestore {
         && request.auth.uid == resource.data.uid; // chacun gère ses propres annonces
     }
 
-    // ⚠️ Laissez ci-dessous vos règles existantes du site v1 intactes.
+    // ── Avis partagés (ACTIF dès que ce bloc est en ligne) ──
+    match /v2_reviews/{doc} {
+      allow read: if true;                        // les avis sont publics
+      allow create: if request.auth != null;      // un membre connecté laisse un avis
+      allow update, delete: if request.auth != null
+        && request.auth.uid == resource.data.uid; // chacun gère ses propres avis
+    }
+
+    // ── Réservations (pour l'étape suivante : réservations cross-utilisateurs) ──
+    match /v2_reservations/{doc} {
+      allow read: if request.auth != null
+        && (request.auth.uid == resource.data.renterUid
+            || request.auth.uid == resource.data.ownerUid);
+      allow create: if request.auth != null
+        && request.auth.uid == request.resource.data.renterUid;
+      allow update, delete: if request.auth != null
+        && (request.auth.uid == resource.data.renterUid
+            || request.auth.uid == resource.data.ownerUid);
+    }
+
+    // ── Messagerie (pour l'étape suivante : messages cross-utilisateurs) ──
+    match /v2_conversations/{conv} {
+      allow read, update: if request.auth != null
+        && request.auth.uid in resource.data.members;
+      allow create: if request.auth != null
+        && request.auth.uid in request.resource.data.members;
+      match /messages/{msg} {
+        allow read, create: if request.auth != null
+          && request.auth.uid in
+             get(/databases/$(database)/documents/v2_conversations/$(conv)).data.members;
+      }
+    }
+
+    // ⚠️ Laissez ci-dessous / au-dessus vos règles existantes du site v1 intactes.
   }
 }
