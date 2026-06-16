@@ -590,18 +590,6 @@ const RESAS=[
  {id:2,it:ITEMS[3],range:"8 → 15 juin",st:"en-cours",lbl:"En cours",prog:60},
  {id:3,it:ITEMS[7],range:"24 → 26 mai",st:"fini",lbl:"Terminée"},
 ];
-const MYADS=[
- {it:ITEMS[1],st:"online",vues:214,locs:9},
- {it:ITEMS[5],st:"online",vues:131,locs:6},
- {it:ITEMS[10],st:"pause",vues:48,locs:2},
-];
-const REVENUS=[{m:"Jan",v:18},{m:"Fév",v:24},{m:"Mar",v:31},{m:"Avr",v:22},{m:"Mai",v:46},{m:"Juin",v:43,cur:true}];
-const REVIEWS=[
- {who:"Marc",note:5,when:"juin 2026",txt:"Vélo cargo impeccable, remise en main propre super simple. Le quartier comme on l'aime."},
- {who:"Inès",note:5,when:"mai 2026",txt:"Sono au top pour l'anniversaire, Noah a même prêté les câbles. Merci voisin !"},
- {who:"Paul",note:4,when:"mai 2026",txt:"Échelle nickel, juste un peu lourde à porter sur 600 m. Pensez au diable !"},
-];
-const DIST_AVIS=[38,3,1,0,0];
 const GRADES=[
  {id:"nouveau",nom:"Nouveau voisin",court:"NOUVEAU",min:0,fee:12,sym:"○",adv:"On vous prête déjà tout le cercle"},
  {id:"palier",nom:"Voisin de palier",court:"PALIER",min:50,fee:11,sym:"◔",adv:"Badge profil + 1 annonce mise en avant"},
@@ -610,7 +598,6 @@ const GRADES=[
  {id:"memoire",nom:"Mémoire du quartier",court:"MÉMOIRE",min:5000,fee:5,sym:"●",adv:"12 mises en avant + accès anticipé"},
  {id:"maire",nom:"Maire du quartier",court:"MAIRE",min:15000,fee:3,sym:"✪",adv:"L'écharpe : ambassadeur officiel Cercle"},
 ];
-const RENTALS=23;
 const getGrade=n=>[...GRADES].reverse().find(g=>n>=g.min)||GRADES[0];
 const getNextGrade=n=>GRADES[GRADES.indexOf(getGrade(n))+1]||null;
 const feeRate=(n,plus)=>Math.max(0.02,getGrade(n).fee/100-(plus?0.01:0));
@@ -735,14 +722,14 @@ function Card({it,open,fav,togFav}){
 }
 
 /* ═══════════ DÉTAIL ═══════════ */
-function Detail({it,backHome,fav,togFav,toast,reserve,openChat,plus,reviews=[]}){
+function Detail({it,backHome,fav,togFav,toast,reserve,openChat,plus,reviews=[],rentals=0}){
   const d=distFor(it.id);
   const[main,setMain]=useState(0);
   useEffect(()=>{setMain(0)},[it.id]);
   const itemReviews=reviews.filter(r=>r.itemId===it.id);
   const[days,setDays]=useState(3);
-  const myGrade=getGrade(RENTALS);
-  const rate=feeRate(RENTALS,plus);
+  const myGrade=getGrade(rentals);
+  const rate=feeRate(rentals,plus);
   const fee=+(it.p*days*rate).toFixed(2);
   const tot=(it.p*days+fee).toFixed(2).replace(".",",");
   useEffect(()=>{window.scrollTo({top:0,behavior:"instant"});
@@ -959,7 +946,9 @@ function Favs({items,open,fav,togFav}){
       :<div className="grid">{list.map(it=><Card key={it.id} it={it} open={open} fav={true} togFav={togFav}/>)}</div>}
   </div>;
 }
-function Profile({dark,setDark,toast,go,plus,user,logout}){
+function Profile({dark,setDark,toast,go,plus,user,logout,stats={}}){
+  const noteStr=stats.note?stats.note.toFixed(1).replace(".",","):"—";
+  const g=getGrade(stats.rentals||0);
   return <div className="page">
     <h1>Mon profil</h1>
     <p className="lead">{user.name} — membre vérifié du cercle de {user.quartier}.</p>
@@ -972,17 +961,17 @@ function Profile({dark,setDark,toast,go,plus,user,logout}){
       <div className="stamp" style={{position:"static",width:52,height:52,transform:"rotate(-8deg)"}}><span className="ck">✓</span><span>VÉRIFIÉ</span></div>
     </div>
     <div className="prof-stats">
-      <div className="pstat"><b>7</b><span>objets proposés</span></div>
-      <div className="pstat"><b>23</b><span>locations</span></div>
-      <div className="pstat"><b style={{color:"var(--sun)"}}>4,9</b><span>note moyenne</span></div>
+      <div className="pstat"><b>{stats.annonces||0}</b><span>objets proposés</span></div>
+      <div className="pstat"><b>{stats.locations||0}</b><span>locations</span></div>
+      <div className="pstat"><b style={{color:"var(--sun)"}}>{noteStr}</b><span>note moyenne</span></div>
     </div>
     <div className="plus-line">{plus?"✦ Cercle+ actif — vos frais de service sont réduits de 1 %":"✦ Cercle+ — commission réduite à 10 %, −1 % par année d'ancienneté"}<button className="btn" style={{marginLeft:"auto",background:"var(--plus)",color:"#fff",padding:"8px 14px",minHeight:36,fontSize:12.5}} onClick={()=>go("plus")}>{plus?"Gérer":"Découvrir"}</button></div>
     <div className="hub">
       {[["carte","Carte du quartier","Tous les objets à leur distance",I.pin],
         ["activite","Mon activité","Revenus, réservations, annonces",I.clock],
         ["notifs","Notifications","Ce qui bouge dans le cercle",I.bell],
-        ["avis","Mes avis","4,9 — 42 voisins",I.star],
-        ["grade","Mon grade",getGrade(RENTALS).nom+" · "+RENTALS+" locations · "+getGrade(RENTALS).fee+" %",I.shield],
+        ["avis","Mes avis",stats.avisCount?`${noteStr} — ${stats.avisCount} avis reçu${stats.avisCount>1?"s":""}`:"Pas encore d'avis reçu",I.star],
+        ["grade","Mon grade",g.nom+" · "+(stats.rentals||0)+" location"+((stats.rentals||0)>1?"s":"")+" · "+g.fee+" %",I.shield],
         ["params","Paramètres","Compte & préférences",I.user],
       ].map(([id,t,s,Ic])=><button key={id} onClick={()=>go(id)}><span className="ic"><Ic size={17}/></span><span>{t}<small>{s}</small></span></button>)}
     </div>
@@ -1126,22 +1115,26 @@ function LeaveReview({resa,addReview,done}){
     </div>
   </div>;
 }
-function Activite({toast,resas,requests=[],answerRequest,myItems,reviews=[],addReview}){
+function Activite({toast,resas,requests=[],answerRequest,myListings=[],stats={},reviews=[],addReview}){
   const reviewedIds=new Set(reviews.map(r=>r.itemId));
   const pending=requests.filter(r=>r.status==="pending");
-  const max=Math.max(...REVENUS.map(r=>r.v));
+  const months=stats.months||[];
+  const max=Math.max(1,...months.map(r=>r.v));
+  const noteStr=stats.note?stats.note.toFixed(1).replace(".",","):"—";
   return <div className="page">
     <h1>Mon activité</h1>
     <p className="lead">Vos revenus, réservations et annonces — le cercle en un coup d'œil.</p>
     <div className="kpis">
-      <div className="kpi"><b>184 €</b><span>revenus 2026</span><span className="up">↗ +46 € ce mois</span></div>
-      <div className="kpi"><b>23</b><span>locations</span><span className="up">↗ 3 en juin</span></div>
-      <div className="kpi"><b>1 240</b><span>vues d'annonces</span><span className="up">↗ +12 %</span></div>
-      <div className="kpi"><b style={{color:"var(--sun)"}}>4,9</b><span>note moyenne</span><span className="up">42 avis</span></div>
+      <div className="kpi"><b>{stats.revenus||0} €</b><span>revenus encaissés</span></div>
+      <div className="kpi"><b>{stats.locations||0}</b><span>location{(stats.locations||0)>1?"s":""}</span></div>
+      <div className="kpi"><b>{stats.annonces||0}</b><span>annonce{(stats.annonces||0)>1?"s":""} en ligne</span></div>
+      <div className="kpi"><b style={{color:"var(--sun)"}}>{noteStr}</b><span>note moyenne{stats.avisCount?` · ${stats.avisCount} avis`:""}</span></div>
     </div>
     <div className="chart">
       <div className="sec-t" style={{fontSize:18}}>Revenus <small>6 derniers mois</small></div>
-      <div className="bars">{REVENUS.map(r=><div key={r.m} className={"bar"+(r.cur?" cur":"")} style={{height:(r.v/max*100)+"%"}}><b>{r.v} €</b><i>{r.m}</i></div>)}</div>
+      {stats.revenus>0
+        ?<div className="bars">{months.map(r=><div key={r.key} className={"bar"+(r.cur?" cur":"")} style={{height:(r.v/max*100)+"%"}}><b>{r.v} €</b><i>{r.m}</i></div>)}</div>
+        :<div className="empty" style={{padding:"24px 12px"}}><div className="big">Pas encore de revenus</div>Vos gains apparaîtront ici dès votre première location confirmée.</div>}
     </div>
     {pending.length>0&&<>
       <div className="sec-t" style={{fontSize:18,margin:"4px 0 10px"}}>Demandes reçues <small>{pending.length}</small></div>
@@ -1170,14 +1163,14 @@ function Activite({toast,resas,requests=[],answerRequest,myItems,reviews=[],addR
         {r.st==="fini"&&addReview&&<LeaveReview resa={r} addReview={addReview} done={reviewedIds.has(r.it.id)}/>}
       </div>)}
     </div>
-    <div className="sec-t" style={{fontSize:18,margin:"4px 0 10px"}}>Mes annonces</div>
+    <div className="sec-t" style={{fontSize:18,margin:"4px 0 10px"}}>Mes annonces <small>{myListings.length}</small></div>
     <div className="rows">
-      {[...myItems.map(it=>({it,st:"online",vues:0,locs:0})),...MYADS].map(a=><div key={a.it.id} className="row-card">
-        <img src={seed(a.it.img[0],120,120)} alt=""/>
-        <div style={{flex:1,minWidth:0}}><div className="ti">{a.it.t}</div><div className="su">{a.vues} vues · {a.locs} locations · {a.it.p} €/j</div></div>
-        <span className={"badge "+(a.st==="online"?"green":"sand")}>{a.st==="online"?"EN LIGNE":"EN PAUSE"}</span>
-        <button className="btn btn-ghost" style={{minHeight:34,padding:"7px 12px",fontSize:12}} onClick={()=>toast(a.st==="online"?"Annonce mise en pause (démo)":"Annonce republiée (démo)")}>{a.st==="online"?"Pause":"Republier"}</button>
-      </div>)}
+      {myListings.length===0&&<div className="empty" style={{padding:"26px 12px"}}><div className="big">Aucune annonce</div>Proposez un objet qui dort chez vous depuis le bouton « Proposer ».</div>}
+      {myListings.map(it=>{const locs=(stats.perItem&&stats.perItem[it.id])||0;return <div key={it.id} className="row-card">
+        <img src={seed(it.img[0],120,120)} alt=""/>
+        <div style={{flex:1,minWidth:0}}><div className="ti">{it.t}</div><div className="su">{locs} location{locs>1?"s":""} · {it.p} €/j</div></div>
+        <span className="badge green">EN LIGNE</span>
+      </div>;})}
     </div>
   </div>;
 }
@@ -1206,33 +1199,40 @@ function Notifs({notifs,markRead,markAll}){
 }
 
 /* ═══════════ MES AVIS ═══════════ */
-function Avis({reviews=[],user}){
-  const tot=DIST_AVIS.reduce((a,b)=>a+b,0);
-  const mine=reviews.filter(r=>!user||!r.by||r.by===(user.name||"Vous"));
+function Avis({reviews=[],user,myListings=[]}){
+  const myIds=new Set(myListings.map(i=>i.id));
+  const received=reviews.filter(r=>myIds.has(r.itemId));
+  const tot=received.length;
+  const avg=tot?received.reduce((s,r)=>s+(r.note||0),0)/tot:0;
+  const dist=[5,4,3,2,1].map(n=>received.filter(r=>r.note===n).length);
+  const mine=reviews.filter(r=>r.by&&user&&r.by===(user.name||"Vous"));
   return <div className="page">
     <h1>Mes avis</h1>
-    <p className="lead">{tot} voisins ont donné leur avis — c'est ça, la réputation de quartier.</p>
-    <div className="avg">
+    <p className="lead">{tot?`${tot} voisin${tot>1?"s ont":" a"} noté vos objets — c'est ça, la réputation de quartier.`:"Vos avis reçus apparaîtront ici dès qu'un voisin notera l'un de vos objets."}</p>
+    {tot>0&&<div className="avg">
       <div>
-        <div className="n">4,9</div>
-        <div style={{color:"var(--sun)",display:"flex",gap:2,marginTop:8}}>{[...Array(5)].map((_,i)=><I.star key={i} size={15}/>)}</div>
+        <div className="n">{avg.toFixed(1).replace(".",",")}</div>
+        <div style={{color:"var(--sun)",display:"flex",gap:2,marginTop:8}}>{[...Array(5)].map((_,i)=><I.star key={i} size={15} style={{opacity:i<Math.round(avg)?1:.25}}/>)}</div>
       </div>
-      <div className="distb">{DIST_AVIS.map((v,i)=><div key={i} className="l">
+      <div className="distb">{dist.map((v,i)=><div key={i} className="l">
         <span style={{width:26}}>{5-i} ★</span>
-        <span className="t"><i style={{width:(v/tot*100)+"%"}}/></span>
+        <span className="t"><i style={{width:(tot?v/tot*100:0)+"%"}}/></span>
         <span style={{width:20,textAlign:"right"}}>{v}</span>
       </div>)}</div>
-    </div>
-    <div className="sec-t" style={{fontSize:18,margin:"6px 0 10px"}}>Avis reçus</div>
-    <div className="rows">{REVIEWS.map((r,i)=><div key={i} className="rev">
-      <div className="rh">
-        <div className="avat" style={{width:34,height:34,fontSize:13}}>{r.who[0]}</div>
-        <b style={{color:"var(--dk)",fontSize:14}}>{r.who}</b>
-        <span className="stars">{[...Array(r.note)].map((_,j)=><I.star key={j} size={11}/>)}</span>
-        <span style={{marginLeft:"auto",fontSize:11.5,color:"var(--gl)"}}>{r.when}</span>
-      </div>
-      <p style={{fontSize:13.5}}>{r.txt}</p>
-    </div>)}</div>
+    </div>}
+    <div className="sec-t" style={{fontSize:18,margin:"6px 0 10px"}}>Avis reçus <small>{tot}</small></div>
+    {tot===0
+      ?<div className="empty" style={{padding:"26px 12px"}}><div className="big">Aucun avis reçu</div>Proposez des objets et soignez vos locations — les avis viendront.</div>
+      :<div className="rows">{received.map(r=><div key={r.id} className="rev">
+        <div className="rh">
+          <div className="avat" style={{width:34,height:34,fontSize:13}}>{(r.by||"V")[0]}</div>
+          <b style={{color:"var(--dk)",fontSize:14}}>{r.by}</b>
+          <span className="stars">{[...Array(r.note)].map((_,j)=><I.star key={j} size={11}/>)}</span>
+          <span style={{marginLeft:"auto",fontSize:11.5,color:"var(--gl)"}}>{r.when}</span>
+        </div>
+        <p style={{fontSize:13.5}}>{r.txt}</p>
+        <div style={{fontSize:12,color:"var(--gl)",marginTop:4}}>sur « {r.itemTitle} »</div>
+      </div>)}</div>}
     <div className="sec-t" style={{fontSize:18,margin:"22px 0 10px"}}>Avis que vous avez laissés <small>{mine.length}</small></div>
     {mine.length===0
       ?<div className="empty" style={{padding:"26px 12px"}}><div className="big">Aucun avis pour l'instant</div>Après une location terminée, laissez un avis depuis <b>Mon activité</b>.</div>
@@ -1249,10 +1249,10 @@ function Avis({reviews=[],user}){
 }
 
 /* ═══════════ MON GRADE ═══════════ */
-function Grade({plus}){
-  const g=getGrade(RENTALS),next=getNextGrade(RENTALS),gi=GRADES.indexOf(g);
-  const prog=next?Math.round((RENTALS-g.min)/(next.min-g.min)*100):100;
-  const eff=Math.round(feeRate(RENTALS,plus)*100);
+function Grade({plus,rentals=0}){
+  const g=getGrade(rentals),next=getNextGrade(rentals),gi=GRADES.indexOf(g);
+  const prog=next?Math.round((rentals-g.min)/(next.min-g.min)*100):100;
+  const eff=Math.round(feeRate(rentals,plus)*100);
   return <div className="page">
     <h1>Mon grade</h1>
     <p className="lead">Plus vous partagez, moins le cercle vous coûte — la commission descend avec le grade.</p>
@@ -1260,7 +1260,7 @@ function Grade({plus}){
       <div className="stamp" style={{position:"static",width:76,height:76,fontSize:9.5,transform:"rotate(-8deg)",flexShrink:0}}><span className="ck" style={{fontSize:19}}>✓</span><span>{g.court}</span></div>
       <div style={{flex:1,minWidth:230}}>
         <b style={{fontFamily:"var(--fd)",fontSize:19,color:"var(--dk)"}}>{g.nom} — commission {g.fee} %{plus&&<span style={{color:"var(--plus)"}}> → {eff} % avec ✦</span>}</b>
-        <div style={{fontSize:13,color:"var(--g)",margin:"3px 0 10px"}}>{RENTALS} locations{next?` — plus que ${(next.min-RENTALS).toLocaleString("fr-FR")} avant le grade ${next.nom} (${next.fee} %)`:" — grade maximal atteint"}</div>
+        <div style={{fontSize:13,color:"var(--g)",margin:"3px 0 10px"}}>{rentals} location{rentals>1?"s":""}{next?` — plus que ${(next.min-rentals).toLocaleString("fr-FR")} avant le grade ${next.nom} (${next.fee} %)`:" — grade maximal atteint"}</div>
         <div className="prog" style={{marginTop:0}}><i style={{width:prog+"%"}}/></div>
       </div>
     </div>
@@ -1595,6 +1595,22 @@ function App(){
   const allResas=useMemo(()=>[...fbResas,...resas],[fbResas,resas]);
   /* conversations affichées : réelles (Firestore) + démos locales */
   const allConvs=useMemo(()=>[...fbConvs,...convs],[fbConvs,convs]);
+  /* mes annonces réelles (publiées par moi) */
+  const myListings=useMemo(()=>{const uid=user&&user.uid;return uid?items.filter(i=>i.uid===uid):[];},[items,user&&user.uid]);
+  /* statistiques réelles dérivées des données live */
+  const stats=useMemo(()=>{
+    const confirmed=fbRequests.filter(r=>r.status==="confirmed");
+    const revenus=confirmed.reduce((s,r)=>s+(+r.total||0),0);
+    const myIds=new Set(myListings.map(i=>i.id));
+    const recv=allReviews.filter(r=>myIds.has(r.itemId));
+    const note=recv.length?recv.reduce((s,r)=>s+(r.note||0),0)/recv.length:0;
+    const now=new Date(),months=[];
+    for(let k=5;k>=0;k--){const dt=new Date(now.getFullYear(),now.getMonth()-k,1);months.push({key:dt.getFullYear()+"-"+dt.getMonth(),m:dt.toLocaleDateString("fr-FR",{month:"short"}).replace(".",""),v:0});}
+    confirmed.forEach(r=>{const t=r.createdAt&&r.createdAt.seconds?new Date(r.createdAt.seconds*1000):null;if(!t)return;const key=t.getFullYear()+"-"+t.getMonth();const b=months.find(x=>x.key===key);if(b)b.v+=(+r.total||0);});
+    if(months.length)months[months.length-1].cur=true;
+    const perItem={};confirmed.forEach(r=>{perItem[r.it.id]=(perItem[r.it.id]||0)+1;});
+    return {revenus,locations:confirmed.length,annonces:myListings.length,avisCount:recv.length,note,months,rentals:confirmed.length,perItem};
+  },[fbRequests,myListings,allReviews]);
   const itemsRef=useRef(items);useEffect(()=>{itemsRef.current=items},[items]);
 
   /* persistance */
@@ -1652,7 +1668,7 @@ function App(){
   const resaView=(id,x)=>{const st=x.status==="declined"?"fini":"a-venir";
     const lbl=x.status==="confirmed"?"✓ Confirmée":x.status==="declined"?"Refusée":"⏳ En attente";
     return {id,fs:true,status:x.status,it:{id:x.itemId,t:x.itemTitle,img:imgsFromSeed(x.itemSeed||"voisin1"),own:x.ownerName||"Voisin"},
-      range:x.range||"",total:x.total,renterName:x.renterName||"Voisin",renterUid:x.renterUid,st,lbl};};
+      range:x.range||"",total:+x.total||0,days:x.days||0,createdAt:x.createdAt,renterName:x.renterName||"Voisin",renterUid:x.renterUid,st,lbl};};
   /* Firebase : mes réservations (côté locataire) */
   useEffect(()=>{
     const d=fbDb();if(!d||!user||!user.uid)return;
@@ -1869,16 +1885,16 @@ function App(){
       </main>
     </>}
 
-    {page==="detail"&&sel&&<Detail it={sel} backHome={goHome} fav={fav.has(sel.id)} togFav={togFav} toast={toast} reserve={need(reserve)} openChat={need(openChat)} plus={plus} reviews={allReviews}/>}
+    {page==="detail"&&sel&&<Detail it={sel} backHome={goHome} fav={fav.has(sel.id)} togFav={togFav} toast={toast} reserve={need(reserve)} openChat={need(openChat)} plus={plus} reviews={allReviews} rentals={stats.rentals}/>}
     {page==="create"&&(user?<Create toast={toast} backHome={goHome} addItem={addItem}/>:<Auth onDone={onAuth} toast={toast}/>)}
     {page==="messages"&&(user?<Messages convs={allConvs} setConvs={setConvs} openId={openConv} setOpenId={setOpenConv} user={user}/>:<Auth onDone={onAuth} toast={toast}/>)}
     {page==="favs"&&<Favs items={items} open={open} fav={fav} togFav={togFav}/>}
-    {page==="profile"&&(user?<Profile dark={dark} setDark={setDark} toast={toast} go={go} plus={plus} user={user} logout={logout}/>:<Auth onDone={onAuth} toast={toast}/>)}
+    {page==="profile"&&(user?<Profile dark={dark} setDark={setDark} toast={toast} go={go} plus={plus} user={user} logout={logout} stats={stats}/>:<Auth onDone={onAuth} toast={toast}/>)}
     {page==="carte"&&<Carte open={open} items={items} dark={dark} user={user}/>}
-    {page==="activite"&&<Activite toast={toast} resas={allResas} requests={fbRequests} answerRequest={answerRequest} myItems={myItems} reviews={allReviews} addReview={addReview}/>}
+    {page==="activite"&&<Activite toast={toast} resas={allResas} requests={fbRequests} answerRequest={answerRequest} myListings={myListings} stats={stats} reviews={allReviews} addReview={addReview}/>}
     {page==="notifs"&&<Notifs notifs={allNotifs} markRead={markRead} markAll={markAll}/>}
-    {page==="avis"&&<Avis reviews={allReviews} user={user}/>}
-    {page==="grade"&&<Grade plus={plus}/>}
+    {page==="avis"&&<Avis reviews={allReviews} user={user} myListings={myListings}/>}
+    {page==="grade"&&<Grade plus={plus} rentals={stats.rentals}/>}
     {page==="plus"&&<Plus toast={toast} plus={plus} subscribe={need(subscribe)}/>}
     {page==="params"&&<Params dark={dark} setDark={setDark} toast={toast} user={user} plus={plus} logout={logout} saveQuartier={saveQuartier}/>}
     {page==="legal"&&<Legal id={legal}/>}
