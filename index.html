@@ -174,6 +174,13 @@ footer .wrap{padding:46px 24px 28px}
 .f-grid a{display:block;font-size:13.5px;color:var(--g);text-decoration:none;padding:4px 0;cursor:pointer}
 .f-grid a:hover{color:var(--p)}
 .f-low{display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--bd);padding-top:18px;font-size:12px;color:var(--g);flex-wrap:wrap;gap:10px}
+.f-low a{color:var(--g);text-decoration:none}.f-low a:hover{color:var(--p)}
+/* bandeau cookies */
+.ckb{position:fixed;left:12px;right:12px;bottom:12px;z-index:300;max-width:600px;margin:0 auto;background:var(--w);border:2px solid var(--dk);border-radius:16px;box-shadow:var(--shf);padding:15px 18px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.ckb p{font-size:13px;color:var(--tx);flex:1;min-width:200px;line-height:1.5}
+.ckb p a{color:var(--p);cursor:pointer;text-decoration:underline}
+.ckb .ckb-btns{display:flex;gap:8px;flex-shrink:0}
+@media(max-width:920px){.ckb{bottom:84px}}
 
 /* ═══ DÉTAIL ═══ */
 .det{max-width:1180px;margin:0 auto;padding:20px 24px 70px}
@@ -602,10 +609,39 @@ const getGrade=n=>[...GRADES].reverse().find(g=>n>=g.min)||GRADES[0];
 const getNextGrade=n=>GRADES[GRADES.indexOf(getGrade(n))+1]||null;
 const feeRate=(n,plus)=>Math.max(0.02,getGrade(n).fee/100-(plus?0.01:0));
 const LEGALS={
- cgu:{t:"Conditions générales",p:["Cercle met en relation des voisins pour la location d'objets du quotidien. En créant un compte, vous acceptez de prêter et d'emprunter avec le soin que vous porteriez à vos propres affaires.","Chaque location donne lieu à une caution séquestrée, restituée sous 48 h après le retour de l'objet en bon état.","La commission de service est de 11 %, réduite par votre grade et votre abonnement Cercle+ (plancher : 2 %)."]},
+ cgu:{t:"Conditions générales d'utilisation",lead:"Les règles du cercle, écrites pour être lues.",maj:"16 juin 2026",sections:[
+   {h:"1. Objet",p:["Cercle est une plateforme qui met en relation des voisins pour la location d'objets du quotidien. En créant un compte, vous acceptez les présentes conditions."]},
+   {h:"2. Inscription & compte",p:["L'inscription est gratuite et réservée aux personnes majeures. Vous vous engagez à fournir des informations exactes et à confirmer votre adresse e-mail.","Vous êtes responsable de la confidentialité de votre mot de passe et de toute activité sur votre compte."]},
+   {h:"3. Le rôle de Cercle",p:["Cercle est un intermédiaire technique : la location est un contrat entre voisins. Cercle facilite la mise en relation, encadre la caution et propose une assurance, mais n'est pas propriétaire des objets."]},
+   {h:"4. Vos engagements",p:["Prêter et emprunter avec le soin que vous porteriez à vos propres affaires. Décrire honnêtement vos objets, respecter les dates convenues, et signaler tout incident sans tarder.","Sont interdits : objets illégaux, dangereux, ou contraires à l'ordre public."]},
+   {h:"5. Location, caution & commission",p:["Chaque location donne lieu à une caution séquestrée, restituée sous 48 h après le retour de l'objet en bon état.","La commission de service est de 11 %, réduite par votre grade et votre abonnement Cercle+, avec un plancher de 2 %."]},
+   {h:"6. Résiliation",p:["Vous pouvez supprimer votre compte à tout moment depuis vos paramètres. Cercle peut suspendre un compte en cas de manquement grave aux présentes conditions."]},
+ ]},
+ mentions:{t:"Mentions légales",lead:"Qui édite et héberge Cercle.",maj:"16 juin 2026",sections:[
+   {h:"Éditeur du site",p:["Cercle — [raison sociale à compléter], [forme juridique] au capital de [montant] €.","Siège social : [adresse à compléter]. SIREN/SIRET : [à compléter]. RCS : [à compléter].","E-mail : support@cercle.fr."]},
+   {h:"Directeur de la publication",p:["[Nom du responsable de la publication à compléter]."]},
+   {h:"Hébergement",p:["Le site est hébergé par GitHub Pages — GitHub, Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, États-Unis.","Les données de compte et d'annonces sont gérées via Google Firebase (Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, Irlande)."]},
+   {h:"Propriété intellectuelle",p:["La marque, le logo et l'identité visuelle « Quartier Libre » de Cercle sont protégés. Les photos et descriptions d'annonces restent la propriété de leurs auteurs."]},
+ ]},
+ cgv:{t:"Conditions de location",lead:"Prix, paiement, annulation — sans surprise.",maj:"16 juin 2026",sections:[
+   {h:"Prix & commission",p:["Le prix de location par jour est fixé librement par le propriétaire de l'objet. Cercle prélève une commission de service (11 %, réduite selon le grade et Cercle+, plancher 2 %), affichée avant toute réservation."]},
+   {h:"Paiement & caution",p:["Le paiement est demandé à la réservation mais n'est débité qu'à la confirmation du propriétaire. La caution est séquestrée (bloquée, non débitée) le temps de la location.","Le montant de la caution est fixé par le propriétaire et affiché avant que vous confirmiez."]},
+   {h:"Annulation",p:["L'annulation est gratuite jusqu'à 24 h avant le début de la location. Passé ce délai, le premier jour peut être retenu."]},
+   {h:"Litiges & assurance",p:["Chaque location est couverte jusqu'à 2 000 € (casse, perte, vol pendant la location). En cas de litige, notre équipe examine les preuves (photos avant/après, échanges) avant toute retenue sur la caution.","Voir aussi la page « Assurance & caution »."]},
+ ]},
  assurance:{t:"Assurance & caution",lead:"Comment vous êtes protégé, des deux côtés du prêt.",p:["Chaque location sur Cercle est couverte jusqu'à 2 000 € : si un objet prêté est cassé, perdu ou volé pendant la location, le propriétaire est indemnisé — sans avance de frais.","La caution est séquestrée par Cercle au moment de la réservation : ni vous ni le propriétaire ne la touchez. Elle est bloquée, jamais débitée tant que tout se passe bien.","Au retour de l'objet en bon état, la caution est libérée automatiquement sous 48 h. En cas de litige, notre équipe regarde les preuves (photos avant/après, échanges) avant toute retenue.","Le montant de la caution est fixé par le propriétaire, en général autour de 6× le prix journalier. Il est toujours affiché avant que vous confirmiez."],mail:"assurance@cercle.fr",mailLabel:"Une question sur l'assurance ?"},
- conf:{t:"Confidentialité",p:["Vos données restent dans le cercle : nous ne vendons rien à personne. Votre adresse exacte n'est jamais affichée — seulement une distance à pied.","Vous pouvez exporter ou supprimer vos données à tout moment depuis les paramètres."]},
- cookies:{t:"Cookies",p:["Cercle utilise le strict minimum : un cookie de session et vos préférences (mode nuit, quartier). Pas de traceurs publicitaires, promis."]},
+ conf:{t:"Politique de confidentialité",lead:"Vos données restent dans le cercle. On vous explique tout.",maj:"16 juin 2026",sections:[
+   {h:"Données que nous collectons",p:["Votre prénom, e-mail, quartier, et éventuellement votre numéro de téléphone. Vos annonces, réservations, messages et avis. Vos préférences (mode nuit, abonnement)."]},
+   {h:"Pourquoi (finalités)",p:["Pour faire fonctionner le service : vous connecter, vous montrer les objets près de chez vous, gérer les locations et la messagerie, et assurer la sécurité du cercle.","Votre adresse exacte n'est jamais affichée aux autres — uniquement une distance à pied."]},
+   {h:"Base légale & sous-traitants",p:["Le traitement repose sur l'exécution du contrat (les CGU) et votre consentement. Vos données sont hébergées chez Google Firebase (UE/Irlande) et ne sont jamais vendues à des tiers."]},
+   {h:"Durée de conservation",p:["Vos données sont conservées tant que votre compte est actif. À la suppression du compte, elles sont effacées (hors obligations légales de conservation, ex. facturation)."]},
+   {h:"Vos droits (RGPD)",p:["Vous disposez d'un droit d'accès, de rectification, d'effacement, de portabilité et d'opposition. Vous pouvez exporter ou supprimer vos données à tout moment depuis Paramètres › Mes données.","Pour toute demande : ecrire@cercle.fr. Vous pouvez aussi saisir la CNIL (cnil.fr)."]},
+ ]},
+ cookies:{t:"Cookies & traceurs",lead:"Le strict minimum, et rien pour la pub.",maj:"16 juin 2026",sections:[
+   {h:"Ce que nous utilisons",p:["Un stockage local pour vous garder connecté (session Firebase) et mémoriser vos préférences (mode nuit, quartier, abonnement)."]},
+   {h:"Pas de publicité",p:["Aucun cookie publicitaire, aucun traceur tiers, aucun revente de données. Pas de Google Analytics ni de pixels marketing."]},
+   {h:"Gérer",p:["Vous pouvez à tout moment vider le stockage local depuis votre navigateur. Le bandeau de consentement vous laisse aussi accepter ou refuser à l'arrivée."]},
+ ]},
  contact:{t:"Nous écrire",lead:"Une question, un souci, une idée ? On lit tout.",p:["Pour toute question sur une location, un litige, votre compte ou l'assurance, écrivez-nous : on répond en général sous 24 h ouvrées.","Besoin d'aide en pleine location ? Précisez le nom de l'objet et la date — ça nous aide à vous répondre vite."],mail:"support@cercle.fr",mailLabel:"Écrire au support"},
 };
 
@@ -1306,7 +1342,7 @@ function Plus({toast,plus,subscribe}){
 }
 
 /* ═══════════ PARAMÈTRES ═══════════ */
-function Params({dark,setDark,toast,user,plus,logout,saveQuartier}){
+function Params({dark,setDark,toast,user,plus,logout,saveQuartier,exportData,deleteAccount,openLegal}){
   const u=user||{name:"Voisin",email:"",quartier:"Metz Sablon",verified:false};
   const[q,setQ]=useState(u.quartier||"");
   const[t1,setT1]=useState(true);
@@ -1345,13 +1381,20 @@ function Params({dark,setDark,toast,user,plus,logout,saveQuartier}){
     <SectionT>Abonnement</SectionT>
     <div className="plus-line" style={{margin:0}}>{plus?"✦ Cercle+ actif — frais de service réduits":"✦ Cercle+ — réduisez votre commission"}<span style={{marginLeft:"auto",fontSize:12.5,fontWeight:700}}>{plus?"Membre":"Non abonné"}</span></div>
 
+    <SectionT>Mes données</SectionT>
+    <div className="panel">
+      <div className="set-row"><div><b style={{color:"var(--dk)"}}>Exporter mes données</b><div style={{fontSize:12.5,color:"var(--g)"}}>Profil, annonces, avis, réservations — fichier JSON (RGPD).</div></div>
+        <button className="btn btn-ghost" style={{minHeight:38,padding:"8px 14px",fontSize:13,flexShrink:0}} onClick={exportData}>Télécharger</button></div>
+      <p style={{fontSize:12,color:"var(--gl)",marginTop:10}}>Vos droits d'accès, de rectification et d'effacement sont détaillés dans la <a style={{color:"var(--p)",cursor:"pointer"}} onClick={()=>openLegal&&openLegal("conf")}>politique de confidentialité</a>.</p>
+    </div>
+
     <SectionT>Compte</SectionT>
     <div className="panel" style={{display:"flex",flexDirection:"column",gap:10}}>
       <button className="btn btn-ghost" onClick={logout}>Se déconnecter</button>
       <div style={{borderTop:"1px dashed var(--bd)",paddingTop:12}}>
         <b style={{color:"var(--ter)",fontSize:14}}>Quitter le cercle</b>
-        <p style={{fontSize:12.5,color:"var(--g)",margin:"4px 0 10px"}}>Supprime votre compte et vos annonces. Vos voisins vous regretteront.</p>
-        <button className="btn btn-ghost" style={{borderColor:"var(--ter)",color:"var(--ter)"}} onClick={()=>toast("Suppression de compte : à brancher (démo)")}>Supprimer mon compte</button>
+        <p style={{fontSize:12.5,color:"var(--g)",margin:"4px 0 10px"}}>Supprime définitivement votre compte, vos annonces et vos données. Irréversible.</p>
+        <button className="btn btn-ghost" style={{borderColor:"var(--ter)",color:"var(--ter)"}} onClick={deleteAccount}>Supprimer mon compte</button>
       </div>
     </div>
   </div>;
@@ -1363,8 +1406,23 @@ function Legal({id}){
   return <div className="page legal">
     <h1>{L.t}</h1>
     <p className="lead">{L.lead||"Version courte, écrite pour être lue."}</p>
-    <div className="panel">{L.p.map((p,i)=><p key={i}>{p}</p>)}</div>
+    <div className="panel">
+      {L.sections
+        ?L.sections.map((s,i)=><div key={i}>{s.h&&<h3>{s.h}</h3>}{s.p.map((p,j)=><p key={j}>{p}</p>)}</div>)
+        :L.p.map((p,i)=><p key={i}>{p}</p>)}
+      {L.maj&&<p style={{fontSize:12,color:"var(--gl)",marginTop:14}}>Dernière mise à jour : {L.maj}</p>}
+    </div>
     {L.mail&&<a className="btn btn-ter" href={"mailto:"+L.mail} style={{marginTop:18,display:"inline-flex"}}><I.msg size={14}/>{L.mailLabel||"Nous écrire"} · {L.mail}</a>}
+  </div>;
+}
+
+function CookieBanner({onChoice,openLegal}){
+  return <div className="ckb" role="dialog" aria-label="Consentement aux cookies">
+    <p>Cercle utilise le strict minimum pour fonctionner (connexion, préférences) — <b style={{color:"var(--dk)"}}>aucun traceur publicitaire</b>. <a onClick={()=>openLegal("cookies")}>En savoir plus</a></p>
+    <div className="ckb-btns">
+      <button className="btn btn-ghost" style={{minHeight:38,padding:"8px 14px",fontSize:13}} onClick={()=>onChoice("refused")}>Refuser</button>
+      <button className="btn btn-ter" style={{minHeight:38,padding:"8px 16px",fontSize:13}} onClick={()=>onChoice("accepted")}>Accepter</button>
+    </div>
   </div>;
 }
 
@@ -1574,6 +1632,7 @@ function App(){
   const[dark,setDark]=useState(P.dark||false);
   const[toastMsg,setToastMsg]=useState(null);
   const[legal,setLegal]=useState("cgu");
+  const[cookie,setCookie]=useState(()=>{try{return localStorage.getItem("cercle_cookie")||""}catch(e){return ""}});
   const[notifs,setNotifs]=useState(P.notifs||NOTIFS0);
   const[readNotifs,setReadNotifs]=useState(()=>new Set(P.readNotifs||[])); // ids de notifs réelles déjà lues
   const[myItems,setMyItems]=useState(P.myItems||[]);
@@ -1720,6 +1779,7 @@ function App(){
   const markRead=id=>{setReadNotifs(s=>{const n=new Set(s);n.add(id);return n});setNotifs(ns=>ns.map(n=>n.id===id?{...n,unread:false}:n));};
   const markAll=()=>{setReadNotifs(s=>{const n=new Set(s);realNotifs.forEach(r=>n.add(r.id));return n});setNotifs(ns=>ns.map(n=>({...n,unread:false})));};
   const openLegal=id=>{setLegal(id);setPage("legal")};
+  const chooseCookie=v=>{try{localStorage.setItem("cercle_cookie",v)}catch(e){}setCookie(v);};
   const unread=allNotifs.filter(n=>n.unread).length;
   const addItem=async({t,c,p,d,imgs,img,cau})=>{
     const arr=(imgs&&imgs.length?imgs:[img||("voisin"+(Date.now()%9973))]).slice(0,4);
@@ -1797,6 +1857,35 @@ function App(){
   const go=p=>{if(p!=="messages")setOpenConv(null);setPage(p)};
   const onAuth=u=>{setUser(u);addNotif({k:"info",txt:`Bienvenue dans le cercle, ${u.name} — profil vérifié ✓`});toast("Bienvenue, "+u.name+" !");go("home")};
   const logout=()=>{const a=fbAuth();if(a)try{a.signOut()}catch(e){}setUser(null);toast("À bientôt dans le quartier");go("home")};
+  /* RGPD : export de mes données (téléchargement JSON) */
+  const exportData=()=>{
+    const data={exportéLe:new Date().toISOString(),profil:user||null,
+      mesAnnonces:myListings,mesAvis:allReviews.filter(r=>user&&r.by===user.name),
+      mesReservations:fbResas,mesDemandesRecues:fbRequests};
+    try{
+      const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+      const url=URL.createObjectURL(blob);const a=document.createElement("a");
+      a.href=url;a.download="mes-donnees-cercle.json";a.click();URL.revokeObjectURL(url);
+      toast("Vos données ont été téléchargées");
+    }catch(e){toast("Export impossible — réessayez")}
+  };
+  /* RGPD : suppression réelle du compte (Auth + Firestore) */
+  const deleteAccount=async()=>{
+    if(!window.confirm("Supprimer définitivement votre compte, vos annonces et vos données ? Cette action est irréversible."))return;
+    const a=fbAuth(),d=fbDb(),fu=a&&a.currentUser;
+    if(!fu){setUser(null);toast("Compte supprimé");go("home");return;}
+    try{
+      if(d&&user&&user.uid){
+        for(const it of myListings){if(it.id&&!/^u\d/.test(it.id)){try{await d.collection("v2_listings").doc(it.id).delete()}catch(_){}}}
+        try{await d.collection("users").doc(user.uid).delete()}catch(_){}
+      }
+      await fu.delete();
+      setUser(null);toast("Votre compte a été supprimé — à bientôt, peut-être.");go("home");
+    }catch(e){
+      if(e&&e.code==="auth/requires-recent-login"){toast("Pour des raisons de sécurité, reconnectez-vous puis réessayez.");logout();}
+      else toast(fbMsg(e));
+    }
+  };
   const need=fn=>(...a)=>{if(!user){toast("Rejoignez le cercle pour continuer");go("auth");return}return fn(...a)};
 
   /* filtre grille */
@@ -1896,7 +1985,7 @@ function App(){
     {page==="avis"&&<Avis reviews={allReviews} user={user} myListings={myListings}/>}
     {page==="grade"&&<Grade plus={plus} rentals={stats.rentals}/>}
     {page==="plus"&&<Plus toast={toast} plus={plus} subscribe={need(subscribe)}/>}
-    {page==="params"&&<Params dark={dark} setDark={setDark} toast={toast} user={user} plus={plus} logout={logout} saveQuartier={saveQuartier}/>}
+    {page==="params"&&<Params dark={dark} setDark={setDark} toast={toast} user={user} plus={plus} logout={logout} saveQuartier={saveQuartier} exportData={exportData} deleteAccount={deleteAccount} openLegal={openLegal}/>}
     {page==="legal"&&<Legal id={legal}/>}
     {page==="auth"&&<Auth onDone={onAuth} toast={toast}/>}
     </div>
@@ -1912,7 +2001,7 @@ function App(){
           <div><h4>Aide</h4><a onClick={()=>openLegal("assurance")}>Assurance & caution</a><a onClick={()=>openLegal("cgu")}>Conditions générales</a><a onClick={()=>openLegal("contact")}>Nous écrire</a></div>
           <div><h4>Cercle</h4><a onClick={()=>go("grade")}>Les grades</a><a style={{color:"var(--plus)"}} onClick={()=>go("plus")}>✦ Cercle+</a></div>
         </div>
-        <div className="f-low"><span>© 2026 Cercle · Tout est à deux rues.</span><span><a style={{display:"inline",cursor:"pointer"}} onClick={()=>openLegal("cgu")}>CGU</a> · <a style={{display:"inline",cursor:"pointer"}} onClick={()=>openLegal("conf")}>Confidentialité</a> · <a style={{display:"inline",cursor:"pointer"}} onClick={()=>openLegal("cookies")}>Cookies</a></span></div>
+        <div className="f-low"><span>© 2026 Cercle · Tout est à deux rues.</span><span style={{display:"flex",flexWrap:"wrap",gap:"4px 0"}}>{[["cgu","CGU"],["cgv","CGV"],["conf","Confidentialité"],["cookies","Cookies"],["mentions","Mentions légales"]].map(([id,lbl],i)=><React.Fragment key={id}>{i>0&&<span>&nbsp;·&nbsp;</span>}<a style={{display:"inline",cursor:"pointer"}} onClick={()=>openLegal(id)}>{lbl}</a></React.Fragment>)}</span></div>
       </div>
     </footer>
 
@@ -1925,6 +2014,7 @@ function App(){
     </nav>
 
     {toastMsg&&<div className="toast" role="status">{toastMsg}</div>}
+    {!cookie&&<CookieBanner onChoice={chooseCookie} openLegal={openLegal}/>}
   </>;
 }
 ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
