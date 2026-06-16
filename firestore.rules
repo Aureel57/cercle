@@ -2,28 +2,27 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ⚠️ NE PAS DÉPLOYER CE FICHIER TEL QUEL : il ne contient PAS les règles
-    // du site v1 (users, items) déjà en ligne. Ajoutez seulement les blocs
-    // ci-dessous DANS vos règles existantes via la console Firebase, sans
-    // rien retirer. Sinon le site v1 casserait.
+    // ── Site v1 (inchangé) ──
+    match /users/{userId} {
+      allow read, write: if true;
+    }
+    match /items/{itemId} {
+      allow read, write: if true;
+    }
 
-    // ── Annonces partagées de la v2 « Quartier Libre » ──
+    // ── Annonces partagées v2 ──
     match /v2_listings/{doc} {
-      allow read: if true;                       // tout le monde voit les annonces
-      allow create: if request.auth != null;     // seul un membre connecté publie
-      allow update, delete: if request.auth != null
-        && request.auth.uid == resource.data.uid; // chacun gère ses propres annonces
+      allow read, write: if true;
     }
 
-    // ── Avis partagés (ACTIF dès que ce bloc est en ligne) ──
+    // ── Avis partagés v2 (actif tout de suite) ──
     match /v2_reviews/{doc} {
-      allow read: if true;                        // les avis sont publics
-      allow create: if request.auth != null;      // un membre connecté laisse un avis
-      allow update, delete: if request.auth != null
-        && request.auth.uid == resource.data.uid; // chacun gère ses propres avis
+      allow read: if true;
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null && request.auth.uid == resource.data.uid;
     }
 
-    // ── Réservations (pour l'étape suivante : réservations cross-utilisateurs) ──
+    // ── Réservations v2 (pour la prochaine étape) ──
     match /v2_reservations/{doc} {
       allow read: if request.auth != null
         && (request.auth.uid == resource.data.renterUid
@@ -35,7 +34,7 @@ service cloud.firestore {
             || request.auth.uid == resource.data.ownerUid);
     }
 
-    // ── Messagerie (pour l'étape suivante : messages cross-utilisateurs) ──
+    // ── Messagerie v2 (pour la prochaine étape) ──
     match /v2_conversations/{conv} {
       allow read, update: if request.auth != null
         && request.auth.uid in resource.data.members;
@@ -48,6 +47,5 @@ service cloud.firestore {
       }
     }
 
-    // ⚠️ Laissez ci-dessous / au-dessus vos règles existantes du site v1 intactes.
   }
 }
