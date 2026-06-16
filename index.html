@@ -319,6 +319,13 @@ footer .wrap{padding:46px 24px 28px}
 .rev{background:var(--w);border:1.5px solid var(--bd);border-radius:14px;padding:16px}
 .rev .rh{display:flex;align-items:center;gap:10px;margin-bottom:7px}
 .rev .stars{color:var(--sun);display:flex;gap:1px}
+.star-pick{display:flex;gap:4px}
+.star-pick button{background:none;border:none;padding:0;cursor:pointer;color:var(--bd);line-height:0;transition:color .12s,transform .12s}
+.star-pick button.on{color:var(--sun)}
+.star-pick button:hover{transform:scale(1.18)}
+.rev-form{background:color-mix(in srgb,var(--sun) 7%,transparent);border:1.5px dashed color-mix(in srgb,var(--sun) 45%,transparent);border-radius:14px;padding:14px 16px;margin-top:10px}
+.rev-form textarea{width:100%;margin-top:10px;padding:10px 12px;border:1.5px solid var(--bd);border-radius:10px;font-size:13.5px;background:var(--w);color:var(--dk);outline:none;min-height:60px;resize:vertical;font-family:var(--f)}
+.rev-form textarea:focus{border-color:var(--p)}
 /* ═══ CARTE DU QUARTIER ═══ */
 .bigradar{position:relative;height:min(70vh,620px);background:var(--w);border:2px solid var(--dk);border-radius:var(--rl);overflow:hidden;box-shadow:var(--shf)}
 .bigradar .legend{position:absolute;top:14px;left:14px;z-index:5;background:color-mix(in srgb,var(--w) 92%,transparent);backdrop-filter:blur(6px);border:1.5px solid var(--bd);border-radius:12px;padding:10px 14px;font-size:11.5px;color:var(--g);font-weight:600}
@@ -712,8 +719,9 @@ function Card({it,open,fav,togFav}){
 }
 
 /* ═══════════ DÉTAIL ═══════════ */
-function Detail({it,backHome,fav,togFav,toast,reserve,openChat,plus}){
+function Detail({it,backHome,fav,togFav,toast,reserve,openChat,plus,reviews=[]}){
   const d=distFor(it.id);
+  const itemReviews=reviews.filter(r=>r.itemId===it.id);
   const[days,setDays]=useState(3);
   const myGrade=getGrade(RENTALS);
   const rate=feeRate(RENTALS,plus);
@@ -756,6 +764,18 @@ function Detail({it,backHome,fav,togFav,toast,reserve,openChat,plus}){
           <div><div className="nm">{it.own}</div><div className="sb">Voisin·e vérifié·e · ★ {it.note.toFixed(1)} · {it.rev} locations</div></div>
           <button className="btn btn-ghost" style={{padding:"9px 15px",minHeight:38,fontSize:13}} onClick={()=>openChat(it.own)}><I.msg size={14}/>Contacter</button>
         </div>
+        {itemReviews.length>0&&<>
+          <h3 className="sh">Avis des voisins <small style={{fontWeight:500,color:"var(--gl)"}}>· {itemReviews.length}</small></h3>
+          <div className="rows">{itemReviews.map(r=><div key={r.id} className="rev">
+            <div className="rh">
+              <div className="avat" style={{width:34,height:34,fontSize:13}}>{(r.by||"V")[0]}</div>
+              <b style={{color:"var(--dk)",fontSize:14}}>{r.by}</b>
+              <span className="stars">{[...Array(r.note)].map((_,j)=><I.star key={j} size={11}/>)}</span>
+              <span style={{marginLeft:"auto",fontSize:11.5,color:"var(--gl)"}}>{r.when}</span>
+            </div>
+            <p style={{fontSize:13.5}}>{r.txt}</p>
+          </div>)}</div>
+        </>}
       </div>
       <aside className="ticket">
         <div className="th">
@@ -1032,7 +1052,34 @@ function Carte({open,items,dark,user}){
 }
 
 /* ═══════════ MON ACTIVITÉ ═══════════ */
-function Activite({toast,resas,myItems}){
+function StarPick({value,onChange}){
+  const[hov,setHov]=useState(0);
+  return <div className="star-pick" role="radiogroup" aria-label="Note">
+    {[1,2,3,4,5].map(n=><button key={n} type="button" className={(hov||value)>=n?"on":""} aria-label={n+" étoile"+(n>1?"s":"")} aria-checked={value===n} role="radio"
+      onMouseEnter={()=>setHov(n)} onMouseLeave={()=>setHov(0)} onClick={()=>onChange(n)}><I.star size={22}/></button>)}
+  </div>;
+}
+function LeaveReview({resa,addReview,done}){
+  const[open,setOpen]=useState(false);
+  const[note,setNote]=useState(5);
+  const[txt,setTxt]=useState("");
+  if(done)return <span className="badge sand">Avis laissé ✓</span>;
+  if(!open)return <button className="btn btn-ghost" style={{minHeight:34,padding:"7px 12px",fontSize:12}} onClick={()=>setOpen(true)}><I.star size={13}/>Laisser un avis</button>;
+  return <div className="rev-form" style={{flexBasis:"100%",order:9}}>
+    <div style={{display:"flex",alignItems:"center",gap:12,flexWrap:"wrap"}}>
+      <b style={{fontSize:13,color:"var(--dk)"}}>Votre avis sur « {resa.it.t} »</b>
+      <StarPick value={note} onChange={setNote}/>
+    </div>
+    <textarea value={txt} onChange={e=>setTxt(e.target.value)} placeholder="Comment s'est passée la location ? (objet, échange avec le voisin…)"/>
+    <div style={{display:"flex",gap:8,marginTop:10}}>
+      <button className="btn btn-ter" style={{minHeight:36,padding:"8px 16px",fontSize:13}} disabled={!txt.trim()}
+        onClick={()=>{addReview({itemId:resa.it.id,itemTitle:resa.it.t,owner:resa.it.own,note,txt});setOpen(false);}}>Publier l'avis</button>
+      <button className="btn btn-ghost" style={{minHeight:36,padding:"8px 14px",fontSize:13}} onClick={()=>setOpen(false)}>Annuler</button>
+    </div>
+  </div>;
+}
+function Activite({toast,resas,myItems,reviews=[],addReview}){
+  const reviewedIds=new Set(reviews.map(r=>r.itemId));
   const max=Math.max(...REVENUS.map(r=>r.v));
   return <div className="page">
     <h1>Mon activité</h1>
@@ -1056,6 +1103,7 @@ function Activite({toast,resas,myItems}){
           {r.st==="en-cours"&&<div className="prog"><i style={{width:r.prog+"%"}}/></div>}
         </div>
         <span className={"badge "+(r.st==="en-cours"?"green":r.st==="a-venir"?"blue":"sand")}>{r.lbl}</span>
+        {r.st==="fini"&&addReview&&<LeaveReview resa={r} addReview={addReview} done={reviewedIds.has(r.it.id)}/>}
       </div>)}
     </div>
     <div className="sec-t" style={{fontSize:18,margin:"4px 0 10px"}}>Mes annonces</div>
@@ -1094,8 +1142,9 @@ function Notifs({notifs,markRead,markAll}){
 }
 
 /* ═══════════ MES AVIS ═══════════ */
-function Avis(){
+function Avis({reviews=[],user}){
   const tot=DIST_AVIS.reduce((a,b)=>a+b,0);
+  const mine=reviews.filter(r=>!user||!r.by||r.by===(user.name||"Vous"));
   return <div className="page">
     <h1>Mes avis</h1>
     <p className="lead">{tot} voisins ont donné leur avis — c'est ça, la réputation de quartier.</p>
@@ -1110,6 +1159,7 @@ function Avis(){
         <span style={{width:20,textAlign:"right"}}>{v}</span>
       </div>)}</div>
     </div>
+    <div className="sec-t" style={{fontSize:18,margin:"6px 0 10px"}}>Avis reçus</div>
     <div className="rows">{REVIEWS.map((r,i)=><div key={i} className="rev">
       <div className="rh">
         <div className="avat" style={{width:34,height:34,fontSize:13}}>{r.who[0]}</div>
@@ -1119,6 +1169,18 @@ function Avis(){
       </div>
       <p style={{fontSize:13.5}}>{r.txt}</p>
     </div>)}</div>
+    <div className="sec-t" style={{fontSize:18,margin:"22px 0 10px"}}>Avis que vous avez laissés <small>{mine.length}</small></div>
+    {mine.length===0
+      ?<div className="empty" style={{padding:"26px 12px"}}><div className="big">Aucun avis pour l'instant</div>Après une location terminée, laissez un avis depuis <b>Mon activité</b>.</div>
+      :<div className="rows">{mine.map(r=><div key={r.id} className="rev">
+        <div className="rh">
+          <span className="stars">{[...Array(r.note)].map((_,j)=><I.star key={j} size={11}/>)}</span>
+          <b style={{color:"var(--dk)",fontSize:14}}>{r.itemTitle}</b>
+          <span style={{marginLeft:"auto",fontSize:11.5,color:"var(--gl)"}}>{r.when}</span>
+        </div>
+        <p style={{fontSize:13.5}}>{r.txt}</p>
+        <div style={{fontSize:12,color:"var(--gl)",marginTop:4}}>chez {r.owner}</div>
+      </div>)}</div>}
   </div>;
 }
 
@@ -1451,16 +1513,20 @@ function App(){
   const[notifs,setNotifs]=useState(P.notifs||NOTIFS0);
   const[myItems,setMyItems]=useState(P.myItems||[]);
   const[resas,setResas]=useState(P.resas||RESAS);
+  const[reviews,setReviews]=useState(P.reviews||[]);
   const[convs,setConvs]=useState(P.convs||CONVS);
   const[plus,setPlus]=useState(P.plus||false);
   const[user,setUser]=useState(fbAuth()?null:(P.user||null));
   const[openConv,setOpenConv]=useState(null);
   const[fbItems,setFbItems]=useState([]);
+  const[fbReviews,setFbReviews]=useState([]);
   const items=useMemo(()=>fbDb()?[...fbItems,...myItems,...ITEMS]:[...myItems,...ITEMS],[fbItems,myItems]);
+  /* avis : ceux du serveur (cross-utilisateurs) + ceux écrits localement, dédupliqués */
+  const allReviews=useMemo(()=>{const seen=new Set(),out=[];for(const r of [...fbReviews,...reviews]){if(r&&!seen.has(r.id)){seen.add(r.id);out.push(r);}}return out;},[fbReviews,reviews]);
   const itemsRef=useRef(items);useEffect(()=>{itemsRef.current=items},[items]);
 
   /* persistance */
-  useEffect(()=>{saveLS({fav:[...fav],dark,notifs,myItems,resas,convs,plus,user})},[fav,dark,notifs,myItems,resas,convs,plus,user]);
+  useEffect(()=>{saveLS({fav:[...fav],dark,notifs,myItems,resas,reviews,convs,plus,user})},[fav,dark,notifs,myItems,resas,reviews,convs,plus,user]);
   useEffect(()=>{document.documentElement.classList.toggle("dark",dark)},[dark]);
   /* Firebase : restauration de session */
   useEffect(()=>{
@@ -1498,6 +1564,17 @@ function App(){
       },err=>console.warn("[Cercle] Firestore lecture indisponible:",err&&err.code));
     }catch(e){console.warn("[Cercle] Firestore off:",e&&e.code)}
   },[]);
+  /* Firebase : avis partagés (Firestore) — repli silencieux si règles absentes */
+  useEffect(()=>{
+    const d=fbDb();if(!d)return;
+    try{
+      return d.collection("v2_reviews").orderBy("createdAt","desc").limit(60).onSnapshot(snap=>{
+        const arr=[];snap.forEach(doc=>{const x=doc.data();
+          arr.push({id:doc.id,itemId:x.itemId,itemTitle:x.itemTitle,owner:x.owner,note:x.note||5,txt:x.txt||"",by:x.by||"Voisin",when:x.when||"récemment"});});
+        setFbReviews(arr);
+      },err=>console.warn("[Cercle] avis Firestore indisponibles:",err&&err.code));
+    }catch(e){console.warn("[Cercle] avis off:",e&&e.code)}
+  },[]);
 
   /* actions */
   const toast=m=>{setToastMsg(m);setTimeout(()=>setToastMsg(null),2600)};
@@ -1529,6 +1606,15 @@ function App(){
     setResas(rs=>[{id:Date.now(),it,range:`12 → ${12+days} juin`,st:"a-venir",lbl:"À venir"},...rs]);
     addNotif({k:"resa",txt:`Demande envoyée à ${it.own} pour « ${it.t} » (${tot} €) — débit à sa confirmation.`});
     toast("Demande envoyée à "+it.own+" — suivez-la dans Mon activité");
+  };
+  const addReview=({itemId,itemTitle,owner,note,txt})=>{
+    const rv={id:"r"+Date.now(),itemId,itemTitle,owner,note,txt:txt.trim(),by:(user&&user.name)||"Vous",when:"juin 2026"};
+    setReviews(rs=>[rv,...rs]);
+    addNotif({k:"avis",txt:`Vous avez laissé un avis ${"★".repeat(note)} sur « ${itemTitle} ».`});
+    toast("Merci pour votre avis !");
+    /* écriture Firestore best-effort (active dès que les règles v2_reviews existent) */
+    const db=fbDb();
+    if(db&&user)db.collection("v2_reviews").add({itemId,itemTitle,owner,note,txt:rv.txt,by:rv.by,when:rv.when,uid:user.uid||"",createdAt:firebase.firestore.FieldValue.serverTimestamp()}).catch(()=>{});
   };
   const openChat=who=>{
     const target=who==="Vous"?"Léa":who;
@@ -1633,15 +1719,15 @@ function App(){
       </main>
     </>}
 
-    {page==="detail"&&sel&&<Detail it={sel} backHome={goHome} fav={fav.has(sel.id)} togFav={togFav} toast={toast} reserve={need(reserve)} openChat={need(openChat)} plus={plus}/>}
+    {page==="detail"&&sel&&<Detail it={sel} backHome={goHome} fav={fav.has(sel.id)} togFav={togFav} toast={toast} reserve={need(reserve)} openChat={need(openChat)} plus={plus} reviews={allReviews}/>}
     {page==="create"&&(user?<Create toast={toast} backHome={goHome} addItem={addItem}/>:<Auth onDone={onAuth} toast={toast}/>)}
     {page==="messages"&&(user?<Messages convs={convs} setConvs={setConvs} openId={openConv} setOpenId={setOpenConv}/>:<Auth onDone={onAuth} toast={toast}/>)}
     {page==="favs"&&<Favs items={items} open={open} fav={fav} togFav={togFav}/>}
     {page==="profile"&&(user?<Profile dark={dark} setDark={setDark} toast={toast} go={go} plus={plus} user={user} logout={logout}/>:<Auth onDone={onAuth} toast={toast}/>)}
     {page==="carte"&&<Carte open={open} items={items} dark={dark} user={user}/>}
-    {page==="activite"&&<Activite toast={toast} resas={resas} myItems={myItems}/>}
+    {page==="activite"&&<Activite toast={toast} resas={resas} myItems={myItems} reviews={allReviews} addReview={addReview}/>}
     {page==="notifs"&&<Notifs notifs={notifs} markRead={markRead} markAll={markAll}/>}
-    {page==="avis"&&<Avis/>}
+    {page==="avis"&&<Avis reviews={allReviews} user={user}/>}
     {page==="grade"&&<Grade plus={plus}/>}
     {page==="plus"&&<Plus toast={toast} plus={plus} subscribe={need(subscribe)}/>}
     {page==="params"&&<Params dark={dark} setDark={setDark} toast={toast} user={user} plus={plus} logout={logout} saveQuartier={saveQuartier}/>}
