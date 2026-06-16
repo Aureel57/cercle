@@ -762,7 +762,7 @@ function Detail({it,backHome,fav,togFav,toast,reserve,openChat,plus,reviews=[]})
         <div className="owner-card">
           <div className="avat">{it.own[0]}</div>
           <div><div className="nm">{it.own}</div><div className="sb">Voisin·e vérifié·e · ★ {it.note.toFixed(1)} · {it.rev} locations</div></div>
-          <button className="btn btn-ghost" style={{padding:"9px 15px",minHeight:38,fontSize:13}} onClick={()=>openChat(it.own)}><I.msg size={14}/>Contacter</button>
+          <button className="btn btn-ghost" style={{padding:"9px 15px",minHeight:38,fontSize:13}} onClick={()=>openChat(it)}><I.msg size={14}/>Contacter</button>
         </div>
         {itemReviews.length>0&&<>
           <h3 className="sh">Avis des voisins <small style={{fontWeight:500,color:"var(--gl)"}}>· {itemReviews.length}</small></h3>
@@ -862,13 +862,31 @@ function Create({toast,backHome,addItem}){
   </div>;
 }
 
-function Messages({convs,setConvs,openId,setOpenId}){
+function Messages({convs,setConvs,openId,setOpenId,user}){
   const cid=openId;
   const c=convs.find(x=>x.id===cid)||null;
   const endRef=useRef(null);
-  useEffect(()=>{if(endRef.current)endRef.current.scrollIntoView({behavior:reduced()?"instant":"smooth",block:"end"})},[c&&c.msgs.length]);
+  const[fsMsgs,setFsMsgs]=useState([]);
+  const myUid=user&&user.uid;
+  /* conversation réelle ouverte → écoute les messages en temps réel */
+  useEffect(()=>{
+    if(!c||!c.fs){setFsMsgs([]);return;}
+    const d=fbDb();if(!d)return;
+    return d.collection("v2_conversations").doc(c.id).collection("messages").orderBy("at","asc").limit(300).onSnapshot(snap=>{
+      const arr=[];snap.forEach(doc=>{const m=doc.data();arr.push([m.from===myUid?"me":"th",m.text]);});setFsMsgs(arr);
+    },err=>console.warn("[Cercle] messages indisponibles:",err&&err.code));
+  },[c&&c.id,c&&c.fs,myUid]);
+  const msgs=c?(c.fs?fsMsgs:(c.msgs||[])):[];
+  useEffect(()=>{if(endRef.current)endRef.current.scrollIntoView({behavior:reduced()?"instant":"smooth",block:"end"})},[msgs.length]);
   const send=txt=>{
     if(!txt.trim()||!c)return;
+    if(c.fs){
+      const d=fbDb();if(!d)return;
+      const cref=d.collection("v2_conversations").doc(c.id);
+      cref.collection("messages").add({from:myUid,text:txt,at:firebase.firestore.FieldValue.serverTimestamp()}).catch(e=>console.warn("[Cercle] envoi message échoué:",e&&e.code));
+      cref.set({last:txt,lastAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true}).catch(()=>{});
+      return;
+    }
     setConvs(cs=>cs.map(x=>x.id===cid?{...x,msgs:[...x.msgs,["me",txt]],last:txt,when:"maintenant"}:x));
     setTimeout(()=>{
       const rep=AUTO_REPLIES[(Math.random()*AUTO_REPLIES.length)|0];
@@ -877,10 +895,10 @@ function Messages({convs,setConvs,openId,setOpenId}){
   };
   if(c)return <div className="page">
     <button className="back" onClick={()=>setOpenId(null)}><I.back size={14}/>Conversations</button>
-    <h1 style={{fontSize:24,marginTop:6}}>{c.who}</h1>
+    <h1 style={{fontSize:24,marginTop:6}}>{c.who}{c.fs&&<span style={{fontSize:12,fontWeight:600,color:"var(--green)",marginLeft:8,verticalAlign:"middle"}}>● en direct</span>}</h1>
     <div className="bubs">
-      {c.msgs.length===0&&<p style={{fontSize:13,color:"var(--g)",fontStyle:"italic"}}>Dites bonjour à {c.who} — c'est un voisin, pas un service client.</p>}
-      {c.msgs.map((m,i)=><div key={i} className={"bub "+m[0]}>{m[1]}</div>)}
+      {msgs.length===0&&<p style={{fontSize:13,color:"var(--g)",fontStyle:"italic"}}>Dites bonjour à {c.who} — c'est un voisin, pas un service client.</p>}
+      {msgs.map((m,i)=><div key={i} className={"bub "+m[0]}>{m[1]}</div>)}
       <div ref={endRef}/>
     </div>
     <form className="mip" onSubmit={e=>{e.preventDefault();const v=e.target.m.value;e.target.reset();send(v)}}>
@@ -891,10 +909,11 @@ function Messages({convs,setConvs,openId,setOpenId}){
   return <div className="page">
     <h1>Courrier du quartier</h1>
     <p className="lead">Vos conversations avec les voisins.</p>
+    {convs.length===0&&<div className="empty" style={{padding:"30px 12px"}}><div className="big">Pas encore de message</div>Ouvrez une fiche objet et touchez « Contacter » pour écrire à un voisin.</div>}
     <div className="msg-l">{convs.map(cv=>
       <button key={cv.id} className="conv" onClick={()=>setOpenId(cv.id)}>
-        <div className="avat">{cv.who[0]}</div>
-        <div style={{minWidth:0}}><div className="nm">{cv.who}</div><div className="lm">{cv.last}</div></div>
+        <div className="avat">{(cv.who||"V")[0]}</div>
+        <div style={{minWidth:0}}><div className="nm">{cv.who}{cv.fs&&<span style={{fontSize:10,color:"var(--green)",marginLeft:6}}>●</span>}</div><div className="lm">{cv.last}</div></div>
         <span className="when">{cv.when}</span>
       </button>)}
     </div>
@@ -1538,11 +1557,14 @@ function App(){
   const[fbReviews,setFbReviews]=useState([]);
   const[fbResas,setFbResas]=useState([]);      // mes réservations (côté locataire)
   const[fbRequests,setFbRequests]=useState([]); // demandes reçues (côté propriétaire)
+  const[fbConvs,setFbConvs]=useState([]);       // conversations réelles (Firestore)
   const items=useMemo(()=>fbDb()?[...fbItems,...myItems,...ITEMS]:[...myItems,...ITEMS],[fbItems,myItems]);
   /* avis : ceux du serveur (cross-utilisateurs) + ceux écrits localement, dédupliqués */
   const allReviews=useMemo(()=>{const seen=new Set(),out=[];for(const r of [...fbReviews,...reviews]){if(r&&!seen.has(r.id)){seen.add(r.id);out.push(r);}}return out;},[fbReviews,reviews]);
   /* réservations affichées au locataire : celles du serveur (réelles) + les démos locales */
   const allResas=useMemo(()=>[...fbResas,...resas],[fbResas,resas]);
+  /* conversations affichées : réelles (Firestore) + démos locales */
+  const allConvs=useMemo(()=>[...fbConvs,...convs],[fbConvs,convs]);
   const itemsRef=useRef(items);useEffect(()=>{itemsRef.current=items},[items]);
 
   /* persistance */
@@ -1620,6 +1642,17 @@ function App(){
       },err=>console.warn("[Cercle] demandes indisponibles:",err&&err.code));
     }catch(e){console.warn("[Cercle] demandes off:",e&&e.code)}
   },[user&&user.uid]);
+  /* Firebase : conversations réelles (où je suis membre) */
+  useEffect(()=>{
+    const d=fbDb();if(!d||!user||!user.uid)return;
+    try{
+      return d.collection("v2_conversations").where("members","array-contains",user.uid).onSnapshot(snap=>{
+        const arr=[];snap.forEach(doc=>{const x=doc.data();const other=(x.members||[]).find(u=>u!==user.uid)||"";
+          arr.push({id:doc.id,fs:true,who:(x.names&&x.names[other])||"Voisin",otherUid:other,last:x.last||"Nouvelle conversation",when:"",lastAt:x.lastAt});});
+        arr.sort((a,b)=>((b.lastAt&&b.lastAt.seconds||0)-(a.lastAt&&a.lastAt.seconds||0)));setFbConvs(arr);
+      },err=>console.warn("[Cercle] conversations indisponibles:",err&&err.code));
+    }catch(e){console.warn("[Cercle] conversations off:",e&&e.code)}
+  },[user&&user.uid]);
 
   /* actions */
   const toast=m=>{setToastMsg(m);setTimeout(()=>setToastMsg(null),2600)};
@@ -1678,8 +1711,21 @@ function App(){
     const db=fbDb();
     if(db&&user)db.collection("v2_reviews").add({itemId,itemTitle,owner,note,txt:rv.txt,by:rv.by,when:rv.when,uid:user.uid||"",createdAt:firebase.firestore.FieldValue.serverTimestamp()}).catch(()=>{});
   };
-  const openChat=who=>{
-    const target=who==="Vous"?"Léa":who;
+  /* openChat accepte un nom (démo) ou un objet annonce (avec uid → vraie conversation Firestore) */
+  const openChat=arg=>{
+    const d=fbDb();
+    const ownerUid=arg&&typeof arg==="object"?(arg.uid||""):"";
+    const ownerName=arg&&typeof arg==="object"?(arg.own||"Voisin"):arg;
+    /* vraie conversation entre deux membres réels */
+    if(d&&user&&user.uid&&ownerUid&&ownerUid!==user.uid){
+      const members=[user.uid,ownerUid].sort();const cid=members.join("_");
+      d.collection("v2_conversations").doc(cid).set({members,names:{[user.uid]:user.name||"Voisin",[ownerUid]:ownerName},
+        last:"Nouvelle conversation",lastAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true})
+        .catch(e=>console.warn("[Cercle] ouverture conversation échouée:",e&&e.code));
+      setOpenConv(cid);setPage("messages");return;
+    }
+    /* repli local : propriétaire de démo (sans compte) ou Firestore indisponible */
+    const target=ownerName==="Vous"?"Léa":ownerName;
     let cv=convs.find(c=>c.who===target);
     if(!cv){cv={id:"c"+Date.now(),who:target,last:"Nouvelle conversation",when:"maintenant",msgs:[]};setConvs(cs=>[cv,...cs]);}
     setOpenConv(cv.id);setPage("messages");
@@ -1783,7 +1829,7 @@ function App(){
 
     {page==="detail"&&sel&&<Detail it={sel} backHome={goHome} fav={fav.has(sel.id)} togFav={togFav} toast={toast} reserve={need(reserve)} openChat={need(openChat)} plus={plus} reviews={allReviews}/>}
     {page==="create"&&(user?<Create toast={toast} backHome={goHome} addItem={addItem}/>:<Auth onDone={onAuth} toast={toast}/>)}
-    {page==="messages"&&(user?<Messages convs={convs} setConvs={setConvs} openId={openConv} setOpenId={setOpenConv}/>:<Auth onDone={onAuth} toast={toast}/>)}
+    {page==="messages"&&(user?<Messages convs={allConvs} setConvs={setConvs} openId={openConv} setOpenId={setOpenConv} user={user}/>:<Auth onDone={onAuth} toast={toast}/>)}
     {page==="favs"&&<Favs items={items} open={open} fav={fav} togFav={togFav}/>}
     {page==="profile"&&(user?<Profile dark={dark} setDark={setDark} toast={toast} go={go} plus={plus} user={user} logout={logout}/>:<Auth onDone={onAuth} toast={toast}/>)}
     {page==="carte"&&<Carte open={open} items={items} dark={dark} user={user}/>}
