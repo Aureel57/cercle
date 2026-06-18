@@ -758,6 +758,10 @@ function Detail({it,backHome,fav,togFav,toast,reserve,openChat,plus,reviews=[],r
   const fmtFr=dt=>dt.toLocaleDateString("fr-FR",{day:"2-digit",month:"short"});
   const sdD=new Date(start+"T00:00:00"),edD=new Date(sdD);edD.setDate(edD.getDate()+days);
   const range=isNaN(sdD)?"":`${fmtFr(sdD)} → ${fmtFr(edD)}`;
+  const startISO=start,endISO=isNaN(edD)?start:edD.toISOString().slice(0,10);
+  const booked=it.booked||[];
+  /* chevauchement avec une période déjà réservée : [s1,e1) ∩ [s2,e2) ≠ ∅ */
+  const conflict=booked.some(b=>b&&b.start&&b.end&&startISO<b.end&&b.start<endISO);
   useEffect(()=>{window.scrollTo({top:0,behavior:"instant"});
     if(typeof gsap!=="undefined"&&!reduced()){
       gsap.from(".gal, .det-body > div",{y:20,autoAlpha:0,duration:.6,stagger:.12,ease:"power3.out"});
@@ -823,14 +827,15 @@ function Detail({it,backHome,fav,togFav,toast,reserve,openChat,plus,reviews=[],r
             </label>
             <label><span>Début</span><input type="date" value={start} min={todayISO} onChange={e=>setStart(e.target.value)} style={{border:"none",background:"none",fontFamily:"var(--f)",fontSize:14,fontWeight:700,color:"var(--dk)",width:"100%",outline:"none"}}/></label>
           </div>
-          {range&&<div style={{fontSize:12,color:"var(--g)",margin:"-4px 0 10px"}}>Du {range.replace(" → "," au ")}</div>}
+          {range&&<div style={{fontSize:12,color:conflict?"var(--ter)":"var(--g)",margin:"-4px 0 10px"}}>Du {range.replace(" → "," au ")}{conflict&&" — déjà réservé"}</div>}
+          {booked.length>0&&<div style={{fontSize:11.5,color:"var(--gl)",margin:"-4px 0 10px",lineHeight:1.5}}>Indisponible : {booked.slice(0,4).map(b=>`${fmtFr(new Date(b.start+"T00:00:00"))}→${fmtFr(new Date(b.end+"T00:00:00"))}`).join(", ")}{booked.length>4?"…":""}</div>}
           <div className="calc">
             <div className="row"><span>{it.p} € × {days} jour{days>1?"s":""}</span><b>{(it.p*days).toFixed(2).replace(".",",")} €</b></div>
             <div className="row"><span>Frais de service ({Math.round(rate*100)} %) · grade {myGrade.nom}</span><b>{fee.toFixed(2).replace(".",",")} €</b></div>
             {plus&&<div className="row" style={{color:"var(--plus)"}}><span>✦ Cercle+ inclus</span><b style={{color:"var(--plus)"}}>−1 %</b></div>}
             <div className="tot"><span>Total</span><b>{tot} €</b></div>
           </div>
-          <button className="btn btn-green" onClick={()=>reserve(it,days,totNum,base,fee,range)}><I.lock size={15}/>Réserver — {tot} €</button>
+          <button className="btn btn-green" disabled={conflict} style={conflict?{opacity:.5,cursor:"not-allowed"}:undefined} onClick={()=>{if(conflict){toast("Ces dates sont déjà réservées — choisissez d'autres dates");return;}reserve(it,days,totNum,base,fee,range,startISO,endISO);}}><I.lock size={15}/>{conflict?"Dates indisponibles":`Réserver — ${tot} €`}</button>
           <p className="note">Débité seulement à la confirmation de {it.own}</p>
           <button className={"btn btn-ghost"} style={{width:"100%",marginTop:8,fontSize:13}} onClick={()=>togFav(it.id)}>{fav?"♥ Retiré des favoris ?":"♡ Ajouter aux favoris"}</button>
         </div>
@@ -1179,8 +1184,8 @@ function Activite({toast,resas,requests=[],answerRequest,myListings=[],stats={},
             <div className="ti">{r.it.t}</div>
             <div className="su"><b style={{color:"var(--dk)"}}>{r.renterName}</b> · {r.range} · {r.total} €</div>
           </div>
-          <button className="btn btn-green" style={{minHeight:34,padding:"7px 14px",fontSize:12}} onClick={()=>answerRequest(r.id,true)}>Accepter</button>
-          <button className="btn btn-ghost" style={{minHeight:34,padding:"7px 12px",fontSize:12}} onClick={()=>answerRequest(r.id,false)}>Décliner</button>
+          <button className="btn btn-green" style={{minHeight:34,padding:"7px 14px",fontSize:12}} onClick={()=>answerRequest(r,true)}>Accepter</button>
+          <button className="btn btn-ghost" style={{minHeight:34,padding:"7px 12px",fontSize:12}} onClick={()=>answerRequest(r,false)}>Décliner</button>
         </div>)}
       </div>
     </>}
@@ -1787,7 +1792,7 @@ function App(){
       return d.collection("v2_listings").orderBy("createdAt","desc").limit(40).onSnapshot(snap=>{
         const arr=[];snap.forEach(doc=>{const x=doc.data();const sd=x.seed||"voisin1";
           const img=(x.imgs&&x.imgs.length)?x.imgs:imgsFromSeed(sd);
-          arr.push({id:doc.id,t:x.t,c:x.c,p:x.p,d:x.d,img,own:x.own||"Voisin",city:x.city||"rue du Sablon",note:(x.note==null?0:x.note),rev:x.rev||0,cau:x.cau||0,uid:x.uid||""});});
+          arr.push({id:doc.id,t:x.t,c:x.c,p:x.p,d:x.d,img,own:x.own||"Voisin",city:x.city||"rue du Sablon",note:(x.note==null?0:x.note),rev:x.rev||0,cau:x.cau||0,uid:x.uid||"",booked:x.booked||[]});});
         setFbItems(arr);
       },err=>console.warn("[Cercle] Firestore lecture indisponible:",err&&err.code));
     }catch(e){console.warn("[Cercle] Firestore off:",e&&e.code)}
@@ -1808,7 +1813,7 @@ function App(){
     const lbl=x.status==="confirmed"?"✓ Confirmée":x.status==="declined"?"Refusée":"⏳ En attente";
     const total=+x.total||0,fee=+x.fee||0,base=+x.base||(total-fee)||total;
     return {id,fs:true,status:x.status,it:{id:x.itemId,t:x.itemTitle,img:imgsFromSeed(x.itemSeed||"voisin1"),own:x.ownerName||"Voisin"},
-      range:x.range||"",total,base,fee,pricePerDay:+x.pricePerDay||0,days:x.days||0,createdAt:x.createdAt,renterName:x.renterName||"Voisin",renterUid:x.renterUid,st,lbl};};
+      range:x.range||"",total,base,fee,pricePerDay:+x.pricePerDay||0,days:x.days||0,startDate:x.startDate||"",endDate:x.endDate||"",createdAt:x.createdAt,renterName:x.renterName||"Voisin",renterUid:x.renterUid,st,lbl};};
   /* Firebase : mes réservations (côté locataire) */
   useEffect(()=>{
     const d=fbDb();if(!d||!user||!user.uid)return;
@@ -1879,14 +1884,14 @@ function App(){
     setMyItems(m=>[it,...m]);
     addNotif({k:"info",txt:`Votre annonce « ${t} » est en ligne dans le cercle.`});
   };
-  const reserve=(it,days,tot,base,fee,range)=>{
+  const reserve=(it,days,tot,base,fee,range,startDate,endDate)=>{
     range=range||`${days} jour${days>1?"s":""}`;
     base=+base||+it.p*days||0;fee=+fee||0;tot=+tot||base+fee;
     const db=fbDb();
     if(db&&user){
       db.collection("v2_reservations").add({itemId:it.id,itemTitle:it.t,itemSeed:it.img&&it.img[0]||"voisin1",
         ownerName:it.own||"Voisin",ownerUid:it.uid||"",renterUid:user.uid||"",renterName:user.name||"Voisin",
-        days,pricePerDay:+it.p||0,base,fee,total:tot,range,status:"pending",createdAt:firebase.firestore.FieldValue.serverTimestamp()})
+        days,pricePerDay:+it.p||0,base,fee,total:tot,range,startDate:startDate||"",endDate:endDate||"",status:"pending",createdAt:firebase.firestore.FieldValue.serverTimestamp()})
         .catch(e=>{console.warn("[Cercle] réservation Firestore échouée, repli local:",e&&e.code);
           setResas(rs=>[{id:Date.now(),it,range,st:"a-venir",lbl:"⏳ En attente"},...rs]);});
     }else{
@@ -1896,10 +1901,18 @@ function App(){
     toast("Demande envoyée à "+it.own+" — suivez-la dans Mon activité");
   };
   /* propriétaire : répondre à une demande reçue */
-  const answerRequest=(id,accept)=>{
+  const answerRequest=(r,accept)=>{
     const d=fbDb();if(!d)return;
+    const id=r&&r.id?r.id:r; // tolère un id brut
     d.collection("v2_reservations").doc(id).update({status:accept?"confirmed":"declined"})
-      .then(()=>{addNotif({k:"resa",txt:accept?"Vous avez accepté une demande de réservation.":"Vous avez décliné une demande."});toast(accept?"Réservation confirmée ✓":"Demande déclinée");})
+      .then(()=>{
+        addNotif({k:"resa",txt:accept?"Vous avez accepté une demande de réservation.":"Vous avez décliné une demande."});
+        toast(accept?"Réservation confirmée ✓":"Demande déclinée");
+        /* bloque la période sur l'annonce (lisible par tous) */
+        if(accept&&r&&r.it&&r.it.id&&r.startDate&&r.endDate){
+          d.collection("v2_listings").doc(r.it.id).update({booked:firebase.firestore.FieldValue.arrayUnion({start:r.startDate,end:r.endDate})}).catch(()=>{});
+        }
+      })
       .catch(e=>{console.warn("[Cercle] réponse demande échouée:",e&&e.code);toast("Action impossible — réessayez");});
   };
   const addReview=({itemId,itemTitle,owner,note,txt})=>{
