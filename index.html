@@ -400,7 +400,7 @@ footer .wrap{padding:46px 24px 28px}
 /* carte réelle Leaflet */
 .bigradar{isolation:isolate}
 .lmap{position:absolute;inset:0;z-index:0}
-.bigradar .leaflet-container{background:var(--bgw);font-family:var(--f)}
+.bigradar .leaflet-container{background:#e7e2d6;font-family:var(--f)}
 .lf-wrap{background:none!important;border:none!important}
 .lf-ping{display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer}
 .lf-ping .ph{width:48px;height:48px;border-radius:50%;border:2.5px solid #fff;box-shadow:0 4px 12px rgba(32,36,47,.32);overflow:hidden;background:#fff;display:block;transition:transform .2s,border-color .2s}
@@ -753,6 +753,11 @@ function Detail({it,backHome,fav,togFav,toast,reserve,openChat,plus,reviews=[],r
   const fee=+(it.p*days*rate).toFixed(2);
   const totNum=+(base+fee).toFixed(2);
   const tot=totNum.toFixed(2).replace(".",",");
+  const todayISO=new Date().toISOString().slice(0,10);
+  const[start,setStart]=useState(todayISO);
+  const fmtFr=dt=>dt.toLocaleDateString("fr-FR",{day:"2-digit",month:"short"});
+  const sdD=new Date(start+"T00:00:00"),edD=new Date(sdD);edD.setDate(edD.getDate()+days);
+  const range=isNaN(sdD)?"":`${fmtFr(sdD)} → ${fmtFr(edD)}`;
   useEffect(()=>{window.scrollTo({top:0,behavior:"instant"});
     if(typeof gsap!=="undefined"&&!reduced()){
       gsap.from(".gal, .det-body > div",{y:20,autoAlpha:0,duration:.6,stagger:.12,ease:"power3.out"});
@@ -816,15 +821,16 @@ function Detail({it,backHome,fav,togFav,toast,reserve,openChat,plus,reviews=[],r
                 {[1,2,3,5,7].map(n=><option key={n} value={n}>{n} jour{n>1?"s":""}</option>)}
               </select>
             </label>
-            <label><span>Début</span><input type="text" defaultValue="12 juin" readOnly/></label>
+            <label><span>Début</span><input type="date" value={start} min={todayISO} onChange={e=>setStart(e.target.value)} style={{border:"none",background:"none",fontFamily:"var(--f)",fontSize:14,fontWeight:700,color:"var(--dk)",width:"100%",outline:"none"}}/></label>
           </div>
+          {range&&<div style={{fontSize:12,color:"var(--g)",margin:"-4px 0 10px"}}>Du {range.replace(" → "," au ")}</div>}
           <div className="calc">
             <div className="row"><span>{it.p} € × {days} jour{days>1?"s":""}</span><b>{(it.p*days).toFixed(2).replace(".",",")} €</b></div>
             <div className="row"><span>Frais de service ({Math.round(rate*100)} %) · grade {myGrade.nom}</span><b>{fee.toFixed(2).replace(".",",")} €</b></div>
             {plus&&<div className="row" style={{color:"var(--plus)"}}><span>✦ Cercle+ inclus</span><b style={{color:"var(--plus)"}}>−1 %</b></div>}
             <div className="tot"><span>Total</span><b>{tot} €</b></div>
           </div>
-          <button className="btn btn-green" onClick={()=>reserve(it,days,totNum,base,fee)}><I.lock size={15}/>Réserver — {tot} €</button>
+          <button className="btn btn-green" onClick={()=>reserve(it,days,totNum,base,fee,range)}><I.lock size={15}/>Réserver — {tot} €</button>
           <p className="note">Débité seulement à la confirmation de {it.own}</p>
           <button className={"btn btn-ghost"} style={{width:"100%",marginTop:8,fontSize:13}} onClick={()=>togFav(it.id)}>{fav?"♥ Retiré des favoris ?":"♡ Ajouter aux favoris"}</button>
         </div>
@@ -1008,13 +1014,14 @@ function Profile({dark,setDark,toast,go,plus,user,logout,stats={}}){
 /* ═══════════ CARTE DU QUARTIER (Leaflet + OSM) ═══════════ */
 const CENTER=[49.0975,6.1844]; /* Metz Sablon (défaut) */
 const __geoCache={};
+const validLL=c=>Array.isArray(c)&&isFinite(+c[0])&&isFinite(+c[1]);
 async function geocode(q){
   if(!q)return null;
   if(__geoCache[q])return __geoCache[q];
   try{
     const r=await fetch("https://nominatim.openstreetmap.org/search?format=json&limit=1&q="+encodeURIComponent(q+", France"));
     const a=await r.json();
-    if(a&&a[0]){const c=[+a[0].lat,+a[0].lon];__geoCache[q]=c;return c;}
+    if(a&&a[0]){const c=[+a[0].lat,+a[0].lon];if(validLL(c)){__geoCache[q]=c;return c;}}
   }catch(e){}
   return null;
 }
@@ -1037,34 +1044,39 @@ function Carte({open,items,dark,user}){
     .map(i=>({it:i,d:distFor(i.id)}))
     .sort((a,b)=>a.d.m-b.d.m).slice(0,20),[items,cc,ray]);
   /* géocodage de l'adresse du membre → centre de la carte */
-  useEffect(()=>{let ok=true;geocode(quartier).then(c=>{if(ok&&c)setCtr(c)});return()=>{ok=false}},[quartier]);
+  useEffect(()=>{let ok=true;geocode(quartier).then(c=>{if(ok&&validLL(c))setCtr(c)});return()=>{ok=false}},[quartier]);
   /* init */
   useEffect(()=>{
     if(typeof L==="undefined"||!mapEl.current||mapRef.current)return;
-    const map=L.map(mapEl.current,{scrollWheelZoom:false,zoomControl:true,attributionControl:true}).setView(ctr,14.8);
-    map.on("click",()=>map.scrollWheelZoom.enable());
+    const c0=validLL(ctr)?ctr:CENTER;
+    const map=L.map(mapEl.current,{scrollWheelZoom:true,zoomControl:true,attributionControl:true}).setView(c0,14.8);
+    map.zoomControl.setPosition("topright"); // évite le chevauchement avec la légende (haut-gauche)
     mapRef.current=map;
-    circlesRef.current=[[250,"2 7"],[500,null],[1000,"2 7"]].map(([r,dash])=>L.circle(ctr,{radius:r,fill:false,color:"#A39B89",weight:1.5,dashArray:dash,opacity:.7}).addTo(map));
-    youRef.current=L.marker(ctr,{icon:L.divIcon({className:"lf-wrap",html:'<div class="lf-you">Chez vous</div>',iconSize:[86,28],iconAnchor:[43,14]}),interactive:false,zIndexOffset:1000}).addTo(map);
+    circlesRef.current=[[250,"2 7"],[500,null],[1000,"2 7"]].map(([r,dash])=>L.circle(c0,{radius:r,fill:false,color:"#A39B89",weight:1.5,dashArray:dash,opacity:.7}).addTo(map));
+    youRef.current=L.marker(c0,{icon:L.divIcon({className:"lf-wrap",html:'<div class="lf-you">Chez vous</div>',iconSize:[86,28],iconAnchor:[43,14]}),interactive:false,zIndexOffset:1000}).addTo(map);
     layerRef.current=L.layerGroup().addTo(map);
     return()=>{map.remove();mapRef.current=null};
   },[]);
   /* recentrage quand l'adresse géocode */
   useEffect(()=>{
-    const map=mapRef.current;if(!map)return;
-    circlesRef.current.forEach(c=>c.setLatLng(ctr));
-    if(youRef.current)youRef.current.setLatLng(ctr);
-    map.flyTo(ctr,ray===250?16.4:ray===500?15.6:14.8,{duration:.6});
+    const map=mapRef.current;if(!map||!validLL(ctr))return;
+    try{
+      circlesRef.current.forEach(c=>c.setLatLng(ctr));
+      if(youRef.current)youRef.current.setLatLng(ctr);
+      map.invalidateSize();
+      if(map.getSize().x>10)map.flyTo(ctr,ray===250?16.4:ray===500?15.6:14.8,{duration:.6});
+      else map.setView(ctr,ray===250?16.4:ray===500?15.6:14.8);
+    }catch(e){console.warn("[Cercle] recentrage carte:",e&&e.message);}
   },[ctr]);
   /* fond de carte jour/nuit */
   useEffect(()=>{
     const map=mapRef.current;if(!map)return;
     if(tileRef.current)map.removeLayer(tileRef.current);
-    tileRef.current=L.tileLayer(`https://{s}.basemaps.cartocdn.com/${dark?"dark_all":"light_all"}/{z}/{x}/{y}{r}.png`,
+    tileRef.current=L.tileLayer(`https://{s}.basemaps.cartocdn.com/${dark?"rastertiles/voyager":"light_all"}/{z}/{x}/{y}{r}.png`,
       {attribution:'© <a href="https://www.openstreetmap.org/copyright">OSM</a> © <a href="https://carto.com/">CARTO</a>',subdomains:"abcd",maxZoom:19}).addTo(map);
   },[dark]);
   /* zoom selon rayon */
-  useEffect(()=>{const m=mapRef.current;if(m)m.flyTo(ctr,ray===250?16.4:ray===500?15.6:14.8,{duration:.6})},[ray]);
+  useEffect(()=>{const m=mapRef.current;if(!m||!validLL(ctr))return;try{m.invalidateSize();if(m.getSize().x>10)m.flyTo(ctr,ray===250?16.4:ray===500?15.6:14.8,{duration:.6});else m.setView(ctr,ray===250?16.4:ray===500?15.6:14.8);}catch(e){console.warn("[Cercle] zoom carte:",e&&e.message);}},[ray]);
   /* markers */
   useEffect(()=>{
     const lg=layerRef.current;if(!lg)return;
@@ -1307,7 +1319,7 @@ function Plus({toast,plus,subscribe}){
     <div className="plus-hero">
       <h2>Moins de commission. Chaque année, un peu moins.</h2>
       <p style={{opacity:.88,fontSize:14,maxWidth:"54ch"}}>−1 % de frais de service dès l'abonnement, puis −1 % par année complète d'ancienneté. Cumulable avec votre grade. Plancher : 2 %.</p>
-      <div className="pp" style={{marginTop:14}}>5,99 € <small>/mois · sans engagement</small></div>
+      <div className="pp" style={{marginTop:14}}>11,99 € <small>/mois · sans engagement</small></div>
       <button className="btn" style={{background:"#fff",color:"#5B21B6",marginTop:14}} onClick={subscribe}>{plus?"✓ Vous êtes membre Cercle+":"✦ Rejoindre Cercle+"}</button>
     </div>
     <div className="panel">
@@ -1537,15 +1549,16 @@ function Auth({onDone,toast}){
   const[busy,setBusy]=useState(false);
   const genCode=()=>String(Math.floor(100000+Math.random()*900000));
   const start=async e=>{e.preventDefault();const f=new FormData(e.target);
-    const name=f.get("n"),email=f.get("e"),pw=f.get("p"),quartier=(f.get("q")||"").trim();
+    const fn=(f.get("n")||"").trim(),ln=(f.get("ln")||"").trim(),email=f.get("e"),pw=f.get("p"),quartier=(f.get("q")||"").trim(),phone=(f.get("tel")||"").trim();
+    const name=(fn+" "+ln).trim();
     if(FB){
       setBusy(true);
       try{
         const res=await fbAuth().createUserWithEmailAndPassword(email,pw);
         try{await res.user.updateProfile({displayName:name})}catch(_){}
-        try{const d=fbDb();if(d)await d.collection("users").doc(res.user.uid).set({name,email,quartier},{merge:true})}catch(_){}
-        await sendVerif(res.user,name,email);
-        onDone({...fbUserToUser(res.user),quartier});
+        try{const d=fbDb();if(d)await d.collection("users").doc(res.user.uid).set({name,firstName:fn,lastName:ln,email,quartier,phone},{merge:true})}catch(_){}
+        await sendVerif(res.user,fn||name,email);
+        onDone({...fbUserToUser(res.user),name,quartier,phone});
       }catch(err){
         console.warn("[Cercle] inscription échouée:",err&&err.code,err&&err.message);
         if(isExistingAccount(err)){setPrefill(email);setStep(0);setMode("login");toast("Vous avez déjà un compte avec cet email — connectez-vous.");}
@@ -1553,7 +1566,7 @@ function Auth({onDone,toast}){
       }
       setBusy(false);
     }else{
-      setForm({name,email,phone:"",quartier:quartier||"Metz Sablon"});setCode(genCode());setStep(1);
+      setForm({name,email,phone,quartier:quartier||"Metz Sablon"});setCode(genCode());setStep(1);
     }
   };
   const login=async e=>{e.preventDefault();const f=new FormData(e.target);
@@ -1608,9 +1621,13 @@ function Auth({onDone,toast}){
       <SocialBtns onDone={onDone} toast={toast}/>
       <div className="or-sep">OU PAR EMAIL</div>
       <form onSubmit={start}>
-        <div className="fg"><label>Prénom</label><input name="n" required autoFocus autoComplete="given-name" placeholder="Noah"/></div>
+        <div className="fr">
+          <div className="fg"><label>Prénom</label><input name="n" required autoFocus autoComplete="given-name" placeholder="Noah"/></div>
+          <div className="fg"><label>Nom</label><input name="ln" required autoComplete="family-name" placeholder="Mouloud"/></div>
+        </div>
         <div className="fg"><label>Email</label><input name="e" type="email" required autoComplete="email" placeholder="vous@exemple.fr"/></div>
-        <div className="fg"><label>Votre quartier</label><input name="q" required autoComplete="address-level2" placeholder="Ex. rue du Sablon, Metz"/><div className="hint">Pour vous montrer les objets près de chez vous — jamais affiché aux autres, seulement la distance.</div></div>
+        <div className="fg"><label>Téléphone</label><input name="tel" type="tel" required autoComplete="tel" placeholder="06 12 34 56 78"/><div className="hint">Pour la remise en main propre et la confiance entre voisins.</div></div>
+        <div className="fg"><label>Adresse / quartier</label><input name="q" required autoComplete="address-level2" placeholder="Ex. 12 rue du Sablon, Metz"/><div className="hint">Pour vous montrer les objets près de chez vous — jamais affichée aux autres, seulement la distance.</div></div>
         <div className="fg"><label>Mot de passe</label><input name="p" type="password" required minLength={6} autoComplete="new-password" placeholder="6 caractères minimum" value={pwVal} onChange={e=>setPwVal(e.target.value)}/><PwMeter value={pwVal}/></div>
         <button className="btn btn-ter" disabled={busy} style={{width:"100%",padding:13,opacity:busy?.6:1}}>{busy?"Création…":"Créer mon compte"}</button>
         <p style={{fontSize:11.5,color:"var(--gl)",textAlign:"center",marginTop:9,lineHeight:1.5}}>Un email de confirmation vous sera envoyé. <b style={{color:"var(--g)"}}>Vous devrez le valider</b> pour entrer dans le cercle.</p>
@@ -1862,8 +1879,8 @@ function App(){
     setMyItems(m=>[it,...m]);
     addNotif({k:"info",txt:`Votre annonce « ${t} » est en ligne dans le cercle.`});
   };
-  const reserve=(it,days,tot,base,fee)=>{
-    const range=`12 → ${12+days} juin`;
+  const reserve=(it,days,tot,base,fee,range)=>{
+    range=range||`${days} jour${days>1?"s":""}`;
     base=+base||+it.p*days||0;fee=+fee||0;tot=+tot||base+fee;
     const db=fbDb();
     if(db&&user){
