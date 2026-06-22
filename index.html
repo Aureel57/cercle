@@ -223,6 +223,22 @@ footer .wrap{padding:46px 24px 28px}
 .ticket .th .prix{font-size:26px}
 .caution{font-size:11px;font-weight:800;color:var(--green);border:2px solid var(--green);border-radius:999px;padding:5px 11px;transform:rotate(-3deg);letter-spacing:.03em}
 .ticket .tb{padding:0 22px 22px}
+.cal{border:1.5px solid var(--bd);border-radius:12px;padding:12px;background:var(--bg);margin-bottom:12px}
+.cal-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.cal-h b{font-family:var(--fd);font-size:14px;text-transform:capitalize;color:var(--dk)}
+.cal-h button{width:30px;height:30px;border-radius:8px;border:1.5px solid var(--bd);background:var(--w);cursor:pointer;font-size:16px;color:var(--dk);line-height:1;display:flex;align-items:center;justify-content:center}
+.cal-h button:disabled{opacity:.3;cursor:default}
+.cal-dow{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px}
+.cal-dow span{text-align:center;font-size:10px;font-weight:700;color:var(--gl)}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.cal-d{aspect-ratio:1;border:none;background:none;border-radius:8px;font-size:12.5px;font-weight:600;color:var(--dk);cursor:pointer;font-family:var(--f);padding:0}
+.cal-d:hover:not(:disabled){background:color-mix(in srgb,var(--ter) 16%,transparent)}
+.cal-d.off{color:var(--gl);text-decoration:line-through;cursor:not-allowed;opacity:.45}
+.cal-d.tdy{box-shadow:inset 0 0 0 1.5px var(--p)}
+.cal-d.rng{background:color-mix(in srgb,var(--ter) 20%,transparent);border-radius:4px}
+.cal-d.sel{background:var(--ter);color:#fff}
+.cal-lg{display:flex;gap:14px;font-size:11px;color:var(--g);margin-top:8px;flex-wrap:wrap}
+.cal-lg i{width:11px;height:11px;border-radius:3px;display:inline-block;vertical-align:-1px;margin-right:4px}
 .dates{display:grid;grid-template-columns:1fr 1fr;border:1.5px solid var(--bd);border-radius:12px;overflow:hidden;margin-bottom:14px;background:var(--bg)}
 .dates>label{padding:10px 14px;cursor:pointer}
 .dates>label:first-child{border-right:1.5px solid var(--bd)}
@@ -741,27 +757,60 @@ function Card({it,open,fav,togFav}){
 }
 
 /* ═══════════ DÉTAIL ═══════════ */
+const isoLocal=d=>{const p=n=>(n<10?"0":"")+n;return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate());};
+/* Calendrier de réservation : clic date de début puis de fin, jours passés/réservés grisés */
+function Cal({booked=[],sel,onPick,today}){
+  const t0=new Date(today+"T00:00:00");
+  const[mon,setMon]=useState(new Date(t0.getFullYear(),t0.getMonth(),1));
+  const isBooked=ds=>booked.some(b=>b&&b.start&&b.end&&ds>=b.start&&ds<b.end);
+  const crosses=(a,b)=>{const s=new Date(a+"T00:00:00"),e=new Date(b+"T00:00:00");for(let d=new Date(s);d<e;d.setDate(d.getDate()+1)){if(isBooked(isoLocal(d)))return true;}return false;};
+  const click=ds=>{
+    if(ds<today||isBooked(ds))return;
+    if(!sel.start||sel.end){onPick({start:ds,end:""});return;}
+    if(ds<=sel.start){onPick({start:ds,end:""});return;}
+    if(crosses(sel.start,ds)){onPick({start:ds,end:""});return;}
+    onPick({start:sel.start,end:ds});
+  };
+  const y=mon.getFullYear(),m=mon.getMonth();
+  const startDow=(new Date(y,m,1).getDay()+6)%7,nDays=new Date(y,m+1,0).getDate();
+  const cells=[];for(let i=0;i<startDow;i++)cells.push(null);for(let d=1;d<=nDays;d++)cells.push(new Date(y,m,d));
+  const prevOff=(y<t0.getFullYear())||(y===t0.getFullYear()&&m<=t0.getMonth());
+  return <div className="cal">
+    <div className="cal-h">
+      <button type="button" disabled={prevOff} onClick={()=>setMon(new Date(y,m-1,1))} aria-label="Mois précédent">‹</button>
+      <b>{mon.toLocaleDateString("fr-FR",{month:"long",year:"numeric"})}</b>
+      <button type="button" onClick={()=>setMon(new Date(y,m+1,1))} aria-label="Mois suivant">›</button>
+    </div>
+    <div className="cal-dow">{["L","M","M","J","V","S","D"].map((d,i)=><span key={i}>{d}</span>)}</div>
+    <div className="cal-grid">{cells.map((d,i)=>{
+      if(!d)return <span key={i}/>;
+      const ds=isoLocal(d),past=ds<today,bk=isBooked(ds);
+      const isStart=ds===sel.start,isEnd=ds===sel.end,inRng=sel.start&&sel.end&&ds>sel.start&&ds<sel.end;
+      const cls=["cal-d"];if(past||bk)cls.push("off");if(isStart||isEnd)cls.push("sel");if(inRng)cls.push("rng");if(ds===today&&!isStart&&!isEnd)cls.push("tdy");
+      return <button key={i} type="button" className={cls.join(" ")} disabled={past||bk} onClick={()=>click(ds)}>{d.getDate()}</button>;
+    })}</div>
+  </div>;
+}
 function Detail({it,backHome,fav,togFav,toast,reserve,openChat,plus,reviews=[],rentals=0}){
   const d=distFor(it.id);
   const[main,setMain]=useState(0);
   useEffect(()=>{setMain(0)},[it.id]);
   const itemReviews=reviews.filter(r=>r.itemId===it.id);
-  const[days,setDays]=useState(3);
   const myGrade=getGrade(rentals);
   const rate=feeRate(rentals,plus);
+  const todayISO=isoLocal(new Date());
+  const[sel,setSel]=useState({start:"",end:""});
+  useEffect(()=>{setSel({start:"",end:""})},[it.id]);
+  const booked=it.booked||[];
+  const fmtFr=dt=>dt.toLocaleDateString("fr-FR",{day:"2-digit",month:"short"});
+  const days=(sel.start&&sel.end)?Math.max(1,Math.round((new Date(sel.end+"T00:00:00")-new Date(sel.start+"T00:00:00"))/864e5)):0;
   const base=+(it.p*days).toFixed(2);
   const fee=+(it.p*days*rate).toFixed(2);
   const totNum=+(base+fee).toFixed(2);
   const tot=totNum.toFixed(2).replace(".",",");
-  const todayISO=new Date().toISOString().slice(0,10);
-  const[start,setStart]=useState(todayISO);
-  const fmtFr=dt=>dt.toLocaleDateString("fr-FR",{day:"2-digit",month:"short"});
-  const sdD=new Date(start+"T00:00:00"),edD=new Date(sdD);edD.setDate(edD.getDate()+days);
-  const range=isNaN(sdD)?"":`${fmtFr(sdD)} → ${fmtFr(edD)}`;
-  const startISO=start,endISO=isNaN(edD)?start:edD.toISOString().slice(0,10);
-  const booked=it.booked||[];
-  /* chevauchement avec une période déjà réservée : [s1,e1) ∩ [s2,e2) ≠ ∅ */
-  const conflict=booked.some(b=>b&&b.start&&b.end&&startISO<b.end&&b.start<endISO);
+  const range=(sel.start&&sel.end)?`${fmtFr(new Date(sel.start+"T00:00:00"))} → ${fmtFr(new Date(sel.end+"T00:00:00"))}`:"";
+  const startISO=sel.start,endISO=sel.end;
+  const canReserve=days>0;
   useEffect(()=>{window.scrollTo({top:0,behavior:"instant"});
     if(typeof gsap!=="undefined"&&!reduced()){
       gsap.from(".gal, .det-body > div",{y:20,autoAlpha:0,duration:.6,stagger:.12,ease:"power3.out"});
@@ -819,23 +868,21 @@ function Detail({it,backHome,fav,togFav,toast,reserve,openChat,plus,reviews=[],r
         </div>
         <div className="perfo"/>
         <div className="tb" style={{paddingTop:18}}>
-          <div className="dates">
-            <label><span>Durée</span>
-              <select value={days} onChange={e=>setDays(+e.target.value)} style={{border:"none",background:"none",fontFamily:"var(--f)",fontSize:14,fontWeight:700,color:"var(--dk)",width:"100%",outline:"none"}}>
-                {[1,2,3,5,7].map(n=><option key={n} value={n}>{n} jour{n>1?"s":""}</option>)}
-              </select>
-            </label>
-            <label><span>Début</span><input type="date" value={start} min={todayISO} onChange={e=>setStart(e.target.value)} style={{border:"none",background:"none",fontFamily:"var(--f)",fontSize:14,fontWeight:700,color:"var(--dk)",width:"100%",outline:"none"}}/></label>
+          <div style={{fontSize:12,fontWeight:700,color:"var(--dk)",marginBottom:8}}>{!sel.start?"Choisissez la date de début":!sel.end?"Choisissez la date de fin":`Du ${range.replace(" → "," au ")} · ${days} jour${days>1?"s":""}`}</div>
+          <Cal booked={booked} sel={sel} onPick={setSel} today={todayISO}/>
+          <div className="cal-lg">
+            <span><i style={{background:"var(--ter)"}}/>Sélection</span>
+            <span><i style={{background:"color-mix(in srgb,var(--gl) 40%,transparent)"}}/>Indisponible</span>
           </div>
-          {range&&<div style={{fontSize:12,color:conflict?"var(--ter)":"var(--g)",margin:"-4px 0 10px"}}>Du {range.replace(" → "," au ")}{conflict&&" — déjà réservé"}</div>}
-          {booked.length>0&&<div style={{fontSize:11.5,color:"var(--gl)",margin:"-4px 0 10px",lineHeight:1.5}}>Indisponible : {booked.slice(0,4).map(b=>`${fmtFr(new Date(b.start+"T00:00:00"))}→${fmtFr(new Date(b.end+"T00:00:00"))}`).join(", ")}{booked.length>4?"…":""}</div>}
-          <div className="calc">
+          <div className="calc" style={{marginTop:12}}>
+            {canReserve?<>
             <div className="row"><span>{it.p} € × {days} jour{days>1?"s":""}</span><b>{(it.p*days).toFixed(2).replace(".",",")} €</b></div>
             <div className="row"><span>Frais de service ({Math.round(rate*100)} %) · grade {myGrade.nom}</span><b>{fee.toFixed(2).replace(".",",")} €</b></div>
             {plus&&<div className="row" style={{color:"var(--plus)"}}><span>✦ Cercle+ inclus</span><b style={{color:"var(--plus)"}}>−1 %</b></div>}
             <div className="tot"><span>Total</span><b>{tot} €</b></div>
+            </>:<div style={{fontSize:12.5,color:"var(--g)",textAlign:"center",padding:"4px 0"}}>Sélectionnez vos dates pour voir le total.</div>}
           </div>
-          <button className="btn btn-green" disabled={conflict} style={conflict?{opacity:.5,cursor:"not-allowed"}:undefined} onClick={()=>{if(conflict){toast("Ces dates sont déjà réservées — choisissez d'autres dates");return;}reserve(it,days,totNum,base,fee,range,startISO,endISO);}}><I.lock size={15}/>{conflict?"Dates indisponibles":`Réserver — ${tot} €`}</button>
+          <button className="btn btn-green" disabled={!canReserve} style={!canReserve?{opacity:.5,cursor:"not-allowed"}:undefined} onClick={()=>{if(!canReserve){toast("Choisissez vos dates de location");return;}reserve(it,days,totNum,base,fee,range,startISO,endISO);}}><I.lock size={15}/>{canReserve?`Réserver — ${tot} €`:"Choisir les dates"}</button>
           <p className="note">Débité seulement à la confirmation de {it.own}</p>
           <button className={"btn btn-ghost"} style={{width:"100%",marginTop:8,fontSize:13}} onClick={()=>togFav(it.id)}>{fav?"♥ Retiré des favoris ?":"♡ Ajouter aux favoris"}</button>
         </div>
