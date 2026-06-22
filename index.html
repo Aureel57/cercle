@@ -1154,7 +1154,7 @@ function LeaveReview({resa,addReview,done}){
     </div>
   </div>;
 }
-function Activite({toast,resas,requests=[],answerRequest,myListings=[],stats={},reviews=[],addReview}){
+function Activite({toast,resas,requests=[],answerRequest,completeRental,myListings=[],stats={},reviews=[],addReview}){
   const reviewedIds=new Set(reviews.map(r=>r.itemId));
   const pending=requests.filter(r=>r.status==="pending");
   const months=stats.months||[];
@@ -1199,6 +1199,7 @@ function Activite({toast,resas,requests=[],answerRequest,myListings=[],stats={},
           {r.st==="en-cours"&&<div className="prog"><i style={{width:r.prog+"%"}}/></div>}
         </div>
         <span className={"badge "+(r.st==="en-cours"?"green":r.st==="a-venir"?"blue":"sand")}>{r.lbl}</span>
+        {r.status==="confirmed"&&completeRental&&<button className="btn btn-ghost" style={{minHeight:34,padding:"7px 12px",fontSize:12}} onClick={()=>completeRental(r)}><I.clock size={13}/>Marquer comme rendu</button>}
         {r.st==="fini"&&addReview&&<LeaveReview resa={r} addReview={addReview} done={reviewedIds.has(r.it.id)}/>}
       </div>)}
     </div>
@@ -1741,7 +1742,7 @@ function App(){
   const myListings=useMemo(()=>{const uid=user&&user.uid;return uid?items.filter(i=>i.uid===uid):[];},[items,user&&user.uid]);
   /* statistiques réelles dérivées des données live */
   const stats=useMemo(()=>{
-    const confirmed=fbRequests.filter(r=>r.status==="confirmed");
+    const confirmed=fbRequests.filter(r=>r.status==="confirmed"||r.status==="completed");
     const gain=r=>(+r.base||((+r.total||0)-(+r.fee||0))||0); // montant perçu par le propriétaire
     const revenus=Math.round(confirmed.reduce((s,r)=>s+gain(r),0));
     const myIds=new Set(myListings.map(i=>i.id));
@@ -1809,8 +1810,8 @@ function App(){
     }catch(e){console.warn("[Cercle] avis off:",e&&e.code)}
   },[]);
   /* mapping doc réservation → objet d'affichage */
-  const resaView=(id,x)=>{const st=x.status==="declined"?"fini":"a-venir";
-    const lbl=x.status==="confirmed"?"✓ Confirmée":x.status==="declined"?"Refusée":"⏳ En attente";
+  const resaView=(id,x)=>{const st=x.status==="completed"?"fini":x.status==="declined"?"refus":"a-venir";
+    const lbl=x.status==="confirmed"?"✓ Confirmée":x.status==="declined"?"Refusée":x.status==="completed"?"Terminée":"⏳ En attente";
     const total=+x.total||0,fee=+x.fee||0,base=+x.base||(total-fee)||total;
     return {id,fs:true,status:x.status,it:{id:x.itemId,t:x.itemTitle,img:imgsFromSeed(x.itemSeed||"voisin1"),own:x.ownerName||"Voisin"},
       range:x.range||"",total,base,fee,pricePerDay:+x.pricePerDay||0,days:x.days||0,startDate:x.startDate||"",endDate:x.endDate||"",createdAt:x.createdAt,renterName:x.renterName||"Voisin",renterUid:x.renterUid,st,lbl};};
@@ -1914,6 +1915,18 @@ function App(){
         }
       })
       .catch(e=>{console.warn("[Cercle] réponse demande échouée:",e&&e.code);toast("Action impossible — réessayez");});
+  };
+  /* locataire : marquer la location comme rendue (→ débloque l'avis) */
+  const completeRental=r=>{
+    if(r&&r.fs){
+      const d=fbDb();if(!d)return;
+      d.collection("v2_reservations").doc(r.id).update({status:"completed"})
+        .then(()=>{addNotif({k:"resa",txt:`Location de « ${r.it.t} » terminée — vous pouvez laisser un avis.`});toast("Location terminée ✓");})
+        .catch(e=>{console.warn("[Cercle] clôture location échouée:",e&&e.code);toast("Action impossible — réessayez");});
+    }else if(r){
+      setResas(rs=>rs.map(x=>x.id===r.id?{...x,st:"fini",lbl:"Terminée"}:x));
+      addNotif({k:"resa",txt:`Location de « ${r.it.t} » terminée — vous pouvez laisser un avis.`});toast("Location terminée ✓");
+    }
   };
   const addReview=({itemId,itemTitle,owner,note,txt})=>{
     const rv={id:"r"+Date.now(),itemId,itemTitle,owner,note,txt:txt.trim(),by:(user&&user.name)||"Vous",when:"juin 2026"};
@@ -2075,7 +2088,7 @@ function App(){
     {page==="favs"&&<Favs items={items} open={open} fav={fav} togFav={togFav}/>}
     {page==="profile"&&(user?<Profile dark={dark} setDark={setDark} toast={toast} go={go} plus={plus} user={user} logout={logout} stats={stats}/>:<Auth onDone={onAuth} toast={toast}/>)}
     {page==="carte"&&<Carte open={open} items={items} dark={dark} user={user}/>}
-    {page==="activite"&&<Activite toast={toast} resas={allResas} requests={fbRequests} answerRequest={answerRequest} myListings={myListings} stats={stats} reviews={allReviews} addReview={addReview}/>}
+    {page==="activite"&&<Activite toast={toast} resas={allResas} requests={fbRequests} answerRequest={answerRequest} completeRental={completeRental} myListings={myListings} stats={stats} reviews={allReviews} addReview={addReview}/>}
     {page==="notifs"&&<Notifs notifs={allNotifs} markRead={markRead} markAll={markAll}/>}
     {page==="avis"&&<Avis reviews={allReviews} user={user} myListings={myListings}/>}
     {page==="grade"&&<Grade plus={plus} rentals={stats.rentals}/>}
