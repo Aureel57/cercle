@@ -1493,9 +1493,24 @@ function openDoc(filename,kind,inner){
   const tampon="<div class=tampon><span style='font-size:17px;line-height:1'>✓</span><span>ÉMIS PAR<br>CERCLE</span></div>";
   const head="<div class=brand><div class=ring></div><div class=bn>cercle<span>.</span></div><div class=pill>"+escH(kind||"Justificatif")+"</div></div>";
   const html="<!doctype html><html lang=fr><head><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'><title>"+escH(filename)+"</title>"+fonts+"<style>"+css+"</style></head><body><div class=bd>"+tampon+head+inner+"</div></body></html>";
-  const w=window.open("","_blank","width=840,height=940");
-  if(w){w.document.write(html);w.document.close();w.focus();setTimeout(()=>{try{w.print()}catch(e){}},850);}
-  else{const blob=new Blob([html],{type:"text/html"});const u=URL.createObjectURL(blob);const a=document.createElement("a");a.href=u;a.download=filename+".html";a.click();URL.revokeObjectURL(u);}
+  /* impression via iframe cachée (pas de popup bloquée) ; repli téléchargement HTML */
+  try{
+    const ifr=document.createElement("iframe");
+    ifr.setAttribute("aria-hidden","true");
+    ifr.style.cssText="position:fixed;right:0;bottom:0;width:0;height:0;border:0;opacity:0";
+    document.body.appendChild(ifr);
+    const cw=ifr.contentWindow,cd=cw.document;
+    cd.open();cd.write(html);cd.close();
+    let done=false;
+    const go=()=>{if(done)return;done=true;try{cw.focus();cw.print();}catch(e){}
+      setTimeout(()=>{try{document.body.removeChild(ifr)}catch(e){}},90000);};
+    ifr.onload=()=>setTimeout(go,650);
+    setTimeout(go,1400); // sécurité si onload ne se déclenche pas
+  }catch(e){
+    const blob=new Blob([html],{type:"text/html"});const u=URL.createObjectURL(blob);
+    const a=document.createElement("a");a.href=u;a.download=filename+".html";document.body.appendChild(a);a.click();
+    setTimeout(()=>{try{document.body.removeChild(a);URL.revokeObjectURL(u)}catch(_){}}, 1000);
+  }
 }
 const ownerGain=r=>+r.base||((+r.total||0)-(+r.fee||0))||0;
 function Revenus({user,stats={}}){
