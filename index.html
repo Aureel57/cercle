@@ -1030,7 +1030,7 @@ function Profile({dark,setDark,toast,go,plus,user,logout,stats={}}){
   const g=getGrade(stats.rentals||0);
   return <div className="page">
     <h1>Mon profil</h1>
-    <p className="lead">{user.name} — membre vérifié du cercle de {user.quartier}.</p>
+    <p className="lead">{user.name} — membre vérifié de Cercle.</p>
     <div className="prof-h">
       <div className="avat">{user.name[0].toUpperCase()}</div>
       <div style={{flex:1}}>
@@ -1394,12 +1394,18 @@ function Plus({toast,plus,subscribe}){
 }
 
 /* ═══════════ PARAMÈTRES ═══════════ */
-function Params({dark,setDark,toast,user,plus,logout,saveQuartier,exportData,deleteAccount,openLegal}){
+function Params({dark,setDark,toast,user,plus,logout,saveQuartier,saveProfile,exportData,deleteAccount,openLegal}){
   const u=user||{name:"Voisin",email:"",quartier:"Metz Sablon",verified:false};
   const[q,setQ]=useState(u.quartier||"");
+  const[nm,setNm]=useState(u.name||"");
+  const[tel,setTel]=useState(u.phone||"");
   const[t1,setT1]=useState(true);
   const[t2,setT2]=useState(false);
   useEffect(()=>{setQ(u.quartier||"")},[u.quartier]);
+  useEffect(()=>{setNm(u.name||"")},[u.name]);
+  useEffect(()=>{setTel(u.phone||"")},[u.phone]);
+  const memberSince=(()=>{try{const fu=fbAuth()&&fbAuth().currentUser;const t=fu&&fu.metadata&&fu.metadata.creationTime;return t?new Date(t).toLocaleDateString("fr-FR",{month:"long",year:"numeric"}):null;}catch(e){return null}})();
+  const profileDirty=nm.trim()!==(u.name||"")||tel.trim()!==(u.phone||"");
   const SectionT=({children})=><div style={{fontFamily:"var(--fd)",fontSize:17,color:"var(--dk)",margin:"22px 0 10px"}}>{children}</div>;
   return <div className="page">
     <h1>Paramètres</h1>
@@ -1410,17 +1416,34 @@ function Params({dark,setDark,toast,user,plus,logout,saveQuartier,exportData,del
       <div style={{flex:1,minWidth:0}}>
         <div style={{fontWeight:700,color:"var(--dk)",fontSize:16}}>{u.name}</div>
         <div style={{fontSize:12.5,color:"var(--g)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{u.email}</div>
+        {memberSince&&<div style={{fontSize:11.5,color:"var(--gl)"}}>Membre depuis {memberSince}</div>}
       </div>
       <span className="badge" style={u.verified?{background:"color-mix(in srgb,var(--green) 14%,transparent)",color:"var(--green)"}:{background:"color-mix(in srgb,var(--ter) 14%,transparent)",color:"var(--ter)"}}>{u.verified?"✓ Vérifié":"Non vérifié"}</span>
     </div>
 
-    <SectionT>Mon quartier</SectionT>
+    <SectionT>Mes informations</SectionT>
     <div className="panel">
-      <div className="fg" style={{marginBottom:8}}><label>Adresse / quartier</label>
-        <input value={q} onChange={e=>setQ(e.target.value)} placeholder="Ex. rue du Sablon, Metz"/>
-        <div className="hint">Centre votre carte et calcule la distance des objets. Jamais affiché aux autres voisins.</div>
+      <div className="fg" style={{marginBottom:12}}><label>Nom complet</label>
+        <input value={nm} onChange={e=>setNm(e.target.value)} placeholder="Prénom Nom" autoComplete="name"/>
       </div>
-      <button className="btn btn-p" disabled={!q.trim()||q.trim()===(u.quartier||"")} style={{opacity:(!q.trim()||q.trim()===(u.quartier||""))?.5:1}} onClick={()=>saveQuartier(q.trim())}>Enregistrer mon quartier</button>
+      <div className="fg" style={{marginBottom:12}}><label>Téléphone</label>
+        <input type="tel" value={tel} onChange={e=>setTel(e.target.value)} placeholder="06 12 34 56 78" autoComplete="tel"/>
+        <div className="hint">Pour la remise en main propre. Partagé seulement avec un voisin lors d'une location.</div>
+      </div>
+      <div className="fg" style={{marginBottom:12}}><label>Email</label>
+        <input value={u.email} readOnly style={{opacity:.7,cursor:"not-allowed"}}/>
+        <div className="hint">L'email de connexion ne se modifie pas ici.</div>
+      </div>
+      <button className="btn btn-p" disabled={!profileDirty||!nm.trim()} style={{opacity:(!profileDirty||!nm.trim())?.5:1}} onClick={()=>saveProfile({name:nm,phone:tel})}>Enregistrer mes informations</button>
+    </div>
+
+    <SectionT>Mon adresse</SectionT>
+    <div className="panel">
+      <div className="fg" style={{marginBottom:8}}><label>Adresse</label>
+        <input value={q} onChange={e=>setQ(e.target.value)} placeholder="Ex. 12 rue du Sablon, Metz"/>
+        <div className="hint">Centre votre carte et calcule la distance des objets. Jamais affichée aux autres voisins, seulement la distance à pied.</div>
+      </div>
+      <button className="btn btn-p" disabled={!q.trim()||q.trim()===(u.quartier||"")} style={{opacity:(!q.trim()||q.trim()===(u.quartier||""))?.5:1}} onClick={()=>saveQuartier(q.trim())}>Enregistrer mon adresse</button>
     </div>
 
     <SectionT>Préférences</SectionT>
@@ -1695,7 +1718,7 @@ function Auth({onDone,toast}){
         </div>
         <div className="fg"><label>Email</label><input name="e" type="email" required autoComplete="email" placeholder="vous@exemple.fr"/></div>
         <div className="fg"><label>Téléphone</label><input name="tel" type="tel" required autoComplete="tel" placeholder="06 12 34 56 78"/><div className="hint">Pour la remise en main propre et la confiance entre voisins.</div></div>
-        <div className="fg"><label>Adresse / quartier</label><input name="q" required autoComplete="address-level2" placeholder="Ex. 12 rue du Sablon, Metz"/><div className="hint">Pour vous montrer les objets près de chez vous — jamais affichée aux autres, seulement la distance.</div></div>
+        <div className="fg"><label>Adresse</label><input name="q" required autoComplete="street-address" placeholder="Ex. 12 rue du Sablon, Metz"/><div className="hint">Pour vous montrer les objets près de chez vous — jamais affichée aux autres, seulement la distance à pied.</div></div>
         <div className="fg"><label>Mot de passe</label><input name="p" type="password" required minLength={6} autoComplete="new-password" placeholder="6 caractères minimum" value={pwVal} onChange={e=>setPwVal(e.target.value)}/><PwMeter value={pwVal}/></div>
         <button className="btn btn-ter" disabled={busy} style={{width:"100%",padding:13,opacity:busy?.6:1}}>{busy?"Création…":"Créer mon compte"}</button>
         <p style={{fontSize:11.5,color:"var(--gl)",textAlign:"center",marginTop:9,lineHeight:1.5}}>Un email de confirmation vous sera envoyé. <b style={{color:"var(--g)"}}>Vous devrez le valider</b> pour entrer dans le cercle.</p>
@@ -1828,18 +1851,28 @@ function App(){
     const a=fbAuth();if(!a)return;
     return a.onAuthStateChanged(fu=>{ if(fu)setUser(u=>u||fbUserToUser(fu)); else setUser(null); });
   },[]);
-  /* Firebase : récupère le quartier du membre depuis Firestore */
+  /* Firebase : récupère les infos du membre (adresse, téléphone) depuis Firestore */
   useEffect(()=>{
     const d=fbDb();if(!d||!user||!user.uid)return;
     d.collection("users").doc(user.uid).get().then(doc=>{
-      if(doc.exists&&doc.data().quartier)setUser(u=>(u&&u.uid===user.uid&&u.quartier!==doc.data().quartier)?{...u,quartier:doc.data().quartier}:u);
+      if(!doc.exists)return;const x=doc.data();
+      setUser(u=>{if(!u||u.uid!==user.uid)return u;const n={...u};if(x.quartier)n.quartier=x.quartier;if(x.phone&&!u.phone)n.phone=x.phone;return n;});
     }).catch(()=>{});
   },[user&&user.uid]);
-  /* met à jour le quartier (paramètres) */
+  /* met à jour l'adresse (paramètres) */
   const saveQuartier=async q=>{
     setUser(u=>u?{...u,quartier:q}:u);
     const d=fbDb();if(d&&user&&user.uid){try{await d.collection("users").doc(user.uid).set({quartier:q},{merge:true})}catch(_){}}
-    toast("Quartier mis à jour");
+    toast("Adresse mise à jour");
+  };
+  /* met à jour nom + téléphone (paramètres) */
+  const saveProfile=async({name,phone})=>{
+    name=(name||"").trim();phone=(phone||"").trim();
+    setUser(u=>u?{...u,name:name||u.name,phone}:u);
+    const a=fbAuth(),fu=a&&a.currentUser;
+    if(fu&&name){try{await fu.updateProfile({displayName:name})}catch(_){}}
+    const d=fbDb();if(d&&user&&user.uid){try{await d.collection("users").doc(user.uid).set({name:name||user.name,phone},{merge:true})}catch(_){}}
+    toast("Profil mis à jour");
   };
   /* recharge l'état de vérification email */
   const refreshVerif=async()=>{
@@ -2156,7 +2189,7 @@ function App(){
     {page==="grade"&&<Grade plus={plus} rentals={stats.rentals}/>}
     {page==="revenus"&&(user?<Revenus user={user} stats={stats}/>:<Auth onDone={onAuth} toast={toast}/>)}
     {page==="plus"&&<Plus toast={toast} plus={plus} subscribe={need(subscribe)}/>}
-    {page==="params"&&<Params dark={dark} setDark={setDark} toast={toast} user={user} plus={plus} logout={logout} saveQuartier={saveQuartier} exportData={exportData} deleteAccount={deleteAccount} openLegal={openLegal}/>}
+    {page==="params"&&<Params dark={dark} setDark={setDark} toast={toast} user={user} plus={plus} logout={logout} saveQuartier={saveQuartier} saveProfile={saveProfile} exportData={exportData} deleteAccount={deleteAccount} openLegal={openLegal}/>}
     {page==="legal"&&<Legal id={legal}/>}
     {page==="auth"&&<Auth onDone={onAuth} toast={toast}/>}
     </div>
