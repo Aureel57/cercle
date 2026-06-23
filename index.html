@@ -470,6 +470,13 @@ footer .wrap{padding:46px 24px 28px}
 .seg button{border:none;background:none;padding:9px;border-radius:9px;font-size:13.5px;font-weight:700;color:var(--g);cursor:pointer;font-family:var(--f)}
 .seg button.on{background:var(--ter);color:#fff}
 .propill{display:inline-block;background:var(--p);color:#fff;font-size:9px;font-weight:800;letter-spacing:.08em;padding:1px 6px;border-radius:6px;margin-left:6px;vertical-align:1px}
+.addr{position:relative}
+.addr-load{position:absolute;right:12px;top:11px;color:var(--gl);font-size:16px;pointer-events:none}
+.addr-sug{position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:60;background:var(--w);border:1.5px solid var(--bd);border-radius:12px;box-shadow:0 8px 24px rgba(32,36,47,.14);overflow:hidden;max-height:240px;overflow-y:auto}
+.addr-sug button{display:flex;gap:8px;align-items:flex-start;width:100%;text-align:left;padding:10px 12px;border:none;background:none;cursor:pointer;font-size:13px;color:var(--dk);font-family:var(--f);line-height:1.4;border-bottom:1px solid var(--bd)}
+.addr-sug button:last-child{border-bottom:none}
+.addr-sug button:hover{background:color-mix(in srgb,var(--ter) 10%,transparent)}
+.addr-sug button svg{flex-shrink:0;margin-top:2px;color:var(--ter)}
 .pwm{margin-top:8px}
 .pwm-bar{display:flex;gap:4px;margin-bottom:6px}
 .pwm-seg{flex:1;height:5px;border-radius:3px;background:var(--bd);transition:background .25s}
@@ -1460,7 +1467,7 @@ function Params({dark,setDark,toast,user,plus,logout,saveQuartier,saveProfile,ex
     <SectionT>Mon adresse</SectionT>
     <div className="panel">
       <div className="fg" style={{marginBottom:8}}><label>Adresse</label>
-        <input value={q} onChange={e=>setQ(e.target.value)} placeholder="Ex. 12 rue du Sablon, Metz"/>
+        <AddressInput value={q} onChange={v=>setQ(v)} placeholder="Commencez à taper votre adresse…"/>
         <div className="hint">Centre votre carte et calcule la distance des objets. Jamais affichée aux autres voisins, seulement la distance à pied.</div>
       </div>
       <button className="btn btn-p" disabled={!q.trim()||q.trim()===(u.quartier||"")} style={{opacity:(!q.trim()||q.trim()===(u.quartier||""))?.5:1}} onClick={()=>saveQuartier(q.trim())}>Enregistrer mon adresse</button>
@@ -1653,6 +1660,37 @@ function CodeInput({onFull,autoFocus}){
       onKeyDown={e=>{if(e.key==="Backspace"&&!e.target.value&&i>0)refs.current[i-1].focus()}}/>)}
   </div>;
 }
+/* Champ adresse avec autocomplétion OSM (suggestions pendant la frappe) */
+function AddressInput({name,value,onChange,placeholder,required,autoFocus}){
+  const[q,setQ]=useState(value!=null?value:"");
+  const[sug,setSug]=useState([]);
+  const[open,setOpen]=useState(false);
+  const[load,setLoad]=useState(false);
+  const tRef=useRef(),boxRef=useRef();
+  useEffect(()=>{if(value!=null&&value!==q)setQ(value)},[value]);
+  const search=v=>{
+    clearTimeout(tRef.current);
+    if(!v||v.trim().length<3){setSug([]);setOpen(false);return;}
+    setLoad(true);
+    tRef.current=setTimeout(async()=>{
+      try{
+        const r=await fetch("https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=5&countrycodes=fr&q="+encodeURIComponent(v));
+        const a=await r.json();setSug(Array.isArray(a)?a.slice(0,5):[]);setOpen(true);
+      }catch(e){setSug([]);}
+      setLoad(false);
+    },450);
+  };
+  const update=(v)=>{setQ(v);onChange&&onChange(v);search(v);};
+  const pick=s=>{const label=s.display_name;setQ(label);setSug([]);setOpen(false);onChange&&onChange(label);};
+  return <div className="addr" ref={boxRef}>
+    <input name={name} value={q} required={required} autoFocus={autoFocus} autoComplete="off" placeholder={placeholder}
+      onChange={e=>update(e.target.value)} onFocus={()=>{if(sug.length)setOpen(true)}} onBlur={()=>setTimeout(()=>setOpen(false),180)}/>
+    {load&&<span className="addr-load">…</span>}
+    {open&&sug.length>0&&<div className="addr-sug">
+      {sug.map((s,i)=><button type="button" key={i} onMouseDown={e=>e.preventDefault()} onClick={()=>pick(s)}><I.pin size={13}/><span>{s.display_name}</span></button>)}
+    </div>}
+  </div>;
+}
 function Auth({onDone,toast}){
   const FB=!!fbAuth();
   const[mode,setMode]=useState("signup");
@@ -1754,7 +1792,7 @@ function Auth({onDone,toast}){
         </>}
         <div className="fg"><label>Email</label><input name="e" type="email" required autoComplete="email" placeholder="vous@exemple.fr"/></div>
         <div className="fg"><label>Téléphone</label><input name="tel" type="tel" required autoComplete="tel" placeholder="06 12 34 56 78"/><div className="hint">Pour la remise en main propre et la confiance entre voisins.</div></div>
-        <div className="fg"><label>Adresse</label><input name="q" required autoComplete="street-address" placeholder="Ex. 12 rue du Sablon, Metz"/><div className="hint">Pour vous montrer les objets près de chez vous — jamais affichée aux autres, seulement la distance à pied.</div></div>
+        <div className="fg"><label>Adresse</label><AddressInput name="q" required placeholder="Commencez à taper votre adresse…"/><div className="hint">Choisissez dans la liste — jamais affichée aux autres, seulement la distance à pied.</div></div>
         <div className="fg"><label>Mot de passe</label><input name="p" type="password" required minLength={6} autoComplete="new-password" placeholder="6 caractères minimum" value={pwVal} onChange={e=>setPwVal(e.target.value)}/><PwMeter value={pwVal}/></div>
         <button className="btn btn-ter" disabled={busy} style={{width:"100%",padding:13,opacity:busy?.6:1}}>{busy?"Création…":"Créer mon compte"}</button>
         <p style={{fontSize:11.5,color:"var(--gl)",textAlign:"center",marginTop:9,lineHeight:1.5}}>Un email de confirmation vous sera envoyé. <b style={{color:"var(--g)"}}>Vous devrez le valider</b> pour entrer dans le cercle.</p>
