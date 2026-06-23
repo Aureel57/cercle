@@ -461,6 +461,15 @@ footer .wrap{padding:46px 24px 28px}
 .psel .cov{position:absolute;bottom:0;left:0;right:0;background:var(--ter);color:#fff;font-size:8.5px;font-weight:800;text-align:center;letter-spacing:.06em;padding:2px 0;text-transform:uppercase}
 .psel .prm{position:absolute;top:3px;right:3px;width:18px;height:18px;border-radius:50%;border:none;background:rgba(0,0,0,.6);color:#fff;font-size:12px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .hint{font-size:12px;color:var(--g);margin-top:5px}
+.chk{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border:1.5px solid var(--bd);border-radius:12px;background:var(--bg);cursor:pointer;margin-bottom:14px}
+.chk input{margin-top:2px;width:17px;height:17px;flex-shrink:0;accent-color:var(--ter);cursor:pointer}
+.chk span{display:flex;flex-direction:column;gap:2px}
+.chk b{font-size:13.5px;color:var(--dk)}
+.chk small{font-size:11.5px;color:var(--g);line-height:1.45}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:var(--bg);border:1.5px solid var(--bd);border-radius:12px;padding:4px;margin-bottom:14px}
+.seg button{border:none;background:none;padding:9px;border-radius:9px;font-size:13.5px;font-weight:700;color:var(--g);cursor:pointer;font-family:var(--f)}
+.seg button.on{background:var(--ter);color:#fff}
+.propill{display:inline-block;background:var(--p);color:#fff;font-size:9px;font-weight:800;letter-spacing:.08em;padding:1px 6px;border-radius:6px;margin-left:6px;vertical-align:1px}
 .pwm{margin-top:8px}
 .pwm-bar{display:flex;gap:4px;margin-bottom:6px}
 .pwm-seg{flex:1;height:5px;border-radius:3px;background:var(--bd);transition:background .25s}
@@ -750,7 +759,7 @@ function Card({it,open,fav,togFav}){
     </div>
     <div className="in">
       <div className="tt"><h3>{it.t}</h3>{it.rev>0?<span className="note"><I.star/>{it.note.toFixed(1)}</span>:<span className="note" style={{background:"color-mix(in srgb,var(--p) 12%,transparent)",color:"var(--p)"}}>Nouveau</span>}</div>
-      <div className="own">{it.own} · {it.city}</div>
+      <div className="own">{it.own}{it.ownerPro&&<span className="propill">PRO</span>} · {it.city}</div>
       <div className="foot"><span className="prix">{it.p} € <small>/jour</small></span><span className="marche">{distFor(it.id).min} min à pied</span></div>
     </div>
   </article>;
@@ -810,7 +819,11 @@ function Detail({it,backHome,fav,togFav,toast,reserve,openChat,plus,reviews=[],r
   const tot=totNum.toFixed(2).replace(".",",");
   const range=(sel.start&&sel.end)?`${fmtFr(new Date(sel.start+"T00:00:00"))} → ${fmtFr(new Date(sel.end+"T00:00:00"))}`:"";
   const startISO=sel.start,endISO=sel.end;
-  const canReserve=days>0;
+  const[licChk,setLicChk]=useState(false);
+  const[licNum,setLicNum]=useState("");
+  useEffect(()=>{setLicChk(false);setLicNum("")},[it.id]);
+  const licOk=!it.needsLicense||(licChk&&licNum.trim().length>=4);
+  const canReserve=days>0&&licOk;
   useEffect(()=>{window.scrollTo({top:0,behavior:"instant"});
     if(typeof gsap!=="undefined"&&!reduced()){
       gsap.from(".gal, .det-body > div",{y:20,autoAlpha:0,duration:.6,stagger:.12,ease:"power3.out"});
@@ -845,7 +858,7 @@ function Detail({it,backHome,fav,togFav,toast,reserve,openChat,plus,reviews=[],r
         <p className="desc">{it.d}</p>
         <div className="owner-card">
           <div className="avat">{it.own[0]}</div>
-          <div><div className="nm">{it.own}</div><div className="sb">Voisin·e vérifié·e{it.rev>0?` · ★ ${it.note.toFixed(1)} · ${it.rev} avis`:""}</div></div>
+          <div><div className="nm">{it.own}{it.ownerPro&&<span className="propill">PRO</span>}</div><div className="sb">{it.ownerPro?"Loueur professionnel":"Voisin·e vérifié·e"}{it.rev>0?` · ★ ${it.note.toFixed(1)} · ${it.rev} avis`:""}</div></div>
           <button className="btn btn-ghost" style={{padding:"9px 15px",minHeight:38,fontSize:13}} onClick={()=>openChat(it)}><I.msg size={14}/>Contacter</button>
         </div>
         {itemReviews.length>0&&<>
@@ -875,14 +888,18 @@ function Detail({it,backHome,fav,togFav,toast,reserve,openChat,plus,reviews=[],r
             <span><i style={{background:"color-mix(in srgb,var(--gl) 40%,transparent)"}}/>Indisponible</span>
           </div>
           <div className="calc" style={{marginTop:12}}>
-            {canReserve?<>
+            {days>0?<>
             <div className="row"><span>{it.p} € × {days} jour{days>1?"s":""}</span><b>{(it.p*days).toFixed(2).replace(".",",")} €</b></div>
             <div className="row"><span>Frais de service ({Math.round(rate*100)} %) · grade {myGrade.nom}</span><b>{fee.toFixed(2).replace(".",",")} €</b></div>
             {plus&&<div className="row" style={{color:"var(--plus)"}}><span>✦ Cercle+ inclus</span><b style={{color:"var(--plus)"}}>−1 %</b></div>}
             <div className="tot"><span>Total</span><b>{tot} €</b></div>
             </>:<div style={{fontSize:12.5,color:"var(--g)",textAlign:"center",padding:"4px 0"}}>Sélectionnez vos dates pour voir le total.</div>}
           </div>
-          <button className="btn btn-green" disabled={!canReserve} style={!canReserve?{opacity:.5,cursor:"not-allowed"}:undefined} onClick={()=>{if(!canReserve){toast("Choisissez vos dates de location");return;}reserve(it,days,totNum,base,fee,range,startISO,endISO);}}><I.lock size={15}/>{canReserve?`Réserver — ${tot} €`:"Choisir les dates"}</button>
+          {it.needsLicense&&<div style={{marginTop:12}}>
+            <label className="chk" style={{marginBottom:8}}><input type="checkbox" checked={licChk} onChange={e=>setLicChk(e.target.checked)}/><span><b>Permis de conduire</b><small>Ce bien est un véhicule. Je certifie détenir un permis valide.</small></span></label>
+            <input value={licNum} onChange={e=>setLicNum(e.target.value)} placeholder="Numéro de permis" aria-label="Numéro de permis" style={{width:"100%",padding:"11px 14px",border:"1.5px solid var(--bd)",borderRadius:12,fontSize:14,background:"var(--bg)",color:"var(--dk)",outline:"none"}}/>
+          </div>}
+          <button className="btn btn-green" disabled={!canReserve} style={!canReserve?{opacity:.5,cursor:"not-allowed",marginTop:12}:{marginTop:12}} onClick={()=>{if(days<1){toast("Choisissez vos dates de location");return;}if(!licOk){toast("Attestez votre permis et saisissez son numéro");return;}reserve(it,days,totNum,base,fee,range,startISO,endISO,licNum.trim());}}><I.lock size={15}/>{days<1?"Choisir les dates":!licOk?"Attestez votre permis":`Réserver — ${tot} €`}</button>
           <p className="note">Débité seulement à la confirmation de {it.own}</p>
           <button className={"btn btn-ghost"} style={{width:"100%",marginTop:8,fontSize:13}} onClick={()=>togFav(it.id)}>{fav?"♥ Retiré des favoris ?":"♡ Ajouter aux favoris"}</button>
         </div>
@@ -902,6 +919,7 @@ function Create({toast,backHome,addItem}){
   const[d,setD]=useState("");
   const[photos,setPhotos]=useState([]);
   const[cau,setCau]=useState("");
+  const[lic,setLic]=useState(false);
   const[upBusy,setUpBusy]=useState(false);
   const price=Math.max(0,+pr||0);
   const cauVal=cau===""?(price?price*6:""):Math.max(0,+cau||0);
@@ -919,7 +937,7 @@ function Create({toast,backHome,addItem}){
     <div className="create-grid">
       <div className="panel">
         <form onSubmit={e=>{e.preventDefault();if(!photos.length){toast("Ajoutez au moins une photo");return;}
-          addItem({t,c,p:price||5,d:d||"Proposé par un voisin du Sablon, avec soin.",imgs:photos,cau:+cauVal||0});
+          addItem({t,c,p:price||5,d:d||"Proposé par un voisin du Sablon, avec soin.",imgs:photos,cau:+cauVal||0,needsLicense:lic});
           toast("Annonce publiée — bienvenue dans le cercle !");backHome();}}>
           <div className="fg"><label>Titre de l'annonce</label><input required value={t} onChange={e=>setT(e.target.value)} placeholder="Ex. Perceuse visseuse Bosch Pro 18V"/></div>
           <div className="fr">
@@ -928,6 +946,7 @@ function Create({toast,backHome,addItem}){
           </div>
           <div className="fg"><label>Caution (€)</label><input type="number" min="0" value={cau} onChange={e=>setCau(e.target.value)} placeholder={price?String(price*6):"Ex. 72"}/><div className="hint">Séquestrée par Cercle, rendue sous 48 h. {price>0&&cau===""?`Suggéré : ${price*6} € (6× le prix/jour).`:"Laissez vide pour la suggestion automatique (6× le prix/jour)."}</div></div>
           <div className="fg"><label>Description</label><textarea value={d} onChange={e=>setD(e.target.value)} placeholder="État, accessoires fournis, lieu de remise en main propre…"/></div>
+          <label className="chk"><input type="checkbox" checked={lic} onChange={e=>setLic(e.target.checked)}/><span><b>Véhicule — permis de conduire requis</b><small>Le locataire devra attester d'un permis valide et saisir son numéro avant de réserver.</small></span></label>
           <div className="fg"><label>Vos photos <small style={{fontWeight:500,color:"var(--gl)"}}>· jusqu'à {MAXP}</small></label>
             {photos.length>0&&<div className="photo-sel">
               {photos.map((p,i)=><div key={i} className="psel">
@@ -1230,6 +1249,7 @@ function Activite({toast,resas,requests=[],answerRequest,completeRental,myListin
           <div style={{flex:1,minWidth:0}}>
             <div className="ti">{r.it.t}</div>
             <div className="su"><b style={{color:"var(--dk)"}}>{r.renterName}</b> · {r.range} · {r.total} €</div>
+            {r.license&&<div className="su" style={{color:"var(--p)"}}>🪪 Permis : {r.license}</div>}
           </div>
           <button className="btn btn-green" style={{minHeight:34,padding:"7px 14px",fontSize:12}} onClick={()=>answerRequest(r,true)}>Accepter</button>
           <button className="btn btn-ghost" style={{minHeight:34,padding:"7px 12px",fontSize:12}} onClick={()=>answerRequest(r,false)}>Décliner</button>
@@ -1510,6 +1530,7 @@ function openDoc(filename,kind,inner){
    +"td{padding:9px 6px;border-bottom:1px solid #E8E1D2}.r{text-align:right}.c{text-align:center}"
    +".tot{margin-top:18px;font-family:'Bricolage Grotesque',Georgia,serif;font-size:18px;background:#F7F3EA;border:2px solid #20242F;border-radius:12px;box-shadow:4px 4px 0 rgba(32,36,47,.12);padding:14px 18px}.tot b{color:#1F8150}"
    +".kv td:first-child{color:#6A7078;width:42%}"
+   +".emet{font-size:12.5px;color:#343A46;background:#F7F3EA;border:1.5px solid #E8E1D2;border-radius:10px;padding:11px 14px;margin-bottom:16px;line-height:1.55}"
    +".note{font-size:11px;color:#A39B89;line-height:1.6;margin-top:22px;border-top:1px solid #E8E1D2;padding-top:12px}"
    +".tampon{position:absolute;top:74px;right:28px;width:74px;height:74px;border:2.5px solid #1F8150;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#1F8150;transform:rotate(-9deg);font-size:8px;font-weight:800;letter-spacing:.07em;text-align:center;line-height:1.15;opacity:.92}";
   const fonts="<link rel=preconnect href='https://fonts.googleapis.com'><link rel=preconnect href='https://fonts.gstatic.com' crossorigin><link href='https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=Instrument+Sans:wght@400;500;600;700&display=swap' rel=stylesheet>";
@@ -1541,22 +1562,27 @@ function Revenus({user,stats={}}){
   const conf=(stats.confirmed||[]).filter(r=>{const t=r.createdAt&&r.createdAt.seconds?new Date(r.createdAt.seconds*1000):null;return t?t.getFullYear()===year:true;});
   const total=conf.reduce((s,r)=>s+ownerGain(r),0);
   const owner=(user&&user.name)||"Voisin";
-  const NOTE="Document fourni à titre indicatif pour vous aider à déclarer vos revenus de location entre particuliers. Les montants correspondent aux sommes perçues, hors commission de service prélevée par Cercle. Cercle est un intermédiaire de mise en relation ; l'identité de l'éditeur figure dans les mentions légales.";
-  const annual=()=>openDoc("Releve-revenus-Cercle-"+year,"Relevé "+year,
-    "<h1>Relevé annuel de revenus "+year+"</h1><p class=sub>Établi pour <b>"+escH(owner)+"</b> · locations confirmées sur Cercle</p>"
-    +"<table><thead><tr><th>Date</th><th>Objet</th><th>Locataire</th><th class=c>Jours</th><th class=r>Montant perçu</th></tr></thead><tbody>"
+  const pro=!!(user&&user.pro),co=(user&&user.company)||owner,siret=(user&&user.siret)||"";
+  const emet=pro?"<div class=emet><b>"+escH(co)+"</b>"+(siret?"<br>SIRET "+escH(siret):"")+"<br>Loueur professionnel — émis via Cercle</div>":"";
+  const TVA="TVA non applicable, art. 293 B du CGI.";
+  const NOTE=pro
+    ?"Facture émise par "+escH(co)+(siret?" (SIRET "+escH(siret)+")":"")+" via la plateforme Cercle. "+TVA+" Montant net perçu, hors commission de service Cercle."
+    :"Document fourni à titre indicatif pour vous aider à déclarer vos revenus de location entre particuliers. Les montants correspondent aux sommes perçues, hors commission de service prélevée par Cercle. Cercle est un intermédiaire de mise en relation ; l'identité de l'éditeur figure dans les mentions légales.";
+  const annual=()=>openDoc((pro?"Recapitulatif-facturation-":"Releve-revenus-Cercle-")+year,pro?"Récap "+year:"Relevé "+year,
+    emet+"<h1>"+(pro?"Récapitulatif de facturation "+year:"Relevé annuel de revenus "+year)+"</h1><p class=sub>"+(pro?"Locations facturées via Cercle":"Établi pour <b>"+escH(owner)+"</b> · locations confirmées sur Cercle")+"</p>"
+    +"<table><thead><tr><th>Date</th><th>Objet</th><th>Client</th><th class=c>Jours</th><th class=r>Montant "+(pro?"facturé":"perçu")+"</th></tr></thead><tbody>"
     +conf.map(r=>"<tr><td>"+docDate(r.createdAt)+"</td><td>"+escH(r.it.t)+"</td><td>"+escH(r.renterName)+"</td><td class=c>"+(r.days||"–")+"</td><td class=r>"+eurF(ownerGain(r))+"</td></tr>").join("")
-    +"</tbody></table><div class=tot>Total perçu en "+year+" : <b>"+eurF(total)+"</b> · "+conf.length+" location"+(conf.length>1?"s":"")+"</div><p class=note>"+NOTE+"</p>");
-  const receipt=r=>openDoc("Recu-Cercle-"+r.id.slice(0,6),"Reçu",
-    "<h1>Reçu de location</h1><p class=sub>Reçu n° "+r.id.slice(0,8).toUpperCase()+" · émis le "+docDate(r.createdAt)+"</p>"
+    +"</tbody></table><div class=tot>Total "+(pro?"facturé":"perçu")+" en "+year+" : <b>"+eurF(total)+"</b> · "+conf.length+" location"+(conf.length>1?"s":"")+"</div><p class=note>"+NOTE+"</p>");
+  const receipt=r=>openDoc((pro?"Facture-Cercle-":"Recu-Cercle-")+r.id.slice(0,6),pro?"Facture":"Reçu",
+    emet+"<h1>"+(pro?"Facture":"Reçu de location")+"</h1><p class=sub>"+(pro?"Facture":"Reçu")+" n° "+r.id.slice(0,8).toUpperCase()+" · émis le "+docDate(r.createdAt)+"</p>"
     +"<table class=kv><tbody>"
-    +"<tr><td>Bénéficiaire</td><td><b>"+escH(owner)+"</b></td></tr>"
+    +"<tr><td>"+(pro?"Émetteur":"Bénéficiaire")+"</td><td><b>"+escH(co)+"</b></td></tr>"
+    +"<tr><td>"+(pro?"Client":"Locataire")+"</td><td>"+escH(r.renterName)+"</td></tr>"
     +"<tr><td>Objet loué</td><td>"+escH(r.it.t)+"</td></tr>"
-    +"<tr><td>Locataire</td><td>"+escH(r.renterName)+"</td></tr>"
     +"<tr><td>Période</td><td>"+escH(r.range||"–")+"</td></tr>"
     +"<tr><td>Durée</td><td>"+(r.days||"–")+" jour"+((r.days||0)>1?"s":"")+"</td></tr>"
     +(r.pricePerDay?"<tr><td>Prix par jour</td><td>"+eurF(r.pricePerDay)+"</td></tr>":"")
-    +"</tbody></table><div class=tot>Montant perçu : <b>"+eurF(ownerGain(r))+"</b></div><p class=note>"+NOTE+"</p>");
+    +"</tbody></table><div class=tot>"+(pro?"Total à régler":"Montant perçu")+" : <b>"+eurF(ownerGain(r))+"</b></div><p class=note>"+NOTE+"</p>");
   return <div className="page">
     <h1>Revenus &amp; justificatifs</h1>
     <p className="lead">Vos documents pour déclarer vos revenus de location.</p>
@@ -1632,6 +1658,7 @@ function Auth({onDone,toast}){
   const[mode,setMode]=useState("signup");
   const[prefill,setPrefill]=useState("");
   const[pwVal,setPwVal]=useState("");
+  const[acct,setAcct]=useState("particulier");
   const[step,setStep]=useState(0);
   const[form,setForm]=useState({});
   const[code,setCode]=useState("");
@@ -1641,15 +1668,16 @@ function Auth({onDone,toast}){
   const genCode=()=>String(Math.floor(100000+Math.random()*900000));
   const start=async e=>{e.preventDefault();const f=new FormData(e.target);
     const fn=(f.get("n")||"").trim(),ln=(f.get("ln")||"").trim(),email=f.get("e"),pw=f.get("p"),quartier=(f.get("q")||"").trim(),phone=(f.get("tel")||"").trim();
-    const name=(fn+" "+ln).trim();
+    const pro=acct==="pro",company=(f.get("co")||"").trim(),siret=(f.get("siret")||"").trim();
+    const name=pro&&company?company:(fn+" "+ln).trim();
     if(FB){
       setBusy(true);
       try{
         const res=await fbAuth().createUserWithEmailAndPassword(email,pw);
         try{await res.user.updateProfile({displayName:name})}catch(_){}
-        try{const d=fbDb();if(d)await d.collection("users").doc(res.user.uid).set({name,firstName:fn,lastName:ln,email,quartier,phone},{merge:true})}catch(_){}
+        try{const d=fbDb();if(d)await d.collection("users").doc(res.user.uid).set({name,firstName:fn,lastName:ln,email,quartier,phone,accountType:acct,pro,company,siret},{merge:true})}catch(_){}
         await sendVerif(res.user,fn||name,email);
-        onDone({...fbUserToUser(res.user),name,quartier,phone});
+        onDone({...fbUserToUser(res.user),name,quartier,phone,pro,company,siret});
       }catch(err){
         console.warn("[Cercle] inscription échouée:",err&&err.code,err&&err.message);
         if(isExistingAccount(err)){setPrefill(email);setStep(0);setMode("login");toast("Vous avez déjà un compte avec cet email — connectez-vous.");}
@@ -1712,10 +1740,18 @@ function Auth({onDone,toast}){
       <SocialBtns onDone={onDone} toast={toast}/>
       <div className="or-sep">OU PAR EMAIL</div>
       <form onSubmit={start}>
+        <div className="seg" role="tablist" aria-label="Type de compte">
+          <button type="button" className={acct==="particulier"?"on":""} onClick={()=>setAcct("particulier")}>Particulier</button>
+          <button type="button" className={acct==="pro"?"on":""} onClick={()=>setAcct("pro")}>Professionnel</button>
+        </div>
         <div className="fr">
           <div className="fg"><label>Prénom</label><input name="n" required autoFocus autoComplete="given-name" placeholder="Noah"/></div>
           <div className="fg"><label>Nom</label><input name="ln" required autoComplete="family-name" placeholder="Mouloud"/></div>
         </div>
+        {acct==="pro"&&<>
+          <div className="fg"><label>Raison sociale</label><input name="co" required autoComplete="organization" placeholder="Ex. Loca Outils SARL"/></div>
+          <div className="fg"><label>SIRET</label><input name="siret" required inputMode="numeric" placeholder="14 chiffres"/><div className="hint">Pour émettre de vraies factures à vos clients. Votre annonce affichera un badge « Pro ».</div></div>
+        </>}
         <div className="fg"><label>Email</label><input name="e" type="email" required autoComplete="email" placeholder="vous@exemple.fr"/></div>
         <div className="fg"><label>Téléphone</label><input name="tel" type="tel" required autoComplete="tel" placeholder="06 12 34 56 78"/><div className="hint">Pour la remise en main propre et la confiance entre voisins.</div></div>
         <div className="fg"><label>Adresse</label><input name="q" required autoComplete="street-address" placeholder="Ex. 12 rue du Sablon, Metz"/><div className="hint">Pour vous montrer les objets près de chez vous — jamais affichée aux autres, seulement la distance à pied.</div></div>
@@ -1856,7 +1892,7 @@ function App(){
     const d=fbDb();if(!d||!user||!user.uid)return;
     d.collection("users").doc(user.uid).get().then(doc=>{
       if(!doc.exists)return;const x=doc.data();
-      setUser(u=>{if(!u||u.uid!==user.uid)return u;const n={...u};if(x.quartier)n.quartier=x.quartier;if(x.phone&&!u.phone)n.phone=x.phone;return n;});
+      setUser(u=>{if(!u||u.uid!==user.uid)return u;const n={...u};if(x.quartier)n.quartier=x.quartier;if(x.phone&&!u.phone)n.phone=x.phone;if(x.pro!==undefined)n.pro=!!x.pro;if(x.company)n.company=x.company;if(x.siret)n.siret=x.siret;return n;});
     }).catch(()=>{});
   },[user&&user.uid]);
   /* met à jour l'adresse (paramètres) */
@@ -1888,7 +1924,7 @@ function App(){
       return d.collection("v2_listings").orderBy("createdAt","desc").limit(40).onSnapshot(snap=>{
         const arr=[];snap.forEach(doc=>{const x=doc.data();const sd=x.seed||"voisin1";
           const img=(x.imgs&&x.imgs.length)?x.imgs:imgsFromSeed(sd);
-          arr.push({id:doc.id,t:x.t,c:x.c,p:x.p,d:x.d,img,own:x.own||"Voisin",city:x.city||"rue du Sablon",note:(x.note==null?0:x.note),rev:x.rev||0,cau:x.cau||0,uid:x.uid||"",booked:x.booked||[]});});
+          arr.push({id:doc.id,t:x.t,c:x.c,p:x.p,d:x.d,img,own:x.own||"Voisin",city:x.city||"rue du Sablon",note:(x.note==null?0:x.note),rev:x.rev||0,cau:x.cau||0,uid:x.uid||"",booked:x.booked||[],needsLicense:!!x.needsLicense,ownerPro:!!x.ownerPro,ownerCompany:x.ownerCompany||""});});
         setFbItems(arr);
       },err=>console.warn("[Cercle] Firestore lecture indisponible:",err&&err.code));
     }catch(e){console.warn("[Cercle] Firestore off:",e&&e.code)}
@@ -1909,7 +1945,7 @@ function App(){
     const lbl=x.status==="confirmed"?"✓ Confirmée":x.status==="declined"?"Refusée":x.status==="completed"?"Terminée":"⏳ En attente";
     const total=+x.total||0,fee=+x.fee||0,base=+x.base||(total-fee)||total;
     return {id,fs:true,status:x.status,it:{id:x.itemId,t:x.itemTitle,img:imgsFromSeed(x.itemSeed||"voisin1"),own:x.ownerName||"Voisin"},
-      range:x.range||"",total,base,fee,pricePerDay:+x.pricePerDay||0,days:x.days||0,startDate:x.startDate||"",endDate:x.endDate||"",createdAt:x.createdAt,renterName:x.renterName||"Voisin",renterUid:x.renterUid,st,lbl};};
+      range:x.range||"",total,base,fee,pricePerDay:+x.pricePerDay||0,days:x.days||0,startDate:x.startDate||"",endDate:x.endDate||"",license:x.license||"",createdAt:x.createdAt,renterName:x.renterName||"Voisin",renterUid:x.renterUid,st,lbl};};
   /* Firebase : mes réservations (côté locataire) */
   useEffect(()=>{
     const d=fbDb();if(!d||!user||!user.uid)return;
@@ -1963,7 +1999,8 @@ function App(){
   const openLegal=id=>{setLegal(id);setPage("legal")};
   const chooseCookie=v=>{try{localStorage.setItem("cercle_cookie",v)}catch(e){}setCookie(v);};
   const unread=allNotifs.filter(n=>n.unread).length;
-  const addItem=async({t,c,p,d,imgs,img,cau})=>{
+  const addItem=async({t,c,p,d,imgs,img,cau,needsLicense})=>{
+    const nl=!!needsLicense;const isPro=!!(user&&user.pro);const ownerCo=(user&&user.company)||"";
     const arr=(imgs&&imgs.length?imgs:[img||("voisin"+(Date.now()%9973))]).slice(0,4);
     const sd=arr[0];
     const dd=d||"Proposé par un voisin du Sablon, avec soin.";
@@ -1971,23 +2008,23 @@ function App(){
     const db=fbDb();
     if(db&&user){
       try{
-        await db.collection("v2_listings").add({t,c,p,d:dd,seed:sd,imgs:arr,cau:cc,own:user.name||"Voisin",uid:user.uid||"",city:"rue du Sablon",note:0,rev:0,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+        await db.collection("v2_listings").add({t,c,p,d:dd,seed:sd,imgs:arr,cau:cc,needsLicense:nl,ownerPro:isPro,ownerCompany:ownerCo,own:user.name||"Voisin",uid:user.uid||"",city:"rue du Sablon",note:0,rev:0,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
         addNotif({k:"info",txt:`Votre annonce « ${t} » est en ligne dans le cercle.`});
         return;
       }catch(e){console.warn("[Cercle] écriture Firestore échouée, repli local:",e&&e.code);}
     }
-    const it={id:"u"+Date.now(),t,c,p,img:arr,own:"Vous",city:"rue du Sablon",note:0,rev:0,d:dd,cau:cc,uid:user&&user.uid||""};
+    const it={id:"u"+Date.now(),t,c,p,img:arr,own:"Vous",city:"rue du Sablon",note:0,rev:0,d:dd,cau:cc,uid:user&&user.uid||"",needsLicense:nl,ownerPro:isPro,ownerCompany:ownerCo};
     setMyItems(m=>[it,...m]);
     addNotif({k:"info",txt:`Votre annonce « ${t} » est en ligne dans le cercle.`});
   };
-  const reserve=(it,days,tot,base,fee,range,startDate,endDate)=>{
+  const reserve=(it,days,tot,base,fee,range,startDate,endDate,license)=>{
     range=range||`${days} jour${days>1?"s":""}`;
     base=+base||+it.p*days||0;fee=+fee||0;tot=+tot||base+fee;
     const db=fbDb();
     if(db&&user){
       db.collection("v2_reservations").add({itemId:it.id,itemTitle:it.t,itemSeed:it.img&&it.img[0]||"voisin1",
         ownerName:it.own||"Voisin",ownerUid:it.uid||"",renterUid:user.uid||"",renterName:user.name||"Voisin",
-        days,pricePerDay:+it.p||0,base,fee,total:tot,range,startDate:startDate||"",endDate:endDate||"",status:"pending",createdAt:firebase.firestore.FieldValue.serverTimestamp()})
+        days,pricePerDay:+it.p||0,base,fee,total:tot,range,startDate:startDate||"",endDate:endDate||"",license:license||"",status:"pending",createdAt:firebase.firestore.FieldValue.serverTimestamp()})
         .catch(e=>{console.warn("[Cercle] réservation Firestore échouée, repli local:",e&&e.code);
           setResas(rs=>[{id:Date.now(),it,range,st:"a-venir",lbl:"⏳ En attente"},...rs]);});
     }else{
