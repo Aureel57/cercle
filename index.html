@@ -213,7 +213,9 @@ footer .wrap{padding:46px 24px 28px}
 .det h3.sh{font-family:var(--fd);font-size:18px;margin:20px 0 8px}
 .det p.desc{max-width:60ch;color:var(--tx)}
 .owner-card{display:flex;align-items:center;gap:13px;background:var(--w);border:1.5px solid var(--bd);border-radius:14px;padding:14px 16px;margin-top:18px;max-width:430px}
-.avat{width:46px;height:46px;border-radius:50%;background:var(--p);color:#fff;font-weight:700;font-size:17px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--fd)}
+.avat{width:46px;height:46px;border-radius:50%;background:var(--p);color:#fff;font-weight:700;font-size:17px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--fd);overflow:hidden}
+.avat img{width:100%;height:100%;object-fit:cover}
+.icon-btn img{width:100%;height:100%;object-fit:cover;border-radius:50%}
 .owner-card .nm{font-weight:700;color:var(--dk);font-size:14.5px}
 .owner-card .sb{font-size:12px;color:var(--g)}
 .owner-card button{margin-left:auto}
@@ -1058,7 +1060,7 @@ function Profile({dark,setDark,toast,go,plus,user,logout,stats={}}){
     <h1>Mon profil</h1>
     <p className="lead">{user.name} — membre vérifié de Cercle.</p>
     <div className="prof-h">
-      <div className="avat">{user.name[0].toUpperCase()}</div>
+      <div className="avat">{user.photo?<img src={user.photo} alt=""/>:user.name[0].toUpperCase()}</div>
       <div style={{flex:1}}>
         <div style={{fontWeight:700,color:"var(--dk)",fontSize:17,fontFamily:"var(--fd)"}}>{user.name}</div>
         <div style={{fontSize:12.5,color:"var(--g)"}}>{user.email}{user.phone?" · "+user.phone:""} · {user.quartier}</div>
@@ -1439,7 +1441,7 @@ function Params({dark,setDark,toast,user,plus,logout,saveQuartier,saveProfile,ex
     <p className="lead">Votre compte, vos préférences.</p>
 
     <div className="panel" style={{display:"flex",alignItems:"center",gap:14}}>
-      <div className="avat" style={{width:54,height:54,fontSize:21}}>{(u.name||"V")[0].toUpperCase()}</div>
+      <div className="avat" style={{width:54,height:54,fontSize:21}}>{u.photo?<img src={u.photo} alt=""/>:(u.name||"V")[0].toUpperCase()}</div>
       <div style={{flex:1,minWidth:0}}>
         <div style={{fontWeight:700,color:"var(--dk)",fontSize:16}}>{u.name}</div>
         <div style={{fontSize:12.5,color:"var(--g)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{u.email}</div>
@@ -2223,7 +2225,7 @@ function App(){
           {user
             ?<button className="btn btn-ter" onClick={()=>go("create")} aria-label="Proposer un objet"><I.plus size={14}/><span className="cta-txt">Proposer un objet</span></button>
             :<button className="btn btn-ter" onClick={()=>go("auth")} aria-label="Rejoindre le cercle"><I.user size={14}/><span className="cta-txt">Rejoindre le cercle</span></button>}
-          {user&&<button className="icon-btn" onClick={()=>go("profile")} aria-label="Mon profil" style={{background:"var(--p)",color:"#fff",borderColor:"var(--p)",fontWeight:800,fontFamily:"var(--fd)"}}>{user.name[0].toUpperCase()}</button>}
+          {user&&<button className="icon-btn" onClick={()=>go("profile")} aria-label="Mon profil" style={{background:"var(--p)",color:"#fff",borderColor:"var(--p)",fontWeight:800,fontFamily:"var(--fd)",overflow:"hidden",padding:0}}>{user.photo?<img src={user.photo} alt=""/>:user.name[0].toUpperCase()}</button>}
         </div>
       </div>
     </header>
