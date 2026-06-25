@@ -479,6 +479,7 @@ footer .wrap{padding:46px 24px 28px}
 .addr-sug button:last-child{border-bottom:none}
 .addr-sug button:hover{background:color-mix(in srgb,var(--ter) 10%,transparent)}
 .addr-sug button svg{flex-shrink:0;margin-top:2px;color:var(--ter)}
+.nudge{display:flex;gap:12px;align-items:center;background:var(--w);border:2px solid var(--dk);border-radius:16px;box-shadow:var(--shf);padding:12px 16px;margin:14px 0 0;flex-wrap:wrap}
 .pwm{margin-top:8px}
 .pwm-bar{display:flex;gap:4px;margin-bottom:6px}
 .pwm-seg{flex:1;height:5px;border-radius:3px;background:var(--bd);transition:background .25s}
@@ -1124,7 +1125,11 @@ function Carte({open,items,dark,user}){
     .map(i=>({it:i,d:distFor(i.id)}))
     .sort((a,b)=>a.d.m-b.d.m).slice(0,20),[items,cc,ray]);
   /* géocodage de l'adresse du membre → centre de la carte */
-  useEffect(()=>{let ok=true;geocode(quartier).then(c=>{if(ok&&validLL(c))setCtr(c)});return()=>{ok=false}},[quartier]);
+  const userLL=user&&isFinite(+user.lat)&&isFinite(+user.lon)?[+user.lat,+user.lon]:null;
+  useEffect(()=>{
+    if(userLL){setCtr(userLL);return;} // coords enregistrées → carte instantanée, pas de géocodage
+    let ok=true;geocode(quartier).then(c=>{if(ok&&validLL(c))setCtr(c)});return()=>{ok=false};
+  },[quartier,userLL&&userLL[0],userLL&&userLL[1]]);
   /* init */
   useEffect(()=>{
     if(typeof L==="undefined"||!mapEl.current||mapRef.current)return;
@@ -1428,6 +1433,7 @@ function Params({dark,setDark,toast,user,plus,logout,saveQuartier,saveProfile,ex
   const[q,setQ]=useState(u.quartier||"");
   const[nm,setNm]=useState(u.name||"");
   const[tel,setTel]=useState(u.phone||"");
+  const[ll,setLL]=useState(null);
   const[t1,setT1]=useState(true);
   const[t2,setT2]=useState(false);
   useEffect(()=>{setQ(u.quartier||"")},[u.quartier]);
@@ -1456,7 +1462,7 @@ function Params({dark,setDark,toast,user,plus,logout,saveQuartier,saveProfile,ex
         <input value={nm} onChange={e=>setNm(e.target.value)} placeholder="Prénom Nom" autoComplete="name"/>
       </div>
       <div className="fg" style={{marginBottom:12}}><label>Téléphone</label>
-        <input type="tel" value={tel} onChange={e=>setTel(e.target.value)} placeholder="06 12 34 56 78" autoComplete="tel"/>
+        <PhoneInput value={tel} onChange={v=>setTel(v)}/>
         <div className="hint">Pour la remise en main propre. Partagé seulement avec un voisin lors d'une location.</div>
       </div>
       <div className="fg" style={{marginBottom:12}}><label>Email</label>
@@ -1469,10 +1475,10 @@ function Params({dark,setDark,toast,user,plus,logout,saveQuartier,saveProfile,ex
     <SectionT>Mon adresse</SectionT>
     <div className="panel">
       <div className="fg" style={{marginBottom:8}}><label>Adresse</label>
-        <AddressInput value={q} onChange={v=>setQ(v)} placeholder="Commencez à taper votre adresse…"/>
+        <AddressInput value={q} onChange={(v,coords)=>{setQ(v);if(coords)setLL(coords);}} placeholder="Commencez à taper votre adresse…"/>
         <div className="hint">Centre votre carte et calcule la distance des objets. Jamais affichée aux autres voisins, seulement la distance à pied.</div>
       </div>
-      <button className="btn btn-p" disabled={!q.trim()||q.trim()===(u.quartier||"")} style={{opacity:(!q.trim()||q.trim()===(u.quartier||""))?.5:1}} onClick={()=>saveQuartier(q.trim())}>Enregistrer mon adresse</button>
+      <button className="btn btn-p" disabled={!q.trim()||q.trim()===(u.quartier||"")} style={{opacity:(!q.trim()||q.trim()===(u.quartier||""))?.5:1}} onClick={()=>saveQuartier(q.trim(),ll)}>Enregistrer mon adresse</button>
     </div>
 
     <SectionT>Préférences</SectionT>
@@ -1682,8 +1688,8 @@ function AddressInput({name,value,onChange,placeholder,required,autoFocus}){
       setLoad(false);
     },450);
   };
-  const update=(v)=>{setQ(v);onChange&&onChange(v);search(v);};
-  const pick=s=>{const label=s.display_name;setQ(label);setSug([]);setOpen(false);onChange&&onChange(label);};
+  const update=(v)=>{setQ(v);onChange&&onChange(v,null);search(v);};
+  const pick=s=>{const label=s.display_name;setQ(label);setSug([]);setOpen(false);onChange&&onChange(label,[+s.lat,+s.lon]);};
   return <div className="addr" ref={boxRef}>
     <input name={name} value={q} required={required} autoFocus={autoFocus} autoComplete="off" placeholder={placeholder}
       onChange={e=>update(e.target.value)} onFocus={()=>{if(sug.length)setOpen(true)}} onBlur={()=>setTimeout(()=>setOpen(false),180)}/>
@@ -1692,6 +1698,14 @@ function AddressInput({name,value,onChange,placeholder,required,autoFocus}){
       {sug.map((s,i)=><button type="button" key={i} onMouseDown={e=>e.preventDefault()} onClick={()=>pick(s)}><I.pin size={13}/><span>{s.display_name}</span></button>)}
     </div>}
   </div>;
+}
+/* Téléphone auto-formaté : 06 12 34 56 78 */
+const fmtPhone=v=>String(v||"").replace(/\D/g,"").slice(0,10).replace(/(\d{2})(?=\d)/g,"$1 ").trim();
+function PhoneInput({name,value,onChange,placeholder,required}){
+  const[p,setP]=useState(fmtPhone(value||""));
+  useEffect(()=>{if(value!=null)setP(fmtPhone(value))},[value]);
+  return <input name={name} type="tel" inputMode="numeric" value={p} required={required} placeholder={placeholder||"06 12 34 56 78"} autoComplete="tel"
+    onChange={e=>{const f=fmtPhone(e.target.value);setP(f);onChange&&onChange(f);}}/>;
 }
 function Auth({onDone,toast}){
   const FB=!!fbAuth();
@@ -1793,9 +1807,8 @@ function Auth({onDone,toast}){
           <div className="fg"><label>SIRET</label><input name="siret" required inputMode="numeric" placeholder="14 chiffres"/><div className="hint">Pour émettre de vraies factures à vos clients. Votre annonce affichera un badge « Pro ».</div></div>
         </>}
         <div className="fg"><label>Email</label><input name="e" type="email" required autoComplete="email" placeholder="vous@exemple.fr"/></div>
-        <div className="fg"><label>Téléphone</label><input name="tel" type="tel" required autoComplete="tel" placeholder="06 12 34 56 78"/><div className="hint">Pour la remise en main propre et la confiance entre voisins.</div></div>
-        <div className="fg"><label>Adresse</label><AddressInput name="q" required placeholder="Commencez à taper votre adresse…"/><div className="hint">Choisissez dans la liste — jamais affichée aux autres, seulement la distance à pied.</div></div>
         <div className="fg"><label>Mot de passe</label><input name="p" type="password" required minLength={6} autoComplete="new-password" placeholder="6 caractères minimum" value={pwVal} onChange={e=>setPwVal(e.target.value)}/><PwMeter value={pwVal}/></div>
+        <p className="hint" style={{textAlign:"center"}}>Adresse et téléphone à compléter plus tard, en 30 secondes.</p>
         <button className="btn btn-ter" disabled={busy} style={{width:"100%",padding:13,opacity:busy?.6:1}}>{busy?"Création…":"Créer mon compte"}</button>
         <p style={{fontSize:11.5,color:"var(--gl)",textAlign:"center",marginTop:9,lineHeight:1.5}}>Un email de confirmation vous sera envoyé. <b style={{color:"var(--g)"}}>Vous devrez le valider</b> pour entrer dans le cercle.</p>
         <p style={{textAlign:"center",fontSize:13,color:"var(--g)",marginTop:10}}>Déjà membre ? <a style={{color:"var(--p)",fontWeight:700,cursor:"pointer"}} onClick={()=>setMode("login")}>Se connecter</a></p>
@@ -1878,6 +1891,7 @@ function App(){
   const[toastMsg,setToastMsg]=useState(null);
   const[legal,setLegal]=useState("cgu");
   const[cookie,setCookie]=useState(()=>{try{return localStorage.getItem("cercle_cookie")||""}catch(e){return ""}});
+  const[nudgeHide,setNudgeHide]=useState(false);
   const[notifs,setNotifs]=useState(P.notifs||[]);
   const[readNotifs,setReadNotifs]=useState(()=>new Set(P.readNotifs||[])); // ids de notifs réelles déjà lues
   const[myItems,setMyItems]=useState(P.myItems||[]);
@@ -1932,13 +1946,14 @@ function App(){
     const d=fbDb();if(!d||!user||!user.uid)return;
     d.collection("users").doc(user.uid).get().then(doc=>{
       if(!doc.exists)return;const x=doc.data();
-      setUser(u=>{if(!u||u.uid!==user.uid)return u;const n={...u};if(x.quartier)n.quartier=x.quartier;if(x.phone&&!u.phone)n.phone=x.phone;if(x.pro!==undefined)n.pro=!!x.pro;if(x.company)n.company=x.company;if(x.siret)n.siret=x.siret;return n;});
+      setUser(u=>{if(!u||u.uid!==user.uid)return u;const n={...u};if(x.quartier)n.quartier=x.quartier;if(x.phone&&!u.phone)n.phone=x.phone;if(isFinite(+x.lat)&&isFinite(+x.lon)){n.lat=+x.lat;n.lon=+x.lon;}if(x.pro!==undefined)n.pro=!!x.pro;if(x.company)n.company=x.company;if(x.siret)n.siret=x.siret;return n;});
     }).catch(()=>{});
   },[user&&user.uid]);
-  /* met à jour l'adresse (paramètres) */
-  const saveQuartier=async q=>{
-    setUser(u=>u?{...u,quartier:q}:u);
-    const d=fbDb();if(d&&user&&user.uid){try{await d.collection("users").doc(user.uid).set({quartier:q},{merge:true})}catch(_){}}
+  /* met à jour l'adresse (paramètres) — stocke aussi les coords si fournies (carte instantanée) */
+  const saveQuartier=async(q,ll)=>{
+    const valid=ll&&isFinite(+ll[0])&&isFinite(+ll[1]);
+    setUser(u=>u?{...u,quartier:q,...(valid?{lat:+ll[0],lon:+ll[1]}:{})}:u);
+    const d=fbDb();if(d&&user&&user.uid){try{await d.collection("users").doc(user.uid).set(valid?{quartier:q,lat:+ll[0],lon:+ll[1]}:{quartier:q},{merge:true})}catch(_){}}
     toast("Adresse mise à jour");
   };
   /* met à jour nom + téléphone (paramètres) */
@@ -2232,6 +2247,12 @@ function App(){
 
     <div id="pagewrap">
     {page==="home"&&<>
+      {user&&!nudgeHide&&(!user.quartier||!user.phone)&&<div className="wrap"><div className="nudge">
+        <span style={{fontSize:20}}>👋</span>
+        <div style={{flex:1,minWidth:160}}><b style={{color:"var(--dk)"}}>Complétez votre profil</b><div style={{fontSize:12.5,color:"var(--g)"}}>Ajoutez votre adresse et votre téléphone (30 s) pour des locations plus fluides.</div></div>
+        <button className="btn btn-ter" style={{minHeight:38,padding:"8px 16px",fontSize:13}} onClick={()=>go("params")}>Compléter</button>
+        <button className="icon-btn" style={{width:34,height:34}} aria-label="Plus tard" onClick={()=>setNudgeHide(true)}>✕</button>
+      </div></div>}
       <Hero items={items} user={user} open={open} onSearch={v=>{setQ(v);document.getElementById("grille")?.scrollIntoView({behavior:reduced()?"instant":"smooth"})}}/>
       <div className="cats" role="tablist" aria-label="Catégories">
         {CATS.map(c=><button key={c.id} role="tab" aria-selected={cat===c.id} className={"cat"+(cat===c.id?" on":"")} onClick={()=>setCat(c.id)}>{c.label}</button>)}
