@@ -21,3 +21,17 @@ v2/email-preview.html
 functions/node_modules/
 functions/.env
 .env
+# Capacitor / mobile (généré)
+www/
+ios/App/Pods/
+ios/App/Podfile.lock
+ios/App/output/
+ios/DerivedData/
+android/.gradle/
+android/.idea/
+android/app/build/
+android/build/
+android/local.properties
+android/captures/
+*.iml
+.cxx/

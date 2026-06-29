@@ -1,0 +1,20 @@
+{
+  "appId": "fr.cercle.app",
+  "appName": "Cercle",
+  "webDir": "www",
+  "backgroundColor": "#F7F3EA",
+  "ios": {
+    "contentInset": "always",
+    "backgroundColor": "#F7F3EA"
+  },
+  "android": {
+    "backgroundColor": "#F7F3EA"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1200,
+      "backgroundColor": "#F7F3EA",
+      "showSpinner": false
+    }
+  }
+}

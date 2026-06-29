@@ -1,0 +1,15 @@
+{
+  "name": "Cercle — location entre voisins",
+  "short_name": "Cercle",
+  "description": "La location d'objets entre voisins. Tout dort déjà à deux rues.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F7F3EA",
+  "theme_color": "#2C50C8",
+  "lang": "fr",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

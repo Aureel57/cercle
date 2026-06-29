@@ -1,0 +1,25 @@
+{
+  "name": "cercle-mobile",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Cercle — application mobile (Capacitor) qui embarque l'app web Quartier Libre.",
+  "scripts": {
+    "build:mobile": "node scripts/build-mobile.mjs",
+    "sync": "npm run build:mobile && npx cap sync",
+    "add:ios": "npx cap add ios",
+    "add:android": "npx cap add android",
+    "open:ios": "npx cap open ios",
+    "open:android": "npx cap open android",
+    "icons": "npx capacitor-assets generate --assetPath resources"
+  },
+  "dependencies": {
+    "@capacitor/android": "^6.2.0",
+    "@capacitor/core": "^6.2.0",
+    "@capacitor/ios": "^6.2.0",
+    "@capacitor/splash-screen": "^6.0.3"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^6.2.0"
+  }
+}
