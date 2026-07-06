@@ -593,6 +593,8 @@ const fbDb=()=>{try{return window.__fbOK?firebase.firestore():null}catch(e){retu
 const fbUserToUser=fu=>({uid:fu.uid,name:fu.displayName||(fu.email||"Voisin").split("@")[0],email:fu.email||"",phone:fu.phoneNumber||"",quartier:"Metz Sablon",verified:!!fu.emailVerified,phoneVerified:!!fu.phoneNumber,photo:fu.photoURL||null});
 const FB_ERR={"auth/invalid-credential":"Email ou mot de passe incorrect.","auth/wrong-password":"Email ou mot de passe incorrect.","auth/user-not-found":"Aucun compte avec cet email — rejoignez le cercle !","auth/email-already-in-use":"Un compte existe déjà avec cet email — connectez-vous.","auth/weak-password":"Mot de passe trop court (6 caractères minimum).","auth/password-does-not-meet-requirements":"Mot de passe trop simple : 6 caractères min, avec une majuscule, un chiffre et un caractère spécial (ex. ! ? @).","auth/invalid-email":"Cet email ne semble pas valide.","auth/missing-password":"Entrez votre mot de passe.","auth/too-many-requests":"Trop d'essais — réessayez dans quelques minutes.","auth/operation-not-allowed":"L'inscription par email n'est pas activée pour le moment.","auth/network-request-failed":"Connexion internet interrompue — réessayez.","auth/internal-error":"Petit souci côté serveur — réessayez dans un instant.","auth/popup-closed-by-user":"Fenêtre Google fermée avant la fin.","auth/popup-blocked":"Popup bloquée par le navigateur — autorisez les popups.","auth/account-exists-with-different-credential":"Un compte existe déjà avec cet email — connectez-vous."};
 const fbMsg=e=>FB_ERR[e&&e.code]||"Petit souci de connexion — réessayez.";
+/* App native (Capacitor) : les popups OAuth ne marchent pas en WebView → on masque les boutons sociaux */
+const IS_NATIVE=!!(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform());
 /* Détecte « cet email a déjà un compte » même si le code varie (protection anti-énumération) */
 const isExistingAccount=e=>{const c=(e&&e.code)||"";const m=((e&&e.message)||"").toLowerCase();return c==="auth/email-already-in-use"||c==="auth/account-exists-with-different-credential"||m.includes("already in use")||m.includes("email-already")||m.includes("already exists");};
 /* Règles de mot de passe du projet : longueur, majuscule, chiffre, caractère spécial */
@@ -1641,6 +1643,7 @@ function CookieBanner({onChoice,openLegal}){
 const GIcon=()=><svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M23.5 12.27c0-.85-.08-1.66-.22-2.45H12v4.64h6.45a5.52 5.52 0 0 1-2.39 3.62v3h3.87c2.26-2.09 3.57-5.16 3.57-8.81z"/><path fill="#34A853" d="M12 24c3.24 0 5.96-1.07 7.93-2.91l-3.87-3a7.18 7.18 0 0 1-10.8-3.77H1.27v3.1A12 12 0 0 0 12 24z"/><path fill="#FBBC05" d="M5.26 14.32a7.2 7.2 0 0 1 0-4.62V6.6H1.27a12 12 0 0 0 0 10.8l3.99-3.08z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.43-3.43A11.97 11.97 0 0 0 1.27 6.6l3.99 3.1A7.17 7.17 0 0 1 12 4.75z"/></svg>;
 const AIcon=()=><svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.05 20.28c-.96.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8.88-.18 2.05-.86 3.46-.73 1.7.14 2.97.81 3.81 2.04-3.5 2.1-2.94 6.71.45 8.06-.64 1.67-1.47 2.32-2.8 2.8zM12.03 7.25c-.17-2.5 1.86-4.56 4.19-4.75.32 2.89-2.62 5.04-4.19 4.75z"/></svg>;
 function SocialBtns({onDone,toast}){
+  if(IS_NATIVE)return null; // en app native, les popups OAuth sont bloquées → email uniquement
   const google=async()=>{
     const a=fbAuth();
     if(!a){onDone({name:"Noah",email:"noah@google.demo",phone:"",quartier:"Metz Sablon",verified:true,phoneVerified:false});return}
@@ -1775,7 +1778,7 @@ function Auth({onDone,toast}){
     <p className="lead">Le quartier ne vous a pas oublié.</p>
     <div className="panel">
       <SocialBtns onDone={onDone} toast={toast}/>
-      <div className="or-sep">OU PAR EMAIL</div>
+      {!IS_NATIVE&&<div className="or-sep">OU PAR EMAIL</div>}
       <form onSubmit={login}>
         <div className="fg"><label>Email</label><input name="e" type="email" required autoFocus={!prefill} defaultValue={prefill} placeholder="vous@exemple.fr"/></div>
         <div className="fg"><label>Mot de passe</label><input name="p" type="password" required autoFocus={!!prefill} placeholder="••••••••"/></div>
@@ -1798,7 +1801,7 @@ function Auth({onDone,toast}){
     </div>}
     {step===0&&<div className="panel">
       <SocialBtns onDone={onDone} toast={toast}/>
-      <div className="or-sep">OU PAR EMAIL</div>
+      {!IS_NATIVE&&<div className="or-sep">OU PAR EMAIL</div>}
       <form onSubmit={start}>
         <div className="seg" role="tablist" aria-label="Type de compte">
           <button type="button" className={acct==="particulier"?"on":""} onClick={()=>setAcct("particulier")}>Particulier</button>
