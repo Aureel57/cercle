@@ -2,27 +2,40 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ── Site v1 (inchangé) ──
+    // ── Profils : chacun ne lit et n'écrit que le sien ──
+    // Le site comme l'application n'accèdent jamais au profil d'un autre membre :
+    // les infos publiques d'un propriétaire (nom, société) voyagent dans l'annonce.
+    // Avant, TOUT était ouvert : n'importe qui pouvait lire emails, téléphones et
+    // adresses de tous les membres — et les réécrire.
     match /users/{userId} {
-      allow read, write: if true;
+      allow read, write: if request.auth != null && request.auth.uid == userId;
     }
+
+    // ── Ancienne collection v1, plus utilisée par aucun code : lecture seule ──
     match /items/{itemId} {
-      allow read, write: if true;
+      allow read: if true;
+      allow write: if false;
     }
 
-    // ── Annonces partagées v2 ──
+    // ── Annonces : publiques en lecture, modifiables par leur seul auteur ──
     match /v2_listings/{doc} {
-      allow read, write: if true;
+      allow read: if true;
+      allow create: if request.auth != null
+        && request.resource.data.uid == request.auth.uid;
+      allow update, delete: if request.auth != null
+        && resource.data.uid == request.auth.uid;
     }
 
-    // ── Avis partagés v2 (actif tout de suite) ──
+    // ── Avis : publics, signés par leur auteur ──
     match /v2_reviews/{doc} {
       allow read: if true;
-      allow create: if request.auth != null;
-      allow update, delete: if request.auth != null && request.auth.uid == resource.data.uid;
+      allow create: if request.auth != null
+        && request.resource.data.uid == request.auth.uid;
+      allow update, delete: if request.auth != null
+        && request.auth.uid == resource.data.uid;
     }
 
-    // ── Réservations v2 (pour la prochaine étape) ──
+    // ── Réservations : visibles et modifiables par les deux parties ──
     match /v2_reservations/{doc} {
       allow read: if request.auth != null
         && (request.auth.uid == resource.data.renterUid
@@ -34,7 +47,7 @@ service cloud.firestore {
             || request.auth.uid == resource.data.ownerUid);
     }
 
-    // ── Messagerie v2 (pour la prochaine étape) ──
+    // ── Messagerie : réservée aux membres de la conversation ──
     match /v2_conversations/{conv} {
       allow read, update: if request.auth != null
         && request.auth.uid in resource.data.members;
@@ -47,5 +60,9 @@ service cloud.firestore {
       }
     }
 
+    // ── Tout le reste : refusé ──
+    match /{document=**} {
+      allow read, write: if false;
+    }
   }
 }

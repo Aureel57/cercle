@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://aureel57.github.io/cercle/sitemap.xml

@@ -10,7 +10,8 @@
     "add:android": "npx cap add android",
     "open:ios": "npx cap open ios",
     "open:android": "npx cap open android",
-    "icons": "npx capacitor-assets generate --assetPath resources"
+    "icons": "npx capacitor-assets generate --assetPath resources",
+    "build": "node build.mjs && node scripts/smoke-test.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^6.2.0",
@@ -19,7 +20,12 @@
     "@capacitor/splash-screen": "^6.0.3"
   },
   "devDependencies": {
+    "@babel/standalone": "^7.26.0",
     "@capacitor/assets": "^3.0.5",
-    "@capacitor/cli": "^6.2.0"
+    "@capacitor/cli": "^6.2.0",
+    "jsdom": "^29.1.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "terser": "^5.51.2"
   }
 }

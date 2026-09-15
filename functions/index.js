@@ -95,12 +95,16 @@ function emailHTML(name, link) {
 }
 
 // ─── Fonction appelable depuis le site ───
-exports.sendVerifEmail = functions.https.onCall(async (data) => {
-  const email = data && data.email;
-  const name = (data && data.name) || "voisin";
-  if (!email) {
-    throw new functions.https.HttpsError("invalid-argument", "Adresse e-mail manquante.");
+// Durcie : réservée aux comptes connectés, et l'adresse est TOUJOURS celle du
+// compte appelant — jamais celle fournie par le client. Sans cela, n'importe qui
+// pouvait faire envoyer des emails à n'importe quelle adresse depuis notre Gmail,
+// et le code d'erreur renvoyé révélait si une adresse était inscrite chez nous.
+exports.sendVerifEmail = functions.https.onCall(async (data, context) => {
+  if (!context.auth || !context.auth.token || !context.auth.token.email) {
+    throw new functions.https.HttpsError("unauthenticated", "Connexion requise.");
   }
+  const email = context.auth.token.email;
+  const name = String((data && data.name) || "voisin").slice(0, 60);
   try {
     // Lien de vérification officiel Firebase (retour sur le site après clic)
     const link = await admin.auth().generateEmailVerificationLink(email, { url: SITE_URL });
@@ -112,7 +116,8 @@ exports.sendVerifEmail = functions.https.onCall(async (data) => {
     });
     return { ok: true };
   } catch (err) {
+    // Détail en log serveur uniquement — le client n'a pas besoin de savoir pourquoi.
     console.error("sendVerifEmail error:", err);
-    throw new functions.https.HttpsError("internal", String(err && (err.code || err.message) || "inconnue"));
+    throw new functions.https.HttpsError("internal", "L'envoi a échoué — réessayez plus tard.");
   }
 });

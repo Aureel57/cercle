@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SPA à routage par ancre : seule l'URL racine est indexable.
+     Les routes #/… ne sont pas des URL distinctes pour les moteurs. -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://aureel57.github.io/cercle/</loc>
+    <changefreq>weekly</changefreq>
+  </url>
+</urlset>

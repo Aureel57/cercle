@@ -1,2270 +1,1695 @@
-const { useState, useEffect, useRef, useMemo, useReducer, createContext, useContext } = React;
-const Ctx=createContext();
-const LANGS={fr:"Français",en:"English",es:"Español"};
+const{useState,useEffect,useRef,useMemo}=React;
 
-/* ========== DATA ========== */
-const CATS=[{id:"all",label:"Tout",icon:"✨"},{id:"tools",label:"Bricolage",icon:"🔧"},{id:"electronics",label:"Électronique",icon:"📷"},{id:"vehicles",label:"Véhicules",icon:"🚗"},{id:"sports",label:"Sport",icon:"🏄"},{id:"garden",label:"Jardin",icon:"🌿"},{id:"events",label:"Événementiel",icon:"🎉"},{id:"music",label:"Musique",icon:"🎸"},{id:"gaming",label:"Gaming",icon:"🎮"},{id:"baby",label:"Bébé",icon:"👶"},{id:"fashion",label:"Mode",icon:"👗"},{id:"camping",label:"Camping",icon:"⛺"},{id:"kitchen",label:"Cuisine",icon:"🍳"},{id:"photo",label:"Photo",icon:"🎬"},{id:"diy",label:"Créatif",icon:"🎨"}];
-const CC={tools:["#F59E0B","#D97706"],electronics:["#3B82F6","#2563EB"],vehicles:["#10B981","#059669"],sports:["#06B6D4","#0891B2"],garden:["#22C55E","#16A34A"],events:["#F43F5E","#E11D48"],music:["#8B5CF6","#7C3AED"],gaming:["#EC4899","#DB2777"],baby:["#F9A8D4","#F472B6"],fashion:["#A78BFA","#8B5CF6"],camping:["#84CC16","#65A30D"],kitchen:["#FB923C","#F97316"],photo:["#64748B","#475569"],diy:["#F472B6","#E879F9"]};
-const CE={tools:"🔧",electronics:"📱",vehicles:"🚲",sports:"🏄",garden:"🌱",events:"🎉",music:"🎸",gaming:"🎮",baby:"🧸",fashion:"👗",camping:"⛺",kitchen:"🍳",photo:"📷",diy:"🎨"};
-function mkImg(cat,id,v=0){const c=CC[cat]||["#9CA3AF","#6B7280"],e=CE[cat]||"📦";return`data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300"><rect width="400" height="300" fill="${c[v%c.length]}" opacity=".12"/><text x="200" y="140" text-anchor="middle" font-size="64">${e}</text><text x="200" y="180" text-anchor="middle" font-family="system-ui" font-weight="600" font-size="13" fill="${c[0]}" opacity=".5">${cat}</text></svg>`)}`}
-const UNSPLASH={
-  tools:["https://images.unsplash.com/photo-1504148455328-c376907d081c?w=400&q=80","https://images.unsplash.com/photo-1581244277943-fe4a9c777189?w=400&q=80","https://images.unsplash.com/photo-1572981779307-38b8cabb2407?w=400&q=80","https://images.unsplash.com/photo-1585771724684-38269d6639fd?w=400&q=80"],
-  electronics:["https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?w=400&q=80","https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=400&q=80","https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400&q=80","https://images.unsplash.com/photo-1593359677879-a4bb92f4834c?w=400&q=80"],
-  vehicles:["https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80","https://images.unsplash.com/photo-1571068316344-75bc76f77890?w=400&q=80","https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=400&q=80","https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=400&q=80"],
-  sports:["https://images.unsplash.com/photo-1517649763962-0c623066013b?w=400&q=80","https://images.unsplash.com/photo-1530549387789-4c1017266635?w=400&q=80","https://images.unsplash.com/photo-1551524164-687a55dd1126?w=400&q=80","https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=400&q=80"],
-  garden:["https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400&q=80","https://images.unsplash.com/photo-1585320806297-9794b3e4aaae?w=400&q=80","https://images.unsplash.com/photo-1592150621744-aca64f48394a?w=400&q=80"],
-  events:["https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=400&q=80","https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=400&q=80","https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?w=400&q=80"],
-  music:["https://images.unsplash.com/photo-1510915361894-db8b60106cb1?w=400&q=80","https://images.unsplash.com/photo-1520523839897-bd0b52f945a0?w=400&q=80","https://images.unsplash.com/photo-1571974599782-87624638275b?w=400&q=80"],
-  gaming:["https://images.unsplash.com/photo-1593305841991-05c297ba4575?w=400&q=80","https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400&q=80","https://images.unsplash.com/photo-1612287230202-1ff1d85d1bdf?w=400&q=80"],
-  baby:["https://images.unsplash.com/photo-1555252333-9f8e92e65df9?w=400&q=80","https://images.unsplash.com/photo-1586015555751-63bb77f4322a?w=400&q=80"],
-  fashion:["https://images.unsplash.com/photo-1445205170230-053b83016050?w=400&q=80","https://images.unsplash.com/photo-1483985988355-763728e1935b?w=400&q=80"],
-  camping:["https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?w=400&q=80","https://images.unsplash.com/photo-1537225228614-56cc3556d7ed?w=400&q=80","https://images.unsplash.com/photo-1478827387698-1527781a4887?w=400&q=80"],
-  kitchen:["https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&q=80","https://images.unsplash.com/photo-1590779033100-9f60a05a013d?w=400&q=80"],
-  photo:["https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=400&q=80","https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=400&q=80","https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=400&q=80"],
-  diy:["https://images.unsplash.com/photo-1452860606245-08befc0ff44b?w=400&q=80","https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80"],
-};
-const LOCS=["Paris 11e","Lyon 3e","Marseille 6e","Bordeaux","Nantes","Toulouse","Lille","Strasbourg","Montpellier","Nice","Rennes","Grenoble"];
-const LL={"Paris 11e":[48.859,2.381],"Lyon 3e":[45.753,4.851],"Marseille 6e":[43.289,5.381],Bordeaux:[44.837,-.579],Nantes:[47.218,-1.553],Toulouse:[43.604,1.444],Lille:[50.629,3.057],Strasbourg:[48.573,7.752],Montpellier:[43.61,3.876],Nice:[43.71,7.262],Rennes:[48.117,-1.677],Grenoble:[45.188,5.724]};
-const DESCS=["En excellent état, entretenu régulièrement. Idéal pour vos projets du week-end.","Peu utilisé, comme neuf. Livré avec tous les accessoires.","Matériel professionnel en parfait état. Nettoyé après chaque location.","Utilisé quelques fois. Mode d'emploi et accessoires inclus.","Investissement récent rentabilisé en location. Assurance incluse.","Fiable et testé avant chaque location. Je réponds rapidement !"];
-const RAW=[{t:"Perceuse visseuse Bosch Pro",c:"tools",p:12},{t:"Ponceuse orbitale Makita",c:"tools",p:15},{t:"Échelle télescopique 5m",c:"tools",p:8},{t:"Nettoyeur haute pression Kärcher",c:"tools",p:20},{t:"Drone DJI Mini 3 Pro",c:"electronics",p:35},{t:"Console PS5 + 2 manettes",c:"electronics",p:18},{t:"Vidéoprojecteur 4K portable",c:"electronics",p:25},{t:"Enceinte JBL PartyBox 310",c:"electronics",p:22},{t:"Camionnette Renault Master",c:"vehicles",p:55},{t:"Vélo électrique Moustache",c:"vehicles",p:18},{t:"Trottinette électrique Xiaomi",c:"vehicles",p:10},{t:"Remorque porte-vélos",c:"vehicles",p:25},{t:"Paddle gonflable + pagaie",c:"sports",p:20},{t:"Ski Rossignol + chaussures 42",c:"sports",p:22},{t:"VTT Decathlon Rockrider",c:"sports",p:14},{t:"Kayak biplace gonflable",c:"sports",p:28},{t:"Tondeuse robot Husqvarna",c:"garden",p:16},{t:"Taille-haie Stihl",c:"garden",p:14},{t:"Motoculteur 5CV",c:"garden",p:30},{t:"Machine à barbe à papa",c:"events",p:25},{t:"Lot 50 chaises pliantes",c:"events",p:40},{t:"Tonnelle 3x6m + LED",c:"events",p:35},{t:"Guitare acoustique Martin",c:"music",p:15},{t:"Platines DJ Pioneer",c:"music",p:30},{t:"Piano numérique Yamaha",c:"music",p:20},{t:"Casque VR Meta Quest 3",c:"gaming",p:22},{t:"Volant Logitech G29",c:"gaming",p:18},{t:"Poussette Yoyo Babyzen",c:"baby",p:12},{t:"Siège auto Cybex",c:"baby",p:8},{t:"Tente 4 places Quechua",c:"camping",p:15},{t:"Glacière électrique 40L",c:"camping",p:10},{t:"Robot pâtissier KitchenAid",c:"kitchen",p:18},{t:"Raclette & fondue 8 pers.",c:"kitchen",p:10},{t:"Canon EOS R6 + 24-70mm",c:"photo",p:45},{t:"Stabilisateur DJI RS3",c:"photo",p:25},{t:"Robe Sézane T.38",c:"fashion",p:15},{t:"Costume Hugo Boss M",c:"fashion",p:20},{t:"Machine à coudre Singer",c:"diy",p:12},{t:"Imprimante 3D Creality",c:"diy",p:18}];
-const USERS=[{id:"u1",name:"Léa Martin",email:"lea@email.com",avatar:"👩‍🦰",verified:true,since:2022,bio:"Passionnée de partage !",location:"Paris 11e",rating:4.9,rentals:87,responseTime:"~15 min"},{id:"u2",name:"Maxime Dupont",email:"max@email.com",avatar:"👨‍🦱",verified:true,since:2021,bio:"Je loue ce que je n'utilise pas.",location:"Lyon 3e",rating:4.95,rentals:142,responseTime:"~30 min"},{id:"u3",name:"Chloé Bernard",email:"chloe@email.com",avatar:"👩",verified:true,since:2023,bio:"Maman de 2 enfants.",location:"Bordeaux",rating:4.8,rentals:34,responseTime:"~1h"},{id:"u4",name:"Antoine Moreau",email:"antoine@email.com",avatar:"👨",verified:false,since:2024,bio:"Nouveau sur Cercle !",location:"Nantes",rating:4.7,rentals:12,responseTime:"~2h"},{id:"u5",name:"Sarah Petit",email:"sarah@email.com",avatar:"👩‍🦱",verified:true,since:2020,bio:"Membre fidèle.",location:"Marseille 6e",rating:4.98,rentals:256,responseTime:"~10 min"},{id:"u6",name:"Hugo Lambert",email:"hugo@email.com",avatar:"👨‍🦳",verified:true,since:2021,bio:"J'adore rendre service.",location:"Toulouse",rating:4.85,rentals:98,responseTime:"~45 min"}];
-const buildItems=()=>RAW.map((r,i)=>{const uArr=UNSPLASH[r.c]||[];const uImg=uArr.length?uArr[i%uArr.length]:null;return{id:i+1,title:r.t,cat:r.c,price:r.p,images:uImg?[uImg,mkImg(r.c,i+1,0),mkImg(r.c,i+1,1)]:[mkImg(r.c,i+1,0),mkImg(r.c,i+1,1),mkImg(r.c,i+1,2)],location:LOCS[i%LOCS.length],rating:+(4.4+Math.random()*.59).toFixed(2),reviews:Math.floor(5+Math.random()*95),owner:USERS[i%USERS.length],description:DESCS[i%DESCS.length],deposit:Math.floor(r.p*3+Math.random()*100),condition:["Comme neuf","Très bon état","Bon état"][i%3],createdAt:"2025",available:true,lat:(LL[LOCS[i%LOCS.length]]||[48.86,2.35])[0]+(.01*Math.random()-.005),lng:(LL[LOCS[i%LOCS.length]]||[48.86,2.35])[1]+(.01*Math.random()-.005)}));
-const uid=()=>"_"+Math.random().toString(36).slice(2,8);
-const ds=d=>new Date(d).toLocaleDateString("fr-FR",{day:"numeric",month:"short"});
-
-const PRO_USERS=[{id:"p1",name:"Loxam Express",email:"contact@loxam.fr",avatar:"🏗️",verified:true,since:2019,bio:"N°1 de la location de matériel en France.",location:"Paris 11e",rating:4.92,rentals:1240,responseTime:"~5 min",isPro:true,company:"Loxam"},{id:"p2",name:"Kiloutou",email:"pro@kiloutou.fr",avatar:"🔶",verified:true,since:2020,bio:"Location de matériel BTP et événementiel.",location:"Lyon 3e",rating:4.88,rentals:890,responseTime:"~10 min",isPro:true,company:"Kiloutou"},{id:"p3",name:"Cyclez Pro",email:"pro@cyclez.fr",avatar:"🚴",verified:true,since:2022,bio:"Flottes de vélos et trottinettes pour entreprises.",location:"Bordeaux",rating:4.95,rentals:456,responseTime:"~15 min",isPro:true,company:"Cyclez"},{id:"p4",name:"EventPro Location",email:"pro@eventpro.fr",avatar:"🎪",verified:true,since:2021,bio:"Matériel événementiel haut de gamme.",location:"Marseille 6e",rating:4.90,rentals:678,responseTime:"~8 min",isPro:true,company:"EventPro"}];
-const PRO_RAW=[{t:"Nacelle élévatrice 12m",c:"tools",p:120},{t:"Mini-pelle 1.5T",c:"tools",p:180},{t:"Groupe électrogène 5kVA",c:"tools",p:45},{t:"Échafaudage complet 10m",c:"tools",p:65},{t:"Compacteur de sol",c:"tools",p:85},{t:"Bétonnière 350L",c:"tools",p:40},{t:"Flotte 10 vélos élec.",c:"vehicles",p:150},{t:"Flotte 20 trottinettes",c:"vehicles",p:200},{t:"Camion benne 3.5T",c:"vehicles",p:95},{t:"Utilitaire frigorifique",c:"vehicles",p:110},{t:"Sono complète 2000W",c:"events",p:80},{t:"Structure alu 6x4m",c:"events",p:150},{t:"Pack éclairage LED pro",c:"events",p:60},{t:"Barnum 6x12m",c:"events",p:120},{t:"Canon R5 + optiques",c:"photo",p:95},{t:"Kit tournage complet",c:"photo",p:180}];
-const buildProItems=()=>PRO_RAW.map((r,i)=>{const uArr=UNSPLASH[r.c]||[];const uImg=uArr.length?uArr[(1000+i)%uArr.length]:null;return{id:1000+i,title:r.t,cat:r.c,price:r.p,images:uImg?[uImg,mkImg(r.c,1000+i,0),mkImg(r.c,1000+i,1)]:[mkImg(r.c,1000+i,0),mkImg(r.c,1000+i,1),mkImg(r.c,1000+i,2)],location:LOCS[(i+3)%LOCS.length],rating:+(4.7+Math.random()*.29).toFixed(2),reviews:Math.floor(20+Math.random()*200),owner:PRO_USERS[i%PRO_USERS.length],description:"Matériel professionnel certifié. Maintenance régulière. Livraison possible sur chantier/site.",deposit:Math.floor(r.p*5+Math.random()*200),condition:"Comme neuf",createdAt:"2025",available:true,isPro:true,lat:(LL[LOCS[(i+3)%LOCS.length]]||[48.86,2.35])[0]+(.01*Math.random()-.005),lng:(LL[LOCS[(i+3)%LOCS.length]]||[48.86,2.35])[1]+(.01*Math.random()-.005)}});
-
-/* ========== REDUCER ========== */
-const init={user:null,items:buildItems(),proItems:buildProItems(),favorites:new Set(),bookings:[],messages:[],conversations:[],reviews:[],notifications:[],userItems:[],payments:[],referrals:[],disputes:[],wallet:0,badges:[]};
-function reducer(s,a){switch(a.type){
-  case"LOGIN":return{...s,user:{...a.payload,refCode:a.payload.refCode||uid().toUpperCase().slice(0,6)}};
-  case"LOGOUT":return{...s,user:null};
-  case"UPD_PROF":return{...s,user:{...s.user,...a.payload}};
-  case"SET_AVATAR":return{...s,user:{...s.user,avatar:a.avatar,avatarUrl:a.url||null}};
-  case"TOG_FAV":{const f=new Set(s.favorites);f.has(a.id)?f.delete(a.id):f.add(a.id);return{...s,favorites:f}}
-  case"BOOK":{
-    const b=a.payload;
-    const n={id:uid(),text:`Réservation : ${b.itemTitle}`,read:false,at:new Date()};
-    const pay={id:uid(),bookingId:b.id,type:"payment",amount:b.total,status:"completed",method:b.payMethod||"card",date:new Date(),label:`Location : ${b.itemTitle}`};
-    const dep={id:uid(),bookingId:b.id,type:"deposit",amount:b.deposit,status:"held",method:b.payMethod||"card",date:new Date(),label:`Caution : ${b.itemTitle}`,itemTitle:b.itemTitle,ownerId:b.ownerId,ownerName:b.ownerName,renterId:b.userId,renterName:s.user?.name||"Locataire"};
-    return{...s,bookings:[...s.bookings,b],notifications:[n,...s.notifications],payments:[...s.payments,pay,dep]}}
-  case"CANCEL_BOOK":return{...s,bookings:s.bookings.map(b=>b.id===a.id?{...b,status:"cancelled"}:b)};
-  case"RELEASE_DEP":{
-    const dep=s.payments.find(p=>p.id===a.id);
-    const n=dep?{id:uid(),text:`Caution de ${dep.amount}€ restituée (${dep.itemTitle})`,read:false,at:new Date()}:null;
-    return{...s,payments:s.payments.map(p=>p.id===a.id?{...p,status:"released",releasedAt:new Date()}:p),notifications:n?[n,...s.notifications]:s.notifications}}
-  case"MSG":{const m=a.payload;let cs=[...s.conversations],cv=cs.find(c=>c.id===m.cid);
-    if(!cv){cv={id:m.cid,parts:[m.from,m.to],itemId:m.itemId,last:m.text,at:new Date()};cs.push(cv)}else cs=cs.map(c=>c.id===m.cid?{...c,last:m.text,at:new Date()}:c);
-    return{...s,messages:[...s.messages,m],conversations:cs}}
-  case"READ_N":return{...s,notifications:s.notifications.map(n=>({...n,read:true}))};
-  case"REVIEW":{const r=a.payload;const items=s.items.map(i=>i.id===r.itemId?{...i,reviews:i.reviews+1,rating:+((i.rating*i.reviews+r.rating)/(i.reviews+1)).toFixed(2)}:i);return{...s,reviews:[...s.reviews,r],items}}
-  case"ADD_ITEM":{const it={...a.payload,id:s.items.length+s.userItems.length+s.proItems.length+100,owner:s.user,rating:0,reviews:0,createdAt:"2026",isPro:a.payload.isPro||false};return{...s,userItems:[...s.userItems,it],notifications:[{id:uid(),text:`"${it.title}" publiée !`,read:false,at:new Date()},...s.notifications]}}
-  case"READ_ONE":return{...s,notifications:s.notifications.map(n=>n.id===a.id?{...n,read:true}:n)};
-  case"REFERRAL":{const n={id:uid(),text:`${a.name} a rejoint Cercle ! +5€`,read:false,at:new Date(),kind:"referral"};return{...s,referrals:[...s.referrals,{id:uid(),name:a.name,date:new Date(),bonus:5}],notifications:[n,...s.notifications]}}
-  case"DISPUTE":return{...s,disputes:[...s.disputes,a.payload],notifications:[{id:uid(),text:"Litige ouvert",read:false,at:new Date(),kind:"dispute"},...s.notifications]};
-  case"RESOLVE_DISPUTE":return{...s,disputes:s.disputes.map(d=>d.id===a.id?{...d,status:"resolved"}:d)};
-  case"VERIFY_ID":return{...s,user:{...s.user,verified:true},notifications:[{id:uid(),text:"Identité vérifiée ✓",read:false,at:new Date(),kind:"system"},...s.notifications]};
-  case"ADD_WALLET":return{...s,wallet:s.wallet+(a.amount||0),notifications:[{id:uid(),text:`+${a.amount}€ ajoutés au wallet`,read:false,at:new Date(),kind:"wallet"},...s.notifications]};
-  case"PAY_WALLET":return{...s,wallet:Math.max(0,s.wallet-(a.amount||0))};
-  case"EARN_BADGE":{if(s.badges.includes(a.badge))return s;const bd=ALL_BADGES.find(b=>b.id===a.badge);const bName=bd?bd.name:a.badge;const bIcon=bd?bd.icon:"🏅";return{...s,badges:[...s.badges,a.badge],notifications:[{id:uid(),text:`🎉 Félicitations ! Badge ${bIcon} "${bName}" débloqué ! Continuez comme ça !`,read:false,at:new Date(),kind:"badge"},...s.notifications]}};
-  case"TOGGLE_AVAIL":{const toggle=i=>i.id===a.id?{...i,available:!i.available}:i;return{...s,items:s.items.map(toggle),userItems:s.userItems.map(toggle)}};
-  default:return s}}
-
-/* ========== ICONS ========== */
-const I={
-  Search:()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{width:15,height:15}}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>,
-  Heart:({f})=><svg viewBox="0 0 24 24" fill={f?"#E85D4A":"rgba(0,0,0,.4)"} stroke={f?"#E85D4A":"#fff"} strokeWidth="2" style={{width:20,height:20}}><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>,
-  Star:()=><svg viewBox="0 0 24 24" fill="currentColor" style={{width:12,height:12}}><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>,
-  Chv:({d})=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{width:13,height:13}}><polyline points={d==="l"?"15 18 9 12 15 6":"9 18 15 12 9 6"}/></svg>,
-  X:()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{width:18,height:18}}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
-  Menu:()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{width:16,height:16}}><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>,
-  User:()=><svg viewBox="0 0 24 24" fill="#8C7B6B" style={{width:20,height:20}}><circle cx="12" cy="8" r="4"/><path d="M12 14c-6 0-8 3-8 5v1h16v-1c0-2-2-5-8-5z"/></svg>,
-  Send:()=><svg viewBox="0 0 24 24" fill="currentColor" style={{width:18,height:18}}><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>,
-  Msg:()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{width:16,height:16}}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>,
-  Plus:()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{width:15,height:15}}><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>,
-  Back:()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{width:16,height:16}}><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>,
-  Flt:()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{width:14,height:14}}><line x1="4" y1="6" x2="20" y2="6"/><circle cx="8" cy="6" r="2" fill="currentColor"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="16" cy="18" r="2" fill="currentColor"/></svg>,
-  Home:()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{width:22,height:22}}><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>,
-  Bell:()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{width:22,height:22}}><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>,
-  MapPin:()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{width:22,height:22}}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>,
-  Prof:()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{width:22,height:22}}><circle cx="12" cy="8" r="4"/><path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/></svg>,
-  Share:()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{width:15,height:15}}><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>,
-};
-
-/* ========== STYLES ========== */
-const css=`@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fraunces:wght@400;500;600;700;800&display=swap');
-*{margin:0;padding:0;box-sizing:border-box}:root{--p:#FF5A5F;--pd:#E04850;--acc:#00A699;--dk:#222;--tx:#484848;--g:#767676;--gl:#B0B0B0;--bd:#EBEBEB;--bg:#F7F7F7;--bgw:#F0F0F0;--w:#FFF;--sh:0 1px 2px rgba(0,0,0,.04),0 4px 12px rgba(0,0,0,.03);--shm:0 2px 8px rgba(0,0,0,.06),0 8px 20px rgba(0,0,0,.05);--shl:0 8px 28px rgba(0,0,0,.1),0 2px 4px rgba(0,0,0,.04);--glass:rgba(255,255,255,.75);--blur:blur(20px);--r:16px;--rl:24px;--f:'Inter',system-ui,-apple-system,sans-serif;--fd:'Fraunces',Georgia,serif;--ease:cubic-bezier(.4,0,.2,1)}
-body,html,#root{font-family:var(--f);color:var(--tx);background:var(--bg);-webkit-font-smoothing:antialiased;letter-spacing:-.01em}button{font-family:var(--f);cursor:pointer}input,select,textarea{font-family:var(--f)}
-/* Header */
-.hdr{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid rgba(0,0,0,.06)}.hi{display:flex;align-items:center;justify-content:space-between;padding:0 28px;max-width:1520px;margin:0 auto;height:72px;gap:12px}
-.logo{display:flex;align-items:center;gap:10px;cursor:pointer;flex-shrink:0}.lc{width:36px;height:36px;border-radius:12px;background:linear-gradient(135deg,var(--p),#FF8A5C);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:17px;font-family:var(--fd);transition:transform .2s}.logo:hover .lc{transform:rotate(-6deg) scale(1.05)}.lt{font-family:var(--fd);font-size:22px;font-weight:700;color:var(--dk);letter-spacing:-.02em}
-/* Search bar */
-.sb{display:flex;align-items:center;border:1px solid var(--bd);border-radius:40px;box-shadow:var(--sh);cursor:pointer;height:48px;max-width:520px;flex:1;margin:0 20px;background:var(--w);transition:all .25s var(--ease)}.sb:hover{box-shadow:var(--shm);border-color:transparent}
-.ss{padding:0 18px;font-size:13px;font-weight:500;white-space:nowrap;color:var(--dk);border-right:1px solid var(--bd);height:100%;display:flex;align-items:center}.ss.m{color:var(--gl);font-weight:400}.ss:last-of-type{border:none}
-.sbb{background:linear-gradient(135deg,var(--p),#FF8A5C);border:none;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;color:#fff;margin-right:8px;flex-shrink:0;transition:all .2s var(--ease)}.sbb:hover{transform:scale(1.08);box-shadow:0 4px 12px rgba(255,90,95,.3)}
-/* Nav right */
-.nr{display:flex;align-items:center;gap:6px;flex-shrink:0}.nb{background:none;border:none;font-size:13px;font-weight:600;color:var(--dk);padding:8px 14px;border-radius:24px;transition:all .2s var(--ease);position:relative}.nb:hover{background:var(--bg)}.ndot{position:absolute;top:4px;right:4px;width:7px;height:7px;border-radius:50%;background:var(--p);border:2px solid var(--w)}
-.pb{display:flex;align-items:center;gap:8px;border:1px solid var(--bd);border-radius:24px;padding:5px 5px 5px 12px;background:var(--w);transition:all .25s var(--ease);position:relative}.pb:hover{box-shadow:var(--shm)}.pav{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--bg),var(--bgw));display:flex;align-items:center;justify-content:center;font-size:15px}
-/* Dropdown */
-.dd{position:absolute;top:calc(100% + 8px);right:0;background:var(--w);border-radius:var(--rl);box-shadow:var(--shl);min-width:240px;padding:8px 0;z-index:200;animation:din .15s var(--ease);border:1px solid rgba(0,0,0,.04)}@keyframes din{from{opacity:0;transform:translateY(-6px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
-.di{padding:11px 18px;font-size:13px;cursor:pointer;transition:all .15s var(--ease);display:flex;align-items:center;gap:10px;border-radius:8px;margin:0 6px}.di:hover{background:var(--bg)}.di.b{font-weight:700}.dsp{height:1px;background:var(--bd);margin:6px 12px}
-/* Categories */
-.cw{display:flex;align-items:center;gap:8px;padding:8px 28px;max-width:1520px;margin:0 auto}.cts{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;flex:1}.cts::-webkit-scrollbar{display:none}
-.ct{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 14px;cursor:pointer;border-bottom:2.5px solid transparent;opacity:.45;transition:all .2s var(--ease);white-space:nowrap;flex-shrink:0}.ct:hover{opacity:.7}.ct.on{opacity:1;border-bottom-color:var(--dk)}
-.cti{font-size:20px}.ctl{font-size:10px;font-weight:600;color:var(--g);letter-spacing:.02em}.ct.on .ctl{color:var(--dk)}
-.fb{display:flex;align-items:center;gap:7px;padding:10px 16px;border:1px solid var(--bd);border-radius:12px;background:var(--w);font-size:12px;font-weight:600;flex-shrink:0;color:var(--dk);transition:all .2s}.fb:hover{border-color:var(--dk);box-shadow:var(--sh)}
-/* Grid & Cards */
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:24px;padding:20px 28px 60px;max-width:1520px;margin:0 auto;animation:fu .4s var(--ease)}@keyframes fu{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-.card{cursor:pointer;position:relative;transition:transform .25s var(--ease)}.card:hover{transform:translateY(-4px)}.ciw{position:relative;width:100%;aspect-ratio:4/3;border-radius:var(--rl);overflow:hidden;background:var(--bg)}.cimg{width:100%;height:100%;object-fit:cover;transition:transform .4s var(--ease)}.card:hover .cimg{transform:scale(1.04)}
-.cfav{position:absolute;top:10px;right:10px;background:none;border:none;z-index:2;filter:drop-shadow(0 2px 4px rgba(0,0,0,.3));transition:transform .2s var(--ease)}.cfav:hover{transform:scale(1.2)}
-.cbdg{position:absolute;top:10px;left:10px;background:rgba(0,0,0,.6);backdrop-filter:blur(8px);color:#fff;padding:4px 10px;border-radius:8px;font-size:10px;font-weight:700;z-index:2;letter-spacing:.02em}
-.nav{position:absolute;top:50%;transform:translateY(-50%);width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.9);backdrop-filter:blur(8px);border:none;display:flex;align-items:center;justify-content:center;box-shadow:var(--sh);opacity:0;transition:all .2s var(--ease);z-index:2}.card:hover .nav{opacity:1}.nav:hover{transform:translateY(-50%) scale(1.1)}.nav.l{left:8px}.nav.r{right:8px}
-.dts{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);display:flex;gap:4px;z-index:2}.dt{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.45);transition:all .2s}.dt.on{background:#fff;transform:scale(1.3)}
-.cbo{padding:10px 2px 0}.cbt{display:flex;justify-content:space-between;align-items:flex-start}.cbn{font-size:14px;font-weight:600;color:var(--dk);line-height:1.3;max-width:82%}.cbr{display:flex;align-items:center;gap:3px;font-size:12.5px;font-weight:500}.cbl{font-size:12px;color:var(--g);margin-top:2px}.cbc{font-size:11px;color:var(--acc);font-weight:600;margin-top:2px}.cbp{margin-top:4px;font-size:14px}.cbp strong{font-weight:700}.cbp span{color:var(--g);font-size:12px}
-.cond-badge{font-size:10px;color:var(--acc);font-weight:600;background:rgba(0,166,153,.08);padding:2px 8px;border-radius:6px}
-/* Overlays & Modals */
-.ov{position:fixed;inset:0;z-index:200;background:var(--w);overflow-y:auto;animation:si .35s var(--ease)}@keyframes si{from{opacity:0;transform:translateY(100%)}to{opacity:1;transform:translateY(0)}}
-.bk{position:fixed;inset:0;background:rgba(0,0,0,.35);backdrop-filter:blur(4px);z-index:300;display:flex;align-items:center;justify-content:center}.md{background:var(--w);border-radius:var(--rl);width:92%;max-width:560px;max-height:88vh;overflow-y:auto;animation:mi .25s var(--ease);box-shadow:var(--shl)}@keyframes mi{from{opacity:0;transform:scale(.96) translateY(12px)}to{opacity:1;transform:scale(1) translateY(0)}}
-.mh{display:flex;align-items:center;justify-content:center;padding:16px 20px;border-bottom:1px solid var(--bd);position:sticky;top:0;background:var(--w);z-index:2;position:relative;border-radius:var(--rl) var(--rl) 0 0}.mh h2{font-size:16px;font-weight:700;font-family:var(--fd);letter-spacing:-.02em}.mx{position:absolute;left:14px;background:none;border:none;padding:6px;border-radius:50%;display:flex;color:var(--dk);transition:background .15s}.mx:hover{background:var(--bg)}
-.mb{padding:20px 24px}.mf{display:flex;justify-content:space-between;align-items:center;padding:14px 24px;border-top:1px solid var(--bd)}
-/* Form elements */
-.fg{margin-bottom:16px}.fg label{display:block;font-size:11px;font-weight:700;margin-bottom:5px;color:var(--dk);text-transform:uppercase;letter-spacing:.04em}.fg input,.fg textarea,.fg select{width:100%;padding:12px 14px;border:1.5px solid var(--bd);border-radius:12px;font-size:13px;outline:none;transition:all .2s var(--ease);background:var(--w)}.fg input:focus,.fg textarea:focus{border-color:var(--dk);box-shadow:0 0 0 3px rgba(34,34,34,.06)}.fg textarea{resize:vertical;min-height:80px}
-/* Buttons */
-.bp{padding:12px 24px;background:linear-gradient(135deg,var(--p),#FF8A5C);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;transition:all .2s var(--ease);letter-spacing:-.01em}.bp:hover{opacity:.92;transform:translateY(-1px);box-shadow:0 4px 16px rgba(255,90,95,.25)}.bp:disabled{opacity:.35;cursor:default;transform:none;box-shadow:none}
-.bs{padding:12px 22px;background:var(--w);color:var(--dk);border:1.5px solid var(--bd);border-radius:12px;font-size:13px;font-weight:600;transition:all .2s var(--ease)}.bs:hover{border-color:var(--dk);background:var(--bg)}
-.bd{background:var(--dk);color:#fff;border:none;border-radius:12px;padding:12px 24px;font-size:13px;font-weight:700;transition:all .2s var(--ease)}.bd:hover{opacity:.88;transform:translateY(-1px)}
-.cl{background:none;border:none;font-size:12px;font-weight:600;text-decoration:underline;color:var(--dk);cursor:pointer}
-.pill{padding:8px 14px;border-radius:24px;border:1.5px solid var(--bd);background:var(--w);font-size:12px;font-weight:500;cursor:pointer;transition:all .2s var(--ease);color:var(--dk)}.pill:hover{border-color:var(--dk)}.pill.on{background:var(--dk);color:#fff;border-color:var(--dk)}
-/* Detail page */
-.dimgs{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:0 28px;max-height:55vh;overflow:hidden;border-radius:var(--rl)}.dimg0{grid-row:span 2;border-radius:var(--rl) 0 0 var(--rl)}.dimgs img{width:100%;height:100%;object-fit:cover;cursor:pointer;transition:filter .2s}.dimgs img:hover{filter:brightness(.95)}
-.dc{display:grid;grid-template-columns:1fr 380px;gap:40px;padding:28px;max-width:1520px;margin:0 auto}.bc{position:sticky;top:90px;height:fit-content;border:1px solid var(--bd);border-radius:var(--rl);padding:24px;box-shadow:var(--shm);background:var(--w)}.bcp{font-family:var(--fd);font-size:24px;font-weight:700;margin-bottom:4px;letter-spacing:-.02em}.bci{margin:12px 0}.bcr{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}.bcf{flex:1}.bcf label{display:block;font-size:10px;font-weight:700;margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em}.bcf input,.bcf select{width:100%;padding:10px 12px;border:1.5px solid var(--bd);border-radius:12px;font-size:13px;outline:none;transition:border .2s}.bcf input:focus{border-color:var(--dk)}
-.bcb{margin:14px 0;padding:14px 0;border-top:1px solid var(--bd)}.bcl{display:flex;justify-content:space-between;padding:4px 0;font-size:13px;color:var(--g)}.bcl.tot{font-weight:700;font-size:15px;color:var(--dk);padding:10px 0 0;margin-top:8px;border-top:1px solid var(--bd)}
-/* Profile */
-.prof{padding:28px;max-width:900px;margin:0 auto}.ph{display:flex;gap:24px;align-items:center;margin-bottom:20px}.pav-l{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--bg),var(--bgw));display:flex;align-items:center;justify-content:center;font-size:40px;flex-shrink:0;border:3px solid var(--w);box-shadow:var(--sh)}.pav-edit{position:relative;cursor:pointer}
-/* Grade system */
-.grade-card{border-radius:var(--rl);padding:20px;margin-bottom:20px;position:relative;overflow:hidden}.grade-card::before{content:'';position:absolute;inset:0;opacity:.06;background:radial-gradient(circle at 30% 50%,currentColor,transparent 70%)}
-.grade-progress{margin-top:14px}.grade-progress-bar{height:6px;border-radius:3px;background:var(--bd);overflow:hidden;margin:6px 0}.grade-progress-fill{height:100%;border-radius:3px;transition:width .8s var(--ease)}
-.grade-progress-fill.bronze{background:linear-gradient(90deg,#CD7F32,#E8A862)}.grade-progress-fill.silver{background:linear-gradient(90deg,#A0A0A0,#D0D0D0)}.grade-progress-fill.gold{background:linear-gradient(90deg,#FFD700,#FFC107)}.grade-progress-fill.platinum{background:linear-gradient(90deg,#7C3AED,#A78BFA)}.grade-progress-fill.diamond{background:linear-gradient(90deg,#06B6D4,#67E8F9)}
-.savings-card{border:1px solid var(--bd);border-radius:var(--rl);padding:20px;margin-bottom:20px;background:linear-gradient(135deg,#F0FDF4,#ECFDF5);display:flex;align-items:center;gap:16px}
-.savings-amount{font-family:var(--fd);font-size:28px;font-weight:700;color:var(--acc)}
-.all-grades{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:14px}.all-grade{text-align:center;padding:12px 6px;border-radius:14px;border:1.5px solid var(--bd);font-size:10px;transition:all .25s var(--ease);cursor:default}.all-grade.current{border-color:var(--dk);background:var(--bg);transform:scale(1.05)}.all-grade .ag-icon{font-size:24px;display:block;margin-bottom:4px}.all-grade .ag-name{font-weight:700;display:block}.all-grade .ag-range{color:var(--g);font-size:9px}
-/* Profile v2 — rebuild */
-.pv2-page{background:var(--bg);min-height:100vh}
-.pv2-hero{background:var(--w);border-bottom:1px solid var(--bd)}
-.pv2-hero-bg{background:linear-gradient(160deg,rgba(255,90,95,.10) 0%,rgba(255,176,103,.06) 100%);padding:48px 20px 0;text-align:center;position:relative}
-.dark .pv2-hero-bg{background:linear-gradient(160deg,rgba(255,107,107,.12) 0%,rgba(79,209,197,.06) 100%)}
-.pv2-back{position:absolute;top:14px;left:14px;background:rgba(255,255,255,.85);backdrop-filter:blur(8px);border:1px solid rgba(0,0,0,.08);border-radius:10px;padding:6px 12px;font-size:12px;font-weight:600;color:var(--dk);display:flex;align-items:center;gap:5px;cursor:pointer}
-.dark .pv2-back{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.15);color:#F5F5F5}
-.pv2-av{width:90px;height:90px;border-radius:50%;border:3px solid var(--w);box-shadow:0 4px 20px rgba(0,0,0,.18);display:flex;align-items:center;justify-content:center;font-size:50px;background:var(--w);position:relative;cursor:pointer;overflow:hidden;margin:0 auto 10px}
-.pv2-av img{width:100%;height:100%;object-fit:cover}
-.pv2-av-badge{position:absolute;bottom:1px;right:1px;width:22px;height:22px;border-radius:50%;background:#059669;border:2.5px solid var(--w);display:flex;align-items:center;justify-content:center;font-size:9px;color:#fff;font-weight:800}
-.pv2-av-cam{position:absolute;bottom:1px;right:1px;width:22px;height:22px;border-radius:50%;background:var(--dk);border:2px solid var(--w);display:flex;align-items:center;justify-content:center;font-size:9px}
-.pv2-name{font-family:var(--fd);font-size:22px;font-weight:700;color:var(--dk);letter-spacing:-.02em;margin-bottom:4px}
-.pv2-bio{font-size:13px;color:var(--g);line-height:1.45;max-width:340px;margin:0 auto}
-.pv2-stats{display:flex;align-items:center;justify-content:center;margin:14px 0 0;padding-bottom:2px}
-.pv2-stat{display:flex;align-items:center;gap:4px;padding:0 14px;font-size:13px;color:var(--dk);border-right:1.5px solid var(--bd)}.pv2-stat:last-child{border-right:none}
-.pv2-stat strong{font-weight:700}
-.pv2-actions{display:flex;gap:10px;justify-content:center;padding:16px 20px 20px}
-.pv2-btn-outline{padding:10px 22px;background:transparent;border:1.5px solid var(--dk);border-radius:12px;font-size:13px;font-weight:600;color:var(--dk);cursor:pointer;transition:all .18s;font-family:var(--f)}
-.pv2-btn-outline:hover{background:var(--bg)}
-.pv2-btn-icon{width:40px;height:40px;border-radius:12px;border:1.5px solid var(--dk);background:transparent;display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;color:var(--dk);transition:all .18s}
-.pv2-btn-icon:hover{background:var(--bg)}
-.pv2-tabs{position:sticky;top:72px;z-index:80;background:var(--w);border-bottom:1px solid var(--bd);display:flex;overflow-x:auto;scrollbar-width:none}
-.pv2-tabs::-webkit-scrollbar{display:none}
-.pv2-tab{display:flex;align-items:center;gap:5px;padding:14px 18px;font-size:12px;font-weight:600;border:none;border-bottom:2.5px solid transparent;color:var(--g);background:none;white-space:nowrap;cursor:pointer;font-family:var(--f);transition:color .18s,border-color .18s}
-.pv2-tab:hover{color:var(--dk)}.pv2-tab.on{color:var(--p);border-bottom-color:var(--p)}
-.pv2-body{max-width:700px;margin:0 auto;padding:20px 16px 100px}
-.pv2-th{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:16px}
-.pv2-th h2{font-family:var(--fd);font-size:17px;font-weight:700;color:var(--dk)}.pv2-th p{font-size:11px;color:var(--g);margin-top:2px}
-.pv2-card{background:var(--w);border:1px solid var(--bd);border-radius:14px;overflow:hidden;margin-bottom:10px;box-shadow:var(--sh)}
-.pv2-book-row{display:flex;gap:12px;padding:14px;align-items:center}
-.pv2-book-img{width:64px;height:52px;object-fit:cover;border-radius:8px;flex-shrink:0;background:var(--bgw)}
-.pv2-pill{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;white-space:nowrap}
-.pv2-set-section{background:var(--w);border:1px solid var(--bd);border-radius:14px;overflow:hidden;margin-bottom:12px;box-shadow:var(--sh)}
-.pv2-set-head{padding:14px 16px 10px;font-size:11px;font-weight:700;color:var(--g);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--bd)}
-.pv2-set-row{display:flex;justify-content:space-between;align-items:center;padding:13px 16px;border-bottom:1px solid var(--bd)}.pv2-set-row:last-child{border-bottom:none}
-.pv2-set-label{font-size:13px;color:var(--dk)}.pv2-set-val{font-size:12px;color:var(--g)}
-.pv2-toggle{width:44px;height:26px;border-radius:13px;border:none;cursor:pointer;position:relative;transition:background .25s;flex-shrink:0}
-.pv2-dot{position:absolute;top:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .25s;box-shadow:0 1px 4px rgba(0,0,0,.25)}
-.pv2-empty{text-align:center;padding:56px 20px;color:var(--g)}.pv2-empty span{font-size:44px;display:block;margin-bottom:12px}.pv2-empty h3{font-size:17px;font-weight:700;color:var(--dk);margin-bottom:5px;font-family:var(--fd)}.pv2-empty p{font-size:13px}
-.pv2-sub-tabs{display:flex;gap:6px;margin-bottom:16px}
-.pv2-sub-tab{padding:7px 16px;border-radius:20px;font-size:12px;font-weight:600;border:1.5px solid var(--bd);background:var(--w);color:var(--g);cursor:pointer;transition:all .18s;font-family:var(--f)}
-.pv2-sub-tab.on{background:var(--dk);color:#fff;border-color:var(--dk)}
-@media(max-width:768px){.pv2-av{width:80px;height:80px;font-size:42px}.pv2-name{font-size:19px}.pv2-stat{padding:0 10px;font-size:12px}.pv2-tab{padding:12px 13px;font-size:11px}.pv2-hero-bg{padding-top:44px}}
-/* ── Profile v3 (pv-) ── */
-.pv-page{background:var(--bg);min-height:100vh}
-.pv-header{background:linear-gradient(135deg,#6C63FF,#4ECDC4);border-bottom:none;padding:56px 20px 0;text-align:center;position:relative}
-.dark .pv-header{background:linear-gradient(135deg,#5850e8,#3db8b0)}
-.pv-back{position:absolute;top:14px;left:14px;background:rgba(255,255,255,.85);backdrop-filter:blur(8px);border:1px solid rgba(0,0,0,.08);border-radius:10px;padding:7px 13px;font-size:12px;font-weight:600;color:var(--dk);display:flex;align-items:center;gap:5px;cursor:pointer;transition:all .18s}
-.dark .pv-back{background:rgba(255,255,255,.12);color:#f5f5f5;border-color:rgba(255,255,255,.18)}
-.pv-share-top{position:absolute;top:14px;right:14px;background:rgba(255,255,255,.85);backdrop-filter:blur(8px);border:1px solid rgba(0,0,0,.08);border-radius:10px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;transition:all .18s}
-.dark .pv-share-top{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.18)}
-.pv-av-wrap{position:relative;width:90px;height:90px;margin:0 auto 12px;cursor:pointer}
-.pv-av{width:90px;height:90px;border-radius:50%;border:3px solid var(--w);box-shadow:0 4px 20px rgba(0,0,0,.18);display:flex;align-items:center;justify-content:center;font-size:50px;background:var(--bgw);overflow:hidden}
-.pv-av img{width:100%;height:100%;object-fit:cover}
-.pv-av-badge{position:absolute;bottom:2px;right:2px;width:22px;height:22px;border-radius:50%;background:#059669;border:2.5px solid var(--w);display:flex;align-items:center;justify-content:center;font-size:9px;color:#fff;font-weight:800}
-.pv-name-row{display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:5px}
-.pv-name{font-family:var(--fd);font-size:22px;font-weight:700;color:#fff;letter-spacing:-.02em}
-.pv-verified{background:rgba(255,255,255,.25);color:#fff;font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;border:1px solid rgba(255,255,255,.5)}
-.pv-bio{font-size:13px;color:rgba(255,255,255,.85);line-height:1.5;max-width:320px;margin:0 auto 4px}
-.pv-since{font-size:12px;color:rgba(255,255,255,.75);margin-top:4px;margin-bottom:0}
-.pv-stats{display:flex;align-items:center;justify-content:center;padding:16px 0;margin-top:14px;border-top:1px solid rgba(255,255,255,.25)}
-.pv-stat{display:flex;flex-direction:column;align-items:center;padding:0 20px}
-.pv-stat strong{font-family:var(--fd);font-size:16px;font-weight:700;color:#fff}
-.pv-stat span{font-size:10px;color:rgba(255,255,255,.75);margin-top:2px;text-transform:uppercase;letter-spacing:.03em}
-.pv-stat-sep{width:1px;height:32px;background:rgba(255,255,255,.3)}
-.pv-actions{display:flex;gap:10px;justify-content:center;padding:14px 20px 20px}
-.pv-btn-edit{padding:10px 22px;background:transparent;border:1.5px solid rgba(255,255,255,.7);border-radius:12px;font-size:13px;font-weight:600;color:#fff;cursor:pointer;transition:all .18s;font-family:var(--f)}
-.pv-btn-edit:hover{background:rgba(255,255,255,.15)}
-.pv-btn-share{padding:10px 22px;background:#fff;color:#6C63FF;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;transition:all .18s;font-family:var(--f)}
-.pv-btn-share:hover{opacity:.9;box-shadow:0 4px 12px rgba(108,99,255,.3)}
-.pv-tabs{position:sticky;top:72px;z-index:80;background:var(--w);border-bottom:1px solid var(--bd);display:flex;overflow-x:auto;scrollbar-width:none}
-.pv-tabs::-webkit-scrollbar{display:none}
-.pv-tab{display:flex;align-items:center;gap:5px;padding:14px 18px;font-size:12px;font-weight:600;border:none;border-bottom:2px solid transparent;color:var(--g);background:none;white-space:nowrap;cursor:pointer;font-family:var(--f);transition:color .18s,border-color .18s}
-.pv-tab:hover{color:var(--dk)}.pv-tab.on{color:var(--p);border-bottom-color:var(--p)}
-.pv-body{max-width:680px;margin:0 auto;padding:20px 16px 100px;position:relative}
-.pv-section-header{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:16px}
-.pv-sh-title{font-family:var(--fd);font-size:18px;font-weight:700;color:var(--dk)}
-.pv-sh-sub{font-size:11px;color:var(--g);margin-top:3px}
-.pv-empty{text-align:center;padding:56px 20px;color:var(--g)}.pv-empty span{font-size:44px;display:block;margin-bottom:12px}.pv-empty h3{font-size:17px;font-weight:700;color:var(--dk);margin-bottom:5px;font-family:var(--fd)}.pv-empty p{font-size:13px}
-.pv-empty-cta{margin-top:16px;font-size:13px;padding:10px 24px;display:inline-flex;align-items:center;gap:6px}
-.pv-fab{position:fixed;bottom:28px;right:20px;width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--p),#FF8A5C);color:#fff;border:none;font-size:26px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(255,90,95,.4);cursor:pointer;z-index:50;transition:transform .2s}.pv-fab:hover{transform:scale(1.08)}
-.pv-sub-tabs{display:flex;gap:6px;margin-bottom:16px}
-.pv-sub-tab{padding:7px 16px;border-radius:20px;font-size:12px;font-weight:600;border:1.5px solid var(--bd);background:var(--w);color:var(--g);cursor:pointer;transition:all .18s;font-family:var(--f)}.pv-sub-tab.on{background:var(--dk);color:#fff;border-color:var(--dk)}
-.pv-book-row{display:flex;gap:12px;padding:14px;align-items:center;background:var(--w);border:1px solid var(--bd);border-radius:14px;margin-bottom:10px;box-shadow:var(--sh)}
-.pv-book-img{width:64px;height:52px;object-fit:cover;border-radius:8px;flex-shrink:0;background:var(--bgw)}
-.pv-pill{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;white-space:nowrap}
-.pv-rating-card{background:var(--w);border:1px solid var(--bd);border-radius:16px;padding:20px;margin-bottom:16px;display:flex;gap:20px;align-items:center;box-shadow:var(--sh)}
-.pv-rating-big{text-align:center;flex-shrink:0;min-width:80px}
-.pv-rating-num{font-family:var(--fd);font-size:52px;font-weight:800;color:var(--dk);line-height:1}
-.pv-stars{color:#F59E0B;font-size:18px;letter-spacing:2px;margin-top:4px}
-.pv-rating-bars{flex:1}
-.pv-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
-.pv-bar-label{font-size:11px;color:var(--g);width:10px;text-align:right}
-.pv-bar-track{flex:1;height:6px;background:var(--bgw);border-radius:3px;overflow:hidden}
-.pv-bar-fill{height:100%;background:#F59E0B;border-radius:3px;transition:width .6s}
-.pv-bar-count{font-size:11px;color:var(--g);width:18px;text-align:right}
-.pv-review-card{background:var(--w);border:1px solid var(--bd);border-radius:14px;padding:16px;margin-bottom:10px;box-shadow:var(--sh)}
-.pv-review-header{display:flex;align-items:center;gap:10px;margin-bottom:8px}
-.pv-review-av{width:38px;height:38px;border-radius:50%;background:var(--bgw);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
-.pv-review-name{font-weight:700;font-size:13px;color:var(--dk)}
-.pv-review-date{font-size:10px;color:var(--gl);margin-top:1px}
-.pv-review-stars{color:#F59E0B;font-size:13px;letter-spacing:1px}
-.pv-review-text{font-size:13px;line-height:1.6;color:var(--tx);margin:0}
-.pv-settings-card{background:var(--w);border:1px solid var(--bd);border-radius:16px;overflow:hidden;margin-bottom:14px;box-shadow:var(--sh)}
-.pv-settings-title{padding:14px 16px 10px;font-size:11px;font-weight:700;color:var(--g);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--bd)}
-.pv-settings-row{display:flex;justify-content:space-between;align-items:center;padding:13px 16px;border-bottom:1px solid var(--bd)}.pv-settings-row:last-child{border-bottom:none}
-.pv-row-label{font-size:13px;color:var(--dk);font-weight:500}
-.pv-row-sub{font-size:11px;color:var(--g);margin-top:1px}
-.pv-toggle{position:relative;display:inline-block;width:44px;height:26px;cursor:pointer;flex-shrink:0}
-.pv-toggle input{opacity:0;width:0;height:0;position:absolute}
-.pv-toggle-track{position:absolute;inset:0;background:var(--bd);border-radius:13px;transition:background .25s;display:block}
-.pv-toggle input:checked~.pv-toggle-track{background:var(--p)}
-.pv-toggle-dot{position:absolute;width:20px;height:20px;border-radius:50%;background:#fff;top:3px;left:3px;transition:transform .25s;box-shadow:0 1px 4px rgba(0,0,0,.25)}
-.pv-toggle input:checked~.pv-toggle-track .pv-toggle-dot{transform:translateX(18px)}
-.pv-verify-banner{margin:10px 16px;padding:12px;background:#FEF3C7;border-radius:10px;display:flex;align-items:center;gap:10px}
-.pv-danger-card{border-color:#FCA5A5}
-.pv-danger-title{color:#DC2626!important}
-.pv-danger-btn-outline{background:none;border:1.5px solid #DC2626;border-radius:10px;padding:8px 18px;font-size:13px;font-weight:700;color:#DC2626;cursor:pointer;transition:all .18s;font-family:var(--f)}.pv-danger-btn-outline:hover{background:#FEF2F2}
-.pv-danger-btn{background:none;border:none;font-size:13px;font-weight:600;color:#DC2626;cursor:pointer;padding:0;font-family:var(--f)}
-@media(max-width:680px){.pv-av,.pv-av-wrap{width:80px;height:80px}.pv-av{font-size:42px}.pv-name{font-size:19px}.pv-stat{padding:0 14px}.pv-tab{padding:12px 13px;font-size:11px}.pv-header{padding-top:50px}.pv-rating-card{flex-direction:column;gap:14px}.pv-rating-big{width:100%}}
-/* Tabs */
-.tabs{display:flex;gap:4px;border-bottom:1px solid var(--bd);margin-bottom:20px}.tab{padding:10px 18px;font-size:13px;font-weight:600;border:none;border-bottom:2.5px solid transparent;color:var(--g);background:none;transition:all .2s var(--ease)}.tab:hover{color:var(--dk)}.tab.on{color:var(--dk);border-bottom-color:var(--dk)}
-/* Messages */
-.ml{display:grid;grid-template-columns:300px 1fr;flex:1;overflow:hidden}.mls{border-right:1px solid var(--bd);overflow-y:auto;background:var(--w)}
-.mc{padding:14px 16px;display:flex;gap:10px;cursor:pointer;border-bottom:1px solid var(--bd);transition:all .15s var(--ease)}.mc:hover,.mc.on{background:var(--bg)}.mca{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--bg),var(--bgw));display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}.mci{flex:1;min-width:0}.mcn{font-size:13px;font-weight:600}.mcl{font-size:11.5px;color:var(--g);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.mch{display:flex;flex-direction:column;height:100%;background:var(--bg)}.mchd{padding:14px 18px;border-bottom:1px solid var(--bd);font-weight:600;font-size:14px;display:flex;align-items:center;gap:10px;background:var(--w)}
-.mcbd{flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:8px}.bub{max-width:70%;padding:10px 14px;border-radius:18px;font-size:13px;line-height:1.45}.bub.me{background:linear-gradient(135deg,var(--p),#FF8A5C);color:#fff;align-self:flex-end;border-bottom-right-radius:4px}.bub.th{background:var(--w);color:var(--dk);align-self:flex-start;border-bottom-left-radius:4px;box-shadow:var(--sh)}.bub .bt{font-size:9px;opacity:.45;margin-top:3px;display:block}
-.mip{display:flex;gap:8px;padding:14px 18px;border-top:1px solid var(--bd);background:var(--w)}.mip input{flex:1;padding:10px 16px;border:1.5px solid var(--bd);border-radius:24px;outline:none;font-size:13px;transition:all .2s}.mip input:focus{border-color:var(--dk);box-shadow:0 0 0 3px rgba(34,34,34,.06)}.mip button{background:linear-gradient(135deg,var(--p),#FF8A5C);color:#fff;border:none;border-radius:50%;width:38px;height:38px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .2s}.mip button:hover{transform:scale(1.05)}
-/* Toast */
-.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--dk);color:#fff;padding:14px 28px;border-radius:16px;font-size:13px;font-weight:600;z-index:500;box-shadow:var(--shl);display:flex;align-items:center;gap:8px;animation:tu .35s var(--ease);white-space:nowrap}@keyframes tu{from{opacity:0;transform:translateX(-50%) translateY(16px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
-.empty{text-align:center;padding:80px 20px;color:var(--g)}.empty span{font-size:48px;display:block;margin-bottom:14px}.empty h2{font-size:20px;font-weight:700;color:var(--dk);margin-bottom:6px;font-family:var(--fd)}
-/* Footer */
-.ft{background:var(--w);border-top:1px solid var(--bd);padding:40px 28px 20px}.ftg{max-width:1520px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:28px;padding-bottom:24px;border-bottom:1px solid var(--bd)}.ftc h4{font-size:11px;font-weight:700;margin-bottom:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--dk)}.ftc a{display:block;font-size:12px;color:var(--g);padding:3px 0;cursor:pointer;transition:color .15s}.ftc a:hover{color:var(--p)}.ftb{max-width:1520px;margin:0 auto;padding-top:14px;display:flex;justify-content:space-between;font-size:11px;color:var(--gl)}
-.ft-promo{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-bottom:24px}
-.ft-legal{display:flex;flex-wrap:wrap;gap:12px}
-.ft-legal-bottom{display:flex;align-items:center;gap:12px}
-/* Search modal */
-.smbg{position:fixed;inset:0;background:rgba(0,0,0,.15);backdrop-filter:blur(4px);z-index:140}.sm{position:fixed;top:0;left:0;right:0;background:var(--w);z-index:150;box-shadow:var(--shl);border-bottom-left-radius:var(--rl);border-bottom-right-radius:var(--rl);animation:sd .2s var(--ease)}@keyframes sd{from{opacity:0;transform:translateY(-8px)}to{opacity:1}}
-.smin{max-width:760px;margin:0 auto;padding:20px 28px 28px}.smr{display:flex;background:var(--bg);border-radius:40px;padding:4px;align-items:center;border:1px solid var(--bd)}.smf{flex:1;padding:12px 20px;border-radius:32px;cursor:pointer;transition:all .2s var(--ease)}.smf:hover,.smf.on{background:var(--w);box-shadow:var(--shm)}.smf label{font-size:9px;font-weight:700;display:block;margin-bottom:3px;text-transform:uppercase;letter-spacing:.06em;color:var(--g)}.smf input{border:none;background:none;font-size:13px;color:var(--dk);outline:none;width:100%;font-weight:500}
-.smgo{background:linear-gradient(135deg,var(--p),#FF8A5C);color:#fff;border:none;border-radius:32px;padding:12px 22px;font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px;transition:all .2s}.smgo:hover{transform:scale(1.03)}
-.ac{position:absolute;top:100%;left:0;right:0;background:var(--w);border-radius:0 0 var(--r) var(--r);box-shadow:var(--shm);max-height:240px;overflow-y:auto;z-index:10}.aci{padding:10px 16px;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:background .1s}.aci:hover{background:var(--bg)}
-.smtg{margin-top:16px}.smtg p{font-size:10px;font-weight:700;margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em;color:var(--g)}.smtl{display:flex;gap:6px;flex-wrap:wrap}.smt{padding:8px 14px;border:1px solid var(--bd);border-radius:12px;background:var(--w);font-size:12px;font-weight:500;transition:all .15s}.smt:hover{border-color:var(--dk);background:var(--bg)}
-@media(max-width:768px){
-  .smin{padding:14px 16px 22px}
-  .smr{flex-direction:column;border-radius:var(--rl);padding:4px 8px;gap:0;align-items:stretch}
-  .smf{padding:12px 14px;border-radius:10px}
-  .smf+.smf{border-top:1px solid var(--bd)}
-  .smgo{width:100%;justify-content:center;margin-top:8px;border-radius:12px;padding:14px 24px}
-  .smtl{gap:5px}
-  .smt{font-size:11px;padding:7px 11px}
-}
-/* Reviews */
-.rev{padding:14px 0;border-bottom:1px solid var(--bd)}.revh{display:flex;align-items:center;gap:10px;margin-bottom:5px}.reva{width:34px;height:34px;border-radius:50%;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:18px}.revn{font-size:13px;font-weight:600}.revd{font-size:10px;color:var(--gl)}.revs{color:var(--p);font-size:12px}.revt{font-size:13px;line-height:1.5}
-@media(max-width:1024px){.dc{grid-template-columns:1fr;gap:24px}.bc{position:relative;top:0}.ml{grid-template-columns:1fr}}
-/* Dark mode — variables */
-.dark{--p:#FF6B6B;--pd:#FF5A5F;--acc:#4FD1C5;--dk:#F5F5F5;--tx:#D1D5DB;--g:#9CA3AF;--gl:#6B7280;--bd:rgba(255,255,255,0.08);--bg:#0F0F0F;--bgw:#242424;--w:#1A1A1A;--sh:0 1px 4px rgba(0,0,0,.5);--shm:0 2px 12px rgba(0,0,0,.5);--shl:0 8px 32px rgba(0,0,0,.6),0 2px 8px rgba(0,0,0,.4);background:#0F0F0F;min-height:100vh}
-/* Dark mode — component overrides */
-.dark .hdr{background:rgba(17,17,17,.94);border-bottom:1px solid rgba(255,255,255,.06)}
-.dark .sb{background:#1E1E1E;border-color:rgba(255,255,255,.14)}
-.dark .sb:hover{box-shadow:0 2px 12px rgba(0,0,0,.4);border-color:rgba(255,255,255,.22)}
-.dark .ss{color:#F5F5F5;border-right-color:rgba(255,255,255,.08)}
-.dark .bs{border-color:rgba(255,255,255,.16)}
-.dark .bs:hover{background:#242424;border-color:rgba(255,255,255,.28)}
-.dark .pill{border-color:rgba(255,255,255,.1)}
-.dark .pill.on{background:var(--p);color:#fff;border-color:var(--p)}
-.dark .pill:hover{border-color:rgba(255,255,255,.3)}
-.dark .fg input,.dark .fg textarea,.dark .fg select{background:#1E1E1E;border-color:rgba(255,255,255,.14);color:#F5F5F5}
-.dark .fg input:focus,.dark .fg textarea:focus{border-color:rgba(255,255,255,.4);box-shadow:0 0 0 3px rgba(255,255,255,.06)}
-.dark .dd{border-color:rgba(255,255,255,.08);background:#1A1A1A}
-.dark .di:hover{background:#242424}
-.dark .dsp{background:rgba(255,255,255,.06)}
-.dark .bk{background:rgba(0,0,0,.75)}
-.dark .md{background:#1A1A1A;border:1px solid rgba(255,255,255,.08)}
-.dark .mh{border-bottom-color:rgba(255,255,255,.08)}
-.dark .sm{background:#1A1A1A}
-.dark .smr{background:#1E1E1E;border-color:rgba(255,255,255,.12)}
-.dark .smf:hover,.dark .smf.on{background:#2A2A2A}
-.dark .smf input{color:#F5F5F5}
-.dark .smf+.smf{border-top-color:rgba(255,255,255,.08)}
-.dark .smt{background:#1E1E1E;border-color:rgba(255,255,255,.1);color:#E5E7EB}
-.dark .smt:hover{background:#2A2A2A;border-color:rgba(255,255,255,.22)}
-.dark .ac{background:#1E1E1E;border:1px solid rgba(255,255,255,.1)}
-.dark .aci:hover{background:#242424}
-.dark .map-side,.dark .map-side-hd{background:#1A1A1A}
-.dark .map-card{background:#1A1A1A;border-color:rgba(255,255,255,.08)}
-.dark .map-card:hover{box-shadow:0 4px 20px rgba(0,0,0,.5);border-color:rgba(255,255,255,.16);transform:translateY(-1px)}
-.dark .map-breadcrumb{background:rgba(13,148,136,.18);border-bottom-color:rgba(255,255,255,.08)}
-.dark .dboard-chart{background:#1A1A1A;border-color:rgba(255,255,255,.08)}
-.dark .nc-i{border-bottom-color:rgba(255,255,255,.06)}
-.dark .nc-i.unread{background:rgba(255,90,95,.08)}
-.dark .rev{border-bottom-color:rgba(255,255,255,.06)}
-.dark .chatbot-bd{background:#0F0F0F}
-.dark .chatbot-msg.bot{background:#1E1E1E;color:#F5F5F5}
-.dark .mip input{background:#1E1E1E;border-color:rgba(255,255,255,.14);color:#F5F5F5}
-/* Dark mode — cards (effet Netflix : card blanche sur fond noir) */
-.dark .cb{background:#FFFFFF;border:1px solid rgba(0,0,0,0.08);box-shadow:0 2px 16px rgba(0,0,0,0.25);border-radius:var(--rl);overflow:hidden}
-.dark .cb .cbn{color:#111111}
-.dark .cb .cbr{color:#111111}
-.dark .cb .cbl{color:#444444}
-.dark .cb .cbp strong{color:#111111}
-.dark .cb .cbp span{color:#444444}
-.dark .cb .cond-badge{background:#CCFBF1;color:#0F766E}
-.dark .cb .cfav svg{stroke:#333}
-/* Bottom nav */
-.bnav{display:none;position:fixed;bottom:0;left:0;right:0;background:rgba(255,255,255,.9);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid rgba(0,0,0,.06);z-index:90;padding:6px 0 max(6px,env(safe-area-inset-bottom))}
-.dark .bnav{background:rgba(21,21,21,.9);border-top:1px solid rgba(255,255,255,.06)}
-.bnav-in{display:flex;justify-content:space-around;align-items:center;max-width:500px;margin:0 auto}
-.bn{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 14px;background:none;border:none;color:var(--gl);font-size:9px;font-weight:600;transition:all .2s var(--ease);position:relative;font-family:var(--f)}
-.bn.on{color:var(--p)}.bn.on svg{stroke:var(--p)}
-.bn .bnd{position:absolute;top:2px;right:10px;width:6px;height:6px;border-radius:50%;background:var(--p)}
-@media(max-width:768px){.bnav{display:block}body{padding-bottom:calc(68px + env(safe-area-inset-bottom,0px))}.nr .nb{display:none}}
-@media(max-width:768px){
-  .ft-promo{grid-template-columns:repeat(2,1fr);gap:12px}
-  .ft-legal{flex-direction:column;gap:6px}
-  .ft-legal-bottom{flex-direction:column;align-items:flex-start;gap:6px}
-}
-@media(max-width:480px){.ftg{grid-template-columns:1fr}}
-/* Map */
-.map-w{height:calc(100vh - 130px);background:var(--bg);overflow:hidden;display:flex;flex-direction:column}
-.map-filters{padding:8px 12px;display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;background:var(--w);border-bottom:1px solid var(--bd);flex-shrink:0}
-.map-filters::-webkit-scrollbar{display:none}
-.map-layout{flex:1;display:grid;grid-template-columns:1fr 340px;grid-template-rows:1fr;overflow:hidden;position:relative;min-height:0}
-.leaflet-container{width:100%!important;height:100%!important}
-.leaflet-popup-content-wrapper{border-radius:12px!important;box-shadow:0 4px 20px rgba(0,0,0,.18)!important;font-family:'DM Sans',system-ui!important;padding:4px 2px!important}
-.leaflet-popup-tip-container{display:none!important}
-.leaflet-popup-close-button{font-size:16px!important;color:#9CA3AF!important}
-.map-pin{background:var(--p);color:#fff;border-radius:20px;padding:5px 12px;font-size:12px;font-weight:700;box-shadow:0 2px 10px rgba(0,0,0,.3);border:2.5px solid #fff;white-space:nowrap;transition:all .15s;min-height:32px;display:flex;align-items:center;gap:4px}
-.map-pin:hover{transform:scale(1.08)}.map-pin.active{transform:scale(1.15);background:var(--pd)}
-.map-side{border-left:1px solid var(--bd);overflow-y:auto;background:var(--w);display:flex;flex-direction:column}
-.map-side-hd{padding:12px 14px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;font-family:var(--fd);font-size:14px;font-weight:600;gap:8px}
-.map-breadcrumb{display:flex;align-items:center;gap:8px;padding:8px 14px;background:rgba(13,148,136,.08);border-bottom:1px solid var(--bd);flex-shrink:0}
-.map-breadcrumb-label{font-size:12px;font-weight:700;color:var(--p);flex:1}
-.map-breadcrumb-reset{background:none;border:1px solid var(--p);color:var(--p);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap}
-.map-card{display:flex;gap:12px;padding:12px 12px;margin:8px 10px;background:var(--w);border:1px solid var(--bd);border-radius:10px;cursor:pointer;transition:box-shadow .15s,transform .15s}
-.map-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.10);transform:translateY(-1px)}
-.map-card img{width:80px;height:80px;border-radius:8px;object-fit:cover;flex-shrink:0}
-.map-card-body{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:4px}
-.map-card-title{font-size:14px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.3}
-.map-card-meta{font-size:11px;color:var(--g);display:flex;align-items:center;gap:4px}
-.map-card-price{font-size:16px;font-weight:800;color:var(--p);line-height:1}
-.map-card-price span{font-size:11px;font-weight:400;color:var(--g)}
-@media(max-width:768px){
-  .map-card{margin:6px 8px;padding:10px}
-  .map-card img{width:60px;height:60px}
-  .map-card-title{font-size:13px}
-  .map-card-price{font-size:14px}
-}
-.map-list-btn{display:none}
-.map-drawer-handle{display:none}
-.map-drawer-close{background:none;border:none;font-size:18px;cursor:pointer;color:var(--gl);padding:2px;line-height:1}
-.map-search-area-btn{position:absolute;top:14px;left:50%;transform:translateX(-50%);background:var(--dk);color:#fff;border:none;border-radius:24px;padding:10px 20px;font-size:13px;font-weight:700;z-index:1000;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.3);white-space:nowrap;display:flex;align-items:center;gap:6px;animation:fadeIn .2s}
-@media(max-width:768px){
-  .map-w{height:calc(100vh - 58px - 68px)}
-  .map-layout{grid-template-columns:1fr!important}
-  .map-pin{padding:8px 16px;font-size:13px;min-height:40px;min-width:56px;justify-content:center}
-  .map-side{position:absolute;bottom:0;left:0;right:0;height:58%;transform:translateY(100%);transition:transform .35s cubic-bezier(.4,0,.2,1);border-left:none;border-top:1px solid var(--bd);border-radius:16px 16px 0 0;box-shadow:0 -6px 28px rgba(0,0,0,.14);z-index:10;overflow-y:auto}
-  .map-side.open{transform:translateY(0)}
-  .map-list-btn{display:flex;position:absolute;bottom:20px;left:50%;transform:translateX(-50%);background:var(--dk);color:#fff;border:none;border-radius:24px;padding:12px 22px;font-size:13px;font-weight:700;z-index:5;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,.28);align-items:center;gap:7px;white-space:nowrap}
-  .map-drawer-handle{display:block;width:36px;height:4px;background:var(--bd);border-radius:2px;margin:10px auto 2px;cursor:pointer;flex-shrink:0}
-  .map-drawer-close{display:block}
-}
-/* Notif center */
-.nc{max-width:640px;margin:0 auto;padding:24px 28px}
-.nc-i{display:flex;gap:12px;padding:14px;border-radius:14px;margin-bottom:8px;cursor:pointer;transition:all .15s var(--ease);align-items:center}
-.nc-i:hover{background:var(--bg)}
-.nc-i.unread{background:var(--bg);border-left:3px solid var(--p)}
-.nc-ic{width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;background:var(--bgw)}
-/* Mode switch */
-.mode-sw{display:flex;background:var(--bg);border-radius:28px;padding:3px;border:1px solid var(--bd);gap:2px}
-.mode-btn{padding:8px 16px;border-radius:24px;border:none;font-size:12px;font-weight:600;background:none;color:var(--g);cursor:pointer;transition:all .2s var(--ease);font-family:var(--f);display:flex;align-items:center;gap:5px}
-.mode-btn.on{background:var(--w);color:var(--dk);box-shadow:var(--sh)}
-.mode-btn.pro-on{background:linear-gradient(135deg,#1E3A5F,#2563EB);color:#fff;box-shadow:0 2px 8px rgba(37,99,235,.25)}
-/* Pro */
-.pro-hdr{background:linear-gradient(135deg,#0F172A,#1E293B) !important;backdrop-filter:none !important;border-bottom:1px solid rgba(255,255,255,.06)}
-.pro-hdr .logo .lc{background:linear-gradient(135deg,#2563EB,#3B82F6)}
-.pro-hdr .lt{color:#fff !important}
-.pro-hdr .sb{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.1)}.pro-hdr .sb .ss{color:rgba(255,255,255,.7)}
-.pro-hdr .nr .nb{color:rgba(255,255,255,.8);border-color:rgba(255,255,255,.1)}.pro-hdr .nr .nb:hover{background:rgba(255,255,255,.08)}
-.pro-hdr .pb{border-color:rgba(255,255,255,.15)}.pro-hdr .mode-sw{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.08)}
-.pro-badge{position:absolute;top:10px;left:10px;background:linear-gradient(135deg,#2563EB,#1D4ED8);color:#fff;padding:4px 10px;border-radius:8px;font-size:9px;font-weight:700;z-index:2;letter-spacing:.04em}
-.pro-card{border:1.5px solid rgba(37,99,235,.15);border-radius:var(--rl)}.pro-card:hover{border-color:#2563EB}
-.pro-banner{background:linear-gradient(135deg,#0F172A,#1E293B);color:#fff;padding:28px;text-align:center;border-radius:0 0 var(--rl) var(--rl);margin-bottom:12px}
-/* Animations */
-@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
-@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
-@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
-@keyframes popIn{0%{opacity:0;transform:scale(.85)}60%{transform:scale(1.03)}100%{opacity:1;transform:scale(1)}}
-.anim-fi{animation:fadeIn .3s var(--ease)}.anim-su{animation:slideUp .4s var(--ease)}.anim-pop{animation:popIn .3s var(--ease)}
-.card{animation:fadeIn .35s var(--ease) both}.card:nth-child(2){animation-delay:.04s}.card:nth-child(3){animation-delay:.08s}.card:nth-child(4){animation-delay:.12s}.card:nth-child(5){animation-delay:.16s}.card:nth-child(6){animation-delay:.2s}
-/* Fullscreen gallery */
-.gallery-fs{position:fixed;inset:0;background:rgba(0,0,0,.96);z-index:300;display:flex;align-items:center;justify-content:center;animation:fadeIn .2s ease}
-.gallery-fs img{max-width:90vw;max-height:85vh;object-fit:contain;border-radius:12px;animation:popIn .3s ease}
-.gallery-fs .gf-nav{position:absolute;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.1);backdrop-filter:blur(12px);border:none;color:#fff;width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px;transition:background .2s}.gallery-fs .gf-nav:hover{background:rgba(255,255,255,.2)}
-.gallery-fs .gf-nav.l{left:20px}.gallery-fs .gf-nav.r{right:20px}
-.gallery-fs .gf-close{position:absolute;top:20px;right:20px;background:rgba(255,255,255,.1);backdrop-filter:blur(12px);border:none;color:#fff;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .2s}.gallery-fs .gf-close:hover{background:rgba(255,255,255,.2)}
-.gallery-fs .gf-counter{position:absolute;bottom:24px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,.6);font-size:13px;font-weight:600}
-/* Chatbot */
-.chatbot-btn{position:fixed;bottom:84px;right:20px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--p),#FF8A5C);color:#fff;border:none;box-shadow:0 4px 20px rgba(255,90,95,.3);cursor:pointer;z-index:80;display:flex;align-items:center;justify-content:center;font-size:24px;transition:all .25s var(--ease);animation:popIn .4s ease}
-.chatbot-btn:hover{transform:scale(1.1);box-shadow:0 6px 28px rgba(255,90,95,.4)}
-.chatbot-w{position:fixed;bottom:84px;right:20px;width:360px;max-height:500px;background:var(--w);border-radius:var(--rl);box-shadow:var(--shl);z-index:85;display:flex;flex-direction:column;overflow:hidden;animation:slideUp .3s var(--ease);border:1px solid rgba(0,0,0,.04)}
-.chatbot-hd{padding:16px 18px;background:linear-gradient(135deg,var(--p),#FF8A5C);color:#fff;display:flex;align-items:center;justify-content:space-between;border-radius:var(--rl) var(--rl) 0 0}
-.chatbot-bd{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:8px;max-height:360px}
-.chatbot-msg{max-width:85%;padding:10px 14px;border-radius:16px;font-size:13px;line-height:1.45;animation:fadeIn .2s ease}
-.chatbot-msg.bot{background:var(--bg);color:var(--dk);align-self:flex-start;border-bottom-left-radius:4px}
-.chatbot-msg.user{background:linear-gradient(135deg,var(--p),#FF8A5C);color:#fff;align-self:flex-end;border-bottom-right-radius:4px}
-.chatbot-ft{padding:12px;border-top:1px solid var(--bd);display:flex;gap:8px}
-.chatbot-ft input{flex:1;border:1.5px solid var(--bd);border-radius:20px;padding:10px 14px;font-size:12px;outline:none;transition:border .2s}.chatbot-ft input:focus{border-color:var(--dk)}
-.chatbot-ft button{background:linear-gradient(135deg,var(--p),#FF8A5C);color:#fff;border:none;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;transition:transform .2s}.chatbot-ft button:hover{transform:scale(1.05)}
-/* Shop */
-.shop-hd{padding:32px;background:linear-gradient(135deg,var(--bg),var(--w));border-bottom:1px solid var(--bd);text-align:center}
-.shop-av{width:72px;height:72px;border-radius:50%;background:var(--w);display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto 10px;border:3px solid var(--bd)}
-/* Badges */
-.badge-g{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:8px;font-size:10px;font-weight:700}
-/* Recommendations */
-.reco{padding:20px 28px;border-top:1px solid var(--bd);margin-top:12px}
-.reco-sc{display:flex;gap:14px;overflow-x:auto;padding-bottom:10px;scrollbar-width:none}.reco-sc::-webkit-scrollbar{display:none}
-.reco-c{min-width:190px;cursor:pointer;transition:transform .25s var(--ease)}.reco-c:hover{transform:translateY(-4px)}
-.reco-ci{width:190px;height:130px;border-radius:var(--r);object-fit:cover}
-/* Push notification */
-.push{position:fixed;top:16px;right:16px;background:var(--w);border-radius:var(--rl);box-shadow:var(--shl);padding:14px 18px;z-index:400;max-width:340px;display:flex;gap:12px;align-items:center;animation:slideUp .3s var(--ease);border:1px solid rgba(0,0,0,.04)}
-.push-close{background:none;border:none;color:var(--gl);cursor:pointer;font-size:16px;flex-shrink:0}
-/* Stats */
-.stat-bar{display:flex;align-items:flex-end;gap:3px;height:80px}.stat-b{flex:1;background:linear-gradient(var(--acc),var(--p));border-radius:4px 4px 0 0;min-height:4px;transition:height .6s var(--ease)}
-/* Wallet */
-.wallet-c{background:linear-gradient(135deg,#1A1A2E,#16213E);color:#fff;border-radius:var(--rl);padding:24px;margin-bottom:20px;box-shadow:var(--shm)}
-.wallet-bal{font-family:var(--fd);font-size:36px;font-weight:700;letter-spacing:-.02em}
-/* Splash */
-.splash{position:fixed;inset:0;background:linear-gradient(135deg,#FF5A5F,#FF8A5C,#FFB067);z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column}
-.splash-logo{width:88px;height:88px;background:#fff;border-radius:24px;display:flex;align-items:center;justify-content:center;font-size:40px;font-weight:800;color:#FF5A5F;font-family:var(--fd);box-shadow:0 16px 48px rgba(0,0,0,.15);animation:pulse 1.5s ease infinite}
-.splash h2{color:#fff;font-family:var(--fd);font-size:28px;margin-top:20px;letter-spacing:-.01em}
-.splash p{color:rgba(255,255,255,.75);font-size:13px;margin-top:8px}
-/* Page transitions */
-.page-tr{animation:pageIn .4s var(--ease)}@keyframes pageIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
-/* Time slots */
-.ts{display:flex;gap:5px;flex-wrap:wrap;margin:8px 0}.ts-btn{padding:6px 12px;border:1.5px solid var(--bd);border-radius:10px;font-size:11px;font-weight:600;background:var(--w);cursor:pointer;transition:all .2s var(--ease)}.ts-btn:hover{border-color:var(--dk)}.ts-btn.on{background:var(--dk);color:#fff;border-color:var(--dk)}
-/* Chat enhanced */
-.typing{display:flex;gap:4px;padding:10px 14px;align-self:flex-start}.typing span{width:6px;height:6px;border-radius:50%;background:var(--gl);animation:typing 1.2s ease infinite}.typing span:nth-child(2){animation-delay:.2s}.typing span:nth-child(3){animation-delay:.4s}@keyframes typing{0%,100%{opacity:.3;transform:translateY(0)}50%{opacity:1;transform:translateY(-5px)}}
-.online-dot{width:9px;height:9px;border-radius:50%;background:#22C55E;border:2px solid var(--w);position:absolute;bottom:-1px;right:-1px}
-/* Bid */
-.bid-bar{display:flex;gap:8px;align-items:center;padding:10px 14px;background:linear-gradient(135deg,#FEF3C7,#FFFBEB);border-radius:12px;margin:8px 0}
-/* History */
-.hist-item{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--bd);align-items:center;font-size:12px}
-/* Range slider */
-.range-sl{-webkit-appearance:none;width:100%;height:4px;border-radius:4px;background:var(--bd);outline:none}.range-sl::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--p);cursor:pointer;box-shadow:0 2px 8px rgba(255,90,95,.3)}
-@media(max-width:768px){
-  /* Chatbot */
-  .chatbot-w{right:10px;left:10px;width:auto;bottom:74px}
-  .chatbot-btn{bottom:76px;right:14px;width:50px;height:50px;font-size:20px}
-  /* Header simplifié : logo + search réduite + profil seulement */
-  .hi{padding:0 12px;height:58px;gap:8px}
-  .mode-sw{display:none}
-  .sb{margin:0;max-width:none;flex:1;height:42px}
-  .sb .ss:first-child{font-size:12px;padding:0 10px;border-right:none}
-  .ss:nth-child(2),.ss:nth-child(3){display:none}
-  .sbb{width:28px;height:28px;margin-right:6px}
-  .nr .nb{display:none}
-  /* Logo */
-  .lt{font-size:18px}
-  .lc{width:30px;height:30px;font-size:14px}
-  /* Catégories : chips lisibles avec scroll horizontal */
-  .cw{padding:2px 10px 6px}
-  .ct{padding:8px 12px;min-width:58px;border-bottom-width:2px}
-  .cti{font-size:22px}
-  .ctl{font-size:10px}
-  .fb{padding:8px 12px;font-size:11px}
-  /* Grille 2 colonnes fixes */
-  .grid{padding:10px 10px 80px;gap:10px;grid-template-columns:repeat(2,1fr)}
-  /* Cards sur mobile */
-  .cbn{font-size:13px}.cbp{font-size:13px}.cbl{font-size:11px}
-  /* Detail */
-  .dimgs{grid-template-columns:1fr;padding:0;border-radius:var(--r)}.dimg0{grid-row:auto}
-  .dc{padding:12px;gap:14px}.dh{padding:10px 12px}
-  /* Hero stats */
-  .hero-stats{gap:14px;padding:12px}
-  .hero-stat-n{font-size:17px}
-  /* Footer */
-  .ftg{grid-template-columns:1fr 1fr}.ft{padding:20px 12px}
-  /* Profile */
-  .prof{padding:14px}.ph{flex-direction:column;text-align:center}
-  /* Dashboard KPIs : 2 colonnes sur mobile */
-  .dboard-grid{grid-template-columns:repeat(2,1fr) !important}
-}
-/* Onboarding */
-.ob-step{animation:popIn .35s var(--ease)}
-/* Hero stats */
-.hero-stats{display:flex;justify-content:center;gap:32px;padding:18px 28px;background:rgba(0,0,0,.18);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);flex-wrap:wrap}
-.hero-stat{text-align:center;color:#fff}
-.hero-stat-n{font-family:var(--fd);font-size:22px;font-weight:800;display:block;letter-spacing:-.02em;line-height:1.1}
-.hero-stat-l{font-size:11px;opacity:.75;font-weight:500;display:block;margin-top:2px}
-@media(max-width:600px){.hero-stats{gap:18px;padding:14px 16px}.hero-stat-n{font-size:18px}}
-/* Toast stack */
-.toast-stack{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);z-index:500;display:flex;flex-direction:column-reverse;gap:8px;align-items:center;pointer-events:none}
-.t2{padding:12px 18px;border-radius:14px;font-size:13px;font-weight:600;box-shadow:0 8px 32px rgba(0,0,0,.2);display:flex;align-items:center;gap:9px;animation:tu .35s var(--ease);white-space:nowrap;pointer-events:all;max-width:360px}
-.t2-s{background:#059669;color:#fff}.t2-b{background:linear-gradient(135deg,#FF5A5F,#FF8A5C);color:#fff}.t2-i{background:var(--dk);color:#fff}.t2-e{background:#DC2626;color:#fff}.t2-w{background:#D97706;color:#fff}
-@media(max-width:768px){.toast-stack{bottom:80px;max-width:88vw}.t2{white-space:normal;justify-content:center}}
-/* Detail map */
-.detail-map{border-radius:12px;overflow:hidden;border:1px solid var(--bd);margin-top:8px}
-/* Dashboard charts */
-.dboard-chart{background:var(--w);border:1px solid var(--bd);border-radius:var(--rl);padding:20px;margin-bottom:0}
-`;
-
-/* ========== COMPONENTS ========== */
-function Carousel({images,onClick}){const[c,setC]=useState(0);return <div className="ciw"><img className="cimg" src={images[c]} alt="" loading="lazy" onClick={onClick} onError={e=>{const fb=images.find(img=>img.startsWith('data:'));if(fb&&e.target.src!==fb)e.target.src=fb;}}/>{images.length>1&&<><button className="nav l" onClick={e=>{e.stopPropagation();setC(x=>(x-1+images.length)%images.length)}}><I.Chv d="l"/></button><button className="nav r" onClick={e=>{e.stopPropagation();setC(x=>(x+1)%images.length)}}><I.Chv d="r"/></button><div className="dts">{images.map((_,i)=><div key={i} className={"dt"+(i===c?" on":"")}/>)}</div></>}</div>}
-
-function Card({item,onOpen,favs,dispatch}){return <div className={"card cb"+(item.isPro?" pro-card":"")}>
-  <Carousel images={item.images} onClick={()=>onOpen(item)}/>
-  <button className="cfav" onClick={e=>{e.stopPropagation();dispatch({type:"TOG_FAV",id:item.id})}}><I.Heart f={favs.has(item.id)}/></button>
-  {item.isPro&&<div className="pro-badge">PRO</div>}
-  {item.owner?.verified&&<div className="cbdg">✓</div>}
-  <div className="cbo" onClick={()=>onOpen(item)}>
-    <div className="cbt"><span className="cbn">{item.title}</span><span className="cbr"><I.Star/> {item.rating}</span></div>
-    <div className="cbl">{item.location}</div>
-    <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginTop:6}}>
-      <div className="cbp"><strong>{item.price} €</strong><span> / jour</span></div>
-      <span className="cond-badge">{item.condition}</span>
-    </div>
-  </div>
-</div>}
-
-function AuthModal({onClose,dispatch,mode:im}){
-  const[mode,setMode]=useState(im||"login");const[step,setStep]=useState(0);const[acctType,setAcctType]=useState("perso");
-  const[f,setF]=useState({name:"",email:"",password:"",location:"Paris 11e",bio:"",company:"",siret:"",sector:"",tva:"",phone:"",website:""});
-  const[err,setErr]=useState("");const[loading,setLoading]=useState("");
-  const u=(k,v)=>setF(p=>({...p,[k]:v}));
-  const go=()=>{
-    if(mode==="login"){if(!f.email||!f.password){setErr("Remplissez tous les champs");return}
-      const found=USERS.find(u=>u.email===f.email)||PRO_USERS.find(u=>u.email===f.email);
-      dispatch({type:"LOGIN",payload:found||{id:uid(),name:f.email.split("@")[0],email:f.email,avatar:"😊",verified:false,since:2026,bio:"",location:"Paris",rating:0,rentals:0,responseTime:"~1h"}});onClose()
-    }else{
-      if(step===0)return setStep(1);
-      if(acctType==="perso"){if(!f.name||!f.email||!f.password){setErr("Remplissez tous les champs");return}
-        dispatch({type:"LOGIN",payload:{id:uid(),name:f.name,email:f.email,avatar:"😊",verified:false,since:2026,bio:f.bio,location:f.location,rating:0,rentals:0,responseTime:"~1h",isPro:false}});onClose()
-      }else{if(!f.company||!f.siret||!f.email||!f.password){setErr("Remplissez les champs obligatoires");return}
-        dispatch({type:"LOGIN",payload:{id:uid(),name:f.company,email:f.email,avatar:"🏢",verified:true,since:2026,bio:f.sector?`Secteur : ${f.sector}`:"Professionnel",location:f.location,rating:0,rentals:0,responseTime:"~15 min",isPro:true,company:f.company,siret:f.siret,tva:f.tva,phone:f.phone,website:f.website,sector:f.sector}});onClose()}
-    }
-  };
-  const socialLogin=(provider,name,avatar)=>{
-    setLoading(provider);
-    setTimeout(()=>{
-      dispatch({type:"LOGIN",payload:{id:uid(),name,email:name.toLowerCase().replace(/ /g,".")+"@"+provider+".com",avatar,verified:true,since:2026,bio:"Connecté via "+provider,location:"Paris",rating:0,rentals:0,responseTime:"~30 min",isPro:false}});
-      onClose();
-    },800);
-  };
-  const sBtn={width:"100%",display:"flex",alignItems:"center",justifyContent:"center",gap:10,padding:"11px 16px",borderRadius:10,fontSize:13,fontWeight:600,border:"1.5px solid var(--bd)",background:"var(--w)",color:"var(--dk)",marginBottom:8,transition:"all .15s",cursor:"pointer",position:"relative"};
-  return <div className="bk" onClick={onClose}><div className="md" onClick={e=>e.stopPropagation()} style={{maxWidth:440}}>
-    <div className="mh"><button className="mx" onClick={onClose}><I.X/></button><h2>{mode==="login"?"Connexion":step===0?"Type de compte":"Inscription"}</h2></div>
-    <div className="mb">
-      {mode==="login"?<>
-        <div style={{textAlign:"center",fontSize:36,marginBottom:10}}>👋</div>
-        <p style={{textAlign:"center",fontSize:13,color:"var(--g)",marginBottom:16}}>Bon retour sur Cercle !</p>
-        <button style={{...sBtn,background:loading==="Google"?"var(--bgw)":undefined}} onClick={()=>socialLogin("Google","Marie Leclerc","👩‍🦰")}>
-          <svg width="18" height="18" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
-          {loading==="Google"?"Connexion...":"Continuer avec Google"}
-        </button>
-        <button style={{...sBtn,background:loading==="Apple"?"#333":"#000",color:"#fff",borderColor:"#000"}} onClick={()=>socialLogin("Apple","Thomas Durand","👨")}>
-          <svg width="16" height="18" viewBox="0 0 17 20" fill="white"><path d="M13.34 10.05c-.02-2.14 1.75-3.17 1.83-3.22-1-1.46-2.55-1.66-3.1-1.68-1.32-.13-2.57.77-3.24.77-.67 0-1.7-.75-2.8-.73A4.13 4.13 0 0 0 2.54 7.6c-1.49 2.58-.38 6.4 1.07 8.49.71 1.02 1.56 2.17 2.67 2.13 1.07-.04 1.47-.69 2.77-.69 1.29 0 1.66.69 2.78.67 1.15-.02 1.88-1.05 2.58-2.08.81-1.19 1.15-2.34 1.17-2.4-.03-.01-2.24-.86-2.26-3.41zM11.24 3.9c.59-.71 .99-1.7.88-2.69-.85.03-1.88.57-2.49 1.27-.55.63-1.03 1.64-.9 2.6.95.08 1.92-.48 2.51-1.18z"/></svg>
-          {loading==="Apple"?"Connexion...":"Continuer avec Apple"}
-        </button>
-        <button style={{...sBtn,background:loading==="Facebook"?"#1877F2":"var(--w)",color:loading==="Facebook"?"#fff":"var(--dk)",borderColor:loading==="Facebook"?"#1877F2":"var(--bd)"}} onClick={()=>socialLogin("Facebook","Julie Martin","👩")}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="#1877F2"><path d="M24 12.07C24 5.41 18.63 0 12 0S0 5.41 0 12.07C0 18.1 4.39 23.1 10.13 24v-8.44H7.08v-3.49h3.04V9.41c0-3.02 1.79-4.69 4.53-4.69 1.31 0 2.68.24 2.68.24v2.97h-1.51c-1.49 0-1.95.93-1.95 1.87v2.26h3.32l-.53 3.49h-2.8V24C19.61 23.1 24 18.1 24 12.07z"/></svg>
-          {loading==="Facebook"?"Connexion...":"Continuer avec Facebook"}
-        </button>
-        <div style={{display:"flex",alignItems:"center",gap:12,margin:"14px 0"}}><div style={{flex:1,height:1,background:"var(--bd)"}}/><span style={{fontSize:11,color:"var(--gl)",fontWeight:600}}>OU</span><div style={{flex:1,height:1,background:"var(--bd)"}}/></div>
-        <div className="fg"><label>Email</label><input type="email" value={f.email} onChange={e=>u("email",e.target.value)} placeholder="jean@email.com"/></div>
-        <div className="fg"><label>Mot de passe</label><input type="password" value={f.password} onChange={e=>u("password",e.target.value)} placeholder="••••••••"/></div>
-        {err&&<p style={{color:"var(--p)",fontSize:12,marginBottom:8}}>{err}</p>}
-        <button className="bp" style={{width:"100%",marginBottom:10}} onClick={go}>Se connecter</button>
-        <p style={{textAlign:"center",fontSize:12,color:"var(--g)"}}>Pas de compte ? <button className="cl" onClick={()=>{setMode("register");setStep(0);setErr("")}}>S'inscrire</button></p>
-      </>:step===0?<>
-        {/* Step 0: Choose account type */}
-        <div style={{textAlign:"center",fontSize:36,marginBottom:10}}>🎉</div>
-        <p style={{textAlign:"center",fontSize:13,color:"var(--g)",marginBottom:20}}>Quel type de compte souhaitez-vous créer ?</p>
-        <div style={{display:"flex",flexDirection:"column",gap:10}}>
-          <div onClick={()=>setAcctType("perso")} style={{border:`2px solid ${acctType==="perso"?"var(--p)":"var(--bd)"}`,borderRadius:14,padding:18,cursor:"pointer",transition:"all .2s",background:acctType==="perso"?"#FEF2F2":"var(--w)"}}>
-            <div style={{display:"flex",alignItems:"center",gap:12}}>
-              <span style={{fontSize:32}}>👤</span>
-              <div style={{flex:1}}>
-                <div style={{fontWeight:700,fontSize:15}}>Particulier</div>
-                <div style={{fontSize:12,color:"var(--g)",lineHeight:1.4,marginTop:2}}>Louez et proposez des objets entre particuliers. Inscription rapide.</div>
-              </div>
-              {acctType==="perso"&&<span style={{color:"var(--p)",fontSize:18}}>✓</span>}
-            </div>
-          </div>
-          <div onClick={()=>setAcctType("pro")} style={{border:`2px solid ${acctType==="pro"?"#2563EB":"var(--bd)"}`,borderRadius:14,padding:18,cursor:"pointer",transition:"all .2s",background:acctType==="pro"?"#EFF6FF":"var(--w)"}}>
-            <div style={{display:"flex",alignItems:"center",gap:12}}>
-              <span style={{fontSize:32}}>🏢</span>
-              <div style={{flex:1}}>
-                <div style={{fontWeight:700,fontSize:15}}>Professionnel</div>
-                <div style={{fontSize:12,color:"var(--g)",lineHeight:1.4,marginTop:2}}>Pour les entreprises et loueurs pro. Espace dédié, facturation, volumes.</div>
-              </div>
-              {acctType==="pro"&&<span style={{color:"#2563EB",fontSize:18}}>✓</span>}
-            </div>
-            <div style={{display:"flex",gap:6,marginTop:8,flexWrap:"wrap"}}>{["Factures","Flotte","Dashboard","Visibilité Pro"].map(t=><span key={t} style={{fontSize:9,padding:"2px 7px",borderRadius:5,background:"#DBEAFE",color:"#1E40AF",fontWeight:600}}>{t}</span>)}</div>
-          </div>
-        </div>
-        <button className="bp" style={{width:"100%",marginTop:16}} onClick={()=>setStep(1)}>Continuer →</button>
-        <p style={{textAlign:"center",fontSize:12,color:"var(--g)",marginTop:8}}>Déjà un compte ? <button className="cl" onClick={()=>{setMode("login");setErr("")}}>Se connecter</button></p>
-      </>:<>
-        {/* Step 1: Form fields */}
-        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:14}}>
-          <button className="cl" style={{display:"flex",alignItems:"center",gap:4}} onClick={()=>setStep(0)}><I.Back/></button>
-          <span style={{fontSize:13,fontWeight:600}}>{acctType==="pro"?"🏢 Compte Professionnel":"👤 Compte Particulier"}</span>
-        </div>
-        {acctType==="pro"?<>
-          {/* Pro fields */}
-          <div style={{background:"linear-gradient(135deg,#EFF6FF,#DBEAFE)",borderRadius:10,padding:12,marginBottom:14,fontSize:11,color:"#1E40AF"}}>
-            <strong>Avantages Pro :</strong> Espace dédié, Dashboard avancé, Facturation auto, Visibilité prioritaire, Gestion de flotte
-          </div>
-          <div className="fg"><label>Nom de l'entreprise <span style={{color:"var(--p)"}}>*</span></label><input value={f.company} onChange={e=>u("company",e.target.value)} placeholder="Ex: Loxam, Mon Entreprise SAS"/></div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-            <div className="fg"><label>N° SIRET <span style={{color:"var(--p)"}}>*</span></label><input value={f.siret} onChange={e=>{const v=e.target.value.replace(/\D/g,"").slice(0,14);u("siret",v.replace(/(\d{3})(?=\d)/g,"$1 ").trim())}} placeholder="123 456 789 00012" maxLength="17"/></div>
-            <div className="fg"><label>N° TVA intracommunautaire</label><input value={f.tva} onChange={e=>u("tva",e.target.value)} placeholder="FR 12 345678901"/></div>
-          </div>
-          <div className="fg"><label>Secteur d'activité <span style={{color:"var(--p)"}}>*</span></label><select value={f.sector} onChange={e=>u("sector",e.target.value)} style={{width:"100%",padding:"10px 12px",border:"1.5px solid var(--bd)",borderRadius:9,fontSize:13}}>
-            <option value="">Sélectionner...</option>
-            <option>BTP & Construction</option><option>Événementiel</option><option>Transport & Logistique</option><option>Audiovisuel & Photo</option><option>Espaces verts & Jardinage</option><option>Industrie & Manufacture</option><option>Restauration & Cuisine</option><option>Sport & Loisirs</option><option>Autre</option>
-          </select></div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-            <div className="fg"><label>Téléphone</label><input value={f.phone} onChange={e=>u("phone",e.target.value)} placeholder="01 23 45 67 89"/></div>
-            <div className="fg"><label>Site web</label><input value={f.website} onChange={e=>u("website",e.target.value)} placeholder="www.monentreprise.fr"/></div>
-          </div>
-          <div className="fg"><label>Email professionnel <span style={{color:"var(--p)"}}>*</span></label><input type="email" value={f.email} onChange={e=>u("email",e.target.value)} placeholder="contact@entreprise.fr"/></div>
-          <div className="fg"><label>Mot de passe <span style={{color:"var(--p)"}}>*</span></label><input type="password" value={f.password} onChange={e=>u("password",e.target.value)} placeholder="••••••••"/></div>
-          <div className="fg"><label>Ville</label><select value={f.location} onChange={e=>u("location",e.target.value)}>{LOCS.map(l=><option key={l}>{l}</option>)}</select></div>
-        </>:<>
-          {/* Particulier fields */}
-          <div className="fg"><label>Nom complet</label><input value={f.name} onChange={e=>u("name",e.target.value)} placeholder="Jean Dupont"/></div>
-          <div className="fg"><label>Email</label><input type="email" value={f.email} onChange={e=>u("email",e.target.value)} placeholder="jean@email.com"/></div>
-          <div className="fg"><label>Mot de passe</label><input type="password" value={f.password} onChange={e=>u("password",e.target.value)} placeholder="••••••••"/></div>
-          <div className="fg"><label>Ville</label><select value={f.location} onChange={e=>u("location",e.target.value)}>{LOCS.map(l=><option key={l}>{l}</option>)}</select></div>
-        </>}
-        {err&&<p style={{color:"var(--p)",fontSize:12,marginBottom:8}}>{err}</p>}
-        <button className="bp" style={{width:"100%",marginTop:6,marginBottom:10,background:acctType==="pro"?"#2563EB":undefined}} onClick={go}>{acctType==="pro"?"Créer mon compte Pro":"Créer mon compte"}</button>
-        <p style={{textAlign:"center",fontSize:10,color:"var(--gl)",lineHeight:1.4}}>En continuant, vous acceptez les <button className="cl" style={{fontSize:10}}>CGU</button> et la <button className="cl" style={{fontSize:10}}>Politique de confidentialité</button>.</p>
-      </>}
-    </div>
-  </div></div>
-}
-
-
-/* ===== ONBOARDING ===== */
-function Onboarding({onClose}){
-  const[step,setStep]=useState(0);
-  const steps=[
-    {icon:"🎉",title:"Bienvenue sur Cercle !",desc:"La plateforme de location entre particuliers et pros. Louez ce dont vous avez besoin, rentabilisez ce que vous n'utilisez pas."},
-    {icon:"🔍",title:"Trouvez facilement",desc:"2 400+ annonces disponibles. Filtrez par catégorie, localisation et prix. Réservez en quelques clics, depuis n'importe où."},
-    {icon:"💰",title:"Rentabilisez vos objets",desc:"Proposez vos affaires inutilisées en 2 minutes. Définissez votre prix et vos disponibilités, les demandes arrivent directement."},
-    {icon:"🛡️",title:"Louer en toute sécurité",desc:"Paiement sécurisé SSL, caution automatique et assurance CercleCover jusqu'à 2 000 €. Vous êtes protégé à chaque location."},
-  ];
-  const s=steps[step];
-  return <div className="bk" style={{zIndex:600}} onClick={onClose}>
-    <div className="md" style={{maxWidth:440,textAlign:"center"}} onClick={e=>e.stopPropagation()}>
-      <div style={{padding:"36px 28px 12px"}} className="ob-step" key={step}>
-        <div style={{fontSize:60,marginBottom:16}}>{s.icon}</div>
-        <h2 style={{fontFamily:"var(--fd)",fontSize:22,fontWeight:700,marginBottom:10,letterSpacing:"-.02em"}}>{s.title}</h2>
-        <p style={{fontSize:14,color:"var(--g)",lineHeight:1.65,maxWidth:340,margin:"0 auto"}}>{s.desc}</p>
-      </div>
-      <div style={{display:"flex",justifyContent:"center",gap:6,marginBottom:20,marginTop:8}}>
-        {steps.map((_,i)=><div key={i} style={{width:i===step?24:6,height:6,borderRadius:3,background:i===step?"var(--p)":"var(--bd)",transition:"all .3s var(--ease)"}}/>)}
-      </div>
-      <div style={{padding:"0 24px 28px",display:"flex",gap:8}}>
-        {step===0
-          ?<button className="bs" style={{flex:1}} onClick={onClose}>Passer</button>
-          :<button className="bs" style={{flex:1}} onClick={()=>setStep(s=>s-1)}>← Retour</button>}
-        {step<steps.length-1
-          ?<button className="bp" style={{flex:2}} onClick={()=>setStep(s=>s+1)}>Suivant →</button>
-          :<button className="bp" style={{flex:2,background:"var(--acc)"}} onClick={onClose}>C'est parti 🚀</button>}
-      </div>
-    </div>
-  </div>
-}
-
-/* ===== MINI CALENDAR ===== */
-function MiniCal({value,onChange,label,minDate}){
-  const d=value?new Date(value):new Date();
-  const[viewY,setViewY]=useState(d.getFullYear());const[viewM,setViewM]=useState(d.getMonth());
-  const months=["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
-  const days=["Lu","Ma","Me","Je","Ve","Sa","Di"];
-  const firstDay=new Date(viewY,viewM,1).getDay()||7;
-  const daysInMonth=new Date(viewY,viewM+1,0).getDate();
-  const today=new Date();today.setHours(0,0,0,0);
-  const minD=minDate?new Date(minDate):today;minD.setHours(0,0,0,0);
-  const prev=()=>{if(viewM===0){setViewM(11);setViewY(viewY-1)}else setViewM(viewM-1)};
-  const next=()=>{if(viewM===11){setViewM(0);setViewY(viewY+1)}else setViewM(viewM+1)};
-  const selDate=value?new Date(value):null;if(selDate)selDate.setHours(0,0,0,0);
-  const cells=[];for(let i=1;i<firstDay;i++)cells.push(null);for(let i=1;i<=daysInMonth;i++)cells.push(i);
-  return <div style={{background:"var(--w)",borderRadius:12,border:"1.5px solid var(--bd)",overflow:"hidden"}}>
-    <div style={{padding:"10px 12px",display:"flex",justifyContent:"space-between",alignItems:"center",background:"var(--bgw)"}}>
-      <button style={{background:"none",border:"none",fontSize:16,cursor:"pointer",padding:"2px 8px",borderRadius:6}} onClick={prev}>‹</button>
-      <span style={{fontSize:13,fontWeight:700,fontFamily:"var(--fd)"}}>{months[viewM]} {viewY}</span>
-      <button style={{background:"none",border:"none",fontSize:16,cursor:"pointer",padding:"2px 8px",borderRadius:6}} onClick={next}>›</button>
-    </div>
-    <div style={{padding:"6px 8px"}}>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:2,marginBottom:4}}>{days.map(d=><div key={d} style={{textAlign:"center",fontSize:10,fontWeight:700,color:"var(--gl)",padding:2}}>{d}</div>)}</div>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:2}}>
-        {cells.map((day,i)=>{if(!day)return <div key={i}/>;
-          const dt=new Date(viewY,viewM,day);dt.setHours(0,0,0,0);
-          const isPast=dt<minD;const isSel=selDate&&dt.getTime()===selDate.getTime();const isToday=dt.getTime()===today.getTime();
-          return <button key={i} disabled={isPast} onClick={()=>{const m=String(viewM+1).padStart(2,"0");const dd=String(day).padStart(2,"0");onChange(`${viewY}-${m}-${dd}`)}}
-            style={{width:"100%",aspectRatio:"1",border:"none",borderRadius:8,fontSize:12,fontWeight:isSel?700:isToday?600:400,
-              background:isSel?"var(--p)":isToday?"var(--bgw)":"transparent",color:isSel?"#fff":isPast?"var(--gl)":"var(--dk)",
-              cursor:isPast?"default":"pointer",transition:"all .1s"}}>
-            {day}
-          </button>
-        })}
-      </div>
-    </div>
-    {label&&<div style={{padding:"6px 12px",borderTop:"1px solid var(--bd)",fontSize:11,color:"var(--g)",textAlign:"center"}}>{label}: <strong>{value||"—"}</strong></div>}
-  </div>
-}
-
-function Detail({item,onClose,state,dispatch,setPage,setConvId,setShowShop}){
-  const[gal,setGal]=useState(null);
-  const[days,setDays]=useState(3);const[sd,setSd]=useState("2026-03-12");const[ed,setEd]=useState("2026-03-14");const[durType,setDurType]=useState("jour");const[timeSlot,setTimeSlot]=useState("");const[booked,setBooked]=useState(false);const[showRF,setShowRF]=useState(false);const[rt,setRt]=useState("");const[rr,setRr]=useState(5);
-  const[payStep,setPayStep]=useState(0);const[showBid,setShowBid]=useState(false);const[bidAmt,setBidAmt]=useState('');const[payMethod,setPayMethod]=useState("card");const[cardNum,setCardNum]=useState("");const[cardExp,setCardExp]=useState("");const[cardCvc,setCardCvc]=useState("");
-  const userRentals=(state.user?.rentals||0)+state.bookings.filter(b=>b.userId===state.user?.id).length;
-  const userGrade=getGrade(userRentals);
-  const ins=Math.floor(item.price*days*.08),fee=Math.floor(item.price*days*userGrade.feeRate),feeBase=Math.floor(item.price*days*0.10),feeSaved=feeBase-fee,tot=item.price*days+ins+fee;
-  useEffect(()=>{if(sd&&ed){const d=Math.max(1,Math.round((new Date(ed)-new Date(sd))/864e5));setDays(d)}},[sd,ed]);
-  const book=()=>{if(!state.user)return;dispatch({type:"BOOK",payload:{id:uid(),itemId:item.id,itemTitle:item.title,itemImg:item.images[0],ownerId:item.owner.id,ownerName:item.owner.name,userId:state.user.id,startDate:sd,endDate:ed,status:"confirmed",total:tot,deposit:item.deposit,days,createdAt:new Date(),payMethod}});setBooked(true);setPayStep(0)};
-  const startConv=()=>{if(!state.user)return;const cid=`c_${item.owner.id}_${state.user.id}_${item.id}`;dispatch({type:"MSG",payload:{id:uid(),cid,from:state.user.id,to:item.owner.id,itemId:item.id,text:`Bonjour ! "${item.title}" est-il disponible ?`,timestamp:new Date()}});onClose();setConvId(cid);setPage("messages")};
-  const submitRev=()=>{if(!state.user||!rt)return;dispatch({type:"REVIEW",payload:{id:uid(),itemId:item.id,fromUserId:state.user.id,fromUserName:state.user.name,fromUserAvatar:state.user.avatar,rating:rr,text:rt,createdAt:new Date()}});setShowRF(false);setRt("")};
-  const iRevs=state.reviews.filter(r=>r.itemId===item.id);
-  return <div className="ov">
-    {gal&&<Gallery images={gal.imgs} start={gal.idx||0} onClose={()=>setGal(null)}/>}
-    <div className="dh"><button className="mx" onClick={onClose} style={{position:"static"}}><I.X/></button><div style={{display:"flex",gap:6}}><button className="cl" style={{display:"flex",alignItems:"center",gap:4}} onClick={()=>dispatch({type:"TOG_FAV",id:item.id})}><I.Heart f={state.favorites.has(item.id)}/></button><button className="cl" style={{display:"flex",alignItems:"center",gap:4}}><I.Share/></button></div></div>
-    <div className="dimgs"><img className="dimg0" src={item.images[0]} alt="" style={{cursor:"pointer"}} onClick={()=>setGal({imgs:item.images,idx:0})}/>{item.images.slice(1).map((im,i)=><img key={i} src={im} alt=""/>)}</div>
-    <div className="dc"><div>
-      <h1 style={{fontFamily:"var(--fd)",fontSize:24,fontWeight:600,marginBottom:4}}>{item.title}</h1>
-      <div style={{fontSize:12,color:"var(--g)",marginBottom:3}}>📍 {item.location}</div>
-      <div style={{display:"flex",alignItems:"center",gap:6,fontSize:13,fontWeight:500,marginBottom:16,flexWrap:"wrap"}}><span style={{display:"flex",alignItems:"center",gap:2}}><I.Star/> {item.rating}</span><span style={{color:"var(--gl)"}}>·</span><span style={{textDecoration:"underline"}}>{item.reviews+iRevs.length} avis</span><span style={{color:"var(--gl)"}}>·</span><span style={{color:"var(--acc)",fontWeight:600}}>{item.condition}</span></div>
-      <div style={{display:"flex",alignItems:"center",gap:11,padding:"18px 0",borderTop:"1px solid var(--bd)",borderBottom:"1px solid var(--bd)"}}>
-        <div style={{width:42,height:42,borderRadius:"50%",background:"var(--bgw)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,position:"relative"}}>{item.owner.avatar}{item.owner.verified&&<div style={{position:"absolute",bottom:-2,right:-2,background:"var(--acc)",color:"#fff",width:15,height:15,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:8,border:"2px solid #fff"}}>✓</div>}</div>
-        <div><div style={{fontSize:14,fontWeight:600,cursor:"pointer",textDecoration:"underline"}} onClick={()=>{onClose();setShowShop&&setShowShop(item.owner)}}>Proposé par {item.owner.name}</div><div style={{fontSize:11,color:"var(--g)"}}>Depuis {item.owner.since} · {item.owner.rentals} locations · ★{item.owner.rating}</div></div>
-      </div>
-      <div style={{padding:"18px 0",borderBottom:"1px solid var(--bd)",display:"flex",flexDirection:"column",gap:14}}>
-        {[item.owner.verified&&["✅","Identité vérifiée",item.owner.name+" a vérifié son identité."],["🛡️","Assurance CercleCover","Couverture jusqu'à 2 000 € incluse."],["💬","Messagerie sécurisée","Échangez via notre chat intégré."],["🔄","Annulation flexible","Gratuite jusqu'à 24h avant."]].filter(Boolean).map(([ic,t,p],i)=><div key={i} style={{display:"flex",gap:11}}><span style={{fontSize:18}}>{ic}</span><div><div style={{fontSize:13,fontWeight:600}}>{t}</div><div style={{fontSize:12,color:"var(--g)",lineHeight:1.4}}>{p}</div></div></div>)}
-      </div>
-      <div style={{padding:"18px 0",borderBottom:"1px solid var(--bd)",fontSize:14,lineHeight:1.6}}>{item.description}</div>
-      <div style={{padding:"18px 0",borderBottom:"1px solid var(--bd)"}}>
-        <h3 style={{fontSize:16,fontWeight:600,fontFamily:"var(--fd)",marginBottom:10}}>Détails</h3>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>{[["📦","État : "+item.condition],["💰","Caution : "+item.deposit+" €"],["📍",item.location],["🚚","Livraison possible"],["📅","Publié : "+item.createdAt],["⏱️","Min. 1 jour"]].map(([ic,t],i)=><div key={i} style={{display:"flex",alignItems:"center",gap:8,fontSize:12,padding:"5px 0"}}><span>{ic}</span>{t}</div>)}</div>
-      </div>
-      <div style={{padding:"18px 0"}}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}><h3 style={{fontSize:16,fontFamily:"var(--fd)",fontWeight:600}}><I.Star/> {item.rating} · {item.reviews+iRevs.length} avis</h3>{state.user&&<button className="bs" style={{fontSize:11,padding:"6px 12px"}} onClick={()=>setShowRF(!showRF)}>Laisser un avis</button>}</div>
-        {showRF&&<div style={{padding:14,background:"var(--bgw)",borderRadius:10,marginBottom:14}}>
-          <div className="fg"><label>Note</label><div style={{display:"flex",gap:3}}>{[1,2,3,4,5].map(n=><button key={n} style={{background:"none",border:"none",fontSize:20,color:n<=rr?"var(--p)":"var(--bd)"}} onClick={()=>setRr(n)}>★</button>)}</div></div>
-          <div className="fg"><label>Votre avis</label><textarea value={rt} onChange={e=>setRt(e.target.value)} placeholder="Partagez votre expérience..."/></div>
-          <button className="bp" style={{fontSize:12,padding:"7px 16px"}} onClick={submitRev}>Publier</button>
-        </div>}
-        {iRevs.map(r=><div key={r.id} className="rev"><div className="revh"><div className="reva">{r.fromUserAvatar}</div><div><div className="revn">{r.fromUserName}</div><div className="revd">{ds(r.createdAt)}</div></div></div><div className="revs">{"★".repeat(r.rating)}{"☆".repeat(5-r.rating)}</div><div className="revt">{r.text}</div></div>)}
-      </div>
-      {/* Rental History */}
-      <div style={{padding:"18px 0",borderBottom:"1px solid var(--bd)"}}>
-        <h3 style={{fontSize:16,fontFamily:"var(--fd)",fontWeight:600,marginBottom:10}}>🔄 Historique de location</h3>
-        {state.bookings.filter(b=>b.itemId===item.id).length===0?<p style={{fontSize:12,color:"var(--g)"}}>Aucune location enregistrée pour cet objet.</p>:
-        state.bookings.filter(b=>b.itemId===item.id).slice(0,5).map(b=><div key={b.id} className="hist-item"><span style={{fontSize:16}}>{b.status==="confirmed"?"✅":"❌"}</span><div style={{flex:1}}><div style={{fontWeight:600}}>{b.ownerName||"Locataire"}</div><div style={{color:"var(--g)"}}>📅 {b.startDate} → {b.endDate} · {b.days}j · {b.total}€</div></div><span style={{fontSize:11,padding:"2px 8px",borderRadius:6,background:b.status==="confirmed"?"#ECFDF5":"#FEF2F2",color:b.status==="confirmed"?"var(--acc)":"var(--p)",fontWeight:600}}>{b.status==="confirmed"?"Confirmé":"Annulé"}</span></div>)}
-      </div>
-      {/* Localisation */}
-      <div style={{padding:"18px 0"}}>
-        <h3 style={{fontSize:16,fontFamily:"var(--fd)",fontWeight:600,marginBottom:4}}>📍 Localisation</h3>
-        <p style={{fontSize:12,color:"var(--g)",marginBottom:8}}>Aux alentours de <strong>{item.location}</strong> · adresse exacte après réservation</p>
-        <div className="detail-map">
-          <iframe title="map"
-            src={`https://www.openstreetmap.org/export/embed.html?bbox=${((item.lng||2.35)-.015).toFixed(4)},${((item.lat||48.86)-.015).toFixed(4)},${((item.lng||2.35)+.015).toFixed(4)},${((item.lat||48.86)+.015).toFixed(4)}&layer=mapnik&marker=${(item.lat||48.86).toFixed(4)},${(item.lng||2.35).toFixed(4)}`}
-            style={{width:"100%",height:200,border:"none",display:"block"}}
-            loading="lazy"
-          />
-        </div>
-      </div>
-    </div>
-    <div><div className="bc">
-      <div className="bcp">{item.price} € <span>/ jour</span></div>
-      <div style={{fontSize:11,color:"var(--g)",marginBottom:2}}>Caution {item.deposit} € · bloquée puis restituée</div>
-      {!showBid?<button className="cl" style={{fontSize:11,marginBottom:6,display:"flex",alignItems:"center",gap:4}} onClick={()=>setShowBid(true)}>🏷️ Proposer un prix</button>:
-      <div className="bid-bar"><span style={{fontSize:14}}>🏷️</span><input type="number" value={bidAmt} onChange={e=>setBidAmt(e.target.value)} placeholder="Votre prix/jour" style={{flex:1,border:"1.5px solid var(--bd)",borderRadius:8,padding:"6px 10px",fontSize:12}}/><button className="bp" style={{fontSize:11,padding:"6px 12px"}} onClick={()=>{if(+bidAmt>0){setShowBid(false);setBidAmt("")}}}>Envoyer</button></div>}
-      {payStep===0?<>
-        <div style={{marginBottom:10}}>
-          <div style={{marginBottom:8}}><label style={{fontSize:11,fontWeight:700,display:"block",marginBottom:4}}>Durée</label><div className="ts">{[["heure","⏰ À l'heure"],["demi","☀️ Demi-journée"],["jour","📅 Journée"],["semaine","📆 Semaine"]].map(([id,l])=><button key={id} className={"ts-btn"+(durType===id?" on":"")} onClick={()=>setDurType(id)}>{l}</button>)}</div></div>
-          {(durType==="heure"||durType==="demi")&&<div style={{marginBottom:8}}><label style={{fontSize:11,fontWeight:700,display:"block",marginBottom:4}}>Créneau</label><div className="ts">{(durType==="heure"?["8h-9h","9h-10h","10h-11h","11h-12h","14h-15h","15h-16h","16h-17h","17h-18h"]:["Matin (8h-12h)","Après-midi (14h-18h)"]).map(s=><button key={s} className={"ts-btn"+(timeSlot===s?" on":"")} onClick={()=>setTimeSlot(s)}>{s}</button>)}</div></div>}
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:8}}>
-            <MiniCal value={sd} onChange={setSd} label="Début"/>
-            <MiniCal value={ed} onChange={setEd} label="Fin" minDate={sd}/>
-          </div>
-          <div className="bcf"><label>Retrait</label><select><option>📍 En main propre</option><option>🚚 Livraison (+10€)</option></select></div>
-        </div>
-        <div className="bcb"><div className="bcl"><span>{item.price} € × {days}j</span><span>{item.price*days} €</span></div><div className="bcl"><span>Assurance</span><span>{ins} €</span></div><div className="bcl"><span>Frais ({Math.round(userGrade.feeRate*100)}%)</span><span>{fee} €</span></div>{state.user&&feeSaved>0&&<div className="bcl" style={{color:"var(--acc)",fontSize:11}}><span>{userGrade.icon} Réduction {userGrade.name}</span><span>-{feeSaved} €</span></div>}<div className="bcl tot"><span>Total</span><span>{tot} €</span></div><div className="bcl" style={{color:"var(--g)",fontSize:11}}><span>🔒 Caution bloquée</span><span>{item.deposit} €</span></div></div>
-        <button className="bp" style={{width:"100%",marginTop:12,background:booked?"var(--acc)":undefined}} onClick={()=>state.user?(booked?null:setPayStep(1)):null} disabled={booked||!state.user}>{!state.user?"Connectez-vous":booked?"✓ Réservé !":"Payer · "+tot+" €"}</button>
-      </>:payStep===1?<>
-        <div style={{padding:"14px 0"}}>
-          <h3 style={{fontFamily:"var(--fd)",fontSize:15,fontWeight:600,marginBottom:10}}>🔒 Paiement sécurisé</h3>
-          <div style={{display:"flex",gap:6,marginBottom:14,flexWrap:"wrap"}}>{[["card","💳 Carte"],["gpay","Google Pay"],["apple","🍎 Apple Pay"],["paypal","🅿️ PayPal"]].map(([id,label])=>
-            <button key={id} className={"pill"+(payMethod===id?" on":"")} onClick={()=>setPayMethod(id)}>{label}</button>
-          )}</div>
-          {payMethod==="card"&&<>
-            <div className="fg"><label>Numéro de carte</label><input value={cardNum} onChange={e=>setCardNum(e.target.value.replace(/\D/g,"").replace(/(.{4})/g,"$1 ").trim())} placeholder="4242 4242 4242 4242" maxLength={19}/></div>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-              <div className="fg"><label>Expiration</label><input value={cardExp} onChange={e=>setCardExp(e.target.value)} placeholder="MM/AA" maxLength={5}/></div>
-              <div className="fg"><label>CVC</label><input value={cardCvc} onChange={e=>setCardCvc(e.target.value)} placeholder="123" maxLength={3} type="password"/></div>
-            </div>
-          </>}
-          {payMethod==="gpay"&&<button style={{width:"100%",padding:14,background:"#fff",border:"1.5px solid var(--bd)",borderRadius:10,display:"flex",alignItems:"center",justifyContent:"center",gap:8,cursor:"pointer",fontSize:14,fontWeight:600}} onClick={()=>{}}>
-            <svg width="40" height="18" viewBox="0 0 40 18"><path d="M19.22 8.69v4.97h-1.56V1.5h4.13a3.74 3.74 0 0 1 2.67 1.05 3.43 3.43 0 0 1 1.1 2.58 3.47 3.47 0 0 1-1.1 2.6 3.73 3.73 0 0 1-2.67 1.06h-2.57v-.1zm0-5.67v4.16h2.6a2.12 2.12 0 0 0 1.59-.64 2.13 2.13 0 0 0 .01-3.04 2.12 2.12 0 0 0-1.6-.64h-2.6v.16z" fill="#5F6368"/><path d="M28.18 5.59c1.15 0 2.06.31 2.73.93.67.62 1 1.47 1 2.55v5.16h-1.48v-1.16h-.07c-.65.96-1.5 1.43-2.57 1.43-.91 0-1.67-.27-2.28-.81a2.56 2.56 0 0 1-.93-2.01c0-.85.32-1.52.96-2.02.64-.5 1.5-.75 2.56-.75.91 0 1.66.17 2.24.5v-.35c0-.57-.22-1.05-.67-1.44a2.22 2.22 0 0 0-1.5-.59c-.87 0-1.56.37-2.07 1.1l-1.36-.86c.75-1.08 1.86-1.62 3.32-1.62v-.06zm-1.97 7.09c0 .43.18.79.55 1.07.37.29.8.43 1.28.43.7 0 1.32-.26 1.85-.79.53-.53.8-1.14.8-1.84-.47-.38-1.12-.57-1.96-.57-.61 0-1.12.15-1.53.45-.4.3-.6.66-.6 1.08l-.4.17z" fill="#5F6368"/><path d="M39.63 5.86l-5.15 11.84h-1.6l1.91-4.15-3.4-7.7h1.68l2.44 5.9h.03l2.38-5.9h1.6l.1.01z" fill="#5F6368"/><path d="M12.81 7.72a7.66 7.66 0 0 0-.1-1.27H6.55v2.4h3.51a3 3 0 0 1-1.3 1.97v1.64h2.11c1.24-1.14 1.95-2.82 1.95-4.74z" fill="#4285F4"/><path d="M6.55 12.36c1.76 0 3.24-.58 4.31-1.58l-2.11-1.64c-.58.39-1.33.62-2.2.62-1.7 0-3.13-1.14-3.64-2.68H.72v1.7A6.5 6.5 0 0 0 6.55 12.36z" fill="#34A853"/><path d="M2.91 7.08a3.9 3.9 0 0 1 0-2.5v-1.7H.72A6.5 6.5 0 0 0 0 5.83c0 1.05.25 2.05.72 2.94l2.19-1.7z" fill="#FBBC04"/><path d="M6.55 2.38c.96 0 1.81.33 2.49.97l1.87-1.87A6.26 6.26 0 0 0 6.55 0 6.5 6.5 0 0 0 .72 3.47l2.19 1.7c.5-1.53 1.94-2.68 3.64-2.68v-.11z" fill="#EA4335"/></svg>
-            Payer avec Google Pay
-          </button>}
-          {payMethod==="paypal"&&<button style={{width:"100%",padding:14,background:"#FFC439",border:"none",borderRadius:10,display:"flex",alignItems:"center",justifyContent:"center",gap:8,cursor:"pointer",fontSize:14,fontWeight:700,color:"#253B80"}} onClick={()=>{}}>
-            <svg width="20" height="22" viewBox="0 0 24 28" fill="#253B80"><path d="M20.4 6.4c.9-1 1.2-2.4 1-4C20 .8 18 0 15.4 0H5.8c-.5 0-1 .4-1 .9L1.4 24c0 .4.2.7.6.7h4.6l1.2-7.3v.2c.1-.5.5-.9 1-.9h2.2c4.3 0 7.6-1.7 8.6-6.7v-.4c-.1 0 .7-2.6.8-3.2z"/><path d="M9.7 6.8c.1-.3.3-.5.5-.7.2-.1.5-.2.7-.2h6.5c.8 0 1.5.1 2.1.2.2 0 .3.1.5.1.2.1.3.1.5.2.1 0 .1 0 .2.1.3.1.5.2.7.4.3-1.6 0-2.7-.9-3.7C19.3 1.9 17 1.2 14 1.2H6c-.5 0-.9.3-1 .8L1.6 25.1c0 .3.2.6.5.6h4.3l1.1-6.8L9.7 6.8z" fill="#179BD7"/></svg>
-            Payer avec PayPal
-          </button>}
-          {payMethod==="apple"&&<button style={{width:"100%",padding:14,background:"#000",border:"none",borderRadius:10,display:"flex",alignItems:"center",justifyContent:"center",gap:8,cursor:"pointer",fontSize:14,fontWeight:600,color:"#fff"}} onClick={()=>{}}>
-            <svg width="16" height="18" viewBox="0 0 17 20" fill="white"><path d="M13.34 10.05c-.02-2.14 1.75-3.17 1.83-3.22-1-1.46-2.55-1.66-3.1-1.68-1.32-.13-2.57.77-3.24.77-.67 0-1.7-.75-2.8-.73A4.13 4.13 0 0 0 2.54 7.6c-1.49 2.58-.38 6.4 1.07 8.49.71 1.02 1.56 2.17 2.67 2.13 1.07-.04 1.47-.69 2.77-.69 1.29 0 1.66.69 2.78.67 1.15-.02 1.88-1.05 2.58-2.08.81-1.19 1.15-2.34 1.17-2.4-.03-.01-2.24-.86-2.26-3.41zM11.24 3.9c.59-.71.99-1.7.88-2.69-.85.03-1.88.57-2.49 1.27-.55.63-1.03 1.64-.9 2.6.95.08 1.92-.48 2.51-1.18z"/></svg>
-            Payer avec Apple Pay
-          </button>}
-          <div style={{background:"var(--bgw)",borderRadius:10,padding:12,marginTop:10,fontSize:12}}>
-            <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}><span>Location</span><strong>{tot} €</strong></div>
-            <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}><span>🔒 Caution (bloquée)</span><strong>{item.deposit} €</strong></div>
-            <div style={{borderTop:"1px solid var(--bd)",paddingTop:6,marginTop:6,display:"flex",justifyContent:"space-between",fontWeight:700}}>
-              <span>Prélevé maintenant</span><span>{tot+item.deposit} €</span>
-            </div>
-            <div style={{fontSize:10,color:"var(--g)",marginTop:6}}>💡 La caution de {item.deposit} € est bloquée sur votre compte et restituée automatiquement sous 48h après retour de l'objet en bon état.</div>
-          </div>
-        </div>
-        <div style={{display:"flex",gap:8}}><button className="bs" style={{flex:1}} onClick={()=>setPayStep(0)}>← Retour</button><button className="bp" style={{flex:2}} onClick={book}>🔒 Confirmer le paiement</button></div>
-      </>:null}
-      <button className="bs" style={{width:"100%",marginTop:8,display:"flex",alignItems:"center",justifyContent:"center",gap:6}} onClick={startConv} disabled={!state.user}><I.Msg/> Contacter {item.owner.name}</button>
-      <div style={{display:"flex",alignItems:"center",gap:6,fontSize:10,color:"var(--g)",marginTop:12,paddingTop:10,borderTop:"1px solid var(--bd)"}}>🛡️ Paiement chiffré SSL · Fonds bloqués jusqu'au retour · Caution restituable</div>
-    </div></div></div>
-  </div>
-}
-
-/* ========== GRADE SYSTEM ========== */
-const GRADES = [
-  { id:"bronze", name:"Bronze", icon:"🥉", min:0, max:4, feeRate:0.10, perks:["Commission standard 10%","Assurance de base","Messagerie standard"] },
-  { id:"silver", name:"Argent", icon:"🥈", min:5, max:14, feeRate:0.08, perks:["Commission réduite 8%","Assurance étendue","Badge Argent","Priorité dans les résultats"] },
-  { id:"gold", name:"Or", icon:"🥇", min:15, max:34, feeRate:0.06, perks:["Commission réduite 6%","Assurance premium","Badge Or","Mise en avant","Support prioritaire"] },
-  { id:"platinum", name:"Platine", icon:"💎", min:35, max:74, feeRate:0.04, perks:["Commission réduite 4%","Assurance tous risques","Badge Platine","Top des résultats","Support VIP","Accès bêta"] },
-  { id:"diamond", name:"Diamant", icon:"👑", min:75, max:Infinity, feeRate:0.02, perks:["Commission mini 2%","Assurance illimitée","Badge Diamant","#1 des résultats","Conciergerie dédiée","Accès bêta","Événements exclusifs"] },
+/* ═══════════ DONNÉES DÉMO ═══════════ */
+const CATS=[
+ {id:"all",label:"Tout"},
+ {id:"brico",label:"Bricolage"},
+ {id:"photo",label:"Photo & son"},
+ {id:"velo",label:"Vélos & mobilité"},
+ {id:"sport",label:"Sport & plein air"},
+ {id:"jardin",label:"Jardin"},
+ {id:"cuisine",label:"Cuisine & maison"},
 ];
-function getGrade(rentals) { return GRADES.find(g => rentals >= g.min && rentals <= g.max) || GRADES[0]; }
-function getNextGrade(rentals) { const i = GRADES.findIndex(g => rentals >= g.min && rentals <= g.max); return i < GRADES.length - 1 ? GRADES[i + 1] : null; }
-function calcSavings(rentals, avgPrice) {
-  const base = GRADES[0].feeRate;
-  const current = getGrade(rentals).feeRate;
-  return Math.floor(rentals * avgPrice * 3 * (base - current));
+/* seed → image. Les vraies photos (data:/http/blob) passent telles quelles, les graines de démo deviennent une image picsum stable. */
+const isUrl=s=>/^(data:|https?:|blob:)/.test(String(s||""));
+const seed=(s,w=560,h=420)=>isUrl(s)?String(s):`https://picsum.photos/seed/${s}/${w}/${h}`;
+/* Galerie à partir d'une graine/photo : une vraie photo unique = 1 image, une graine de démo = 3 vues distinctes. */
+const imgsFromSeed=sd=>isUrl(sd)?[sd]:[sd,sd+"b",sd+"c"];
+/* Redimensionne une photo choisie (côté navigateur) en JPEG compact pour le stockage/affichage. */
+function fileToDataURL(file,max=900,q=0.72){return new Promise((res,rej)=>{const u=URL.createObjectURL(file),im=new Image();
+  im.onload=()=>{let w=im.width,h=im.height;if(w>h&&w>max){h=Math.round(h*max/w);w=max;}else if(h>=w&&h>max){w=Math.round(w*max/h);h=max;}
+    const cv=document.createElement("canvas");cv.width=w;cv.height=h;cv.getContext("2d").drawImage(im,0,0,w,h);URL.revokeObjectURL(u);res(cv.toDataURL("image/jpeg",q));};
+  im.onerror=e=>{URL.revokeObjectURL(u);rej(e);};im.src=u;});}
+const ITEMS=[
+ {id:"p1",t:"Perceuse visseuse Bosch Pro 18V",c:"brico",p:12,img:["atelier","outils2","etabli3"],own:"Léa",city:"rue de Charonne",note:4.9,rev:42,d:"Perceuse professionnelle 18V, 2 batteries + coffret 34 embouts. Elle dort dans mon garage 360 jours par an — autant qu'elle serve. Remise en main propre devant la boulangerie Petit."},
+ {id:"p2",t:"Vélo cargo électrique",c:"velo",p:18,img:["velo22","rue4","cargo7"],own:"Maxime",city:"rue Haute",note:4.8,rev:31,d:"Vélo cargo électrique, idéal courses et enfants. Casque et antivol fournis. Autonomie 60 km."},
+ {id:"p3",t:"Canon EOS R6 + 24-70 mm",c:"photo",p:45,img:["foret9","camera5","photo12"],own:"Chloé",city:"av. de la Gare",note:5.0,rev:18,d:"Boîtier plein format + zoom 24-70 f/2.8. Parfait mariages et week-ends. 2 batteries, carte 128 Go."},
+ {id:"p4",t:"Tente 4 places Quechua",c:"sport",p:15,img:["camp4","montagne8","tente2"],own:"Sarah",city:"rue du Sablon",note:4.7,rev:26,d:"Tente 4 places, montage 10 minutes, étanche. Sac de transport, sardines et maillet inclus."},
+ {id:"p5",t:"Ponceuse orbitale Makita",c:"brico",p:9,img:["bois3","atelier6","ponce1"],own:"Karim",city:"rue des Tanneurs",note:4.8,rev:22,d:"Ponceuse orbitale 125 mm + 20 disques. Idéale meubles et volets."},
+ {id:"p6",t:"Sono JBL PartyBox 310",c:"photo",p:22,img:["fete7","sono2","soiree9"],own:"Emma",city:"pl. Saint-Louis",note:4.6,rev:35,d:"240 W, batterie 18 h, micro inclus. Vos voisins l'entendront — prévenez-les ou invitez-les."},
+ {id:"p7",t:"Taille-haie électrique",c:"jardin",p:11,img:["jardin5","haie3","vert8"],own:"Paul",city:"rue Verlaine",note:4.7,rev:14,d:"Lame 55 cm, rallonge 20 m fournie. Léger et maniable."},
+ {id:"p8",t:"Appareil à raclette 8 pers.",c:"cuisine",p:6,img:["table9","cuisine4","repas2"],own:"Inès",city:"rue du Pont",note:4.9,rev:51,d:"Huit poêlons, pierre de cuisson. L'objet le plus loué du quartier en hiver."},
+ {id:"p9",t:"Paddle gonflable + pagaie",c:"sport",p:16,img:["lac6","eau3","paddle8"],own:"Hugo",city:"quai des Saules",note:4.5,rev:12,d:"Paddle 320 cm, pompe et leash inclus. Gilet en option."},
+ {id:"p10",t:"Vidéoprojecteur 4K Epson",c:"photo",p:19,img:["cine2","salon7","ecran4"],own:"Léa",city:"rue de Charonne",note:4.8,rev:29,d:"3000 lumens, HDMI + Chromecast. Écran 100 pouces pliable fourni."},
+ {id:"p11",t:"Échelle télescopique 3,8 m",c:"brico",p:8,img:["mur5","echelle2","facade6"],own:"Marc",city:"imp. des Lilas",note:4.6,rev:9,d:"Alu, se range dans un coffre de voiture. Sangle de sécurité incluse."},
+ {id:"p12",t:"Barbecue Weber + plancha",c:"jardin",p:14,img:["bbq3","terrasse6","grill1"],own:"Nadia",city:"rue des Vignes",note:4.9,rev:38,d:"Weber 57 cm + plancha fonte. Charbon non fourni, bonne humeur obligatoire."},
+];
+/* Caution : mêmes règles que l'application — ~5 jours de location, bornée 20–2 000 €. */
+const CAUTION_MIN=20,CAUTION_MAX=2000;
+const cautionSuggest=p=>Math.min(CAUTION_MAX,Math.max(CAUTION_MIN,Math.round(((+p||0)*5)/5)*5));
+function distFor(id){const h=String(id).split("").reduce((a,c)=>(a*31+c.charCodeAt(0))%997,7);const m=150+(h%9)*100;return{m,min:Math.max(2,Math.round(m/80))}}
+const distLabel=id=>{const d=distFor(id);return `à ${d.m} m · ${d.min} min à pied`};
+/* Persistance locale */
+const LSKEY="cercle_v2";
+const loadLS=()=>{try{return JSON.parse(localStorage.getItem(LSKEY))||{}}catch(e){return{}}};
+const saveLS=o=>{try{localStorage.setItem(LSKEY,JSON.stringify(o))}catch(e){}};
+const AUTO_REPLIES=["Pas de souci, à bientôt !","Ça marche, je vous le mets de côté.","Parfait — remise en main propre devant la boulangerie ?","Top, à tout à l'heure !","Avec plaisir, c'est ça le cercle."];
+/* Firebase helpers */
+const fbAuth=()=>{try{return window.__fbOK?firebase.auth():null}catch(e){return null}};
+const fbDb=()=>{try{return window.__fbOK?firebase.firestore():null}catch(e){return null}};
+const fbUserToUser=fu=>({uid:fu.uid,name:fu.displayName||(fu.email||"Voisin").split("@")[0],email:fu.email||"",phone:fu.phoneNumber||"",quartier:"Metz Sablon",verified:!!fu.emailVerified,phoneVerified:!!fu.phoneNumber,photo:fu.photoURL||null});
+const FB_ERR={"auth/invalid-credential":"Email ou mot de passe incorrect.","auth/wrong-password":"Email ou mot de passe incorrect.","auth/user-not-found":"Aucun compte avec cet email — rejoignez le cercle !","auth/email-already-in-use":"Un compte existe déjà avec cet email — connectez-vous.","auth/weak-password":"Mot de passe trop court (6 caractères minimum).","auth/password-does-not-meet-requirements":"Mot de passe trop simple : 6 caractères min, avec une majuscule, un chiffre et un caractère spécial (ex. ! ? @).","auth/invalid-email":"Cet email ne semble pas valide.","auth/missing-password":"Entrez votre mot de passe.","auth/too-many-requests":"Trop d'essais — réessayez dans quelques minutes.","auth/operation-not-allowed":"L'inscription par email n'est pas activée pour le moment.","auth/network-request-failed":"Connexion internet interrompue — réessayez.","auth/internal-error":"Petit souci côté serveur — réessayez dans un instant.","auth/popup-closed-by-user":"Fenêtre Google fermée avant la fin.","auth/popup-blocked":"Popup bloquée par le navigateur — autorisez les popups.","auth/account-exists-with-different-credential":"Un compte existe déjà avec cet email — connectez-vous."};
+const fbMsg=e=>FB_ERR[e&&e.code]||"Petit souci de connexion — réessayez.";
+/* App native (Capacitor) : les popups OAuth ne marchent pas en WebView → on masque les boutons sociaux */
+const IS_NATIVE=!!(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform());
+/* Détecte « cet email a déjà un compte » même si le code varie (protection anti-énumération) */
+const isExistingAccount=e=>{const c=(e&&e.code)||"";const m=((e&&e.message)||"").toLowerCase();return c==="auth/email-already-in-use"||c==="auth/account-exists-with-different-credential"||m.includes("already in use")||m.includes("email-already")||m.includes("already exists");};
+/* Règles de mot de passe du projet : longueur, majuscule, chiffre, caractère spécial */
+const pwChecks=p=>({len:(p||"").length>=6,upper:/[A-Z]/.test(p||""),digit:/[0-9]/.test(p||""),special:/[^A-Za-z0-9]/.test(p||"")});
+const pwScore=p=>{const c=pwChecks(p);return c.len+c.upper+c.digit+c.special;};
+const PW_LVL=[{t:"",c:"var(--bd)"},{t:"Très faible",c:"var(--ter)"},{t:"Faible",c:"var(--sun)"},{t:"Correct",c:"var(--sun)"},{t:"Solide",c:"var(--green)"}];
+/* Indicateur de force en direct (4 critères = 4 segments) */
+function PwMeter({value}){
+  if(!value)return <div className="hint">6 caractères min, avec une majuscule, un chiffre et un caractère spécial (ex. ! ? @).</div>;
+  const c=pwChecks(value),s=pwScore(value),lvl=PW_LVL[s]||PW_LVL[0];
+  const item=(ok,label)=><span className={ok?"ok":""}><b>{ok?"✓":"○"}</b>{label}</span>;
+  return <div className="pwm">
+    <div className="pwm-bar">{[0,1,2,3].map(i=><div key={i} className="pwm-seg" style={{background:i<s?lvl.c:"var(--bd)"}}/>)}</div>
+    <div className="pwm-lvl" style={{color:lvl.c}}><span>{lvl.t}</span></div>
+    <div className="pwm-checks">{item(c.len,"6 caractères")}{item(c.upper,"Une majuscule")}{item(c.digit,"Un chiffre")}{item(c.special,"Un caractère spécial")}</div>
+  </div>;
 }
-
-function Profile({state, dispatch, setPage, setSelected, initTab}) {
-  const user = (state && state.user) || {};
-  const userName = user.name || 'Noah M.';
-  const userAvatar = user.avatar || null;
-
-  const [tab, setTab] = React.useState(initTab || 'annonces');
-  const [editMode, setEditMode] = React.useState(false);
-  const [profileData, setProfileData] = React.useState({
-    name: userName,
-    email: user.email || 'noah@cercle.fr',
-    phone: user.phone || '+33 6 12 34 56 78',
-    bio: user.bio || "Passionné par le partage et l'économie collaborative. Super hôte depuis 2024.",
-    notifEmail: true,
-    notifPush: true,
-  });
-
-  const listings = (state && state.items && state.items.filter(i => i.owner === user.id)) || [];
-  const favs = (state && state.favs) || [];
-
-  const tabs = [
-    { id: 'annonces', label: 'Annonces', icon: '🏷️', count: listings.length || 0 },
-    { id: 'reservations', label: 'Réservations', icon: '📅', count: 3 },
-    { id: 'avis', label: 'Avis', icon: '⭐', count: 12 },
-    { id: 'favoris', label: 'Favoris', icon: '❤️', count: favs.length || 2 },
-    { id: 'parametres', label: 'Paramètres', icon: '⚙️', count: null },
-  ];
-
-  const mockReservations = [
-    { id: 1, item: 'Perceuse Bosch Pro', img: '🔧', dates: '15 – 17 Mars', status: 'En cours', color: '#10b981', bg: '#d1fae5', price: '30 €', renter: 'Marie L.' },
-    { id: 2, item: 'Vélo électrique', img: '🚲', dates: '5 – 7 Mars', status: 'Terminée', color: '#6b7280', bg: '#f3f4f6', price: '45 €', renter: 'Thomas B.' },
-    { id: 3, item: 'Kayak double', img: '🛶', dates: '25 – 27 Avr.', status: 'À venir', color: '#3b82f6', bg: '#dbeafe', price: '80 €', renter: 'Julie K.' },
-  ];
-
-  const mockReviews = [
-    { id: 1, author: 'Marie L.', initials: 'ML', date: 'Mars 2024', rating: 5, text: 'Très sérieux, matériel en parfait état. Je recommande vivement !', color: '#8b5cf6' },
-    { id: 2, author: 'Thomas B.', initials: 'TB', date: 'Fév. 2024', rating: 5, text: 'Transaction rapide, objet conforme. Super expérience, merci !', color: '#3b82f6' },
-    { id: 3, author: 'Julie K.', initials: 'JK', date: 'Jan. 2024', rating: 4, text: 'Bon état général, échange ponctuel. À recommander.', color: '#10b981' },
-  ];
-
-  const mockFavs = [
-    { id: 1, title: 'Tente 4 places', price: 18, rating: 4.9, reviews: 24, img: '⛺', owner: 'Lucas M.', badge: '🏅' },
-    { id: 2, title: 'Appareil photo Sony', price: 45, rating: 4.8, reviews: 31, img: '📷', owner: 'Emma R.', badge: '' },
-    { id: 3, title: 'Paddle gonflable', price: 22, rating: 4.7, reviews: 18, img: '🏄', owner: 'Alex V.', badge: '⚡' },
-    { id: 4, title: 'Perceuse Makita', price: 12, rating: 5.0, reviews: 47, img: '🔩', owner: 'Paul D.', badge: '🏅' },
-  ];
-
-  const S = {
-    page: { maxWidth: 680, margin: '0 auto', paddingBottom: 100, fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif' },
-
-    // Hero card
-    hero: {
-      background: 'linear-gradient(145deg,#6C63FF 0%,#8b5cf6 40%,#4ECDC4 100%)',
-      padding: '36px 24px 0',
-      position: 'relative',
-    },
-    heroInner: {
-      background: 'white',
-      borderRadius: '24px 24px 0 0',
-      padding: '0 24px 24px',
-      marginTop: 60,
-      boxShadow: '0 -4px 32px rgba(108,99,255,0.15)',
-    },
-    avatarWrap: {
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'flex-end',
-      marginTop: -48,
-      marginBottom: 16,
-    },
-    avatar: {
-      width: 88, height: 88, borderRadius: '50%',
-      background: 'linear-gradient(135deg,#6C63FF,#4ECDC4)',
-      border: '4px solid white',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontSize: 32,
-      boxShadow: '0 4px 16px rgba(108,99,255,0.35)',
-      position: 'relative',
-      flexShrink: 0,
-    },
-    verifiedBadge: {
-      position: 'absolute', bottom: 2, right: 2,
-      width: 24, height: 24, borderRadius: '50%',
-      background: '#10b981', border: '2px solid white',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontSize: 11, color: 'white', fontWeight: 700,
-    },
-    heroActions: { display: 'flex', gap: 8 },
-    btnEdit: {
-      padding: '8px 16px', borderRadius: 20, fontSize: 13, fontWeight: 600,
-      background: '#f3f4f6', border: 'none', color: '#374151',
-      cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4,
-    },
-    btnShare: {
-      padding: '8px 12px', borderRadius: 20, fontSize: 13,
-      background: '#f3f4f6', border: 'none', color: '#374151',
-      cursor: 'pointer', display: 'flex', alignItems: 'center',
-    },
-    name: { fontSize: 22, fontWeight: 800, color: '#111827', margin: '0 0 4px', letterSpacing: -0.3 },
-    subInfo: { fontSize: 13, color: '#6b7280', margin: '0 0 10px', display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' },
-    pill: {
-      display: 'inline-flex', alignItems: 'center', gap: 4,
-      background: '#f3f4f6', borderRadius: 20, padding: '3px 10px',
-      fontSize: 12, color: '#374151', fontWeight: 500,
-    },
-    pillGreen: {
-      display: 'inline-flex', alignItems: 'center', gap: 4,
-      background: '#d1fae5', borderRadius: 20, padding: '3px 10px',
-      fontSize: 12, color: '#065f46', fontWeight: 600,
-    },
-    pillPurple: {
-      display: 'inline-flex', alignItems: 'center', gap: 4,
-      background: '#ede9fe', borderRadius: 20, padding: '3px 10px',
-      fontSize: 12, color: '#6C63FF', fontWeight: 600,
-    },
-    stars: { display: 'flex', gap: 2, alignItems: 'center' },
-    bio: { fontSize: 14, color: '#6b7280', lineHeight: 1.6, margin: '0 0 20px' },
-    statsRow: {
-      display: 'grid', gridTemplateColumns: 'repeat(3,1fr)',
-      gap: 1, background: '#f3f4f6', borderRadius: 16, overflow: 'hidden',
-      margin: '0 0 20px',
-    },
-    statCell: {
-      background: 'white', padding: '14px 8px', textAlign: 'center',
-    },
-    statNum: { fontSize: 20, fontWeight: 800, color: '#111827', display: 'block', lineHeight: 1 },
-    statLbl: { fontSize: 11, color: '#9ca3af', marginTop: 3, display: 'block', textTransform: 'uppercase', letterSpacing: 0.5 },
-    trustRow: { display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 4 },
-
-    // Tabs
-    tabsWrap: {
-      background: 'white', borderBottom: '1px solid #f3f4f6',
-      position: 'sticky', top: 56, zIndex: 20,
-      overflowX: 'auto', display: 'flex',
-    },
-    tab: (active) => ({
-      flex: 'none', padding: '14px 16px', fontSize: 13, fontWeight: active ? 700 : 500,
-      color: active ? '#6C63FF' : '#6b7280',
-      borderBottom: active ? '2px solid #6C63FF' : '2px solid transparent',
-      cursor: 'pointer', whiteSpace: 'nowrap',
-      display: 'flex', alignItems: 'center', gap: 6, transition: 'all 0.15s',
-      background: 'none', border: 'none', borderBottom: active ? '2px solid #6C63FF' : '2px solid transparent',
-    }),
-    tabCount: (active) => ({
-      fontSize: 11, fontWeight: 700,
-      background: active ? '#ede9fe' : '#f3f4f6',
-      color: active ? '#6C63FF' : '#9ca3af',
-      borderRadius: 10, padding: '1px 6px', minWidth: 18, textAlign: 'center',
-    }),
-
-    // Content
-    content: { padding: '20px 16px' },
-
-    // Cards
-    card: {
-      background: 'white', borderRadius: 16,
-      border: '1px solid #f3f4f6',
-      boxShadow: '0 1px 8px rgba(0,0,0,0.06)',
-      overflow: 'hidden', marginBottom: 12,
-      transition: 'box-shadow 0.2s, transform 0.2s',
-      cursor: 'pointer',
-    },
-    listingGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 },
-    listingImg: {
-      height: 110, display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontSize: 40, background: 'linear-gradient(135deg,#f5f3ff,#ecfdf5)',
-    },
-    listingBody: { padding: '10px 12px 12px' },
-    listingTitle: { fontSize: 13, fontWeight: 700, color: '#111827', margin: '0 0 4px' },
-    listingPrice: { fontSize: 14, fontWeight: 800, color: '#6C63FF', margin: 0 },
-    listingRating: { fontSize: 11, color: '#6b7280', marginTop: 4, display: 'flex', alignItems: 'center', gap: 3 },
-
-    // Empty state
-    empty: {
-      textAlign: 'center', padding: '48px 24px',
-      background: 'white', borderRadius: 20,
-      border: '2px dashed #e5e7eb',
-    },
-    emptyIllus: { fontSize: 56, marginBottom: 16 },
-    emptyTitle: { fontSize: 18, fontWeight: 700, color: '#111827', margin: '0 0 8px' },
-    emptyText: { fontSize: 14, color: '#9ca3af', margin: '0 0 24px', lineHeight: 1.6 },
-    btnPrimary: {
-      display: 'inline-flex', alignItems: 'center', gap: 8,
-      padding: '13px 24px', borderRadius: 14, fontSize: 14, fontWeight: 700,
-      background: 'linear-gradient(135deg,#6C63FF,#8b5cf6)', color: 'white',
-      border: 'none', cursor: 'pointer', boxShadow: '0 4px 14px rgba(108,99,255,0.35)',
-      transition: 'transform 0.15s, box-shadow 0.15s',
-    },
-    suggestions: {
-      display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center', marginTop: 20,
-    },
-    suggestionChip: {
-      padding: '6px 14px', borderRadius: 20, fontSize: 12, fontWeight: 500,
-      background: '#f5f3ff', color: '#6C63FF', border: '1px solid #ddd6fe',
-      cursor: 'pointer',
-    },
-
-    // Reservation card
-    resCard: {
-      background: 'white', borderRadius: 16, border: '1px solid #f3f4f6',
-      boxShadow: '0 1px 8px rgba(0,0,0,0.06)', padding: '16px',
-      marginBottom: 10, display: 'flex', gap: 14, alignItems: 'flex-start',
-    },
-    resImgBox: {
-      width: 52, height: 52, borderRadius: 12,
-      background: 'linear-gradient(135deg,#f5f3ff,#ecfdf5)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontSize: 24, flexShrink: 0,
-    },
-    resInfo: { flex: 1 },
-    resTitle: { fontSize: 14, fontWeight: 700, color: '#111827', margin: '0 0 3px' },
-    resMeta: { fontSize: 12, color: '#9ca3af', margin: '0 0 8px' },
-    resFooter: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
-    resBadge: (color, bg) => ({
-      fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 20,
-      background: bg, color: color,
-    }),
-    resPrice: { fontSize: 15, fontWeight: 800, color: '#111827' },
-
-    // Reviews
-    ratingHero: {
-      background: 'white', borderRadius: 20, padding: '24px',
-      border: '1px solid #f3f4f6', boxShadow: '0 1px 8px rgba(0,0,0,0.06)',
-      marginBottom: 16, display: 'flex', gap: 24, alignItems: 'center',
-    },
-    ratingBig: { fontSize: 52, fontWeight: 900, color: '#111827', lineHeight: 1 },
-    ratingStars: { fontSize: 18, color: '#f59e0b', letterSpacing: 2 },
-    ratingTotal: { fontSize: 13, color: '#9ca3af', marginTop: 4 },
-    barRow: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 },
-    barLabel: { fontSize: 12, color: '#6b7280', width: 12, textAlign: 'right' },
-    barTrack: { flex: 1, height: 6, background: '#f3f4f6', borderRadius: 3, overflow: 'hidden' },
-    barFill: (w) => ({ width: w, height: '100%', background: '#f59e0b', borderRadius: 3 }),
-    reviewCard: {
-      background: 'white', borderRadius: 16, padding: '16px',
-      border: '1px solid #f3f4f6', boxShadow: '0 1px 8px rgba(0,0,0,0.06)', marginBottom: 10,
-    },
-    reviewTop: { display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 },
-    reviewAvatar: (color) => ({
-      width: 40, height: 40, borderRadius: '50%',
-      background: color, display: 'flex', alignItems: 'center',
-      justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: 14, flexShrink: 0,
-    }),
-    reviewName: { fontSize: 14, fontWeight: 700, color: '#111827' },
-    reviewDate: { fontSize: 12, color: '#9ca3af' },
-    reviewText: { fontSize: 13, color: '#6b7280', lineHeight: 1.65, margin: 0 },
-
-    // Favs
-    favCard: {
-      background: 'white', borderRadius: 16, border: '1px solid #f3f4f6',
-      boxShadow: '0 1px 8px rgba(0,0,0,0.06)', overflow: 'hidden',
-    },
-    favImg: {
-      height: 100, display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontSize: 38, background: 'linear-gradient(135deg,#fdf4ff,#f0fdf4)', position: 'relative',
-    },
-    favHeart: {
-      position: 'absolute', top: 8, right: 8,
-      width: 28, height: 28, borderRadius: '50%',
-      background: 'rgba(255,255,255,0.9)', display: 'flex',
-      alignItems: 'center', justifyContent: 'center', fontSize: 13,
-      boxShadow: '0 1px 4px rgba(0,0,0,0.1)',
-    },
-    favBody: { padding: '10px 12px 12px' },
-    favTitle: { fontSize: 13, fontWeight: 700, color: '#111827', margin: '0 0 2px' },
-    favOwner: { fontSize: 11, color: '#9ca3af', margin: '0 0 6px' },
-    favBottom: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
-    favPrice: { fontSize: 14, fontWeight: 800, color: '#6C63FF' },
-    favRating: { fontSize: 11, color: '#6b7280', display: 'flex', alignItems: 'center', gap: 2 },
-
-    // Settings
-    settingsSection: { marginBottom: 24 },
-    sectionTitle: { fontSize: 11, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 0.8, margin: '0 0 10px' },
-    fieldCard: {
-      background: 'white', borderRadius: 14, border: '1px solid #f3f4f6',
-      boxShadow: '0 1px 4px rgba(0,0,0,0.04)', overflow: 'hidden',
-    },
-    fieldRow: {
-      padding: '14px 16px', borderBottom: '1px solid #f9fafb',
-      display: 'flex', flexDirection: 'column', gap: 2,
-    },
-    fieldLabel: { fontSize: 11, color: '#9ca3af', fontWeight: 600 },
-    fieldInput: {
-      border: 'none', outline: 'none', fontSize: 14, color: '#111827',
-      background: 'transparent', padding: 0, width: '100%', fontFamily: 'inherit',
-    },
-    toggleCard: {
-      background: 'white', borderRadius: 14, border: '1px solid #f3f4f6',
-      boxShadow: '0 1px 4px rgba(0,0,0,0.04)', overflow: 'hidden', marginBottom: 8,
-    },
-    toggleRow: {
-      padding: '14px 16px', display: 'flex',
-      justifyContent: 'space-between', alignItems: 'center',
-      borderBottom: '1px solid #f9fafb',
-    },
-    toggleInfo: { display: 'flex', flexDirection: 'column', gap: 2 },
-    toggleTitle: { fontSize: 14, fontWeight: 600, color: '#111827' },
-    toggleSub: { fontSize: 12, color: '#9ca3af' },
-    toggle: (on) => ({
-      width: 46, height: 26, borderRadius: 13, position: 'relative',
-      background: on ? '#6C63FF' : '#d1d5db', cursor: 'pointer', transition: 'background 0.2s',
-      flexShrink: 0,
-    }),
-    toggleKnob: (on) => ({
-      position: 'absolute', top: 3, left: on ? 23 : 3,
-      width: 20, height: 20, borderRadius: '50%',
-      background: 'white', boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
-      transition: 'left 0.2s',
-    }),
-    savBtn: {
-      width: '100%', padding: '15px', borderRadius: 14,
-      background: 'linear-gradient(135deg,#6C63FF,#8b5cf6)',
-      border: 'none', color: 'white', fontSize: 15, fontWeight: 700,
-      cursor: 'pointer', boxShadow: '0 4px 14px rgba(108,99,255,0.3)', marginBottom: 10,
-    },
-    logoutBtn: {
-      width: '100%', padding: '15px', borderRadius: 14,
-      background: 'white', border: '2px solid #fecaca',
-      color: '#ef4444', fontSize: 15, fontWeight: 700, cursor: 'pointer',
-    },
-  };
-
-  const StarRow = ({n=5}) => (
-    <span style={{color:'#f59e0b',fontSize:14,letterSpacing:1}}>
-      {'★'.repeat(n)}{'☆'.repeat(5-n)}
-    </span>
-  );
-
-  return (
-    <div style={S.page}>
-
-      {/* ─── HERO ─── */}
-      <div style={S.hero}>
-        {/* Background pattern dots */}
-        <div style={{position:'absolute',top:0,left:0,right:0,bottom:0,backgroundImage:'radial-gradient(circle,rgba(255,255,255,0.15) 1px,transparent 1px)',backgroundSize:'20px 20px'}} />
-        <div style={{position:'relative'}}>
-          <div style={S.heroInner}>
-            <div style={S.avatarWrap}>
-              <div style={S.avatar}>
-                {userAvatar ? <img src={userAvatar} style={{width:'100%',height:'100%',borderRadius:'50%',objectFit:'cover'}} /> : '👤'}
-                <div style={S.verifiedBadge}>✓</div>
-              </div>
-              <div style={S.heroActions}>
-                <button onClick={() => setTab('parametres')} style={S.btnEdit}>✏️ Modifier</button>
-                <button style={S.btnShare}>↗</button>
-              </div>
-            </div>
-
-            <h2 style={S.name}>{profileData.name}</h2>
-
-            <div style={S.subInfo}>
-              <span style={S.pillGreen}>✓ Identité vérifiée</span>
-              <span style={S.pillPurple}>🏅 Super hôte</span>
-              <span style={S.pill}>📍 Paris</span>
-              <span style={S.pill}>🗓️ Membre depuis 2024</span>
-            </div>
-
-            <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:12}}>
-              <StarRow n={5} />
-              <span style={{fontSize:15,fontWeight:800,color:'#111827'}}>4.9</span>
-              <span style={{fontSize:13,color:'#9ca3af'}}>· 12 avis</span>
-            </div>
-
-            {profileData.bio && <p style={S.bio}>{profileData.bio}</p>}
-
-            <div style={S.statsRow}>
-              {[
-                {num: listings.length || 3, lbl: 'Annonces'},
-                {num: 12, lbl: 'Avis'},
-                {num: '97%', lbl: 'Réponses'},
-              ].map(s => (
-                <div key={s.lbl} style={S.statCell}>
-                  <strong style={S.statNum}>{s.num}</strong>
-                  <span style={S.statLbl}>{s.lbl}</span>
-                </div>
-              ))}
-            </div>
-
-            <div style={S.trustRow}>
-              <span style={S.pill}>⚡ Répond en &lt;1h</span>
-              <span style={S.pill}>🔒 Paiement sécurisé</span>
-              <span style={S.pill}>🛡️ Caution assurée</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ─── TABS ─── */}
-      <div style={S.tabsWrap}>
-        {tabs.map(t => (
-          <button key={t.id} onClick={() => setTab(t.id)}
-            style={{...S.tab(tab===t.id), background:'none', outline:'none',
-              borderTop:'none', borderLeft:'none', borderRight:'none'}}>
-            <span>{t.icon}</span>
-            <span>{t.label}</span>
-            {t.count !== null && <span style={S.tabCount(tab===t.id)}>{t.count}</span>}
-          </button>
-        ))}
-      </div>
-
-      {/* ─── CONTENT ─── */}
-      <div style={S.content}>
-
-        {/* ── Annonces ── */}
-        {tab === 'annonces' && (
-          listings.length === 0 ? (
-            <div style={S.empty}>
-              <div style={S.emptyIllus}>📦</div>
-              <h3 style={S.emptyTitle}>Pas encore d'annonces</h3>
-              <p style={S.emptyText}>Commencez à louer vos objets et gagnez de l'argent facilement. Vos voisins cherchent peut-être ce que vous avez !</p>
-              <button style={S.btnPrimary} onClick={() => setPage && setPage('create')}>
-                ＋ Créer ma première annonce
-              </button>
-              <div style={S.suggestions}>
-                {['🔧 Outils', '🚲 Vélo', '📷 Caméra', '⛺ Camping', '🎮 Jeux', '🛺 Véhicule'].map(s => (
-                  <span key={s} style={S.suggestionChip}>{s}</span>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <div style={S.listingGrid}>
-              {listings.map(l => (
-                <div key={l.id} style={S.card} onClick={() => { setSelected && setSelected(l); setPage && setPage('detail'); }}>
-                  <div style={S.listingImg}>{l.img || '📦'}</div>
-                  <div style={S.listingBody}>
-                    <p style={S.listingTitle}>{l.title}</p>
-                    <p style={S.listingPrice}>{l.price}€<span style={{fontWeight:400,fontSize:11,color:'#9ca3af'}}>/jour</span></p>
-                    <div style={S.listingRating}>⭐ {l.rating || '4.8'} <span>· {l.reviews || 0} avis</span></div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )
-        )}
-
-        {/* ── Réservations ── */}
-        {tab === 'reservations' && (
-          <div>
-            <p style={{fontSize:13,color:'#9ca3af',margin:'0 0 16px',fontWeight:500}}>3 réservations au total</p>
-            {mockReservations.map(r => (
-              <div key={r.id} style={S.resCard}>
-                <div style={S.resImgBox}>{r.img}</div>
-                <div style={S.resInfo}>
-                  <p style={S.resTitle}>{r.item}</p>
-                  <p style={S.resMeta}>📅 {r.dates} · avec {r.renter}</p>
-                  <div style={S.resFooter}>
-                    <span style={S.resBadge(r.color, r.bg)}>{r.status}</span>
-                    <span style={S.resPrice}>{r.price}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* ── Avis ── */}
-        {tab === 'avis' && (
-          <div>
-            <div style={S.ratingHero}>
-              <div style={{textAlign:'center'}}>
-                <div style={S.ratingBig}>4.9</div>
-                <div style={S.ratingStars}>★★★★★</div>
-                <div style={S.ratingTotal}>12 avis</div>
-              </div>
-              <div style={{flex:1}}>
-                {[5,4,3,2,1].map(n => (
-                  <div key={n} style={S.barRow}>
-                    <span style={S.barLabel}>{n}</span>
-                    <div style={S.barTrack}>
-                      <div style={S.barFill(n===5?'83%':n===4?'12%':'5%')} />
-                    </div>
-                    <span style={{fontSize:11,color:'#9ca3af',width:24}}>
-                      {n===5?10:n===4?2:0}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-            {mockReviews.map(r => (
-              <div key={r.id} style={S.reviewCard}>
-                <div style={S.reviewTop}>
-                  <div style={S.reviewAvatar(r.color)}>{r.initials}</div>
-                  <div style={{flex:1}}>
-                    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-                      <span style={S.reviewName}>{r.author}</span>
-                      <span style={{fontSize:12,color:'#f59e0b',letterSpacing:1}}>{'★'.repeat(r.rating)}</span>
-                    </div>
-                    <div style={S.reviewDate}>{r.date}</div>
-                  </div>
-                </div>
-                <p style={S.reviewText}>"{r.text}"</p>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* ── Favoris ── */}
-        {tab === 'favoris' && (
-          <div style={S.listingGrid}>
-            {mockFavs.map(f => (
-              <div key={f.id} style={S.favCard}>
-                <div style={S.favImg}>
-                  {f.img}
-                  <div style={S.favHeart}>❤️</div>
-                  {f.badge && <div style={{position:'absolute',top:8,left:8,fontSize:14}}>{f.badge}</div>}
-                </div>
-                <div style={S.favBody}>
-                  <p style={S.favTitle}>{f.title}</p>
-                  <p style={S.favOwner}>par {f.owner}</p>
-                  <div style={S.favBottom}>
-                    <span style={S.favPrice}>{f.price}€<span style={{fontWeight:400,fontSize:11,color:'#9ca3af'}}>/j</span></span>
-                    <span style={S.favRating}>⭐ {f.rating} <span style={{color:'#d1d5db'}}>·</span> {f.reviews}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* ── Paramètres ── */}
-        {tab === 'parametres' && (
-          <div>
-            <div style={S.settingsSection}>
-              <p style={S.sectionTitle}>Mon profil</p>
-              <div style={S.fieldCard}>
-                {[
-                  {label:'Nom complet', key:'name'},
-                  {label:'Email', key:'email'},
-                  {label:'Téléphone', key:'phone'},
-                ].map((f,i,arr) => (
-                  <div key={f.key} style={{...S.fieldRow, borderBottom: i<arr.length-1 ? '1px solid #f9fafb' : 'none'}}>
-                    <span style={S.fieldLabel}>{f.label}</span>
-                    <input value={profileData[f.key]}
-                      onChange={e => setProfileData({...profileData,[f.key]:e.target.value})}
-                      style={S.fieldInput} />
-                  </div>
-                ))}
-                <div style={{...S.fieldRow,borderBottom:'none'}}>
-                  <span style={S.fieldLabel}>Bio</span>
-                  <textarea rows={3} value={profileData.bio}
-                    onChange={e => setProfileData({...profileData,bio:e.target.value})}
-                    style={{...S.fieldInput,resize:'none'}} />
-                </div>
-              </div>
-            </div>
-
-            <div style={S.settingsSection}>
-              <p style={S.sectionTitle}>Notifications</p>
-              <div style={S.toggleCard}>
-                {[
-                  {key:'notifEmail',title:'Emails',sub:'Nouvelles réservations et messages'},
-                  {key:'notifPush',title:'Notifications push',sub:'Alertes en temps réel'},
-                ].map((f,i,arr) => (
-                  <div key={f.key} style={{...S.toggleRow,borderBottom:i<arr.length-1?'1px solid #f9fafb':'none'}}>
-                    <div style={S.toggleInfo}>
-                      <span style={S.toggleTitle}>{f.title}</span>
-                      <span style={S.toggleSub}>{f.sub}</span>
-                    </div>
-                    <div style={S.toggle(profileData[f.key])}
-                      onClick={()=>setProfileData({...profileData,[f.key]:!profileData[f.key]})}>
-                      <div style={S.toggleKnob(profileData[f.key])} />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div style={S.settingsSection}>
-              <p style={S.sectionTitle}>Confiance &amp; Sécurité</p>
-              <div style={S.fieldCard}>
-                {[
-                  {icon:'✅',label:'Identité vérifiée',value:'Confirmée'},
-                  {icon:'📱',label:'Numéro vérifié',value:profileData.phone},
-                  {icon:'📧',label:'Email vérifié',value:profileData.email},
-                ].map((item,i,arr) => (
-                  <div key={item.label} style={{
-                    ...S.fieldRow, flexDirection:'row',
-                    alignItems:'center', justifyContent:'space-between',
-                    borderBottom: i<arr.length-1 ? '1px solid #f9fafb' : 'none'
-                  }}>
-                    <span style={{fontSize:14,color:'#111827'}}>{item.icon} {item.label}</span>
-                    <span style={{fontSize:13,color:'#10b981',fontWeight:600}}>{item.value}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <button style={S.savBtn}>Sauvegarder les modifications</button>
-            <button style={S.logoutBtn}>🚪 Se déconnecter</button>
-          </div>
-        )}
-
-      </div>
-    </div>
-  );
+const VERIF_SETTINGS={url:"https://aureel57.github.io/cercle/",handleCodeInApp:false};
+/* Envoie l'email de vérif : email DA via Cloud Function si déployée, sinon email Firebase standard */
+async function sendVerif(user,name,email){
+  try{
+    if(window.__fbOK&&firebase.functions){
+      await firebase.functions().httpsCallable("sendVerifEmail")({email,name});
+      return;
+    }
+  }catch(e){/* fonction non déployée / erreur → repli */}
+  try{await user.sendEmailVerification(VERIF_SETTINGS)}catch(_){}
 }
-function CreateListing({state,dispatch,setPage,mode}){
-  const[f,setF]=useState({title:"",cat:"tools",price:"",location:state.user?.location||"Paris 11e",condition:"Comme neuf",description:"",deposit:""});
-  const u=(k,v)=>setF(p=>({...p,[k]:v}));
-  const go=()=>{if(!f.title||!f.price)return;dispatch({type:"ADD_ITEM",payload:{...f,price:+f.price,deposit:+f.deposit||+f.price*3,images:[mkImg(f.cat,99,0),mkImg(f.cat,99,1),mkImg(f.cat,99,2)]}});setPage("profile")};
-  return <div style={{maxWidth:540,margin:"0 auto",padding:28}}>
-    <button className="cl" style={{marginBottom:14,display:"flex",alignItems:"center",gap:5}} onClick={()=>setPage("profile")}><I.Back/> Retour</button>
-    <h1 style={{fontFamily:"var(--fd)",fontSize:22,marginBottom:18}}>Créer une annonce</h1>
-    <div className="fg"><label>Titre *</label><input value={f.title} onChange={e=>u("title",e.target.value)} placeholder="Ex: Perceuse Bosch Pro"/></div>
-    <div className="fg"><label>Catégorie</label><select value={f.cat} onChange={e=>u("cat",e.target.value)}>{CATS.filter(c=>c.id!=="all").map(c=><option key={c.id} value={c.id}>{c.icon} {c.label}</option>)}</select></div>
-    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-      <div className="fg"><label>Prix/jour (€) *</label><input type="number" value={f.price} onChange={e=>u("price",e.target.value)} placeholder="15"/></div>
-      <div className="fg"><label>Caution (€)</label><input type="number" value={f.deposit} onChange={e=>u("deposit",e.target.value)} placeholder="Auto"/></div>
-    </div>
-    <div className="fg"><label>État</label><select value={f.condition} onChange={e=>u("condition",e.target.value)}><option>Comme neuf</option><option>Très bon état</option><option>Bon état</option></select></div>
-    <div className="fg"><label>Ville</label><input value={f.location} onChange={e=>u("location",e.target.value)}/></div>
-    <div className="fg"><label>Description</label><textarea value={f.description} onChange={e=>u("description",e.target.value)} placeholder="Décrivez votre objet..." rows={3}/></div>
-    <div style={{padding:16,background:"var(--bgw)",borderRadius:10,marginBottom:16,textAlign:"center"}}><span style={{fontSize:28}}>📸</span><p style={{fontSize:11,color:"var(--g)",marginTop:4}}>Photos = placeholders provisoires</p></div>
-    <button className="bp" style={{width:"100%"}} onClick={go}>Publier l'annonce</button>
-  </div>
-}
-
-function Messages({state,dispatch,cid,setCid,setPage}){
-  const[msg,setMsg]=useState("");const ref=useRef(null);const[typing,setTyping]=useState(false);const[seen,setSeen]=useState({});
-  const convs=state.conversations.sort((a,b)=>new Date(b.at)-new Date(a.at));
-  const ac=convs.find(c=>c.id===cid);
-  const msgs=state.messages.filter(m=>m.cid===cid).sort((a,b)=>new Date(a.timestamp)-new Date(b.timestamp));
-  useEffect(()=>{ref.current&&(ref.current.scrollTop=ref.current.scrollHeight)},[msgs.length]);
-  const send=()=>{if(!msg.trim()||!ac)return;const other=ac.parts.find(p=>p!==state.user.id);dispatch({type:"MSG",payload:{id:uid(),cid,from:state.user.id,to:other,text:msg.trim(),timestamp:new Date()}});setMsg("");
-    setTyping(true);setTimeout(()=>{setTyping(false);const reps=["Bonjour ! Oui c'est disponible 😊","Bien sûr, on s'arrange.","Super, quand voulez-vous le récupérer ?","Envoyez-moi une demande !","Merci pour votre intérêt !"];dispatch({type:"MSG",payload:{id:uid(),cid,from:other,to:state.user.id,text:reps[Math.floor(Math.random()*reps.length)],timestamp:new Date()}})},1200+Math.random()*2e3)};
-  const getO=cv=>{const oid=cv.parts.find(p=>p!==state.user?.id);return USERS.find(u=>u.id===oid)||{name:"Utilisateur",avatar:"😊"}};
-  return <div style={{height:"100vh",display:"flex",flexDirection:"column"}}><div style={{display:"flex",alignItems:"center",gap:10,padding:"10px 16px",borderBottom:"1px solid var(--bd)",background:"var(--w)",flexShrink:0}}>
-    <button className="mx" style={{position:"static"}} onClick={()=>setPage("home")}><I.Back/></button>
-    <a className="logo" onClick={()=>setPage("home")}><div className="lc">C</div><span className="lt">Cercle</span></a>
-    <span style={{fontSize:15,fontWeight:600,fontFamily:"var(--fd)",marginLeft:8}}>Messages</span>
-  </div><div className="ml"><div className="mls"><div style={{padding:14,fontFamily:"var(--fd)",fontSize:16,fontWeight:600,borderBottom:"1px solid var(--bd)"}}>Messages</div>{convs.length===0?<div style={{padding:18,textAlign:"center",color:"var(--g)",fontSize:12}}>Aucune conversation</div>:convs.map(c=>{const o=getO(c);return <div key={c.id} className={"mc"+(cid===c.id?" on":"")} onClick={()=>setCid(c.id)}><div className="mca" style={{position:"relative"}}>{o.avatar}<span className="online-dot"/></div><div className="mci"><div className="mcn">{o.name}</div><div className="mcl">{c.last}</div></div></div>})}</div>
-  <div className="mch">{!ac?<div style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",color:"var(--g)"}}><div style={{textAlign:"center"}}><span style={{fontSize:36,display:"block",marginBottom:6}}>💬</span>Sélectionnez une conversation</div></div>:<><div className="mchd"><span style={{fontSize:20}}>{getO(ac).avatar}</span>{getO(ac).name}</div><div className="mcbd" ref={ref}>{msgs.map(m=><div key={m.id} className={"bub"+(m.from===state.user?.id?" me":" th")}>{m.text}<span className="bt">{new Date(m.timestamp).toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})}{m.from===state.user?.id&&" ✓✓"}</span></div>)}{typing&&<div className="typing"><span/><span/><span/></div>}</div><div className="mip"><input value={msg} onChange={e=>setMsg(e.target.value)} placeholder="Écrire un message..." onKeyDown={e=>e.key==="Enter"&&send()}/><button onClick={send}><I.Send/></button></div></>}</div></div></div>
-}
-
-function SearchM({onClose,onSearch,allItems,filters,setFilters}){
-  const[q,setQ]=useState("");const[w,setW]=useState("");const[af,setAf]=useState("what");
-  const sugg=useMemo(()=>!q||q.length<2?[]:allItems.filter(i=>i.title.toLowerCase().includes(q.toLowerCase())).slice(0,5),[q,allItems]);
-  return <><div className="smbg" onClick={onClose}/><div className="sm"><div className="smin">
-    <div className="smr">
-      <div className={"smf"+(af==="what"?" on":"")} onClick={()=>setAf("what")} style={{position:"relative"}}><label>Quoi ?</label><input placeholder="Perceuse, drone…" value={q} onChange={e=>setQ(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"){onSearch(q,w);onClose()}}} autoFocus/>{sugg.length>0&&af==="what"&&<div className="ac">{sugg.map(s=><div key={s.id} className="aci" onClick={()=>{onSearch(s.title,"");onClose()}}><span>{CE[s.cat]||"📦"}</span>{s.title}<span style={{marginLeft:"auto",fontSize:10,color:"var(--g)"}}>{s.price}€/j</span></div>)}</div>}</div>
-      <div className={"smf"+(af==="where"?" on":"")} onClick={()=>setAf("where")} style={{position:"relative"}}><label>Où ?</label><input placeholder="Ville…" value={w} onChange={e=>setW(e.target.value)}/>{af==="where"&&w&&<div className="ac">{LOCS.filter(l=>l.toLowerCase().includes(w.toLowerCase())).slice(0,5).map(l=><div key={l} className="aci" onClick={()=>setW(l)}>📍 {l}</div>)}</div>}</div>
-      <div className={"smf"+(af==="when"?" on":"")} onClick={()=>setAf("when")}><label>Quand ?</label><input type="date"/></div>
-      <button className="smgo" onClick={()=>{onSearch(q,w);onClose()}}><I.Search/> Chercher</button>
-    </div>
-    {af==="what"&&!q&&<><div style={{margin:"10px 0"}}><div style={{display:"flex",justifyContent:"space-between",fontSize:10,fontWeight:700,marginBottom:4}}><span>Prix max</span><span>{filters?.priceMax||500}€/j</span></div><input type="range" className="range-sl" min="5" max="500" value={filters?.priceMax||500} onChange={e=>setFilters&&setFilters(p=>({...p,priceMax:+e.target.value}))}/></div><div className="smtg"><p>Populaires</p><div className="smtl">{["Perceuse","Drone","Vélo électrique","Vidéoprojecteur","Paddle","Enceinte","Appareil photo","Coudre"].map(t=><button key={t} className="smt" onClick={()=>{onSearch(t,"");onClose()}}>{t}</button>)}</div></div></>}
-  </div></div></>
-}
-
-function FilterM({onClose,filters,setFilters,count}){
-  const[l,setL]=useState({...filters});const up=(k,v)=>setL(p=>({...p,[k]:v}));
-  return <div className="bk" onClick={onClose}><div className="md" onClick={e=>e.stopPropagation()} style={{maxWidth:520}}>
-    <div className="mh"><button className="mx" onClick={onClose}><I.X/></button><h2>Filtres</h2></div>
-    <div className="mb">
-      <div style={{marginBottom:18}}><h3 style={{fontSize:14,fontWeight:700,fontFamily:"var(--fd)",marginBottom:8}}>Trier par</h3>
-        <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>{[["pertinence","Pertinence"],["price_asc","Prix ↑"],["price_desc","Prix ↓"],["rating","Note ↓"],["recent","Récent"]].map(([id,label])=>
-          <button key={id} className={"pill"+((l.sort||"pertinence")===id?" on":"")} onClick={()=>up("sort",id)}>{label}</button>
-        )}</div>
-      </div>
-      <div style={{marginBottom:18}}><h3 style={{fontSize:14,fontWeight:700,fontFamily:"var(--fd)",marginBottom:8}}>Prix / jour</h3><div style={{display:"flex",gap:10,alignItems:"center"}}><div className="fg" style={{flex:1,margin:0}}><label>Min €</label><input type="number" value={l.priceMin} onChange={e=>up("priceMin",+e.target.value)}/></div><span style={{color:"var(--gl)"}}>–</span><div className="fg" style={{flex:1,margin:0}}><label>Max €</label><input type="number" value={l.priceMax} onChange={e=>up("priceMax",+e.target.value)}/></div></div></div>
-      <div style={{marginBottom:18}}><h3 style={{fontSize:14,fontWeight:700,fontFamily:"var(--fd)",marginBottom:8}}>Catégorie</h3>
-        <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>{CATS.map(c=><button key={c.id} className={"pill"+((l.filterCat||"all")===c.id?" on":"")} onClick={()=>up("filterCat",c.id)}>{c.icon} {c.label}</button>)}</div>
-      </div>
-      <div style={{marginBottom:18}}><h3 style={{fontSize:14,fontWeight:700,fontFamily:"var(--fd)",marginBottom:8}}>État</h3><div style={{display:"flex",gap:5,flexWrap:"wrap"}}>{["Tous","Comme neuf","Très bon état","Bon état"].map(c=><button key={c} className={"pill"+(l.condition===c?" on":"")} onClick={()=>up("condition",c)}>{c}</button>)}</div></div>
-      <div style={{marginBottom:18}}><h3 style={{fontSize:14,fontWeight:700,fontFamily:"var(--fd)",marginBottom:8}}>Note minimale</h3>
-        <div style={{display:"flex",gap:5}}>{[0,4,4.5,4.8].map(r=><button key={r} className={"pill"+((l.minRating||0)===r?" on":"")} onClick={()=>up("minRating",r)}>{r===0?"Toutes":"≥ "+r+" ★"}</button>)}</div>
-      </div>
-      <div style={{marginBottom:18}}><h3 style={{fontSize:14,fontWeight:700,fontFamily:"var(--fd)",marginBottom:8}}>Options</h3><div style={{display:"flex",gap:5,flexWrap:"wrap"}}>{["Propriétaire vérifié","Livraison","Annulation flexible"].map(o=><button key={o} className={"pill"+((l.options||[]).includes(o)?" on":"")} onClick={()=>{const os=l.options||[];up("options",os.includes(o)?os.filter(x=>x!==o):[...os,o])}}>{o}</button>)}</div></div>
-    </div>
-    <div className="mf"><button className="cl" onClick={()=>setL({priceMin:0,priceMax:500,condition:"Tous",options:[],sort:"pertinence",filterCat:"all",minRating:0})}>Effacer</button><button className="bd" onClick={()=>{setFilters(l);onClose()}}>Afficher {count} résultats</button></div>
-  </div></div>
-}
-
-
-
-/* ===== INFO PAGES ===== */
-const INFO_PAGES={
-  guide:{title:"Guide de demarrage",icon:"📖",sections:[["Comment ca marche ?","Cercle connecte ceux qui ont des objets avec ceux qui en ont besoin. Recherchez, reservez, profitez, restituez."],["Etape 1","Recherchez un objet par mot-cle ou categorie."],["Etape 2","Reservez en ligne et payez de maniere securisee."],["Etape 3","Recuperez l'objet chez le proprietaire."],["Etape 4","Rendez-le en bon etat. Caution restituee sous 48h."]]},
-  cover:{title:"Assurance CercleCover",icon:"🛡️",sections:[["Protection incluse","CercleCover couvre les dommages accidentels jusqu'a 2 000 euros, sans franchise, sur chaque location."],["Que couvre-t-elle ?","Casse accidentelle, vol pendant la location, defaillance technique. Non couvert : usure normale, perte."],["Reclamation","Ouvrez un litige depuis votre espace avec photos. Traitement sous 72h."]]},
-  security:{title:"Securite des paiements",icon:"🔒",sections:[["Paiements proteges","Chiffrement SSL 256 bits. Visa, Mastercard, Google Pay, Apple Pay, PayPal acceptes."],["Caution sequestree","Jamais transmise directement au proprietaire. Restituee automatiquement apres validation du retour."],["Transparence","Le prix affiche inclut tout : location + assurance + frais de service."]]},
-  contact:{title:"Nous contacter",icon:"📞",sections:[["Chat IA","Notre assistant est disponible 24/7. Cliquez sur le bouton en bas a droite."],["Email","support@cercle.fr — Reponse sous 24h ouvrees."],["Reseaux","Instagram @cercle.app, Twitter @cercle_app, Facebook /cercleapp"]]},
-  blog:{title:"Blog Cercle",icon:"📝",sections:[["Cercle Pro lance","Decouvrez l'espace professionnel avec gestion de flotte et facturation automatique."],["Impact ecologique","Un objet loue remplace 4 achats neufs. 12 tonnes de CO2 economisees cette annee."],["5 astuces","Photos de qualite, prix competitif, reponse rapide, flexibilite, bonne description."]]},
-  forum:{title:"Forum d'entraide",icon:"💬",sections:[["Bienvenue","Posez vos questions et partagez vos experiences avec la communaute."],["Sujet populaire","Comment fixer le bon prix ? Regardez les annonces similaires et ajustez."],["Sujet populaire","Que faire en cas de retard ? Contactez via messagerie, puis ouvrez un litige si besoin."]]},
-  guides:{title:"Guides pratiques",icon:"📚",sections:[["Guide locataire","Trouvez les meilleures offres, verifiez l'etat des objets, laissez des avis constructifs."],["Guide proprietaire","Optimisez vos annonces avec photos pro et descriptions detaillees."],["Guide caution","Tout sur le blocage, conditions de retenue et processus de restitution."]]},
-  impact:{title:"Impact environnemental",icon:"🌱",sections:[["Notre engagement","L'economie du partage reduit la production, le gaspillage et l'empreinte carbone."],["Nos chiffres","45 000 objets partages, 12 tonnes de CO2 economisees, 8 000 achats evites."],["Objectif 2027","100 000 locations/mois et premiere plateforme neutre en carbone du secteur."]]},
-  temoignages:{title:"Temoignages",icon:"📣",sections:[["Marie, Paris","J'ai loue une perceuse pour 12 euros au lieu de l'acheter 90. Simple et rapide !"],["Thomas, Lyon","Je gagne 200 euros/mois en louant mes outils. Cercle s'occupe de tout."],["Julie, Bordeaux","Pour mon mariage, tout loue sur Cercle. Economie de 1 500 euros !"]]},
-  conseils:{title:"Conseils pour louer",icon:"💡",sections:[["Le bon prix","Analysez les annonces similaires dans votre zone pour vous positionner."],["Belles photos","Lumiere naturelle, plusieurs angles, fond neutre et propre."],["Reactivite","Visez un temps de reponse inferieur a 1 heure pour maximiser les reservations."]]},
-  revenus:{title:"Maximiser ses revenus",icon:"📈",sections:[["Avis 5 etoiles","Chaque avis 5 etoiles augmente votre taux de reservation de 15%."],["Calendrier","Activez les reservations instantanees et proposez des tarifs degressifs."],["Fidelite","Montez en grade pour reduire vos commissions de 10% a 2%."]]},
-  photos:{title:"Prendre de bonnes photos",icon:"📸",sections:[["Eclairage","Lumiere naturelle, pres d'une fenetre. Evitez le flash."],["Angles","Minimum 3 photos : vue d'ensemble, detail, objet en contexte."],["Mise en scene","Fond neutre, pas de desordre. La presentation fait la difference."]]},
-  superproprio:{title:"Devenir Super Proprio",icon:"⭐",sections:[["Criteres","Note > 4.8, taux de reponse > 90%, 0 annulation, 20+ locations."],["Avantages","Badge visible, priorite dans les resultats, commission reduite."],["Comment","Maintenez vos performances pendant 3 mois consecutifs."]]},
-  about:{title:"A propos de Cercle",icon:"🏢",sections:[["Notre histoire","Ne en 2024, Cercle part du constat que la plupart des objets sont sous-utilises."],["L'equipe","25 passionnes a Paris, Lyon et Bordeaux. Tech, design, economie circulaire."],["Investisseurs","Soutenus par des fonds engages dans l'economie durable."]]},
-  mission:{title:"Notre mission",icon:"🎯",sections:[["Accessibilite","Louer aussi simplement qu'acheter, pour tous, partout."],["Anti-gaspillage","Chaque objet loue est un objet qui n'est pas fabrique."],["Lien social","La location entre voisins cree de la confiance dans les quartiers."]]},
-  careers:{title:"Carrieres",icon:"💼",sections:[["Pourquoi nous rejoindre ?","Impact reel, equipe bienveillante, teletravail flexible, stock-options."],["Postes ouverts","Dev Full-Stack, Product Designer, Growth Manager, Customer Success, Data Engineer."],["Postuler","Envoyez CV et motivation a careers@cercle.fr"]]},
-  press:{title:"Espace presse",icon:"📰",sections:[["Kit presse","Logo, photos, captures et chiffres cles sur demande a press@cercle.fr"],["Medias","Mentionne dans Les Echos, TechCrunch France, Maddyness, BFM Business."],["Contact","press@cercle.fr — Reponse sous 24h pour les journalistes."]]},
-  partners:{title:"Partenariats",icon:"🤝",sections:[["Devenez partenaire","Entreprises, collectivites, associations : integrez Cercle dans votre offre."],["Nos partenaires","Mairies, bailleurs, coworking, entreprises du CAC 40."],["Contact","partenariats@cercle.fr"]]},
-  newsletter:{title:"Newsletter",icon:"📧",sections:[["Restez informe","Recevez chaque semaine nos meilleures annonces et conseils."],["Contenu","Top 5 annonces, conseils, codes promo exclusifs, nouveautes."],["Inscription","Entrez votre email. Desabonnement en un clic."]]}
+const GRADES=[
+ {id:"nouveau",nom:"Nouveau voisin",court:"NOUVEAU",min:0,fee:12,sym:"○",adv:"On vous prête déjà tout le cercle"},
+ {id:"palier",nom:"Voisin de palier",court:"PALIER",min:50,fee:11,sym:"◔",adv:"Badge profil + 1 annonce mise en avant"},
+ {id:"habitue",nom:"Habitué du quartier",court:"HABITUÉ",min:500,fee:9,sym:"◑",adv:"3 annonces mises en avant"},
+ {id:"figure",nom:"Figure du quartier",court:"FIGURE",min:2000,fee:7,sym:"◕",adv:"6 mises en avant + support prioritaire"},
+ {id:"memoire",nom:"Mémoire du quartier",court:"MÉMOIRE",min:5000,fee:5,sym:"●",adv:"12 mises en avant + accès anticipé"},
+ {id:"maire",nom:"Maire du quartier",court:"MAIRE",min:15000,fee:3,sym:"✪",adv:"L'écharpe : ambassadeur officiel Cercle"},
+];
+const getGrade=n=>[...GRADES].reverse().find(g=>n>=g.min)||GRADES[0];
+const getNextGrade=n=>GRADES[GRADES.indexOf(getGrade(n))+1]||null;
+const feeRate=(n,plus)=>Math.max(0.02,getGrade(n).fee/100-(plus?0.01:0));
+const LEGALS={
+ cgu:{t:"Conditions générales d'utilisation",lead:"Les règles du cercle, écrites pour être lues.",maj:"16 juin 2026",sections:[
+   {h:"1. Objet",p:["Cercle est une plateforme qui met en relation des voisins pour la location d'objets du quotidien. En créant un compte, vous acceptez les présentes conditions."]},
+   {h:"2. Inscription & compte",p:["L'inscription est gratuite et réservée aux personnes majeures. Vous vous engagez à fournir des informations exactes et à confirmer votre adresse e-mail.","Vous êtes responsable de la confidentialité de votre mot de passe et de toute activité sur votre compte."]},
+   {h:"3. Le rôle de Cercle",p:["Cercle est un intermédiaire technique : la location est un contrat entre voisins. Cercle facilite la mise en relation, encadre la caution et propose une assurance, mais n'est pas propriétaire des objets."]},
+   {h:"4. Vos engagements",p:["Prêter et emprunter avec le soin que vous porteriez à vos propres affaires. Décrire honnêtement vos objets, respecter les dates convenues, et signaler tout incident sans tarder.","Sont interdits : objets illégaux, dangereux, ou contraires à l'ordre public."]},
+   {h:"5. Location, caution & commission",p:["Chaque location donne lieu à une caution séquestrée, restituée sous 48 h après le retour de l'objet en bon état.","La commission de service est de 11 %, réduite par votre grade et votre abonnement Cercle+, avec un plancher de 2 %."]},
+   {h:"6. Résiliation",p:["Vous pouvez supprimer votre compte à tout moment depuis vos paramètres. Cercle peut suspendre un compte en cas de manquement grave aux présentes conditions."]},
+ ]},
+ mentions:{t:"Mentions légales",lead:"Qui édite et héberge Cercle.",maj:"16 juin 2026",sections:[
+   {h:"Éditeur du site",p:["Cercle — [raison sociale à compléter], [forme juridique] au capital de [montant] €.","Siège social : [adresse à compléter]. SIREN/SIRET : [à compléter]. RCS : [à compléter].","E-mail : support@cercle.fr."]},
+   {h:"Directeur de la publication",p:["[Nom du responsable de la publication à compléter]."]},
+   {h:"Hébergement",p:["Le site est hébergé par GitHub Pages — GitHub, Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, États-Unis.","Les données de compte et d'annonces sont gérées via Google Firebase (Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, Irlande)."]},
+   {h:"Propriété intellectuelle",p:["La marque, le logo et l'identité visuelle « Quartier Libre » de Cercle sont protégés. Les photos et descriptions d'annonces restent la propriété de leurs auteurs."]},
+ ]},
+ cgv:{t:"Conditions de location",lead:"Prix, paiement, annulation — sans surprise.",maj:"16 juin 2026",sections:[
+   {h:"Prix & commission",p:["Le prix de location par jour est fixé librement par le propriétaire de l'objet. Cercle prélève une commission de service (11 %, réduite selon le grade et Cercle+, plancher 2 %), affichée avant toute réservation."]},
+   {h:"Paiement & caution",p:["Le paiement est demandé à la réservation mais n'est débité qu'à la confirmation du propriétaire. La caution est séquestrée (bloquée, non débitée) le temps de la location.","Le montant de la caution est fixé par le propriétaire et affiché avant que vous confirmiez."]},
+   {h:"Annulation",p:["L'annulation est gratuite jusqu'à 24 h avant le début de la location. Passé ce délai, le premier jour peut être retenu."]},
+   {h:"Litiges & assurance",p:["Chaque location est couverte jusqu'à 2 000 € (casse, perte, vol pendant la location). En cas de litige, notre équipe examine les preuves (photos avant/après, échanges) avant toute retenue sur la caution.","Voir aussi la page « Assurance & caution »."]},
+ ]},
+ assurance:{t:"Assurance & caution",lead:"Comment vous êtes protégé, des deux côtés du prêt.",p:["Chaque location sur Cercle est couverte jusqu'à 2 000 € : si un objet prêté est cassé, perdu ou volé pendant la location, le propriétaire est indemnisé — sans avance de frais.","La caution est séquestrée par Cercle au moment de la réservation : ni vous ni le propriétaire ne la touchez. Elle est bloquée, jamais débitée tant que tout se passe bien.","Au retour de l'objet en bon état, la caution est libérée automatiquement sous 48 h. En cas de litige, notre équipe regarde les preuves (photos avant/après, échanges) avant toute retenue.","Le montant de la caution est fixé par le propriétaire, en général l'équivalent de 5 jours de location (entre 20 € et 2 000 €). Il est toujours affiché avant que vous confirmiez."],mail:"assurance@cercle.fr",mailLabel:"Une question sur l'assurance ?"},
+ conf:{t:"Politique de confidentialité",lead:"Vos données restent dans le cercle. On vous explique tout.",maj:"16 juin 2026",sections:[
+   {h:"Données que nous collectons",p:["Votre prénom, e-mail, quartier, et éventuellement votre numéro de téléphone. Vos annonces, réservations, messages et avis. Vos préférences (mode nuit, abonnement)."]},
+   {h:"Pourquoi (finalités)",p:["Pour faire fonctionner le service : vous connecter, vous montrer les objets près de chez vous, gérer les locations et la messagerie, et assurer la sécurité du cercle.","Votre adresse exacte n'est jamais affichée aux autres — uniquement une distance à pied."]},
+   {h:"Base légale & sous-traitants",p:["Le traitement repose sur l'exécution du contrat (les CGU) et votre consentement. Vos données sont hébergées chez Google Firebase (UE/Irlande) et ne sont jamais vendues à des tiers."]},
+   {h:"Durée de conservation",p:["Vos données sont conservées tant que votre compte est actif. À la suppression du compte, elles sont effacées (hors obligations légales de conservation, ex. facturation)."]},
+   {h:"Vos droits (RGPD)",p:["Vous disposez d'un droit d'accès, de rectification, d'effacement, de portabilité et d'opposition. Vous pouvez exporter ou supprimer vos données à tout moment depuis Paramètres › Mes données.","Pour toute demande : ecrire@cercle.fr. Vous pouvez aussi saisir la CNIL (cnil.fr)."]},
+ ]},
+ cookies:{t:"Cookies & traceurs",lead:"Le strict minimum, et rien pour la pub.",maj:"16 juin 2026",sections:[
+   {h:"Ce que nous utilisons",p:["Un stockage local pour vous garder connecté (session Firebase) et mémoriser vos préférences (mode nuit, quartier, abonnement)."]},
+   {h:"Pas de publicité",p:["Aucun cookie publicitaire, aucun traceur tiers, aucun revente de données. Pas de Google Analytics ni de pixels marketing."]},
+   {h:"Gérer",p:["Vous pouvez à tout moment vider le stockage local depuis votre navigateur. Le bandeau de consentement vous laisse aussi accepter ou refuser à l'arrivée."]},
+ ]},
+ contact:{t:"Nous écrire",lead:"Une question, un souci, une idée ? On lit tout.",p:["Pour toute question sur une location, un litige, votre compte ou l'assurance, écrivez-nous : on répond en général sous 24 h ouvrées.","Besoin d'aide en pleine location ? Précisez le nom de l'objet et la date — ça nous aide à vous répondre vite."],mail:"support@cercle.fr",mailLabel:"Écrire au support"},
 };
-function InfoPage({id,setPage}){
-  const pg=INFO_PAGES[id];if(!pg)return null;
-  return <div style={{maxWidth:720,margin:"0 auto",padding:28}}>
-    <button className="cl" style={{marginBottom:20,display:"flex",alignItems:"center",gap:5}} onClick={()=>setPage("home")}><I.Back/> Retour</button>
-    <div style={{textAlign:"center",marginBottom:28}}><span style={{fontSize:48}}>{pg.icon}</span><h1 style={{fontFamily:"var(--fd)",fontSize:26,fontWeight:700,marginTop:8}}>{pg.title}</h1></div>
-    {pg.sections.map((s,i)=><div key={i} style={{marginBottom:16,padding:20,background:"var(--bg)",borderRadius:16,border:"1px solid var(--bd)"}}>
-      <h3 style={{fontSize:15,fontWeight:700,marginBottom:6}}>{s[0]}</h3>
-      <p style={{fontSize:14,lineHeight:1.7,color:"var(--g)"}}>{s[1]}</p>
-    </div>)}
-  </div>
+
+/* ═══════════ ICÔNES ═══════════ */
+const S=(p,vw="0 0 24 24")=>({size=16,...r})=><svg viewBox={vw} fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{width:size,height:size}} {...r}>{p}</svg>;
+const I={
+ search:S(<><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></>),
+ pin:S(<><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="3"/></>),
+ heart:S(<path d="M19 14c1.5-1.5 2-3.2 2-5a5 5 0 0 0-9-3 5 5 0 0 0-9 3c0 1.8.5 3.5 2 5l7 7 7-7Z"/>),
+ star:({size=13})=><svg viewBox="0 0 24 24" fill="currentColor" style={{width:size,height:size}}><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>,
+ plus:S(<path d="M12 5v14M5 12h14"/>),
+ back:S(<><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></>),
+ shield:S(<path d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5l-8-3Z"/>),
+ lock:S(<><rect x="4" y="10" width="16" height="11" rx="2.5"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></>),
+ clock:S(<><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></>),
+ msg:S(<path d="M21 12c0 4-4 7-9 7a10 10 0 0 1-3-.4L3 20l1.6-4A6.6 6.6 0 0 1 3 12c0-4 4-7 9-7s9 3 9 7Z"/>),
+ user:S(<><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-3.5 4.5-5 8-5s6.5 1.5 8 5"/></>),
+ home:S(<><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.5"/></>),
+ moon:S(<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/>),
+ sun:S(<><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></>),
+ send:S(<><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></>),
+ walk:S(<><circle cx="13" cy="4" r="1.5"/><path d="M10 22l2-7 2 2v5M7 12l3-3 2 1 2 3h3"/></>),
+ bell:S(<><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></>),
+};
+
+/* ═══════════ LOGO ═══════════ */
+const Logo=({size=38})=><svg width={size} height={size} viewBox="0 0 48 48" role="img" aria-label="Cercle">
+  <circle cx="24" cy="24" r="19" fill="none" stroke="var(--p)" strokeWidth="5" strokeLinecap="round" strokeDasharray="89 31" transform="rotate(35 24 24)"/>
+  <circle cx="24" cy="24" r="6.5" fill="var(--ter)"/>
+</svg>;
+
+/* ═══════════ GSAP helpers ═══════════ */
+const reduced=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
+function useReveal(deps){
+  useEffect(()=>{
+    if(typeof gsap==="undefined")return;
+    if(reduced()){document.querySelectorAll('.reveal').forEach(el=>{el.style.opacity=1;el.style.transform='none'});return;}
+    const els=document.querySelectorAll('.reveal');
+    gsap.to(els,{opacity:1,y:0,duration:.6,stagger:.05,ease:"power3.out",overwrite:"auto"});
+  },deps);
 }
 
-/* ===== MAP PAGE ===== */
-function MapPage({items,onOpen}){
-  const[mapCat,setMapCat]=useState('all');
-  const[areaItems,setAreaItems]=useState([]);
-  const[drawerOpen,setDrawerOpen]=useState(false);
-  const[sel,setSel]=useState(null);
-  const mapRef=useRef(null);
-  const leafRef=useRef(null);
-  const mgRef=useRef(null);
-  const rebuildRef=useRef(null);
-  const mapCatRef=useRef('all');
-  const itemsRef=useRef(items);
-  // Always keep itemsRef in sync without triggering effects
-  itemsRef.current=items;
-
-  /* ---- helpers ---- */
-  const filterByBounds=(map,src)=>{
-    try{
-      const b=map.getBounds();
-      if(!b||!b.isValid())return src;
-      return src.filter(i=>typeof i.lat==='number'&&typeof i.lng==='number'&&b.contains([i.lat,i.lng]));
-    }catch{return src;}
-  };
-
-  const buildMarkers=(map,mg,src)=>{
-    mg.clearLayers();
-    const cities={};
-    src.forEach(i=>{
-      if(typeof i.lat!=='number'||typeof i.lng!=='number')return;
-      if(!cities[i.location])cities[i.location]={cnt:0,lat:i.lat,lng:i.lng,minPrice:i.price};
-      cities[i.location].cnt++;
-      if(i.price<cities[i.location].minPrice)cities[i.location].minPrice=i.price;
-    });
-    Object.entries(cities).forEach(([name,d])=>{
-      const short=name.replace(/\s\d+\w?$/,'');
-      const icon=window.L.divIcon({
-        className:'',
-        html:`<div class="map-pin">📍 ${d.cnt} · ${short}</div>`,
-        iconSize:[0,0],iconAnchor:[0,16]
-      });
-      const popup=window.L.popup({maxWidth:200,closeButton:true,className:'map-popup-wrap'}).setContent(
-        `<div style="font-family:'DM Sans',system-ui;padding:6px 2px;min-width:140px">
-          <div style="font-size:14px;font-weight:700;margin-bottom:4px">📍 ${short}</div>
-          <div style="font-size:12px;color:#6B7280">${d.cnt} annonce${d.cnt>1?'s':''} disponible${d.cnt>1?'s':''}</div>
-          <div style="font-size:13px;font-weight:600;color:#0D9488;margin-top:4px">À partir de ${d.minPrice}€<span style="font-weight:400;color:#9CA3AF">/jour</span></div>
-        </div>`
-      );
-      const m=window.L.marker([d.lat,d.lng],{icon}).bindPopup(popup);
-      m.on('click',()=>{
-        setSel(name);
-        setDrawerOpen(true);
-      });
-      mg.addLayer(m);
-    });
-  };
-
-  /* ---- Init Leaflet (once on mount) ---- */
+/* ═══════════ HERO RADAR ═══════════ */
+function Hero({items,open,onSearch,user}){
+  const ref=useRef(null);
+  const picks=useMemo(()=>items.slice(0,5),[items]);
+  const POS=[{x:20,y:16},{x:79,y:22},{x:86,y:64},{x:22,y:72},{x:58,y:90}];
   useEffect(()=>{
-    if(!window.L)return console.warn('[MapPage] Leaflet not loaded');
-    if(!mapRef.current)return;
-    if(leafRef.current)return;
-
-    const map=window.L.map(mapRef.current,{zoomControl:true,attributionControl:true}).setView([46.8,2.5],6);
-    window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-      attribution:'© <a href="https://openstreetmap.org/copyright">OSM</a>',
-      maxZoom:19
-    }).addTo(map);
-    const mg=window.L.layerGroup().addTo(map);
-    mgRef.current=mg;
-    leafRef.current=map;
-
-    // Capture stable refs for event handlers (avoid stale closures)
-    rebuildRef.current=(src)=>buildMarkers(map,mg,src);
-
-    const getSrc=()=>{
-      const cat=mapCatRef.current;
-      return cat==='all'?itemsRef.current:itemsRef.current.filter(i=>i.cat===cat);
-    };
-
-    // Initial render — delay filter until map tiles settle
-    const initSrc=getSrc();
-    buildMarkers(map,mg,initSrc);
-    setTimeout(()=>{
-      map.invalidateSize();
-      setAreaItems(filterByBounds(map,initSrc));
-    },200);
-
-    // Both moveend and zoomend → instant list update + reset city selection
-    // Note: Leaflet always fires moveend AFTER zoomend, so using both is intentional.
-    // zoomend fires first (rebuilds markers+filters), then moveend fires again
-    // with the same data — a no-op in practice since getSrc() and bounds are stable.
-    // Close popup at zoom START (before animation) so it never survives the transition
-    map.on('zoomstart',()=>map.closePopup());
-
-    const onMapChange=()=>{
-      map.closePopup();          // belt-and-suspenders: also close on zoomend/moveend
-      map.invalidateSize();      // fix grey tiles when container size is recalculated
-      const s=getSrc();
-      buildMarkers(map,mg,s);
-      setAreaItems(filterByBounds(map,s));
-      setSel(null);
-    };
-    map.on('moveend',onMapChange);
-    map.on('zoomend',onMapChange);
-
-    return()=>{
-      map.remove();
-      leafRef.current=null;
-      mgRef.current=null;
-      rebuildRef.current=null;
-    };
-  },[]);/* eslint-disable-line react-hooks/exhaustive-deps */
-
-  /* ---- React to category filter changes ---- */
-  useEffect(()=>{
-    mapCatRef.current=mapCat;
-    if(!leafRef.current||!rebuildRef.current)return;
-    const src=mapCat==='all'?items:items.filter(i=>i.cat===mapCat);
-    rebuildRef.current(src);
-    setAreaItems(filterByBounds(leafRef.current,src));
-    setSel(null);
-    setDrawerOpen(false);
-  },[mapCat]);/* eslint-disable-line react-hooks/exhaustive-deps */
-
-  const panelItems=sel?areaItems.filter(i=>i.location===sel):areaItems;
-  const closeDrawer=()=>{setSel(null);setDrawerOpen(false);};
-
-  return <div className="map-w">
-    {/* Category filter bar */}
-    <div className="map-filters">
-      {CATS.slice(0,10).map(c=><button key={c.id} className={"pill"+(mapCat===c.id?" on":"")} style={{fontSize:11,whiteSpace:"nowrap",flexShrink:0}} onClick={()=>setMapCat(c.id)}>{c.icon} {c.label}</button>)}
-    </div>
-    <div className="map-layout">
-      {/* Map area */}
-      <div style={{position:"relative",minHeight:0}}>
-        <div ref={mapRef} style={{position:"absolute",inset:0}}/>
-        <button className="map-list-btn" style={{zIndex:1000}} onClick={()=>setDrawerOpen(d=>!d)}>
-          📋 {areaItems.length} annonce{areaItems.length!==1?"s":""}
-        </button>
+    if(typeof gsap==="undefined"||!ref.current||reduced())return;
+    const ctx=gsap.context(()=>{
+      gsap.from(".h-el",{y:22,autoAlpha:0,duration:.7,stagger:.09,ease:"power3.out"});
+      gsap.from(".rings circle",{scale:.55,transformOrigin:"50% 50%",autoAlpha:0,duration:.9,stagger:.12,ease:"power2.out"});
+      gsap.from(".ping",{scale:0,autoAlpha:0,duration:.55,stagger:.15,delay:.45,ease:"back.out(2.2)"});
+      gsap.utils.toArray(".ping").forEach((p,i)=>gsap.to(p,{y:"+=7",duration:2.8+i*.5,yoyo:true,repeat:-1,ease:"sine.inOut",delay:1.2+i*.3}));
+      const sp=ref.current.querySelector(".sould path");
+      if(sp){const L=sp.getTotalLength();gsap.fromTo(sp,{strokeDasharray:L,strokeDashoffset:L},{strokeDashoffset:0,duration:.7,delay:.85,ease:"power2.out"});}
+    },ref);
+    return()=>ctx.revert();
+  },[]);
+  return <div className="hero" ref={ref}>
+    <div>
+      <div className="eyebrow h-el"><span className="dot"/>{(user&&user.quartier)||"Metz Sablon"} · {ITEMS.length*18} objets autour de vous</div>
+      <h1>
+        <span className="h-el" style={{display:"block"}}>Arrêtez d'acheter.</span>
+        <span className="h-el" style={{display:"block"}}>Tout dort déjà</span>
+        <span className="h-el bl" style={{display:"block"}}><span className="sould">à deux rues<svg viewBox="0 0 200 10" preserveAspectRatio="none"><path d="M3 7 Q 50 2 100 6 T 197 5"/></svg></span>.</span>
+      </h1>
+      <p className="sub h-el">Perceuse, vélo cargo, sono, appareil photo… Vos voisins les ont, ils les prêtent. Assuré jusqu'à 2 000 €, caution séquestrée.</p>
+      <form className="hsearch h-el" onSubmit={e=>{e.preventDefault();onSearch(e.target.q.value)}}>
+        <I.search size={18}/>
+        <input name="q" placeholder="De quoi avez-vous besoin ?" aria-label="Rechercher un objet"/>
+        <button type="submit" className="btn btn-p">Chercher</button>
+      </form>
+      <div className="proof h-el">
+        <div><b>2 412</b><span>objets partagés</span></div><div className="sep"/>
+        <div><b>12 000+</b><span>voisins inscrits</span></div><div className="sep"/>
+        <div><b style={{color:"var(--sun)"}}>★ 4,8</b><span>note moyenne</span></div>
       </div>
-      {/* Side panel (desktop) / Bottom drawer (mobile) */}
-      <div className={"map-side"+(drawerOpen?" open":"")}>
-        <div className="map-drawer-handle" onClick={closeDrawer}/>
-        <div className="map-side-hd">
-          <span>{areaItems.length} annonce{areaItems.length!==1?"s":""} dans cette zone</span>
-          <button className="map-drawer-close" onClick={closeDrawer}>✕</button>
+    </div>
+    <div className="radar">
+      <svg className="rings" viewBox="0 0 460 430" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+        <circle cx="230" cy="215" r="198" className="dash"/>
+        <circle cx="230" cy="215" r="136"/>
+        <circle cx="230" cy="215" r="74" className="dash"/>
+        <text x="356" y="206">1 km</text><text x="298" y="148">500 m</text>
+      </svg>
+      <div className="you">Chez vous<i/></div>
+      {picks.map((it,i)=>{const p=POS[i];return(
+        <button key={it.id} className="ping" style={{left:p.x+"%",top:p.y+"%"}} onClick={()=>open(it)} aria-label={it.t}>
+          <span className="ph"><img src={seed(it.img[0],160,160)} alt=""/><span className="pt"/></span>
+          <span className="lbl">{it.t.length>15?it.t.slice(0,14)+"…":it.t} · <b>{it.p} €/j</b></span>
+        </button>);})}
+    </div>
+  </div>;
+}
+
+/* ═══════════ CARTE ═══════════ */
+function Card({it,open,fav,togFav}){
+  return <article className="card reveal" onClick={()=>open(it)}>
+    <div className="ph">
+      <img src={seed(it.img[0])} alt={it.t} loading="lazy"/>
+      <div className="stamp"><span className="ck">✓</span><span>VÉRIFIÉ</span></div>
+      <div className="dist"><I.walk size={11}/>{distLabel(it.id)}</div>
+      <button className={"fav"+(fav?" on":"")} aria-label="Favori" onClick={e=>{e.stopPropagation();togFav(it.id)}}>
+        <svg viewBox="0 0 24 24" fill={fav?"currentColor":"none"} stroke="currentColor" strokeWidth="2.2" strokeLinejoin="round" style={{width:16,height:16}}><path d="M19 14c1.5-1.5 2-3.2 2-5a5 5 0 0 0-9-3 5 5 0 0 0-9 3c0 1.8.5 3.5 2 5l7 7 7-7Z"/></svg>
+      </button>
+    </div>
+    <div className="in">
+      <div className="tt"><h3>{it.t}</h3>{it.rev>0?<span className="note"><I.star/>{it.note.toFixed(1)}</span>:<span className="note" style={{background:"color-mix(in srgb,var(--p) 12%,transparent)",color:"var(--p)"}}>Nouveau</span>}</div>
+      <div className="own">{it.own}{it.ownerPro&&<span className="propill">PRO</span>} · {it.city}</div>
+      <div className="foot"><span className="prix">{it.p} € <small>/jour</small></span><span className="marche">{distFor(it.id).min} min à pied</span></div>
+    </div>
+  </article>;
+}
+
+/* ═══════════ DÉTAIL ═══════════ */
+const isoLocal=d=>{const p=n=>(n<10?"0":"")+n;return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate());};
+/* Calendrier de réservation : clic date de début puis de fin, jours passés/réservés grisés */
+function Cal({booked=[],sel,onPick,today}){
+  const t0=new Date(today+"T00:00:00");
+  const[mon,setMon]=useState(new Date(t0.getFullYear(),t0.getMonth(),1));
+  const isBooked=ds=>booked.some(b=>b&&b.start&&b.end&&ds>=b.start&&ds<b.end);
+  const crosses=(a,b)=>{const s=new Date(a+"T00:00:00"),e=new Date(b+"T00:00:00");for(let d=new Date(s);d<e;d.setDate(d.getDate()+1)){if(isBooked(isoLocal(d)))return true;}return false;};
+  const click=ds=>{
+    if(ds<today||isBooked(ds))return;
+    if(!sel.start||sel.end){onPick({start:ds,end:""});return;}
+    if(ds<=sel.start){onPick({start:ds,end:""});return;}
+    if(crosses(sel.start,ds)){onPick({start:ds,end:""});return;}
+    onPick({start:sel.start,end:ds});
+  };
+  const y=mon.getFullYear(),m=mon.getMonth();
+  const startDow=(new Date(y,m,1).getDay()+6)%7,nDays=new Date(y,m+1,0).getDate();
+  const cells=[];for(let i=0;i<startDow;i++)cells.push(null);for(let d=1;d<=nDays;d++)cells.push(new Date(y,m,d));
+  const prevOff=(y<t0.getFullYear())||(y===t0.getFullYear()&&m<=t0.getMonth());
+  return <div className="cal">
+    <div className="cal-h">
+      <button type="button" disabled={prevOff} onClick={()=>setMon(new Date(y,m-1,1))} aria-label="Mois précédent">‹</button>
+      <b>{mon.toLocaleDateString("fr-FR",{month:"long",year:"numeric"})}</b>
+      <button type="button" onClick={()=>setMon(new Date(y,m+1,1))} aria-label="Mois suivant">›</button>
+    </div>
+    <div className="cal-dow">{["L","M","M","J","V","S","D"].map((d,i)=><span key={i}>{d}</span>)}</div>
+    <div className="cal-grid">{cells.map((d,i)=>{
+      if(!d)return <span key={i}/>;
+      const ds=isoLocal(d),past=ds<today,bk=isBooked(ds);
+      const isStart=ds===sel.start,isEnd=ds===sel.end,inRng=sel.start&&sel.end&&ds>sel.start&&ds<sel.end;
+      const cls=["cal-d"];if(past||bk)cls.push("off");if(isStart||isEnd)cls.push("sel");if(inRng)cls.push("rng");if(ds===today&&!isStart&&!isEnd)cls.push("tdy");
+      return <button key={i} type="button" className={cls.join(" ")} disabled={past||bk} onClick={()=>click(ds)}>{d.getDate()}</button>;
+    })}</div>
+  </div>;
+}
+function Detail({it,backHome,fav,togFav,toast,reserve,openChat,plus,reviews=[],rentals=0}){
+  const d=distFor(it.id);
+  const[main,setMain]=useState(0);
+  useEffect(()=>{setMain(0)},[it.id]);
+  const itemReviews=reviews.filter(r=>r.itemId===it.id);
+  const myGrade=getGrade(rentals);
+  const rate=feeRate(rentals,plus);
+  const todayISO=isoLocal(new Date());
+  const[sel,setSel]=useState({start:"",end:""});
+  useEffect(()=>{setSel({start:"",end:""})},[it.id]);
+  const booked=it.booked||[];
+  const fmtFr=dt=>dt.toLocaleDateString("fr-FR",{day:"2-digit",month:"short"});
+  const days=(sel.start&&sel.end)?Math.max(1,Math.round((new Date(sel.end+"T00:00:00")-new Date(sel.start+"T00:00:00"))/864e5)):0;
+  const base=+(it.p*days).toFixed(2);
+  const fee=+(it.p*days*rate).toFixed(2);
+  const totNum=+(base+fee).toFixed(2);
+  const tot=totNum.toFixed(2).replace(".",",");
+  const range=(sel.start&&sel.end)?`${fmtFr(new Date(sel.start+"T00:00:00"))} → ${fmtFr(new Date(sel.end+"T00:00:00"))}`:"";
+  const startISO=sel.start,endISO=sel.end;
+  const[licChk,setLicChk]=useState(false);
+  const[licNum,setLicNum]=useState("");
+  useEffect(()=>{setLicChk(false);setLicNum("")},[it.id]);
+  const licOk=!it.needsLicense||(licChk&&licNum.trim().length>=4);
+  const canReserve=days>0&&licOk;
+  useEffect(()=>{window.scrollTo({top:0,behavior:"instant"});
+    if(typeof gsap!=="undefined"&&!reduced()){
+      gsap.from(".gal, .det-body > div",{y:20,autoAlpha:0,duration:.6,stagger:.12,ease:"power3.out"});
+    }
+  },[it.id]);
+  return <div className="det">
+    <button className="back" onClick={backHome}><I.back size={14}/>Retour</button>
+    <div className="gal">
+      <div className="g0"><img src={seed(it.img[main]||it.img[0],900,560)} alt={it.t}/>
+        <div className="stamp" style={{width:56,height:56,fontSize:7.5}}><span className="ck" style={{fontSize:13}}>✓</span><span>VÉRIFIÉ</span></div>
+      </div>
+      {it.img.length>1&&<div className="gthumbs">
+        {it.img.map((im,i)=><button key={i} type="button" className={"gth"+(i===main?" on":"")} onClick={()=>setMain(i)} aria-label={"Photo "+(i+1)}><img src={seed(im,200,140)} alt=""/></button>)}
+      </div>}
+    </div>
+    <div className="det-body">
+      <div>
+        <h1>{it.t}</h1>
+        <div className="meta">
+          {it.rev>0
+            ?<><span className="st"><I.star size={14}/></span><b>{it.note.toFixed(1)}</b><span style={{textDecoration:"underline"}}>{it.rev} avis</span><span>·</span></>
+            :<><b style={{color:"var(--p)"}}>Nouvelle annonce</b><span>·</span></>}
+          <span>{it.own} · répond en ~15 min</span>
         </div>
-        {/* Breadcrumb ville sélectionnée */}
-        {sel&&<div className="map-breadcrumb">
-          <span className="map-breadcrumb-label">📍 {sel} · {panelItems.length} annonce{panelItems.length!==1?"s":""}</span>
-          <button className="map-breadcrumb-reset" onClick={()=>setSel(null)}>✕ Tout voir</button>
-        </div>}
-        {panelItems.length===0
-          ?<div style={{padding:32,textAlign:"center",color:"var(--g)"}}><div style={{fontSize:32}}>🗺️</div><p style={{fontSize:12,marginTop:8}}>Aucune annonce dans cette zone</p></div>
-          :<div style={{overflowY:"auto",flex:1,paddingBottom:8}}>
-            {panelItems.map(i=><div key={i.id} className="map-card" onClick={()=>onOpen(i)}>
-              <img src={i.images[0]} alt={i.title}/>
-              <div className="map-card-body">
-                <div className="map-card-title">{i.title}</div>
-                <div className="map-card-meta">📍 {i.location.replace(/\s\d+\w?$/,'')} · ★ {i.rating} ({i.reviews})</div>
-                <div style={{display:"flex",alignItems:"baseline",gap:4,marginTop:2}}>
-                  <span className="map-card-price">{i.price}€<span>/jour</span></span>
-                  {i.condition&&<span style={{fontSize:10,background:"var(--bgw)",border:"1px solid var(--bd)",borderRadius:4,padding:"1px 5px",color:"var(--g)",fontWeight:500}}>{i.condition}</span>}
-                </div>
-              </div>
-            </div>)}
+        <div className="trajet"><I.walk size={15}/>à {d.m} m de chez vous — {d.min} minutes à pied, {it.city}</div>
+        <div className="guars">
+          <div className="guar"><b><I.shield size={14}/>Protégé 2 000 €</b><span>par Cercle</span></div>
+          <div className="guar"><b><I.lock size={14}/>Caution séquestrée</b><span>rendue sous 48 h</span></div>
+          <div className="guar"><b><I.clock size={14}/>Annulation 24 h</b><span>gratuite</span></div>
+        </div>
+        <h3 className="sh">Description</h3>
+        <p className="desc">{it.d}</p>
+        <div className="owner-card">
+          <div className="avat">{it.own[0]}</div>
+          <div><div className="nm">{it.own}{it.ownerPro&&<span className="propill">PRO</span>}</div><div className="sb">{it.ownerPro?"Loueur professionnel":"Voisin·e vérifié·e"}{it.rev>0?` · ★ ${it.note.toFixed(1)} · ${it.rev} avis`:""}</div></div>
+          <button className="btn btn-ghost" style={{padding:"9px 15px",minHeight:38,fontSize:13}} onClick={()=>openChat(it)}><I.msg size={14}/>Contacter</button>
+        </div>
+        {itemReviews.length>0&&<>
+          <h3 className="sh">Avis des voisins <small style={{fontWeight:500,color:"var(--gl)"}}>· {itemReviews.length}</small></h3>
+          <div className="rows">{itemReviews.map(r=><div key={r.id} className="rev">
+            <div className="rh">
+              <div className="avat" style={{width:34,height:34,fontSize:13}}>{(r.by||"V")[0]}</div>
+              <b style={{color:"var(--dk)",fontSize:14}}>{r.by}</b>
+              <span className="stars">{[...Array(r.note)].map((_,j)=><I.star key={j} size={11}/>)}</span>
+              <span style={{marginLeft:"auto",fontSize:11.5,color:"var(--gl)"}}>{r.when}</span>
+            </div>
+            <p style={{fontSize:13.5}}>{r.txt}</p>
+          </div>)}</div>
+        </>}
+      </div>
+      <aside className="ticket">
+        <div className="th">
+          <span className="prix">{it.p} € <small>/jour</small></span>
+          <span className="caution">CAUTION {it.cau||it.p*6} €</span>
+        </div>
+        <div className="perfo"/>
+        <div className="tb" style={{paddingTop:18}}>
+          <div style={{fontSize:12,fontWeight:700,color:"var(--dk)",marginBottom:8}}>{!sel.start?"Choisissez la date de début":!sel.end?"Choisissez la date de fin":`Du ${range.replace(" → "," au ")} · ${days} jour${days>1?"s":""}`}</div>
+          <Cal booked={booked} sel={sel} onPick={setSel} today={todayISO}/>
+          <div className="cal-lg">
+            <span><i style={{background:"var(--ter)"}}/>Sélection</span>
+            <span><i style={{background:"color-mix(in srgb,var(--gl) 40%,transparent)"}}/>Indisponible</span>
+          </div>
+          <div className="calc" style={{marginTop:12}}>
+            {days>0?<>
+            <div className="row"><span>{it.p} € × {days} jour{days>1?"s":""}</span><b>{(it.p*days).toFixed(2).replace(".",",")} €</b></div>
+            <div className="row"><span>Frais de service ({Math.round(rate*100)} %) · grade {myGrade.nom}</span><b>{fee.toFixed(2).replace(".",",")} €</b></div>
+            {plus&&<div className="row" style={{color:"var(--plus)"}}><span>✦ Cercle+ inclus</span><b style={{color:"var(--plus)"}}>−1 %</b></div>}
+            <div className="tot"><span>Total</span><b>{tot} €</b></div>
+            </>:<div style={{fontSize:12.5,color:"var(--g)",textAlign:"center",padding:"4px 0"}}>Sélectionnez vos dates pour voir le total.</div>}
+          </div>
+          {it.needsLicense&&<div style={{marginTop:12}}>
+            <label className="chk" style={{marginBottom:8}}><input type="checkbox" checked={licChk} onChange={e=>setLicChk(e.target.checked)}/><span><b>Permis de conduire</b><small>Ce bien est un véhicule. Je certifie détenir un permis valide.</small></span></label>
+            <input value={licNum} onChange={e=>setLicNum(e.target.value)} placeholder="Numéro de permis" aria-label="Numéro de permis" style={{width:"100%",padding:"11px 14px",border:"1.5px solid var(--bd)",borderRadius:12,fontSize:14,background:"var(--bg)",color:"var(--dk)",outline:"none"}}/>
           </div>}
+          <button className="btn btn-green" disabled={!canReserve} style={!canReserve?{opacity:.5,cursor:"not-allowed",marginTop:12}:{marginTop:12}} onClick={()=>{if(days<1){toast("Choisissez vos dates de location");return;}if(!licOk){toast("Attestez votre permis et saisissez son numéro");return;}reserve(it,days,totNum,base,fee,range,startISO,endISO,licNum.trim());}}><I.lock size={15}/>{days<1?"Choisir les dates":!licOk?"Attestez votre permis":`Réserver — ${tot} €`}</button>
+          <p className="note">Débité seulement à la confirmation de {it.own}</p>
+          <button className={"btn btn-ghost"} style={{width:"100%",marginTop:8,fontSize:13}} onClick={()=>togFav(it.id)}>{fav?"♥ Retiré des favoris ?":"♡ Ajouter aux favoris"}</button>
+        </div>
+      </aside>
+    </div>
+  </div>;
+}
+
+/* ═══════════ PAGES ═══════════ */
+const PHOTO_PH="data:image/svg+xml,"+encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' width='400' height='300'><rect width='100%' height='100%' fill='#F7F3EA'/><g fill='none' stroke='#C9BFA8' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'><rect x='150' y='112' width='100' height='76' rx='10'/><circle cx='176' cy='140' r='9'/><path d='M150 174l30-26 22 18 24-22 24 24'/></g><text x='200' y='214' font-family='sans-serif' font-size='17' fill='#A39B89' text-anchor='middle'>Ajoutez votre photo</text></svg>");
+function Create({toast,backHome,addItem}){
+  const HINTS={brico:"les outils du quartier se louent 8–15 €/j",photo:"photo & son : 15–45 €/j",velo:"vélos & mobilité : 12–20 €/j",sport:"sport & plein air : 10–18 €/j",jardin:"jardin : 8–14 €/j",cuisine:"cuisine & maison : 5–10 €/j"};
+  const MAXP=4;
+  const[t,setT]=useState("");
+  const[c,setC]=useState("brico");
+  const[pr,setPr]=useState("");
+  const[d,setD]=useState("");
+  const[photos,setPhotos]=useState([]);
+  const[cau,setCau]=useState("");
+  const[lic,setLic]=useState(false);
+  const[upBusy,setUpBusy]=useState(false);
+  const price=Math.max(0,+pr||0);
+  const cauVal=cau===""?(price?cautionSuggest(price):""):Math.min(CAUTION_MAX,Math.max(0,+cau||0));
+  const prev={id:"prev",t:t||"Votre objet",c,p:price||8,img:photos.length?photos:[PHOTO_PH],own:"Vous",city:"rue du Sablon",note:0,rev:0,d,cau:+cauVal||0};
+  const addPhoto=p=>setPhotos(ps=>ps.length>=MAXP||ps.includes(p)?ps:[...ps,p]);
+  const removePhoto=i=>setPhotos(ps=>ps.filter((_,j)=>j!==i));
+  const onUpload=async e=>{const f=e.target.files&&e.target.files[0];if(!f){return;}e.target.value="";
+    if(!/^image\//.test(f.type)){toast("Choisissez un fichier image");return;}
+    if(f.size>12*1024*1024){toast("Photo trop lourde (12 Mo max)");return;}
+    if(photos.length>=MAXP){toast("4 photos maximum");return;}
+    setUpBusy(true);try{const u=await fileToDataURL(f);addPhoto(u);}catch(_){toast("Impossible de lire cette photo");}setUpBusy(false);};
+  return <div className="page" style={{maxWidth:1180}}>
+    <h1>Proposer un objet</h1>
+    <p className="lead">Il dort chez vous ? Il peut servir à deux rues. Photo, prix — en ligne en 2 minutes.</p>
+    <div className="create-grid">
+      <div className="panel">
+        <form onSubmit={e=>{e.preventDefault();if(!photos.length){toast("Ajoutez au moins une photo");return;}
+          addItem({t,c,p:price||5,d:d||"Proposé par un voisin du Sablon, avec soin.",imgs:photos,cau:+cauVal||0,needsLicense:lic});
+          toast("Annonce publiée — bienvenue dans le cercle !");backHome();}}>
+          <div className="fg"><label>Titre de l'annonce</label><input required value={t} onChange={e=>setT(e.target.value)} placeholder="Ex. Perceuse visseuse Bosch Pro 18V"/></div>
+          <div className="fr">
+            <div className="fg"><label>Catégorie</label><select value={c} onChange={e=>setC(e.target.value)}>{CATS.filter(x=>x.id!=="all").map(x=><option key={x.id} value={x.id}>{x.label}</option>)}</select></div>
+            <div className="fg"><label>Prix par jour (€)</label><input type="number" min="1" required value={pr} onChange={e=>setPr(e.target.value)} placeholder="12"/><div className="hint">{HINTS[c]}</div></div>
+          </div>
+          <div className="fg"><label>Caution (€)</label><input type="number" min={CAUTION_MIN} max={CAUTION_MAX} value={cau} onChange={e=>setCau(e.target.value)} placeholder={price?String(cautionSuggest(price)):"Ex. 60"}/><div className="hint">Séquestrée par Cercle, rendue sous 48 h. {price>0&&cau===""?`Suggéré : ${cautionSuggest(price)} € (≈ 5 jours de location).`:"Laissez vide pour la suggestion automatique (≈ 5 jours de location, entre 20 et 2 000 €)."}</div></div>
+          <div className="fg"><label>Description</label><textarea value={d} onChange={e=>setD(e.target.value)} placeholder="État, accessoires fournis, lieu de remise en main propre…"/></div>
+          <label className="chk"><input type="checkbox" checked={lic} onChange={e=>setLic(e.target.checked)}/><span><b>Véhicule — permis de conduire requis</b><small>Le locataire devra attester d'un permis valide et saisir son numéro avant de réserver.</small></span></label>
+          <div className="fg"><label>Vos photos <small style={{fontWeight:500,color:"var(--gl)"}}>· jusqu'à {MAXP}</small></label>
+            {photos.length>0&&<div className="photo-sel">
+              {photos.map((p,i)=><div key={i} className="psel">
+                <img src={seed(p,160,160)} alt=""/>
+                {i===0&&<span className="cov">Couverture</span>}
+                <button type="button" className="prm" onClick={()=>removePhoto(i)} aria-label="Retirer la photo">×</button>
+              </div>)}
+            </div>}
+            <div className="photo-pick">
+              <label className={"photo-up"+(photos.length>=MAXP?" full":"")} title="Importer une photo">
+                <I.plus size={16}/><span>{upBusy?"…":"Importer"}</span>
+                <input type="file" accept="image/*" onChange={onUpload} disabled={photos.length>=MAXP}/>
+              </label>
+            </div>
+            <div className="hint">Importez vos vraies photos depuis votre appareil (recadrées et allégées automatiquement). La première sera la couverture.</div>
+          </div>
+          {price>0&&<div className="gain"><I.star size={14}/>Louée 2 week-ends par mois ≈ {price*4} €/mois dans votre poche · caution : {cauVal||cautionSuggest(price)} €</div>}
+          <button type="submit" className="btn btn-ter" disabled={!photos.length} style={{width:"100%",padding:14,fontSize:15,marginTop:12,opacity:photos.length?1:.5}}>Publier mon annonce</button>
+          {!photos.length&&<p className="hint" style={{textAlign:"center"}}>Ajoutez au moins une photo pour publier.</p>}
+        </form>
+      </div>
+      <aside className="cprev">
+        <div className="plabel">Aperçu — votre annonce dans le cercle</div>
+        <Card it={prev} open={()=>{}} fav={false} togFav={()=>{}}/>
+      </aside>
+    </div>
+  </div>;
+}
+
+function Messages({convs,setConvs,openId,setOpenId,user}){
+  const cid=openId;
+  const c=convs.find(x=>x.id===cid)||null;
+  const endRef=useRef(null);
+  const[fsMsgs,setFsMsgs]=useState([]);
+  const myUid=user&&user.uid;
+  /* conversation réelle ouverte → écoute les messages en temps réel */
+  useEffect(()=>{
+    if(!c||!c.fs){setFsMsgs([]);return;}
+    const d=fbDb();if(!d)return;
+    return d.collection("v2_conversations").doc(c.id).collection("messages").orderBy("at","asc").limit(300).onSnapshot(snap=>{
+      const arr=[];snap.forEach(doc=>{const m=doc.data();arr.push([m.from===myUid?"me":"th",m.text]);});setFsMsgs(arr);
+    },err=>console.warn("[Cercle] messages indisponibles:",err&&err.code));
+  },[c&&c.id,c&&c.fs,myUid]);
+  const msgs=c?(c.fs?fsMsgs:(c.msgs||[])):[];
+  useEffect(()=>{if(endRef.current)endRef.current.scrollIntoView({behavior:reduced()?"instant":"smooth",block:"end"})},[msgs.length]);
+  const send=txt=>{
+    if(!txt.trim()||!c)return;
+    if(c.fs){
+      const d=fbDb();if(!d)return;
+      const cref=d.collection("v2_conversations").doc(c.id);
+      cref.collection("messages").add({from:myUid,text:txt,at:firebase.firestore.FieldValue.serverTimestamp()}).catch(e=>console.warn("[Cercle] envoi message échoué:",e&&e.code));
+      cref.set({last:txt,lastAt:firebase.firestore.FieldValue.serverTimestamp(),lastFrom:myUid},{merge:true}).catch(()=>{});
+      return;
+    }
+    setConvs(cs=>cs.map(x=>x.id===cid?{...x,msgs:[...x.msgs,["me",txt]],last:txt,when:"maintenant"}:x));
+    setTimeout(()=>{
+      const rep=AUTO_REPLIES[(Math.random()*AUTO_REPLIES.length)|0];
+      setConvs(cs=>cs.map(x=>x.id===cid?{...x,msgs:[...x.msgs,["th",rep]],last:rep,when:"maintenant"}:x));
+    },1400);
+  };
+  if(c)return <div className="page">
+    <button className="back" onClick={()=>setOpenId(null)}><I.back size={14}/>Conversations</button>
+    <h1 style={{fontSize:24,marginTop:6}}>{c.who}{c.fs&&<span style={{fontSize:12,fontWeight:600,color:"var(--green)",marginLeft:8,verticalAlign:"middle"}}>● en direct</span>}</h1>
+    <div className="bubs">
+      {msgs.length===0&&<p style={{fontSize:13,color:"var(--g)",fontStyle:"italic"}}>Dites bonjour à {c.who} — c'est un voisin, pas un service client.</p>}
+      {msgs.map((m,i)=><div key={i} className={"bub "+m[0]}>{m[1]}</div>)}
+      <div ref={endRef}/>
+    </div>
+    <form className="mip" onSubmit={e=>{e.preventDefault();const v=e.target.m.value;e.target.reset();send(v)}}>
+      <input name="m" placeholder={"Écrire à "+c.who+"…"} autoComplete="off"/>
+      <button className="btn btn-p" style={{borderRadius:999,width:46,height:46,padding:0}} aria-label="Envoyer"><I.send size={16}/></button>
+    </form>
+  </div>;
+  return <div className="page">
+    <h1>Courrier du quartier</h1>
+    <p className="lead">Vos conversations avec les voisins.</p>
+    {convs.length===0&&<div className="empty" style={{padding:"30px 12px"}}><div className="big">Pas encore de message</div>Ouvrez une fiche objet et touchez « Contacter » pour écrire à un voisin.</div>}
+    <div className="msg-l">{convs.map(cv=>
+      <button key={cv.id} className="conv" onClick={()=>setOpenId(cv.id)}>
+        <div className="avat">{(cv.who||"V")[0]}</div>
+        <div style={{minWidth:0}}><div className="nm">{cv.who}{cv.fs&&<span style={{fontSize:10,color:"var(--green)",marginLeft:6}}>●</span>}</div><div className="lm">{cv.last}</div></div>
+        <span className="when">{cv.when}</span>
+      </button>)}
+    </div>
+  </div>;
+}
+function Favs({items,open,fav,togFav}){
+  const list=items.filter(i=>fav.has(i.id));
+  useReveal([list.length]);
+  return <div className="page" style={{maxWidth:1180}}>
+    <h1>Mes favoris</h1>
+    <p className="lead">{list.length?list.length+" objet"+(list.length>1?"s":"")+" sous le coude.":""}</p>
+    {list.length===0
+      ?<div className="empty"><div className="big">Rien pour l'instant</div>Touchez le cœur d'une annonce pour la garder ici.</div>
+      :<div className="grid">{list.map(it=><Card key={it.id} it={it} open={open} fav={true} togFav={togFav}/>)}</div>}
+  </div>;
+}
+function Profile({dark,setDark,toast,go,plus,user,logout,stats={}}){
+  const noteStr=stats.note?stats.note.toFixed(1).replace(".",","):"—";
+  const g=getGrade(stats.rentals||0);
+  return <div className="page">
+    <h1>Mon profil</h1>
+    <p className="lead">{user.name} — membre vérifié de Cercle.</p>
+    <div className="prof-h">
+      <div className="avat">{user.photo?<img src={user.photo} alt=""/>:user.name[0].toUpperCase()}</div>
+      <div style={{flex:1}}>
+        <div style={{fontWeight:700,color:"var(--dk)",fontSize:17,fontFamily:"var(--fd)"}}>{user.name}</div>
+        <div style={{fontSize:12.5,color:"var(--g)"}}>{user.email}{user.phone?" · "+user.phone:""} · {user.quartier}</div>
+      </div>
+      <div className="stamp" style={{position:"static",width:52,height:52,transform:"rotate(-8deg)"}}><span className="ck">✓</span><span>VÉRIFIÉ</span></div>
+    </div>
+    <div className="prof-stats">
+      <div className="pstat"><b>{stats.annonces||0}</b><span>objets proposés</span></div>
+      <div className="pstat"><b>{stats.locations||0}</b><span>locations</span></div>
+      <div className="pstat"><b style={{color:"var(--sun)"}}>{noteStr}</b><span>note moyenne</span></div>
+    </div>
+    <div className="plus-line">{plus?"✦ Cercle+ actif — vos frais de service sont réduits de 1 %":"✦ Cercle+ — commission réduite à 10 %, −1 % par année d'ancienneté"}<button className="btn" style={{marginLeft:"auto",background:"var(--plus)",color:"#fff",padding:"8px 14px",minHeight:36,fontSize:12.5}} onClick={()=>go("plus")}>{plus?"Gérer":"Découvrir"}</button></div>
+    <div className="hub">
+      {[["activite","Mon activité","Revenus, réservations, annonces",I.clock],
+        ["notifs","Notifications","Ce qui bouge dans le cercle",I.bell],
+        ["avis","Mes avis",stats.avisCount?`${noteStr} — ${stats.avisCount} avis reçu${stats.avisCount>1?"s":""}`:"Pas encore d'avis reçu",I.star],
+        ["grade","Mon grade",g.nom+" · "+(stats.rentals||0)+" location"+((stats.rentals||0)>1?"s":"")+" · "+g.fee+" %",I.shield],
+        ["revenus","Revenus & justificatifs","Relevé annuel, reçus à télécharger",I.clock],
+        ["params","Paramètres","Compte & préférences",I.user],
+      ].map(([id,t,s,Ic])=><button key={id} onClick={()=>go(id)}><span className="ic"><Ic size={17}/></span><span>{t}<small>{s}</small></span></button>)}
+    </div>
+    <div className="panel" style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:14,marginTop:14}}>
+      <div><div style={{fontWeight:700,color:"var(--dk)"}}>Nuit de quartier</div><div style={{fontSize:12.5,color:"var(--g)"}}>Encre bleue, lampadaires — jamais de noir pur.</div></div>
+      <button className="icon-btn" onClick={()=>setDark(!dark)} aria-label="Basculer le mode nuit">{dark?<I.sun size={17}/>:<I.moon size={17}/>}</button>
+    </div>
+    <button className="btn btn-ghost" style={{width:"100%",marginTop:14,borderColor:"var(--ter)",color:"var(--ter)"}} onClick={logout}>Se déconnecter</button>
+  </div>;
+}
+
+function StarPick({value,onChange}){
+  const[hov,setHov]=useState(0);
+  return <div className="star-pick" role="radiogroup" aria-label="Note">
+    {[1,2,3,4,5].map(n=><button key={n} type="button" className={(hov||value)>=n?"on":""} aria-label={n+" étoile"+(n>1?"s":"")} aria-checked={value===n} role="radio"
+      onMouseEnter={()=>setHov(n)} onMouseLeave={()=>setHov(0)} onClick={()=>onChange(n)}><I.star size={22}/></button>)}
+  </div>;
+}
+function LeaveReview({resa,addReview,done}){
+  const[open,setOpen]=useState(false);
+  const[note,setNote]=useState(5);
+  const[txt,setTxt]=useState("");
+  if(done)return <span className="badge sand">Avis laissé ✓</span>;
+  if(!open)return <button className="btn btn-ghost" style={{minHeight:34,padding:"7px 12px",fontSize:12}} onClick={()=>setOpen(true)}><I.star size={13}/>Laisser un avis</button>;
+  return <div className="rev-form" style={{flexBasis:"100%",order:9}}>
+    <div style={{display:"flex",alignItems:"center",gap:12,flexWrap:"wrap"}}>
+      <b style={{fontSize:13,color:"var(--dk)"}}>Votre avis sur « {resa.it.t} »</b>
+      <StarPick value={note} onChange={setNote}/>
+    </div>
+    <textarea value={txt} onChange={e=>setTxt(e.target.value)} placeholder="Comment s'est passée la location ? (objet, échange avec le voisin…)"/>
+    <div style={{display:"flex",gap:8,marginTop:10}}>
+      <button className="btn btn-ter" style={{minHeight:36,padding:"8px 16px",fontSize:13}} disabled={!txt.trim()}
+        onClick={()=>{addReview({itemId:resa.it.id,itemTitle:resa.it.t,owner:resa.it.own,note,txt});setOpen(false);}}>Publier l'avis</button>
+      <button className="btn btn-ghost" style={{minHeight:36,padding:"8px 14px",fontSize:13}} onClick={()=>setOpen(false)}>Annuler</button>
+    </div>
+  </div>;
+}
+function Activite({toast,resas,requests=[],answerRequest,completeRental,myListings=[],stats={},reviews=[],addReview}){
+  const reviewedIds=new Set(reviews.map(r=>r.itemId));
+  const pending=requests.filter(r=>r.status==="pending");
+  const months=stats.months||[];
+  const max=Math.max(1,...months.map(r=>r.v));
+  const noteStr=stats.note?stats.note.toFixed(1).replace(".",","):"—";
+  return <div className="page">
+    <h1>Mon activité</h1>
+    <p className="lead">Vos revenus, réservations et annonces — le cercle en un coup d'œil.</p>
+    <div className="kpis">
+      <div className="kpi"><b>{stats.revenus||0} €</b><span>revenus encaissés</span></div>
+      <div className="kpi"><b>{stats.locations||0}</b><span>location{(stats.locations||0)>1?"s":""}</span></div>
+      <div className="kpi"><b>{stats.annonces||0}</b><span>annonce{(stats.annonces||0)>1?"s":""} en ligne</span></div>
+      <div className="kpi"><b style={{color:"var(--sun)"}}>{noteStr}</b><span>note moyenne{stats.avisCount?` · ${stats.avisCount} avis`:""}</span></div>
+    </div>
+    <div className="chart">
+      <div className="sec-t" style={{fontSize:18}}>Revenus <small>6 derniers mois</small></div>
+      {stats.revenus>0
+        ?<div className="bars">{months.map(r=><div key={r.key} className={"bar"+(r.cur?" cur":"")} style={{height:(r.v/max*100)+"%"}}><b>{r.v} €</b><i>{r.m}</i></div>)}</div>
+        :<div className="empty" style={{padding:"24px 12px"}}><div className="big">Pas encore de revenus</div>Vos gains apparaîtront ici dès votre première location confirmée.</div>}
+    </div>
+    {pending.length>0&&<>
+      <div className="sec-t" style={{fontSize:18,margin:"4px 0 10px"}}>Demandes reçues <small>{pending.length}</small></div>
+      <div className="rows" style={{marginBottom:22}}>
+        {pending.map(r=><div key={r.id} className="row-card">
+          <img src={seed(r.it.img[0],120,120)} alt=""/>
+          <div style={{flex:1,minWidth:0}}>
+            <div className="ti">{r.it.t}</div>
+            <div className="su"><b style={{color:"var(--dk)"}}>{r.renterName}</b> · {r.range} · {r.total} €</div>
+            {r.license&&<div className="su" style={{color:"var(--p)"}}>🪪 Permis : {r.license}</div>}
+          </div>
+          <button className="btn btn-green" style={{minHeight:34,padding:"7px 14px",fontSize:12}} onClick={()=>answerRequest(r,true)}>Accepter</button>
+          <button className="btn btn-ghost" style={{minHeight:34,padding:"7px 12px",fontSize:12}} onClick={()=>answerRequest(r,false)}>Décliner</button>
+        </div>)}
+      </div>
+    </>}
+    <div className="sec-t" style={{fontSize:18,margin:"4px 0 10px"}}>Réservations</div>
+    <div className="rows" style={{marginBottom:22}}>
+      {resas.length===0&&<div className="empty" style={{padding:"26px 12px"}}><div className="big">Aucune réservation</div>Réservez un objet près de chez vous depuis l'accueil.</div>}
+      {resas.map(r=><div key={r.id} className="row-card">
+        <img src={seed(r.it.img[0],120,120)} alt=""/>
+        <div style={{flex:1,minWidth:0}}>
+          <div className="ti">{r.it.t}</div><div className="su">{r.range} · chez {r.it.own}</div>
+          {r.st==="en-cours"&&<div className="prog"><i style={{width:r.prog+"%"}}/></div>}
+        </div>
+        <span className={"badge "+(r.st==="en-cours"?"green":r.st==="a-venir"?"blue":"sand")}>{r.lbl}</span>
+        {r.status==="confirmed"&&completeRental&&<button className="btn btn-ghost" style={{minHeight:34,padding:"7px 12px",fontSize:12}} onClick={()=>completeRental(r)}><I.clock size={13}/>Marquer comme rendu</button>}
+        {r.st==="fini"&&addReview&&<LeaveReview resa={r} addReview={addReview} done={reviewedIds.has(r.it.id)}/>}
+      </div>)}
+    </div>
+    <div className="sec-t" style={{fontSize:18,margin:"4px 0 10px"}}>Mes annonces <small>{myListings.length}</small></div>
+    <div className="rows">
+      {myListings.length===0&&<div className="empty" style={{padding:"26px 12px"}}><div className="big">Aucune annonce</div>Proposez un objet qui dort chez vous depuis le bouton « Proposer ».</div>}
+      {myListings.map(it=>{const locs=(stats.perItem&&stats.perItem[it.id])||0;return <div key={it.id} className="row-card">
+        <img src={seed(it.img[0],120,120)} alt=""/>
+        <div style={{flex:1,minWidth:0}}><div className="ti">{it.t}</div><div className="su">{locs} location{locs>1?"s":""} · {it.p} €/j</div></div>
+        <span className="badge green">EN LIGNE</span>
+      </div>;})}
+    </div>
+  </div>;
+}
+
+/* ═══════════ NOTIFICATIONS ═══════════ */
+function Notifs({notifs,markRead,markAll}){
+  const meta={resa:{c:"var(--green)",Ic:I.lock},msg:{c:"var(--p)",Ic:I.msg},avis:{c:"var(--sun)",Ic:I.star},info:{c:"var(--ter)",Ic:I.pin}};
+  return <div className="page">
+    <div style={{display:"flex",alignItems:"baseline",justifyContent:"space-between",gap:12,flexWrap:"wrap"}}>
+      <h1>Notifications</h1>
+      <button className="back" style={{marginBottom:0}} onClick={markAll}>Tout marquer lu</button>
+    </div>
+    <p className="lead">Ce qui bouge dans votre cercle.</p>
+    {notifs.length===0&&<div className="empty" style={{padding:"34px 12px"}}><div className="big">Rien de neuf</div>Vos réservations, messages et avis apparaîtront ici.</div>}
+    <div className="rows">
+      {notifs.map(n=>{const m=meta[n.k]||meta.info;const Ic=m.Ic;return(
+        <button key={n.id} className={"notif"+(n.unread?" unread":"")} onClick={()=>markRead(n.id)}>
+          <span className="nic" style={{background:`color-mix(in srgb,${m.c} 12%,transparent)`,color:m.c}}><Ic size={16}/></span>
+          <span style={{flex:1}}>
+            <span style={{display:"block",fontSize:13.5,color:"var(--dk)",fontWeight:n.unread?700:500,lineHeight:1.45}}>{n.txt}</span>
+            <span style={{fontSize:11.5,color:"var(--gl)"}}>{n.when}</span>
+          </span>
+          {n.unread&&<span className="dot"/>}
+        </button>);})}
+    </div>
+  </div>;
+}
+
+/* ═══════════ MES AVIS ═══════════ */
+function Avis({reviews=[],user,myListings=[]}){
+  const myIds=new Set(myListings.map(i=>i.id));
+  const received=reviews.filter(r=>myIds.has(r.itemId));
+  const tot=received.length;
+  const avg=tot?received.reduce((s,r)=>s+(r.note||0),0)/tot:0;
+  const dist=[5,4,3,2,1].map(n=>received.filter(r=>r.note===n).length);
+  const mine=reviews.filter(r=>r.by&&user&&r.by===(user.name||"Vous"));
+  return <div className="page">
+    <h1>Mes avis</h1>
+    <p className="lead">{tot?`${tot} voisin${tot>1?"s ont":" a"} noté vos objets — c'est ça, la réputation de quartier.`:"Vos avis reçus apparaîtront ici dès qu'un voisin notera l'un de vos objets."}</p>
+    {tot>0&&<div className="avg">
+      <div>
+        <div className="n">{avg.toFixed(1).replace(".",",")}</div>
+        <div style={{color:"var(--sun)",display:"flex",gap:2,marginTop:8}}>{[...Array(5)].map((_,i)=><I.star key={i} size={15} style={{opacity:i<Math.round(avg)?1:.25}}/>)}</div>
+      </div>
+      <div className="distb">{dist.map((v,i)=><div key={i} className="l">
+        <span style={{width:26}}>{5-i} ★</span>
+        <span className="t"><i style={{width:(tot?v/tot*100:0)+"%"}}/></span>
+        <span style={{width:20,textAlign:"right"}}>{v}</span>
+      </div>)}</div>
+    </div>}
+    <div className="sec-t" style={{fontSize:18,margin:"6px 0 10px"}}>Avis reçus <small>{tot}</small></div>
+    {tot===0
+      ?<div className="empty" style={{padding:"26px 12px"}}><div className="big">Aucun avis reçu</div>Proposez des objets et soignez vos locations — les avis viendront.</div>
+      :<div className="rows">{received.map(r=><div key={r.id} className="rev">
+        <div className="rh">
+          <div className="avat" style={{width:34,height:34,fontSize:13}}>{(r.by||"V")[0]}</div>
+          <b style={{color:"var(--dk)",fontSize:14}}>{r.by}</b>
+          <span className="stars">{[...Array(r.note)].map((_,j)=><I.star key={j} size={11}/>)}</span>
+          <span style={{marginLeft:"auto",fontSize:11.5,color:"var(--gl)"}}>{r.when}</span>
+        </div>
+        <p style={{fontSize:13.5}}>{r.txt}</p>
+        <div style={{fontSize:12,color:"var(--gl)",marginTop:4}}>sur « {r.itemTitle} »</div>
+      </div>)}</div>}
+    <div className="sec-t" style={{fontSize:18,margin:"22px 0 10px"}}>Avis que vous avez laissés <small>{mine.length}</small></div>
+    {mine.length===0
+      ?<div className="empty" style={{padding:"26px 12px"}}><div className="big">Aucun avis pour l'instant</div>Après une location terminée, laissez un avis depuis <b>Mon activité</b>.</div>
+      :<div className="rows">{mine.map(r=><div key={r.id} className="rev">
+        <div className="rh">
+          <span className="stars">{[...Array(r.note)].map((_,j)=><I.star key={j} size={11}/>)}</span>
+          <b style={{color:"var(--dk)",fontSize:14}}>{r.itemTitle}</b>
+          <span style={{marginLeft:"auto",fontSize:11.5,color:"var(--gl)"}}>{r.when}</span>
+        </div>
+        <p style={{fontSize:13.5}}>{r.txt}</p>
+        <div style={{fontSize:12,color:"var(--gl)",marginTop:4}}>chez {r.owner}</div>
+      </div>)}</div>}
+  </div>;
+}
+
+/* ═══════════ MON GRADE ═══════════ */
+function Grade({plus,rentals=0}){
+  const g=getGrade(rentals),next=getNextGrade(rentals),gi=GRADES.indexOf(g);
+  const prog=next?Math.round((rentals-g.min)/(next.min-g.min)*100):100;
+  const eff=Math.round(feeRate(rentals,plus)*100);
+  return <div className="page">
+    <h1>Mon grade</h1>
+    <p className="lead">Plus vous partagez, moins le cercle vous coûte — la commission descend avec le grade.</p>
+    <div className="panel" style={{display:"flex",gap:20,alignItems:"center",flexWrap:"wrap"}}>
+      <div className="stamp" style={{position:"static",width:76,height:76,fontSize:9.5,transform:"rotate(-8deg)",flexShrink:0}}><span className="ck" style={{fontSize:19}}>✓</span><span>{g.court}</span></div>
+      <div style={{flex:1,minWidth:230}}>
+        <b style={{fontFamily:"var(--fd)",fontSize:19,color:"var(--dk)"}}>{g.nom} — commission {g.fee} %{plus&&<span style={{color:"var(--plus)"}}> → {eff} % avec ✦</span>}</b>
+        <div style={{fontSize:13,color:"var(--g)",margin:"3px 0 10px"}}>{rentals} location{rentals>1?"s":""}{next?` — plus que ${(next.min-rentals).toLocaleString("fr-FR")} avant le grade ${next.nom} (${next.fee} %)`:" — grade maximal atteint"}</div>
+        <div className="prog" style={{marginTop:0}}><i style={{width:prog+"%"}}/></div>
+      </div>
+    </div>
+    <div className="tiers">{GRADES.map((t,i)=><div key={t.id} className={"tier"+(i===gi?" cur":i<gi?" done":"")}>
+      <div className="tic" style={{color:i<=gi?"var(--green)":"var(--gl)",fontSize:22}}>{t.sym}</div>
+      <b>{t.nom}</b>{t.min.toLocaleString("fr-FR")}+ locations
+      <span className="fee">{t.fee} %</span>
+      <div style={{marginTop:5,fontSize:11,color:i===gi?"var(--green)":"var(--gl)",fontWeight:600,lineHeight:1.35}}>{t.adv}</div>
+    </div>)}</div>
+    <p style={{fontSize:12.5,color:"var(--g)"}}>Cumulable avec Cercle+ (−1 %, puis −1 % par année complète) — sans jamais descendre sous le plancher de 2 %.</p>
+  </div>;
+}
+
+/* ═══════════ CERCLE+ ═══════════ */
+function Plus({toast,plus,subscribe}){
+  const[yrs,setYrs]=useState(1);
+  const taux=Math.max(2,11-1-yrs);
+  return <div className="page">
+    <h1>Cercle<span style={{color:"var(--plus)"}}>+</span></h1>
+    <p className="lead">L'abonnement de ceux qui font tourner le quartier.</p>
+    <div className="plus-hero">
+      <h2>Moins de commission. Chaque année, un peu moins.</h2>
+      <p style={{opacity:.88,fontSize:14,maxWidth:"54ch"}}>−1 % de frais de service dès l'abonnement, puis −1 % par année complète d'ancienneté. Cumulable avec votre grade. Plancher : 2 %.</p>
+      {/* Offre de lancement alignée sur l'application : −50 % les 3 premiers mois. */}
+      <div style={{marginTop:14,display:"inline-block",background:"rgba(255,255,255,.18)",borderRadius:999,padding:"5px 12px",fontSize:12.5,fontWeight:800}}>−50 % les 3 premiers mois</div>
+      <div className="pp" style={{marginTop:8}}><s style={{opacity:.6,fontSize:"60%",fontWeight:600}}>11,99 €</s> 5,99 € <small>/mois les 3 premiers mois, puis 11,99 € · sans engagement</small></div>
+      <button className="btn" style={{background:"#fff",color:"#5B21B6",marginTop:14}} onClick={subscribe}>{plus?"✓ Vous êtes membre Cercle+":"✦ Rejoindre Cercle+"}</button>
+    </div>
+    <div className="panel">
+      <div className="sec-t" style={{fontSize:18}}>Votre commission dans le temps</div>
+      <div className="sim">
+        <span style={{fontSize:13,color:"var(--g)"}}>Ancienneté : <b style={{color:"var(--dk)"}}>{yrs} an{yrs>1?"s":""}</b></span>
+        <input type="range" min="0" max="5" value={yrs} onChange={e=>setYrs(+e.target.value)} aria-label="Années d'ancienneté"/>
+        <span className="out">{taux} %</span>
+      </div>
+      <p style={{fontSize:12,color:"var(--gl)",marginTop:6}}>Base 11 % − 1 % (abonnement) − 1 % par an — sans jamais descendre sous 2 %.</p>
+      <div style={{marginTop:14}}>
+        <div className="plus-feat"><span className="pk">✦</span><span><b style={{color:"var(--dk)"}}>−1 % immédiat</b> sur tous vos frais de service</span></div>
+        <div className="plus-feat"><span className="pk">✦</span><span><b style={{color:"var(--dk)"}}>−1 % par année complète</b> — la fidélité paye</span></div>
+        <div className="plus-feat"><span className="pk">✦</span><span><b style={{color:"var(--dk)"}}>Cumulable avec votre grade</b> (Pilier −1 %, Gardien −2 %)</span></div>
+        <div className="plus-feat"><span className="pk">✦</span><span><b style={{color:"var(--dk)"}}>Plancher 2 %</b> — l'assurance et la caution séquestrée restent incluses</span></div>
       </div>
     </div>
   </div>;
 }
 
-/* ===== NOTIF CENTER ===== */
-function NotifCenter({state,dispatch,setPage}){
-  const kinds={booking:"📅",deposit:"🔒",listing:"📦",referral:"🎁",dispute:"⚖️",system:"⚙️"};
-  return <div className="nc">
-    <button className="cl" style={{marginBottom:14,display:"flex",alignItems:"center",gap:5}} onClick={()=>setPage("home")}><I.Back/> Retour</button>
-    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
-      <h1 style={{fontFamily:"var(--fd)",fontSize:22}}>🔔 Notifications</h1>
-      {state.notifications.some(n=>!n.read)&&<button className="cl" onClick={()=>dispatch({type:"READ_N"})}>Tout marquer lu</button>}
+/* ═══════════ PARAMÈTRES ═══════════ */
+function Params({dark,setDark,toast,user,plus,logout,saveQuartier,saveProfile,exportData,deleteAccount,openLegal}){
+  const u=user||{name:"Voisin",email:"",quartier:"Metz Sablon",verified:false};
+  const[q,setQ]=useState(u.quartier||"");
+  const[nm,setNm]=useState(u.name||"");
+  const[tel,setTel]=useState(u.phone||"");
+  const[ll,setLL]=useState(null);
+  const[t1,setT1]=useState(true);
+  const[t2,setT2]=useState(false);
+  useEffect(()=>{setQ(u.quartier||"")},[u.quartier]);
+  useEffect(()=>{setNm(u.name||"")},[u.name]);
+  useEffect(()=>{setTel(u.phone||"")},[u.phone]);
+  const memberSince=(()=>{try{const fu=fbAuth()&&fbAuth().currentUser;const t=fu&&fu.metadata&&fu.metadata.creationTime;return t?new Date(t).toLocaleDateString("fr-FR",{month:"long",year:"numeric"}):null;}catch(e){return null}})();
+  const profileDirty=nm.trim()!==(u.name||"")||tel.trim()!==(u.phone||"");
+  const SectionT=({children})=><div style={{fontFamily:"var(--fd)",fontSize:17,color:"var(--dk)",margin:"22px 0 10px"}}>{children}</div>;
+  return <div className="page">
+    <h1>Paramètres</h1>
+    <p className="lead">Votre compte, vos préférences.</p>
+
+    <div className="panel" style={{display:"flex",alignItems:"center",gap:14}}>
+      <div className="avat" style={{width:54,height:54,fontSize:21}}>{u.photo?<img src={u.photo} alt=""/>:(u.name||"V")[0].toUpperCase()}</div>
+      <div style={{flex:1,minWidth:0}}>
+        <div style={{fontWeight:700,color:"var(--dk)",fontSize:16}}>{u.name}</div>
+        <div style={{fontSize:12.5,color:"var(--g)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{u.email}</div>
+        {memberSince&&<div style={{fontSize:11.5,color:"var(--gl)"}}>Membre depuis {memberSince}</div>}
+      </div>
+      <span className="badge" style={u.verified?{background:"color-mix(in srgb,var(--green) 14%,transparent)",color:"var(--green)"}:{background:"color-mix(in srgb,var(--ter) 14%,transparent)",color:"var(--ter)"}}>{u.verified?"✓ Vérifié":"Non vérifié"}</span>
     </div>
-    {state.notifications.length===0?<div className="empty"><span>🔔</span><h2>Aucune notification</h2></div>:
-    state.notifications.map(n=><div key={n.id} className={"nc-i"+(n.read?"":" unread")} onClick={()=>dispatch({type:"READ_ONE",id:n.id})}>
-      <div className="nc-ic" style={{background:n.read?"var(--bgw)":"#FEF2F2"}}>{kinds[n.kind]||"📌"}</div>
-      <div style={{flex:1}}><div style={{fontSize:13,fontWeight:n.read?400:600}}>{n.text}</div><div style={{fontSize:10,color:"var(--g)"}}>{ds(n.at)}</div></div>
-      {!n.read&&<div style={{width:8,height:8,borderRadius:"50%",background:"var(--p)",flexShrink:0}}/>}
-    </div>)}
-  </div>
+
+    <SectionT>Mes informations</SectionT>
+    <div className="panel">
+      <div className="fg" style={{marginBottom:12}}><label>Nom complet</label>
+        <input value={nm} onChange={e=>setNm(e.target.value)} placeholder="Prénom Nom" autoComplete="name"/>
+      </div>
+      <div className="fg" style={{marginBottom:12}}><label>Téléphone</label>
+        <PhoneInput value={tel} onChange={v=>setTel(v)}/>
+        <div className="hint">Pour la remise en main propre. Partagé seulement avec un voisin lors d'une location.</div>
+      </div>
+      <div className="fg" style={{marginBottom:12}}><label>Email</label>
+        <input value={u.email} readOnly style={{opacity:.7,cursor:"not-allowed"}}/>
+        <div className="hint">L'email de connexion ne se modifie pas ici.</div>
+      </div>
+      <button className="btn btn-p" disabled={!profileDirty||!nm.trim()} style={{opacity:(!profileDirty||!nm.trim())?.5:1}} onClick={()=>saveProfile({name:nm,phone:tel})}>Enregistrer mes informations</button>
+    </div>
+
+    <SectionT>Mon adresse</SectionT>
+    <div className="panel">
+      <div className="fg" style={{marginBottom:8}}><label>Adresse</label>
+        <AddressInput value={q} onChange={(v,coords)=>{setQ(v);if(coords)setLL(coords);}} placeholder="Commencez à taper votre adresse…"/>
+        <div className="hint">Centre votre carte et calcule la distance des objets. Jamais affichée aux autres voisins, seulement la distance à pied.</div>
+      </div>
+      <button className="btn btn-p" disabled={!q.trim()||q.trim()===(u.quartier||"")} style={{opacity:(!q.trim()||q.trim()===(u.quartier||""))?.5:1}} onClick={()=>saveQuartier(q.trim(),ll)}>Enregistrer mon adresse</button>
+    </div>
+
+    <SectionT>Préférences</SectionT>
+    <div className="panel">
+      <div className="set-row"><div><b style={{color:"var(--dk)"}}>Notifications du cercle</b><div style={{fontSize:12.5,color:"var(--g)"}}>Réservations, messages, nouveaux objets à 500 m</div></div><button className={"tgl"+(t1?" on":"")} onClick={()=>setT1(!t1)} aria-label="Notifications"><i/></button></div>
+      <div className="set-row"><div><b style={{color:"var(--dk)"}}>Nuit automatique</b><div style={{fontSize:12.5,color:"var(--g)"}}>Suivre le coucher du soleil</div></div><button className={"tgl"+(t2?" on":"")} onClick={()=>setT2(!t2)} aria-label="Nuit automatique"><i/></button></div>
+      <div className="set-row"><div><b style={{color:"var(--dk)"}}>Nuit de quartier</b><div style={{fontSize:12.5,color:"var(--g)"}}>Encre bleue, jamais de noir pur</div></div><button className={"tgl"+(dark?" on":"")} onClick={()=>setDark(!dark)} aria-label="Mode nuit"><i/></button></div>
+    </div>
+
+    <SectionT>Abonnement</SectionT>
+    <div className="plus-line" style={{margin:0}}>{plus?"✦ Cercle+ actif — frais de service réduits":"✦ Cercle+ — réduisez votre commission"}<span style={{marginLeft:"auto",fontSize:12.5,fontWeight:700}}>{plus?"Membre":"Non abonné"}</span></div>
+
+    <SectionT>Mes données</SectionT>
+    <div className="panel">
+      <div className="set-row"><div><b style={{color:"var(--dk)"}}>Exporter mes données</b><div style={{fontSize:12.5,color:"var(--g)"}}>Profil, annonces, avis, réservations — fichier JSON (RGPD).</div></div>
+        <button className="btn btn-ghost" style={{minHeight:38,padding:"8px 14px",fontSize:13,flexShrink:0}} onClick={exportData}>Télécharger</button></div>
+      <p style={{fontSize:12,color:"var(--gl)",marginTop:10}}>Vos droits d'accès, de rectification et d'effacement sont détaillés dans la <a style={{color:"var(--p)",cursor:"pointer"}} onClick={()=>openLegal&&openLegal("conf")}>politique de confidentialité</a>.</p>
+    </div>
+
+    <SectionT>Compte</SectionT>
+    <div className="panel" style={{display:"flex",flexDirection:"column",gap:10}}>
+      <button className="btn btn-ghost" onClick={logout}>Se déconnecter</button>
+      <div style={{borderTop:"1px dashed var(--bd)",paddingTop:12}}>
+        <b style={{color:"var(--ter)",fontSize:14}}>Quitter le cercle</b>
+        <p style={{fontSize:12.5,color:"var(--g)",margin:"4px 0 10px"}}>Supprime définitivement votre compte, vos annonces et vos données. Irréversible.</p>
+        <button className="btn btn-ghost" style={{borderColor:"var(--ter)",color:"var(--ter)"}} onClick={deleteAccount}>Supprimer mon compte</button>
+      </div>
+    </div>
+  </div>;
 }
 
-/* ===== DASHBOARD ===== */
-function Dashboard({state,dispatch,setPage}){
-  const u=state.user;
-  const myItems=[...state.items.filter(i=>i.owner.id===u.id),...state.userItems];
-  const myBookAsOwner=state.bookings.filter(b=>b.ownerId===u.id);
-  const revenue=myBookAsOwner.filter(b=>b.status==="confirmed").reduce((s,b)=>s+b.total,0);
-  const depOwner=state.payments.filter(p=>p.type==="deposit"&&p.ownerId===u.id);
-  const months=["Jan","Fév","Mar","Avr","Mai","Juin","Jul","Août","Sep","Oct","Nov","Déc"];
-  const seed=revenue||120;
-  const monthlyVals=months.map((_,i)=>Math.max(4,Math.floor(seed/12*(0.4+Math.sin(i*.9+1)*.45+.15))));
-  const catData=Object.entries(myItems.reduce((acc,it)=>{acc[it.cat]=(acc[it.cat]||0)+1;return acc},{}));
-  const barRef=useRef(null);const pieRef=useRef(null);
-  const barInst=useRef(null);const pieInst=useRef(null);
-  useEffect(()=>{
-    if(!window.Chart||!barRef.current)return;
-    if(barInst.current)barInst.current.destroy();
-    barInst.current=new window.Chart(barRef.current,{
-      type:"bar",
-      data:{labels:months,datasets:[{label:"Revenus (€)",data:monthlyVals,backgroundColor:"rgba(255,90,95,.7)",borderColor:"#FF5A5F",borderWidth:0,borderRadius:6,borderSkipped:false}]},
-      options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{grid:{color:"rgba(128,128,128,.1)"},ticks:{callback:v=>v+"€",font:{size:10}}}}}
-    });
-    return()=>{if(barInst.current)barInst.current.destroy()};
-  },[revenue]);
-  useEffect(()=>{
-    if(!window.Chart||!pieRef.current||catData.length===0)return;
-    if(pieInst.current)pieInst.current.destroy();
-    const colors=["#FF5A5F","#00A699","#FC642D","#3B82F6","#8B5CF6","#10B981","#F59E0B","#EC4899"];
-    pieInst.current=new window.Chart(pieRef.current,{
-      type:"doughnut",
-      data:{labels:catData.map(([c])=>c),datasets:[{data:catData.map(([,v])=>v),backgroundColor:colors.slice(0,catData.length),borderWidth:2,borderColor:"var(--w)"}]},
-      options:{responsive:true,plugins:{legend:{position:"right",labels:{font:{size:11},boxWidth:12}}}}
-    });
-    return()=>{if(pieInst.current)pieInst.current.destroy()};
-  },[myItems.length]);
-  const exportPDF=()=>{
-    if(!window.jspdf){alert("jsPDF non disponible. Vérifiez la connexion.");return}
-    const {jsPDF}=window.jspdf;
-    const doc=new jsPDF();
-    const now=new Date().toLocaleDateString("fr-FR");
-    doc.setFont("helvetica","bold");doc.setFontSize(22);doc.setTextColor(255,90,95);
-    doc.text("Cercle",20,22);
-    doc.setTextColor(34,34,34);doc.setFontSize(13);doc.setFont("helvetica","normal");
-    doc.text("Dashboard propriétaire",20,30);
-    doc.setFontSize(10);doc.setTextColor(120,120,120);
-    doc.text(`Généré le ${now} · ${u.name}`,20,38);
-    doc.setDrawColor(235,235,235);doc.line(20,42,190,42);
-    doc.setTextColor(34,34,34);doc.setFont("helvetica","bold");doc.setFontSize(14);doc.text("Résumé",20,52);
-    doc.setFont("helvetica","normal");doc.setFontSize(11);
-    const kpis=[["Revenus totaux",revenue+" €"],["Annonces actives",myItems.length],["Locations reçues",myBookAsOwner.length],["Cautions en cours",depOwner.filter(d=>d.status==="held").length]];
-    kpis.forEach(([k,v],i)=>{doc.setFont("helvetica","bold");doc.text(k+":  ",20,62+i*9);doc.setFont("helvetica","normal");doc.text(String(v),75,62+i*9)});
-    doc.line(20,100,190,100);
-    doc.setFont("helvetica","bold");doc.setFontSize(14);doc.text("Revenus mensuels",20,110);
-    doc.setFont("helvetica","normal");doc.setFontSize(10);
-    months.forEach((m,i)=>{const col=i<6?20:110;const row=120+(i%6)*9;doc.text(`${m}: ${monthlyVals[i]} €`,col,row)});
-    doc.line(20,178,190,178);
-    doc.setFont("helvetica","bold");doc.setFontSize(14);doc.text("Annonces",20,188);
-    doc.setFont("helvetica","normal");doc.setFontSize(10);
-    myItems.slice(0,8).forEach((it,i)=>doc.text(`• ${it.title} – ${it.price}€/j – ${it.available?"Disponible":"Indisponible"}`,20,198+i*9));
-    doc.setFont("helvetica","italic");doc.setFontSize(9);doc.setTextColor(160,160,160);
-    doc.text("Cercle © 2026 · Plateforme de location entre particuliers",20,285);
-    doc.save(`cercle-dashboard-${now.replace(/\//g,"-")}.pdf`);
+/* ═══════════ LÉGAL ═══════════ */
+function Legal({id}){
+  const L=LEGALS[id]||LEGALS.cgu;
+  return <div className="page legal">
+    <h1>{L.t}</h1>
+    <p className="lead">{L.lead||"Version courte, écrite pour être lue."}</p>
+    <div className="panel">
+      {L.sections
+        ?L.sections.map((s,i)=><div key={i}>{s.h&&<h3>{s.h}</h3>}{s.p.map((p,j)=><p key={j}>{p}</p>)}</div>)
+        :L.p.map((p,i)=><p key={i}>{p}</p>)}
+      {L.maj&&<p style={{fontSize:12,color:"var(--gl)",marginTop:14}}>Dernière mise à jour : {L.maj}</p>}
+    </div>
+    {L.mail&&<a className="btn btn-ter" href={"mailto:"+L.mail} style={{marginTop:18,display:"inline-flex"}}><I.msg size={14}/>{L.mailLabel||"Nous écrire"} · {L.mail}</a>}
+  </div>;
+}
+
+/* ═══════════ JUSTIFICATIFS (relevé / reçu imprimable → PDF) ═══════════ */
+const escH=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const docDate=ca=>{const t=ca&&ca.seconds?new Date(ca.seconds*1000):new Date();return t.toLocaleDateString("fr-FR",{day:"2-digit",month:"long",year:"numeric"});};
+const eurF=n=>(+n||0).toFixed(2).replace(".",",")+" €";
+function openDoc(filename,kind,inner){
+  const css="@page{margin:12mm}*{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}"
+   +"body{font-family:'Instrument Sans',system-ui,sans-serif;color:#20242F;background:#F7F3EA;margin:0;padding:30px 22px;line-height:1.55}"
+   +".bd{max-width:680px;margin:0 auto;background:#fff;border:2px solid #20242F;border-radius:18px;box-shadow:6px 6px 0 rgba(32,36,47,.13);padding:30px 32px;position:relative;overflow:hidden}"
+   +".brand{display:flex;align-items:center;gap:11px;margin-bottom:20px}"
+   +".ring{width:30px;height:30px;border:5px solid #2C50C8;border-radius:50%;border-right-color:transparent}"
+   +".bn{font-family:'Bricolage Grotesque',Georgia,serif;font-size:23px;font-weight:800;letter-spacing:-.5px}.bn span{color:#DA6740}"
+   +".pill{margin-left:auto;background:#DA6740;color:#fff;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:5px 12px;border-radius:20px}"
+   +"h1{font-family:'Bricolage Grotesque',Georgia,serif;font-size:23px;line-height:1.15;margin:0 0 4px;letter-spacing:-.4px;max-width:78%}"
+   +".sub{color:#6A7078;font-size:13px;margin:0 0 18px}"
+   +"table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13.5px}"
+   +"th{text-align:left;border-bottom:2px solid #20242F;padding:9px 6px;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:#6A7078}"
+   +"td{padding:9px 6px;border-bottom:1px solid #E8E1D2}.r{text-align:right}.c{text-align:center}"
+   +".tot{margin-top:18px;font-family:'Bricolage Grotesque',Georgia,serif;font-size:18px;background:#F7F3EA;border:2px solid #20242F;border-radius:12px;box-shadow:4px 4px 0 rgba(32,36,47,.12);padding:14px 18px}.tot b{color:#1F8150}"
+   +".kv td:first-child{color:#6A7078;width:42%}"
+   +".emet{font-size:12.5px;color:#343A46;background:#F7F3EA;border:1.5px solid #E8E1D2;border-radius:10px;padding:11px 14px;margin-bottom:16px;line-height:1.55}"
+   +".note{font-size:11px;color:#A39B89;line-height:1.6;margin-top:22px;border-top:1px solid #E8E1D2;padding-top:12px}"
+   +".tampon{position:absolute;top:74px;right:28px;width:74px;height:74px;border:2.5px solid #1F8150;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#1F8150;transform:rotate(-9deg);font-size:8px;font-weight:800;letter-spacing:.07em;text-align:center;line-height:1.15;opacity:.92}";
+  const fonts="<link rel=preconnect href='https://fonts.googleapis.com'><link rel=preconnect href='https://fonts.gstatic.com' crossorigin><link href='https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=Instrument+Sans:wght@400;500;600;700&display=swap' rel=stylesheet>";
+  const tampon="<div class=tampon><span style='font-size:17px;line-height:1'>✓</span><span>ÉMIS PAR<br>CERCLE</span></div>";
+  const head="<div class=brand><div class=ring></div><div class=bn>cercle<span>.</span></div><div class=pill>"+escH(kind||"Justificatif")+"</div></div>";
+  const html="<!doctype html><html lang=fr><head><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'><title>"+escH(filename)+"</title>"+fonts+"<style>"+css+"</style></head><body><div class=bd>"+tampon+head+inner+"</div></body></html>";
+  /* impression via iframe cachée (pas de popup bloquée) ; repli téléchargement HTML */
+  try{
+    const ifr=document.createElement("iframe");
+    ifr.setAttribute("aria-hidden","true");
+    ifr.style.cssText="position:fixed;right:0;bottom:0;width:0;height:0;border:0;opacity:0";
+    document.body.appendChild(ifr);
+    const cw=ifr.contentWindow,cd=cw.document;
+    cd.open();cd.write(html);cd.close();
+    let done=false;
+    const go=()=>{if(done)return;done=true;try{cw.focus();cw.print();}catch(e){}
+      setTimeout(()=>{try{document.body.removeChild(ifr)}catch(e){}},90000);};
+    ifr.onload=()=>setTimeout(go,650);
+    setTimeout(go,1400); // sécurité si onload ne se déclenche pas
+  }catch(e){
+    const blob=new Blob([html],{type:"text/html"});const u=URL.createObjectURL(blob);
+    const a=document.createElement("a");a.href=u;a.download=filename+".html";document.body.appendChild(a);a.click();
+    setTimeout(()=>{try{document.body.removeChild(a);URL.revokeObjectURL(u)}catch(_){}}, 1000);
+  }
+}
+const ownerGain=r=>+r.base||((+r.total||0)-(+r.fee||0))||0;
+function Revenus({user,stats={}}){
+  const year=new Date().getFullYear();
+  const conf=(stats.confirmed||[]).filter(r=>{const t=r.createdAt&&r.createdAt.seconds?new Date(r.createdAt.seconds*1000):null;return t?t.getFullYear()===year:true;});
+  const total=conf.reduce((s,r)=>s+ownerGain(r),0);
+  const owner=(user&&user.name)||"Voisin";
+  const pro=!!(user&&user.pro),co=(user&&user.company)||owner,siret=(user&&user.siret)||"";
+  const emet=pro?"<div class=emet><b>"+escH(co)+"</b>"+(siret?"<br>SIRET "+escH(siret):"")+"<br>Loueur professionnel — émis via Cercle</div>":"";
+  const TVA="TVA non applicable, art. 293 B du CGI.";
+  const NOTE=pro
+    ?"Facture émise par "+escH(co)+(siret?" (SIRET "+escH(siret)+")":"")+" via la plateforme Cercle. "+TVA+" Montant net perçu, hors commission de service Cercle."
+    :"Document fourni à titre indicatif pour vous aider à déclarer vos revenus de location entre particuliers. Les montants correspondent aux sommes perçues, hors commission de service prélevée par Cercle. Cercle est un intermédiaire de mise en relation ; l'identité de l'éditeur figure dans les mentions légales.";
+  const annual=()=>openDoc((pro?"Recapitulatif-facturation-":"Releve-revenus-Cercle-")+year,pro?"Récap "+year:"Relevé "+year,
+    emet+"<h1>"+(pro?"Récapitulatif de facturation "+year:"Relevé annuel de revenus "+year)+"</h1><p class=sub>"+(pro?"Locations facturées via Cercle":"Établi pour <b>"+escH(owner)+"</b> · locations confirmées sur Cercle")+"</p>"
+    +"<table><thead><tr><th>Date</th><th>Objet</th><th>Client</th><th class=c>Jours</th><th class=r>Montant "+(pro?"facturé":"perçu")+"</th></tr></thead><tbody>"
+    +conf.map(r=>"<tr><td>"+docDate(r.createdAt)+"</td><td>"+escH(r.it.t)+"</td><td>"+escH(r.renterName)+"</td><td class=c>"+(r.days||"–")+"</td><td class=r>"+eurF(ownerGain(r))+"</td></tr>").join("")
+    +"</tbody></table><div class=tot>Total "+(pro?"facturé":"perçu")+" en "+year+" : <b>"+eurF(total)+"</b> · "+conf.length+" location"+(conf.length>1?"s":"")+"</div><p class=note>"+NOTE+"</p>");
+  const receipt=r=>openDoc((pro?"Facture-Cercle-":"Recu-Cercle-")+r.id.slice(0,6),pro?"Facture":"Reçu",
+    emet+"<h1>"+(pro?"Facture":"Reçu de location")+"</h1><p class=sub>"+(pro?"Facture":"Reçu")+" n° "+r.id.slice(0,8).toUpperCase()+" · émis le "+docDate(r.createdAt)+"</p>"
+    +"<table class=kv><tbody>"
+    +"<tr><td>"+(pro?"Émetteur":"Bénéficiaire")+"</td><td><b>"+escH(co)+"</b></td></tr>"
+    +"<tr><td>"+(pro?"Client":"Locataire")+"</td><td>"+escH(r.renterName)+"</td></tr>"
+    +"<tr><td>Objet loué</td><td>"+escH(r.it.t)+"</td></tr>"
+    +"<tr><td>Période</td><td>"+escH(r.range||"–")+"</td></tr>"
+    +"<tr><td>Durée</td><td>"+(r.days||"–")+" jour"+((r.days||0)>1?"s":"")+"</td></tr>"
+    +(r.pricePerDay?"<tr><td>Prix par jour</td><td>"+eurF(r.pricePerDay)+"</td></tr>":"")
+    +"</tbody></table><div class=tot>"+(pro?"Total à régler":"Montant perçu")+" : <b>"+eurF(ownerGain(r))+"</b></div><p class=note>"+NOTE+"</p>");
+  return <div className="page">
+    <h1>Revenus &amp; justificatifs</h1>
+    <p className="lead">Vos documents pour déclarer vos revenus de location.</p>
+    <div className="panel" style={{display:"flex",alignItems:"center",gap:16,flexWrap:"wrap"}}>
+      <div style={{flex:1,minWidth:180}}>
+        <div style={{fontSize:12.5,color:"var(--g)"}}>Total perçu en {year}</div>
+        <div style={{fontFamily:"var(--fd)",fontSize:28,color:"var(--dk)"}}>{eurF(total)}</div>
+        <div style={{fontSize:12.5,color:"var(--gl)"}}>{conf.length} location{conf.length>1?"s":""} confirmée{conf.length>1?"s":""}</div>
+      </div>
+      <button className="btn btn-ter" style={{padding:"12px 18px"}} disabled={!conf.length} onClick={annual}>Télécharger le relevé {year}</button>
+    </div>
+    <div className="sec-t" style={{fontSize:18,margin:"6px 0 10px"}}>Détail des locations</div>
+    {conf.length===0
+      ?<div className="empty" style={{padding:"26px 12px"}}><div className="big">Aucune location confirmée</div>Vos justificatifs apparaîtront ici dès qu'une location de vos objets sera confirmée.</div>
+      :<div className="rows">{conf.map(r=><div key={r.id} className="row-card">
+        <img src={seed(r.it.img[0],120,120)} alt=""/>
+        <div style={{flex:1,minWidth:0}}><div className="ti">{r.it.t}</div><div className="su">{docDate(r.createdAt)} · {r.renterName} · {eurF(ownerGain(r))}</div></div>
+        <button className="btn btn-ghost" style={{minHeight:34,padding:"7px 14px",fontSize:12}} onClick={()=>receipt(r)}>Reçu</button>
+      </div>)}</div>}
+    <p style={{fontSize:12,color:"var(--gl)",marginTop:14,lineHeight:1.6}}>Les montants correspondent aux sommes perçues (hors commission). Cercle est un intermédiaire ; vous restez responsable de votre déclaration. Voir la <b>politique de confidentialité</b> et les <b>mentions légales</b>.</p>
+  </div>;
+}
+
+function CookieBanner({onChoice,openLegal}){
+  return <div className="ckb" role="dialog" aria-label="Consentement aux cookies">
+    <p>Cercle utilise le strict minimum pour fonctionner (connexion, préférences) — <b style={{color:"var(--dk)"}}>aucun traceur publicitaire</b>. <a onClick={()=>openLegal("cookies")}>En savoir plus</a></p>
+    <div className="ckb-btns">
+      <button className="btn btn-ghost" style={{minHeight:38,padding:"8px 14px",fontSize:13}} onClick={()=>onChoice("refused")}>Refuser</button>
+      <button className="btn btn-ter" style={{minHeight:38,padding:"8px 16px",fontSize:13}} onClick={()=>onChoice("accepted")}>Accepter</button>
+    </div>
+  </div>;
+}
+
+/* ═══════════ INSCRIPTION / CONNEXION ═══════════ */
+const GIcon=()=><svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M23.5 12.27c0-.85-.08-1.66-.22-2.45H12v4.64h6.45a5.52 5.52 0 0 1-2.39 3.62v3h3.87c2.26-2.09 3.57-5.16 3.57-8.81z"/><path fill="#34A853" d="M12 24c3.24 0 5.96-1.07 7.93-2.91l-3.87-3a7.18 7.18 0 0 1-10.8-3.77H1.27v3.1A12 12 0 0 0 12 24z"/><path fill="#FBBC05" d="M5.26 14.32a7.2 7.2 0 0 1 0-4.62V6.6H1.27a12 12 0 0 0 0 10.8l3.99-3.08z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.43-3.43A11.97 11.97 0 0 0 1.27 6.6l3.99 3.1A7.17 7.17 0 0 1 12 4.75z"/></svg>;
+const AIcon=()=><svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.05 20.28c-.96.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8.88-.18 2.05-.86 3.46-.73 1.7.14 2.97.81 3.81 2.04-3.5 2.1-2.94 6.71.45 8.06-.64 1.67-1.47 2.32-2.8 2.8zM12.03 7.25c-.17-2.5 1.86-4.56 4.19-4.75.32 2.89-2.62 5.04-4.19 4.75z"/></svg>;
+function SocialBtns({onDone,toast}){
+  if(IS_NATIVE)return null; // en app native, les popups OAuth sont bloquées → email uniquement
+  const google=async()=>{
+    const a=fbAuth();
+    if(!a){onDone({name:"Noah",email:"noah@google.demo",phone:"",quartier:"Metz Sablon",verified:true,phoneVerified:false});return}
+    try{const res=await a.signInWithPopup(new firebase.auth.GoogleAuthProvider());onDone(fbUserToUser(res.user));}
+    catch(e){if(e.code!=="auth/popup-closed-by-user"&&e.code!=="auth/cancelled-popup-request")toast(fbMsg(e));}
   };
-  return <div style={{maxWidth:920,margin:"0 auto",padding:28}}>
-    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16,flexWrap:"wrap",gap:10}}>
-      <div><button className="cl" style={{marginBottom:6,display:"flex",alignItems:"center",gap:5}} onClick={()=>setPage("home")}><I.Back/> Retour</button>
-        <h1 style={{fontFamily:"var(--fd)",fontSize:22}}>📊 Dashboard propriétaire</h1></div>
-      <button className="bs" style={{display:"flex",alignItems:"center",gap:7,fontSize:12,padding:"10px 18px"}} onClick={exportPDF}>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{width:14,height:14}}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Exporter PDF
-      </button>
-    </div>
-    <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:20}} className="dboard-grid">
-      {[["💰",revenue+" €","Revenus totaux","#ECFDF5"],["📦",myItems.length,"Annonces actives","var(--bgw)"],["📅",myBookAsOwner.length,"Locations reçues","var(--bgw)"],["🔒",depOwner.filter(d=>d.status==="held").length,"Cautions en cours","#FEF3C7"]].map(([ic,val,label,bg],i)=>
-      <div key={i} style={{background:bg,borderRadius:12,padding:14,textAlign:"center"}}><span style={{fontSize:22}}>{ic}</span><div style={{fontFamily:"var(--fd)",fontSize:20,fontWeight:700,margin:"4px 0"}}>{val}</div><div style={{fontSize:10,color:"var(--g)"}}>{label}</div></div>)}
-    </div>
-    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginBottom:20}} className="dboard-grid">
-      <div className="dboard-chart">
-        <h3 style={{fontFamily:"var(--fd)",fontSize:15,marginBottom:14}}>📈 Revenus mensuels</h3>
-        {window.Chart?<canvas ref={barRef}/>:<div style={{height:160,display:"flex",alignItems:"flex-end",gap:3}}>{monthlyVals.map((v,i)=><div key={i} style={{flex:1,textAlign:"center"}}><div style={{background:"linear-gradient(var(--acc),var(--p))",borderRadius:"4px 4px 0 0",height:Math.max(4,v/3),margin:"0 auto",width:"80%"}}/><div style={{fontSize:8,color:"var(--g)",marginTop:3}}>{months[i]}</div></div>)}</div>}
-      </div>
-      <div className="dboard-chart">
-        <h3 style={{fontFamily:"var(--fd)",fontSize:15,marginBottom:14}}>🗂️ Répartition par catégorie</h3>
-        {catData.length>0&&window.Chart?<canvas ref={pieRef}/>:catData.length===0?<div style={{textAlign:"center",paddingTop:40,color:"var(--g)",fontSize:12}}>Aucune annonce</div>:<div style={{fontSize:12,color:"var(--g)"}}>Chart.js non chargé</div>}
-      </div>
-    </div>
-    <h3 style={{fontFamily:"var(--fd)",fontSize:16,marginBottom:10}}>Disponibilité des annonces</h3>
-    {myItems.length===0&&<div className="empty"><span>📦</span><h2>Aucune annonce</h2><p>Proposez vos premiers objets pour voir vos stats.</p><button className="bp" style={{marginTop:12}} onClick={()=>setPage("create")}>Créer une annonce</button></div>}
-    {myItems.map(it=><div key={it.id} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:10,border:"1px solid var(--bd)",borderRadius:8,marginBottom:6}}>
-      <div style={{display:"flex",alignItems:"center",gap:8}}><img src={it.images[0]} alt="" style={{width:40,height:30,objectFit:"cover",borderRadius:6}}/><div><div style={{fontSize:13,fontWeight:600}}>{it.title}</div><div style={{fontSize:11,color:"var(--g)"}}>{it.price}€/j · {it.cat}</div></div></div>
-      <button className={"pill"+(it.available?" on":"")} style={{fontSize:11}} onClick={()=>dispatch({type:"TOGGLE_AVAIL",id:it.id})}>{it.available?"✓ Disponible":"Indisponible"}</button>
-    </div>)}
-  </div>
-}
-
-/* ===== REFERRAL ===== */
-function ReferralPage({state,dispatch,setPage}){
-  const[copied,setCopied]=useState(false);const[friendName,setFriendName]=useState("");
-  const code=state.user?.refCode||"CERCLE";
-  const totalBonus=state.referrals.reduce((s,r)=>s+r.bonus,0);
-  const copy=()=>{navigator.clipboard?.writeText(code).catch(()=>{});setCopied(true);setTimeout(()=>setCopied(false),2000)};
-  const invite=()=>{if(!friendName)return;dispatch({type:"REFERRAL",name:friendName});setFriendName("")};
-  return <div style={{maxWidth:540,margin:"0 auto",padding:28}}>
-    <button className="cl" style={{marginBottom:14,display:"flex",alignItems:"center",gap:5}} onClick={()=>setPage("home")}><I.Back/> Retour</button>
-    <h1 style={{fontFamily:"var(--fd)",fontSize:22,marginBottom:6}}>⭐ Parrainage</h1>
-    <p style={{fontSize:13,color:"var(--g)",marginBottom:16}}>Invitez vos amis et gagnez 5€ de crédit par filleul inscrit !</p>
-    <div style={{background:"linear-gradient(135deg,#FEF3C7,#FFFBEB)",borderRadius:14,padding:20,textAlign:"center",marginBottom:16}}>
-      <div style={{fontSize:11,fontWeight:700,marginBottom:6}}>VOTRE CODE PARRAIN</div>
-      <div style={{fontFamily:"var(--fd)",fontSize:32,fontWeight:700,letterSpacing:4,marginBottom:8}}>{code}</div>
-      <button className="bp" style={{fontSize:12,padding:"8px 20px"}} onClick={copy}>{copied?"✓ Copié !":"📋 Copier le code"}</button>
-    </div>
-    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:16}}>
-      <div style={{border:"1.5px solid var(--bd)",borderRadius:12,padding:14,textAlign:"center"}}><div style={{fontSize:24}}>👥</div><div style={{fontFamily:"var(--fd)",fontSize:22,fontWeight:700}}>{state.referrals.length}</div><div style={{fontSize:10,color:"var(--g)"}}>Filleuls</div></div>
-      <div style={{border:"1.5px solid var(--bd)",borderRadius:12,padding:14,textAlign:"center"}}><div style={{fontSize:24}}>💰</div><div style={{fontFamily:"var(--fd)",fontSize:22,fontWeight:700,color:"var(--acc)"}}>{totalBonus}€</div><div style={{fontSize:10,color:"var(--g)"}}>Gagnés</div></div>
-    </div>
-    <div className="fg"><label>Simuler un parrainage</label><div style={{display:"flex",gap:6}}><input value={friendName} onChange={e=>setFriendName(e.target.value)} placeholder="Nom de votre ami"/><button className="bp" style={{fontSize:12,padding:"8px 14px",flexShrink:0}} onClick={invite}>Inviter</button></div></div>
-    {state.referrals.length>0&&<><h3 style={{fontFamily:"var(--fd)",fontSize:15,marginTop:12,marginBottom:8}}>Historique</h3>
-    {state.referrals.map(r=><div key={r.id} style={{display:"flex",justifyContent:"space-between",padding:10,border:"1px solid var(--bd)",borderRadius:8,marginBottom:4,fontSize:13}}><span>👤 {r.name} · {ds(r.date)}</span><span style={{color:"var(--acc)",fontWeight:700}}>+{r.bonus}€</span></div>)}</>}
-  </div>
-}
-
-/* ===== VERIFY ID ===== */
-function VerifyId({state,dispatch,setPage}){
-  const[step,setStep]=useState(state.user?.verified?3:0);const[doc,setDoc]=useState("cni");
-  return <div style={{maxWidth:500,margin:"0 auto",padding:28}}>
-    <button className="cl" style={{marginBottom:14,display:"flex",alignItems:"center",gap:5}} onClick={()=>setPage("profile")}><I.Back/> Retour</button>
-    <h1 style={{fontFamily:"var(--fd)",fontSize:22,marginBottom:16}}>🆔 Vérification d'identité</h1>
-    {step===3||state.user?.verified?<div style={{textAlign:"center",padding:30}}><span style={{fontSize:48}}>✅</span><h2 style={{fontFamily:"var(--fd)",marginTop:8}}>Identité vérifiée</h2><p style={{fontSize:13,color:"var(--g)",marginTop:4}}>Votre profil affiche maintenant le badge ✓</p></div>:
-    step===0?<><p style={{fontSize:13,color:"var(--g)",marginBottom:14}}>Pour la sécurité de la communauté, vérifiez votre identité.</p>
-      <div style={{display:"flex",gap:8,marginBottom:16}}>{[["cni","🪪 CNI"],["passport","📘 Passeport"],["license","🚗 Permis"]].map(([id,l])=><button key={id} className={"pill"+(doc===id?" on":"")} onClick={()=>setDoc(id)}>{l}</button>)}</div>
-      <div style={{background:"var(--bgw)",borderRadius:12,padding:24,textAlign:"center",marginBottom:16,border:"2px dashed var(--bd)"}}><span style={{fontSize:32}}>📸</span><p style={{fontSize:12,color:"var(--g)",marginTop:6}}>Photo du document (simulé)</p></div>
-      <button className="bp" style={{width:"100%"}} onClick={()=>setStep(1)}>Envoyer le document</button></>:
-    step===1?<div style={{textAlign:"center",padding:30}}><div style={{fontSize:40,animation:"spin 1s linear infinite"}}>⏳</div><style>{"@keyframes spin{to{transform:rotate(360deg)}}"}</style>
-      <h2 style={{fontFamily:"var(--fd)",marginTop:12}}>Vérification en cours...</h2><p style={{fontSize:13,color:"var(--g)",marginTop:4}}>Cela prend quelques secondes</p>
-      {setTimeout(()=>setStep(2),1500)&&null}</div>:
-    step===2?<div style={{textAlign:"center",padding:30}}><span style={{fontSize:48}}>✅</span><h2 style={{fontFamily:"var(--fd)",marginTop:8}}>Document accepté !</h2>
-      <button className="bp" style={{marginTop:14}} onClick={()=>{dispatch({type:"VERIFY_ID"});setStep(3)}}>Finaliser la vérification</button></div>:null}
-  </div>
-}
-
-/* ===== DISPUTE ===== */
-function DisputePage({state,dispatch,setPage}){
-  const[reason,setReason]=useState("");const[bookId,setBookId]=useState("");const[desc,setDesc]=useState("");
-  const myBook=state.bookings.filter(b=>b.userId===state.user?.id||b.ownerId===state.user?.id);
-  const submit=()=>{if(!reason||!bookId)return;dispatch({type:"DISPUTE",payload:{id:uid(),bookingId:bookId,reason,desc,status:"open",by:state.user.id,date:new Date()}});setReason("");setDesc("")};
-  return <div style={{maxWidth:540,margin:"0 auto",padding:28}}>
-    <button className="cl" style={{marginBottom:14,display:"flex",alignItems:"center",gap:5}} onClick={()=>setPage("profile")}><I.Back/> Retour</button>
-    <h1 style={{fontFamily:"var(--fd)",fontSize:22,marginBottom:6}}>⚖️ Litiges</h1>
-    <p style={{fontSize:13,color:"var(--g)",marginBottom:16}}>Ouvrez un litige si un problème survient lors d'une location.</p>
-    <div className="fg"><label>Réservation concernée</label><select value={bookId} onChange={e=>setBookId(e.target.value)} style={{width:"100%",padding:"10px 12px",border:"1.5px solid var(--bd)",borderRadius:9,fontSize:13}}><option value="">Sélectionner...</option>{myBook.map(b=><option key={b.id} value={b.id}>{b.itemTitle} ({b.startDate})</option>)}</select></div>
-    <div className="fg"><label>Motif</label><div style={{display:"flex",gap:5,flexWrap:"wrap"}}>{["Objet endommagé","Non conforme","Non restitué","Caution injustifiée","Autre"].map(r=><button key={r} className={"pill"+(reason===r?" on":"")} onClick={()=>setReason(r)}>{r}</button>)}</div></div>
-    <div className="fg"><label>Description</label><textarea value={desc} onChange={e=>setDesc(e.target.value)} placeholder="Décrivez le problème..." rows={3}/></div>
-    <button className="bp" style={{width:"100%"}} onClick={submit}>Ouvrir le litige</button>
-    {state.disputes.length>0&&<><h3 style={{fontFamily:"var(--fd)",fontSize:15,marginTop:20,marginBottom:8}}>Mes litiges</h3>
-    {state.disputes.map(d=><div key={d.id} style={{padding:12,border:"1.5px solid var(--bd)",borderRadius:10,marginBottom:8}}>
-      <div style={{display:"flex",justifyContent:"space-between"}}><span style={{fontWeight:600,fontSize:13}}>{d.reason}</span><span style={{fontSize:11,padding:"2px 8px",borderRadius:6,fontWeight:600,background:d.status==="open"?"#FEF3C7":"#ECFDF5",color:d.status==="open"?"#92400E":"var(--acc)"}}>{d.status==="open"?"⏳ En cours":"✓ Résolu"}</span></div>
-      <div style={{fontSize:11,color:"var(--g)",marginTop:2}}>{ds(d.date)}{d.desc&&" · "+d.desc}</div>
-      {d.status==="open"&&<button className="cl" style={{fontSize:11,marginTop:6}} onClick={()=>dispatch({type:"RESOLVE_DISPUTE",id:d.id})}>Marquer résolu</button>}
-    </div>)}</>}
-  </div>
-}
-
-
-
-/* ===== FULLSCREEN GALLERY ===== */
-function Gallery({images,start,onClose}){
-  const[idx,setIdx]=useState(start||0);
-  useEffect(()=>{const h=e=>{if(e.key==="Escape")onClose();if(e.key==="ArrowRight")setIdx(i=>(i+1)%images.length);if(e.key==="ArrowLeft")setIdx(i=>(i-1+images.length)%images.length)};window.addEventListener("keydown",h);return()=>window.removeEventListener("keydown",h)},[]);
-  return <div className="gallery-fs" onClick={onClose}>
-    <button className="gf-close" onClick={onClose}><I.X/></button>
-    <button className="gf-nav l" onClick={e=>{e.stopPropagation();setIdx(i=>(i-1+images.length)%images.length)}}>‹</button>
-    <img src={images[idx]} alt="" onClick={e=>e.stopPropagation()}/>
-    <button className="gf-nav r" onClick={e=>{e.stopPropagation();setIdx(i=>(i+1)%images.length)}}>›</button>
-    <div className="gf-counter">{idx+1} / {images.length}</div>
-  </div>
-}
-
-/* ===== CHATBOT ===== */
-function Chatbot({items,onOpen,onClose}){
-  const[msgs,setMsgs]=useState([{from:"bot",text:"Bonjour ! 👋 Je suis l'assistant Cercle.\n\nDites-moi ce que vous cherchez à louer !\n\nExemples :\n• \"perceuse\" ou \"bricolage\"\n• \"vélo\" ou \"transport\"\n• \"fête\" ou \"anniversaire\"\n• \"prix\" pour les moins chers\n• \"aide\" pour comprendre le fonctionnement"}]);
-  const[input,setInput]=useState("");const ref=useRef(null);
-  useEffect(()=>{ref.current&&(ref.current.scrollTop=ref.current.scrollHeight)},[msgs.length]);
-  const norm=s=>s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
-  const KW={tools:["bricolage","perceuse","visseuse","ponceuse","echelle","nettoyeur","karcher","outil","percer","poncer","scie","tournevis","marteau","cle","compresseur","meuleuse"],electronics:["electronique","drone","console","ps5","xbox","projecteur","videoprojecteur","enceinte","jbl","bluetooth","tv","ecran","son","haut-parleur","camera"],vehicles:["vehicule","voiture","camion","camionnette","velo","trottinette","scooter","remorque","transport","utilitaire","fourgon","moto"],sports:["sport","paddle","ski","kayak","vtt","velo","surf","planche","raquette","fitness","musculation","boxe","randonnee","escalade"],garden:["jardin","tondeuse","taille-haie","taille haie","motoculteur","arrosage","plante","herbe","pelouse","haie","debroussailleuse","souffleur"],events:["evenement","fete","mariage","anniversaire","chaise","tonnelle","barbe a papa","sono","dj","decoration","party","bapteme","reception"],music:["musique","guitare","piano","platine","dj","instrument","clavier","batterie","micro","ampli","synthetiseur"],gaming:["jeu","gaming","console","casque vr","meta quest","volant","manette","ps5","xbox","nintendo","playstation","jeux video"],baby:["bebe","poussette","siege auto","enfant","landau","berceau","biberon","puericulture"],fashion:["mode","robe","costume","vetement","habit","sezane","hugo boss","tenue","smoking"],camping:["camping","tente","glaciere","sac de couchage","randonnee","bivouac","plein air","hamac","rechaud"],kitchen:["cuisine","robot","kitchenaid","raclette","fondue","patissier","mixer","blender","thermomix","plancha"],photo:["photo","appareil","camera","canon","stabilisateur","trepied","objectif","reflex","video","gopro","nikon","sony"],diy:["creatif","couture","coudre","imprimante 3d","singer","machine","impression","diy","art","broder"]};
-  const findItems=(q)=>{
-    const words=norm(q).split(/\s+/).filter(w=>w.length>1);
-    if(words.length===0)return[];
-    let scored=items.map(item=>{let score=0;const t=norm(item.title);const d=norm(item.description||"");const c=item.cat;
-      words.forEach(w=>{
-        if(t.includes(w))score+=10;
-        if(w.length>=3&&t.split(/\s+/).some(tw=>tw.startsWith(w)||w.startsWith(tw)))score+=6;
-        if(d.includes(w))score+=3;
-        if(c.includes(w))score+=5;
-        Object.entries(KW).forEach(([cat,kws])=>{if(kws.some(k=>k.includes(w)||w.includes(k)||(w.length>=3&&k.startsWith(w)))){if(item.cat===cat)score+=8}})
-      });
-      return{item,score}}).filter(s=>s.score>0).sort((a,b)=>b.score-a.score);
-    return scored.slice(0,4).map(s=>s.item);
+  const apple=()=>{
+    const a=fbAuth();
+    if(!a){onDone({name:"Noah",email:"noah@apple.demo",phone:"",quartier:"Metz Sablon",verified:true,phoneVerified:false});return}
+    toast("Connexion Apple — à activer dans la console Firebase");
   };
-  const getCatFromQ=(q)=>{const ql=norm(q);let best=null,bestN=0;Object.entries(KW).forEach(([cat,kws])=>{const n=kws.filter(k=>ql.includes(k)||(k.length>=3&&ql.split(/\s+/).some(w=>k.includes(w)||w.includes(k)))).length;if(n>bestN){bestN=n;best=cat}});return best};
-  const send=()=>{if(!input.trim())return;const q=input.trim();const ql=norm(q);setMsgs(p=>[...p,{from:"user",text:q}]);setInput("");
-    setTimeout(()=>{
-      if(["bonjour","salut","hello","hi","hey","coucou","yo"].some(g=>ql.includes(g))){setMsgs(p=>[...p,{from:"bot",text:"Bonjour ! 😊 Comment puis-je vous aider ?\n\nDites-moi ce que vous voulez louer, par exemple :\n\"perceuse\", \"vélo\", \"sono pour une fête\"..."}]);return}
-      if(["merci","thanks","super","genial","parfait","cool"].some(g=>ql.includes(g))){setMsgs(p=>[...p,{from:"bot",text:"Avec plaisir ! 😊 N'hésitez pas si vous avez d'autres questions."}]);return}
-      if(["prix","combien","budget","cher","pas cher","moins cher","economique","cheap"].some(g=>ql.includes(g))){const sorted=[...items].sort((a,b)=>a.price-b.price);setMsgs(p=>[...p,{from:"bot",text:`💰 Les prix vont de ${sorted[0]?.price}€ à ${sorted[sorted.length-1]?.price}€ par jour.\n\nVoici les plus abordables :`,items:sorted.slice(0,4)}]);return}
-      if(["caution","depot","garantie","remboursement","rembourse"].some(g=>ql.includes(g))){setMsgs(p=>[...p,{from:"bot",text:"🔒 Caution\n\nLa caution est bloquée lors de la réservation et restituée sous 48h après le retour de l'objet en bon état.\n\nLe propriétaire la libère depuis son espace."}]);return}
-      if(["aide","comment","fonctionn","utiliser","marche","expliqu"].some(g=>ql.includes(g))){setMsgs(p=>[...p,{from:"bot",text:"📖 Comment ça marche ?\n\n1️⃣ Trouvez un objet à louer\n2️⃣ Réservez et payez en ligne (paiement sécurisé)\n3️⃣ Récupérez l'objet chez le propriétaire\n4️⃣ Profitez-en pendant la durée !\n5️⃣ Rendez-le → caution restituée 🎉\n\nBesoin d'autre chose ?"}]);return}
-      if(["populaire","tendance","top","meilleur","mieux note"].some(g=>ql.includes(g))){const top=[...items].sort((a,b)=>b.rating-a.rating).slice(0,4);setMsgs(p=>[...p,{from:"bot",text:"🔥 Top annonces les mieux notées :",items:top}]);return}
-      if(["nouveau","recent","dernier","neuf"].some(g=>ql.includes(g))){const recent=items.filter(i=>i.condition==="Comme neuf").slice(0,4);setMsgs(p=>[...p,{from:"bot",text:"✨ Objets en état \"Comme neuf\" :",items:recent.length>0?recent:items.slice(0,4)}]);return}
-      const found=findItems(q);
-      if(found.length>0){setMsgs(p=>[...p,{from:"bot",text:`J'ai trouvé ${found.length} résultat${found.length>1?"s":""} pour "${q}" 🎯`,items:found}])}
-      else{const cat=getCatFromQ(q);
-        if(cat){const catItems=items.filter(i=>i.cat===cat).slice(0,4);if(catItems.length>0){setMsgs(p=>[...p,{from:"bot",text:`Dans la catégorie ${CATS.find(c=>c.id===cat)?.label||cat} :`,items:catItems}])}else{setMsgs(p=>[...p,{from:"bot",text:`Hmm, rien trouvé dans cette catégorie. Essayez d'autres mots-clés !`}])}}
-        else{const suggestions=items.sort(()=>Math.random()-.5).slice(0,3);setMsgs(p=>[...p,{from:"bot",text:`Je n'ai pas trouvé de résultat pour "${q}" 😅\n\nEssayez avec :\n• Un nom d'objet : perceuse, vélo, drone\n• Une catégorie : bricolage, sport, musique\n• Un mot-clé : fête, photo, camping\n\nVoici quelques suggestions :`,items:suggestions}])}}
-    },400+Math.random()*200)};
-  return <div className="chatbot-w">
-    <div className="chatbot-hd"><div style={{display:"flex",alignItems:"center",gap:8}}><span style={{fontSize:20}}>🤖</span><div><div style={{fontWeight:700,fontSize:14}}>Assistant Cercle</div><div style={{fontSize:10,opacity:.8}}>En ligne · Réponse instantanée</div></div></div><button style={{background:"none",border:"none",color:"#fff",fontSize:18,cursor:"pointer"}} onClick={onClose}>✕</button></div>
-    <div className="chatbot-bd" ref={ref}>{msgs.map((m,i)=><div key={i}><div className={"chatbot-msg "+(m.from)} style={{whiteSpace:"pre-line"}}>{m.text}</div>
-      {m.items&&<div style={{display:"flex",flexDirection:"column",gap:4,marginTop:6}}>{m.items.map(it=><div key={it.id} style={{display:"flex",gap:8,padding:8,background:"var(--bg)",borderRadius:12,cursor:"pointer",fontSize:12,transition:"all .15s",border:"1px solid var(--bd)"}} onClick={()=>onOpen(it)} onMouseEnter={e=>{e.currentTarget.style.transform="scale(1.02)";e.currentTarget.style.borderColor="var(--p)"}} onMouseLeave={e=>{e.currentTarget.style.transform="scale(1)";e.currentTarget.style.borderColor="var(--bd)"}}><img src={it.images[0]} alt="" style={{width:48,height:36,objectFit:"cover",borderRadius:8,flexShrink:0}}/><div style={{flex:1,minWidth:0}}><div style={{fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{it.title}</div><div style={{display:"flex",justifyContent:"space-between",marginTop:2}}><span style={{color:"var(--p)",fontWeight:700}}>{it.price}€/j</span><span style={{color:"var(--g)"}}>★ {it.rating}</span></div></div></div>)}</div>}
-    </div>)}</div>
-    <div className="chatbot-ft"><input value={input} onChange={e=>setInput(e.target.value)} placeholder="Que cherchez-vous à louer ?" onKeyDown={e=>e.key==="Enter"&&send()}/><button onClick={send}><I.Send/></button></div>
-  </div>
+  return <div className="social-btns">
+    <button type="button" onClick={google}><GIcon/>Continuer avec Google</button>
+    <button type="button" onClick={apple}><AIcon/>Continuer avec Apple</button>
+  </div>;
+}
+function CodeInput({onFull,autoFocus}){
+  const refs=useRef([]);
+  useEffect(()=>{if(autoFocus&&refs.current[0])refs.current[0].focus()},[autoFocus]);
+  const collect=()=>{const c=refs.current.map(r=>r&&r.value||"").join("");if(c.length===6)onFull(c)};
+  return <div className="codes" onPaste={e=>{
+      const v=(e.clipboardData.getData("text")||"").replace(/\D/g,"").slice(0,6);
+      if(!v)return;e.preventDefault();
+      v.split("").forEach((ch,i)=>{if(refs.current[i])refs.current[i].value=ch});
+      if(v.length===6)onFull(v);else if(refs.current[v.length])refs.current[v.length].focus();
+    }}>
+    {[...Array(6)].map((_,i)=><input key={i} maxLength={1} inputMode="numeric" aria-label={"Chiffre "+(i+1)}
+      ref={el=>refs.current[i]=el}
+      onChange={e=>{const v=e.target.value.replace(/\D/g,"");e.target.value=v;
+        if(v&&i<5)refs.current[i+1].focus();collect();}}
+      onKeyDown={e=>{if(e.key==="Backspace"&&!e.target.value&&i>0)refs.current[i-1].focus()}}/>)}
+  </div>;
+}
+/* Champ adresse avec autocomplétion OSM (suggestions pendant la frappe) */
+function AddressInput({name,value,onChange,placeholder,required,autoFocus}){
+  const[q,setQ]=useState(value!=null?value:"");
+  const[sug,setSug]=useState([]);
+  const[open,setOpen]=useState(false);
+  const[load,setLoad]=useState(false);
+  const tRef=useRef(),boxRef=useRef();
+  useEffect(()=>{if(value!=null&&value!==q)setQ(value)},[value]);
+  const search=v=>{
+    clearTimeout(tRef.current);
+    if(!v||v.trim().length<3){setSug([]);setOpen(false);return;}
+    setLoad(true);
+    tRef.current=setTimeout(async()=>{
+      try{
+        const r=await fetch("https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=5&countrycodes=fr&q="+encodeURIComponent(v));
+        const a=await r.json();setSug(Array.isArray(a)?a.slice(0,5):[]);setOpen(true);
+      }catch(e){setSug([]);}
+      setLoad(false);
+    },450);
+  };
+  const update=(v)=>{setQ(v);onChange&&onChange(v,null);search(v);};
+  const pick=s=>{const label=s.display_name;setQ(label);setSug([]);setOpen(false);onChange&&onChange(label,[+s.lat,+s.lon]);};
+  return <div className="addr" ref={boxRef}>
+    <input name={name} value={q} required={required} autoFocus={autoFocus} autoComplete="off" placeholder={placeholder}
+      onChange={e=>update(e.target.value)} onFocus={()=>{if(sug.length)setOpen(true)}} onBlur={()=>setTimeout(()=>setOpen(false),180)}/>
+    {load&&<span className="addr-load">…</span>}
+    {open&&sug.length>0&&<div className="addr-sug">
+      {sug.map((s,i)=><button type="button" key={i} onMouseDown={e=>e.preventDefault()} onClick={()=>pick(s)}><I.pin size={13}/><span>{s.display_name}</span></button>)}
+    </div>}
+  </div>;
+}
+/* Téléphone auto-formaté : 06 12 34 56 78 */
+const fmtPhone=v=>String(v||"").replace(/\D/g,"").slice(0,10).replace(/(\d{2})(?=\d)/g,"$1 ").trim();
+function PhoneInput({name,value,onChange,placeholder,required}){
+  const[p,setP]=useState(fmtPhone(value||""));
+  useEffect(()=>{if(value!=null)setP(fmtPhone(value))},[value]);
+  return <input name={name} type="tel" inputMode="numeric" value={p} required={required} placeholder={placeholder||"06 12 34 56 78"} autoComplete="tel"
+    onChange={e=>{const f=fmtPhone(e.target.value);setP(f);onChange&&onChange(f);}}/>;
+}
+function Auth({onDone,toast}){
+  const FB=!!fbAuth();
+  const[mode,setMode]=useState("signup");
+  const[prefill,setPrefill]=useState("");
+  const[pwVal,setPwVal]=useState("");
+  const[acct,setAcct]=useState("particulier");
+  const[step,setStep]=useState(0);
+  const[form,setForm]=useState({});
+  const[code,setCode]=useState("");
+  const[phoneSent,setPhoneSent]=useState(false);
+  const[phoneOk,setPhoneOk]=useState(false);
+  const[busy,setBusy]=useState(false);
+  const genCode=()=>String(Math.floor(100000+Math.random()*900000));
+  const start=async e=>{e.preventDefault();const f=new FormData(e.target);
+    const fn=(f.get("n")||"").trim(),ln=(f.get("ln")||"").trim(),email=f.get("e"),pw=f.get("p"),quartier=(f.get("q")||"").trim(),phone=(f.get("tel")||"").trim();
+    const pro=acct==="pro",company=(f.get("co")||"").trim(),siret=(f.get("siret")||"").trim();
+    const name=pro&&company?company:(fn+" "+ln).trim();
+    if(FB){
+      setBusy(true);
+      try{
+        const res=await fbAuth().createUserWithEmailAndPassword(email,pw);
+        try{await res.user.updateProfile({displayName:name})}catch(_){}
+        try{const d=fbDb();if(d)await d.collection("users").doc(res.user.uid).set({name,firstName:fn,lastName:ln,email,quartier,phone,accountType:acct,pro,company,siret},{merge:true})}catch(_){}
+        await sendVerif(res.user,fn||name,email);
+        onDone({...fbUserToUser(res.user),name,quartier,phone,pro,company,siret});
+      }catch(err){
+        console.warn("[Cercle] inscription échouée:",err&&err.code,err&&err.message);
+        if(isExistingAccount(err)){setPrefill(email);setStep(0);setMode("login");toast("Vous avez déjà un compte avec cet email — connectez-vous.");}
+        else toast(fbMsg(err));
+      }
+      setBusy(false);
+    }else{
+      setForm({name,email,phone,quartier:quartier||"Metz Sablon"});setCode(genCode());setStep(1);
+    }
+  };
+  const login=async e=>{e.preventDefault();const f=new FormData(e.target);
+    const email=f.get("e"),pw=f.get("p");
+    if(FB){
+      setBusy(true);
+      try{const res=await fbAuth().signInWithEmailAndPassword(email,pw);onDone(fbUserToUser(res.user));}
+      catch(err){toast(fbMsg(err))}
+      setBusy(false);
+    }else{
+      onDone({name:(email||"Voisin").split("@")[0],email,phone:"",quartier:"Metz Sablon",verified:true,phoneVerified:false});
+    }
+  };
+  const forgot=async()=>{
+    if(FB){const em=prompt("Votre email :");if(em){try{await fbAuth().sendPasswordResetEmail(em);toast("Email de réinitialisation envoyé à "+em)}catch(e){toast(fbMsg(e))}}}
+    else toast("Email de réinitialisation envoyé (démo)");
+  };
+  const resendVerif=async()=>{const u=fbAuth()&&fbAuth().currentUser;if(u){try{await sendVerif(u,u.displayName||"voisin",u.email);toast("Email de vérification renvoyé")}catch(e){toast(fbMsg(e))}}};
+  const finishFb=()=>{const u=fbAuth()&&fbAuth().currentUser;onDone(u?fbUserToUser(u):{...form,verified:false,phoneVerified:false});};
+  const checkEmail=c=>{if(c!==code){toast("Code incorrect — regardez l'encart jaune");return}setStep(2);};
+  const sendSms=e=>{e.preventDefault();const f=new FormData(e.target);
+    setForm(o=>({...o,phone:f.get("ph")}));setCode(genCode());setPhoneSent(true);};
+  const checkPhone=c=>{if(c!==code){toast("Code incorrect — regardez l'encart jaune");return}setPhoneOk(true);setStep(3);};
+  const finish=()=>onDone({...form,verified:true,phoneVerified:phoneOk});
+  if(mode==="login")return <div className="page auth-wrap">
+    <h1>Bon retour</h1>
+    <p className="lead">Le quartier ne vous a pas oublié.</p>
+    <div className="panel">
+      <SocialBtns onDone={onDone} toast={toast}/>
+      {!IS_NATIVE&&<div className="or-sep">OU PAR EMAIL</div>}
+      <form onSubmit={login}>
+        <div className="fg"><label>Email</label><input name="e" type="email" required autoFocus={!prefill} defaultValue={prefill} placeholder="vous@exemple.fr"/></div>
+        <div className="fg"><label>Mot de passe</label><input name="p" type="password" required autoFocus={!!prefill} placeholder="••••••••"/></div>
+        <button className="btn btn-p" disabled={busy} style={{width:"100%",padding:13,opacity:busy?.6:1}}>{busy?"Connexion…":"Se connecter"}</button>
+      </form>
+      <p style={{textAlign:"center",fontSize:13,color:"var(--g)",marginTop:12}}>
+        <a style={{color:"var(--g)",cursor:"pointer",textDecoration:"underline"}} onClick={forgot}>Mot de passe oublié ?</a>
+        {" · "}Pas de compte ? <a style={{color:"var(--p)",fontWeight:700,cursor:"pointer"}} onClick={()=>{setMode("signup");setStep(0)}}>Rejoindre le cercle</a>
+      </p>
+    </div>
+  </div>;
+  return <div className="page auth-wrap">
+    <h1>Rejoindre le cercle</h1>
+    <p className="lead">Un clic suffit — ou trois petits champs.</p>
+    {!FB&&<div className="stepper">
+      {["Compte","Email","Téléphone","Bienvenue"].map((l,i)=><React.Fragment key={l}>
+        {i>0&&<div className={"sline"+(step>=i?" done":"")}/>}
+        <div className={"step"+(step===i?" on":step>i?" done":"")}><span className="sdot">{step>i?"✓":i+1}</span>{l}{i===2&&<span style={{fontSize:8.5,color:"var(--gl)",textTransform:"none",letterSpacing:0}}>optionnel</span>}</div>
+      </React.Fragment>)}
+    </div>}
+    {step===0&&<div className="panel">
+      <SocialBtns onDone={onDone} toast={toast}/>
+      {!IS_NATIVE&&<div className="or-sep">OU PAR EMAIL</div>}
+      <form onSubmit={start}>
+        <div className="seg" role="tablist" aria-label="Type de compte">
+          <button type="button" className={acct==="particulier"?"on":""} onClick={()=>setAcct("particulier")}>Particulier</button>
+          <button type="button" className={acct==="pro"?"on":""} onClick={()=>setAcct("pro")}>Professionnel</button>
+        </div>
+        <div className="fr">
+          <div className="fg"><label>Prénom</label><input name="n" required autoFocus autoComplete="given-name" placeholder="Noah"/></div>
+          <div className="fg"><label>Nom</label><input name="ln" required autoComplete="family-name" placeholder="Mouloud"/></div>
+        </div>
+        {acct==="pro"&&<>
+          <div className="fg"><label>Raison sociale</label><input name="co" required autoComplete="organization" placeholder="Ex. Loca Outils SARL"/></div>
+          <div className="fg"><label>SIRET</label><input name="siret" required inputMode="numeric" placeholder="14 chiffres"/><div className="hint">Pour émettre de vraies factures à vos clients. Votre annonce affichera un badge « Pro ».</div></div>
+        </>}
+        <div className="fg"><label>Email</label><input name="e" type="email" required autoComplete="email" placeholder="vous@exemple.fr"/></div>
+        <div className="fg"><label>Mot de passe</label><input name="p" type="password" required minLength={6} autoComplete="new-password" placeholder="6 caractères minimum" value={pwVal} onChange={e=>setPwVal(e.target.value)}/><PwMeter value={pwVal}/></div>
+        <p className="hint" style={{textAlign:"center"}}>Adresse et téléphone à compléter plus tard, en 30 secondes.</p>
+        <button className="btn btn-ter" disabled={busy} style={{width:"100%",padding:13,opacity:busy?.6:1}}>{busy?"Création…":"Créer mon compte"}</button>
+        <p style={{fontSize:11.5,color:"var(--gl)",textAlign:"center",marginTop:9,lineHeight:1.5}}>Un email de confirmation vous sera envoyé. <b style={{color:"var(--g)"}}>Vous devrez le valider</b> pour entrer dans le cercle.</p>
+        <p style={{textAlign:"center",fontSize:13,color:"var(--g)",marginTop:10}}>Déjà membre ? <a style={{color:"var(--p)",fontWeight:700,cursor:"pointer"}} onClick={()=>setMode("login")}>Se connecter</a></p>
+      </form>
+    </div>}
+    {step===9&&<div className="panel" style={{textAlign:"center",padding:34}}>
+      <div className="stamp" style={{position:"static",width:84,height:84,fontSize:9,margin:"0 auto 16px",transform:"rotate(-8deg)"}}><span className="ck" style={{fontSize:22}}>✉</span><span>ENVOYÉ</span></div>
+      <h3 style={{fontFamily:"var(--fd)",fontSize:22}}>Compte créé, {form.name} !</h3>
+      <p style={{fontSize:13.5,color:"var(--g)",margin:"6px 0 18px"}}>On vous a envoyé un lien de vérification à <b style={{color:"var(--dk)"}}>{form.email}</b>. Cliquez dessus quand vous voulez — vous pouvez déjà explorer le quartier.</p>
+      <button className="btn btn-green" style={{width:"100%",padding:13}} onClick={finishFb}>Explorer le quartier</button>
+      <p style={{fontSize:12,color:"var(--gl)",marginTop:12}}>Rien reçu ? <a style={{color:"var(--p)",cursor:"pointer"}} onClick={resendVerif}>Renvoyer l'email</a> · pensez aux spams.</p>
+    </div>}
+    {step===1&&<div className="panel" style={{textAlign:"center"}}>
+      <h3 style={{fontFamily:"var(--fd)",fontSize:20,marginBottom:4}}>Vérifions votre email</h3>
+      <p style={{fontSize:13.5,color:"var(--g)"}}>Un code à 6 chiffres a été envoyé à <b style={{color:"var(--dk)"}}>{form.email}</b></p>
+      <div className="demo-code">Démo — votre code : <b>{code}</b></div>
+      <CodeInput autoFocus onFull={checkEmail}/>
+      <button className="btn btn-ghost" style={{width:"100%",marginBottom:10}} onClick={()=>checkEmail(code)}>Valider automatiquement (démo)</button>
+      <p style={{fontSize:12,color:"var(--gl)"}}>Rien reçu ? <a style={{color:"var(--p)",cursor:"pointer"}} onClick={()=>{setCode(genCode());toast("Nouveau code envoyé")}}>Renvoyer</a> — vous pouvez aussi coller le code d'un coup.</p>
+    </div>}
+    {step===2&&<div className="panel" style={{textAlign:"center"}}>
+      <h3 style={{fontFamily:"var(--fd)",fontSize:20,marginBottom:4}}>Votre téléphone <span style={{fontSize:13,color:"var(--gl)",fontFamily:"var(--f)"}}>(optionnel)</span></h3>
+      {!phoneSent&&<>
+        <p style={{fontSize:13.5,color:"var(--g)",marginBottom:14}}>Il rassure vos voisins — mais rien ne presse, vous pourrez le faire plus tard.</p>
+        <form onSubmit={sendSms}>
+          <div className="fg" style={{textAlign:"left"}}><label>Téléphone</label><input name="ph" type="tel" required autoFocus placeholder="06 12 34 56 78"/></div>
+          <button className="btn btn-p" style={{width:"100%",padding:12}}>Recevoir le code par SMS</button>
+        </form>
+        <button className="btn btn-ghost" style={{width:"100%",marginTop:10}} onClick={()=>setStep(3)}>Plus tard — rejoindre le cercle</button>
+      </>}
+      {phoneSent&&<>
+        <p style={{fontSize:13.5,color:"var(--g)"}}>Un SMS a été envoyé au <b style={{color:"var(--dk)"}}>{form.phone}</b></p>
+        <div className="demo-code">Démo — votre code : <b>{code}</b></div>
+        <CodeInput autoFocus onFull={checkPhone}/>
+        <button className="btn btn-ghost" style={{width:"100%",marginBottom:10}} onClick={()=>checkPhone(code)}>Valider automatiquement (démo)</button>
+        <button className="btn btn-ghost" style={{width:"100%"}} onClick={()=>setStep(3)}>Plus tard</button>
+      </>}
+    </div>}
+    {step===3&&<div className="panel" style={{textAlign:"center",padding:34}}>
+      <div className="stamp" style={{position:"static",width:84,height:84,fontSize:10,margin:"0 auto 16px",transform:"rotate(-8deg)"}}><span className="ck" style={{fontSize:22}}>✓</span><span>VÉRIFIÉ</span></div>
+      <h3 style={{fontFamily:"var(--fd)",fontSize:22}}>Bienvenue dans le cercle, {form.name} !</h3>
+      <p style={{fontSize:13.5,color:"var(--g)",margin:"6px 0 18px"}}>{phoneOk?"Email et téléphone vérifiés — le tampon est posé.":"Email vérifié — vous pourrez ajouter votre téléphone depuis les paramètres."}</p>
+      <button className="btn btn-green" style={{width:"100%",padding:13}} onClick={finish}>Explorer le quartier</button>
+    </div>}
+  </div>;
 }
 
-/* ===== OWNER SHOP ===== */
-function Shop({owner,items,onClose,onOpen,state,dispatch}){
-  const ownerItems=items.filter(i=>i.owner?.id===owner.id);
-  const grade=getGrade(owner.rentals||0);
-  return <div className="ov">
-    <div className="dh"><button className="mx" onClick={onClose} style={{position:"static"}}><I.X/></button><span style={{fontWeight:600}}>Boutique</span></div>
-    <div className="shop-hd">
-      <div className="shop-av" style={{border:`3px solid ${grade.id==="diamond"?"#06B6D4":grade.id==="platinum"?"#7C3AED":grade.id==="gold"?"#FFD700":"var(--bd)"}`}}>{owner.avatarUrl?<img src={owner.avatarUrl} style={{width:"100%",height:"100%",borderRadius:"50%",objectFit:"cover"}} alt=""/>:owner.avatar}</div>
-      <h2 style={{fontFamily:"var(--fd)",fontSize:20}}>{owner.name}</h2>
-      <div style={{display:"flex",gap:8,justifyContent:"center",marginTop:6,fontSize:12,color:"var(--g)"}}>
-        <span>{grade.icon} {grade.name}</span><span>·</span><span>★ {owner.rating}</span><span>·</span><span>{owner.rentals} locations</span><span>·</span><span>Depuis {owner.since}</span>
+/* ═══════════ APP ═══════════ */
+/* « carte » n'existe plus : les anciens liens #/carte retombent sur l'accueil. */
+const ROUTES=["home","favs","messages","profile","create","activite","notifs","avis","grade","plus","params","revenus","legal","detail","auth"];
+/* ═══════════ BLOCAGE TANT QUE L'EMAIL N'EST PAS VÉRIFIÉ ═══════════ */
+function VerifyGate({user,onRefresh,onResend,onLogout}){
+  return <>
+    <header className="hdr"><div className="wrap">
+      <button className="logo"><Logo/><span className="lt">Cercle</span></button>
+    </div></header>
+    <div className="page auth-wrap">
+      <div className="panel" style={{textAlign:"center",padding:34}}>
+        <div className="stamp" style={{position:"static",width:88,height:88,fontSize:9,margin:"0 auto 18px",transform:"rotate(-8deg)"}}><span className="ck" style={{fontSize:24}}>✉</span><span>À VÉRIFIER</span></div>
+        <h1 style={{fontSize:26}}>Confirmez votre adresse</h1>
+        <p style={{fontSize:14,color:"var(--g)",margin:"8px 0 6px",lineHeight:1.6}}>On a envoyé un email à <b style={{color:"var(--dk)"}}>{user.email}</b>. Cliquez sur le lien <b>Confirmer mon adresse</b> pour entrer dans le cercle.</p>
+        <p style={{fontSize:12.5,color:"var(--gl)",marginBottom:20}}>Pensez à regarder dans les spams. Le voisinage, c'est la confiance — on vérifie qui rejoint.</p>
+        <button className="btn btn-green" style={{width:"100%",padding:14}} onClick={onRefresh}>J'ai confirmé — entrer</button>
+        <div style={{display:"flex",gap:10,marginTop:10}}>
+          <button className="btn btn-ghost" style={{flex:1}} onClick={onResend}>Renvoyer l'email</button>
+          <button className="btn btn-ghost" style={{flex:1}} onClick={onLogout}>Se déconnecter</button>
+        </div>
       </div>
-      {owner.verified&&<span className="badge-g" style={{background:"#ECFDF5",color:"var(--acc)",margin:"8px auto 0"}}>✓ Vérifié</span>}
-      <p style={{fontSize:12,color:"var(--g)",marginTop:6}}>{owner.bio}</p>
     </div>
-    <div style={{padding:20}}>
-      <h3 style={{fontFamily:"var(--fd)",fontSize:16,marginBottom:12}}>{ownerItems.length} annonces</h3>
-      <div className="grid" style={{padding:0}}>{ownerItems.map(i=><Card key={i.id} item={i} onOpen={onOpen} favs={state.favorites} dispatch={dispatch}/>)}</div>
-    </div>
-  </div>
+  </>;
 }
 
-/* ===== WALLET ===== */
-function WalletPage({state,dispatch,setPage}){
-  const[amount,setAmount]=useState("");
-  return <div style={{maxWidth:540,margin:"0 auto",padding:28}}>
-    <button className="cl" style={{marginBottom:14,display:"flex",alignItems:"center",gap:5}} onClick={()=>setPage("profile")}><I.Back/> Retour</button>
-    <h1 style={{fontFamily:"var(--fd)",fontSize:22,marginBottom:16}}>💳 Mon Wallet</h1>
-    <div className="wallet-c">
-      <div style={{fontSize:11,opacity:.7,marginBottom:4}}>Solde disponible</div>
-      <div className="wallet-bal">{state.wallet} €</div>
-      <div style={{display:"flex",gap:8,marginTop:14}}>{[10,25,50,100].map(v=><button key={v} style={{flex:1,padding:"8px",background:"rgba(255,255,255,.15)",border:"1px solid rgba(255,255,255,.2)",borderRadius:8,color:"#fff",fontWeight:700,fontSize:13,cursor:"pointer"}} onClick={()=>dispatch({type:"ADD_WALLET",amount:v})}>+{v}€</button>)}</div>
-    </div>
-    <div className="fg"><label>Montant personnalisé</label><div style={{display:"flex",gap:6}}><input type="number" value={amount} onChange={e=>setAmount(e.target.value)} placeholder="Ex: 30"/><button className="bp" style={{fontSize:12,padding:"8px 16px",flexShrink:0}} onClick={()=>{if(+amount>0){dispatch({type:"ADD_WALLET",amount:+amount});setAmount("")}}}>Recharger</button></div></div>
-    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginTop:14}}>
-      <div style={{padding:14,border:"1.5px solid var(--bd)",borderRadius:12,textAlign:"center"}}><div style={{fontSize:10,color:"var(--g)"}}>Crédits parrainage</div><div style={{fontFamily:"var(--fd)",fontSize:20,fontWeight:700,color:"var(--acc)"}}>{state.referrals.reduce((s,r)=>s+r.bonus,0)}€</div></div>
-      <div style={{padding:14,border:"1.5px solid var(--bd)",borderRadius:12,textAlign:"center"}}><div style={{fontSize:10,color:"var(--g)"}}>Total rechargé</div><div style={{fontFamily:"var(--fd)",fontSize:20,fontWeight:700}}>{state.wallet}€</div></div>
-    </div>
-  </div>
-}
+/* Titres d'onglet par page — seul levier de référencement d'une SPA à ancres. */
+const PAGE_TITLES={
+  home:"Cercle — Tout est à deux rues",
+  favs:"Mes favoris — Cercle",
+  messages:"Courrier — Cercle",
+  profile:"Mon profil — Cercle",
+  create:"Proposer un objet — Cercle",
+  activite:"Mon activité — Cercle",
+  notifs:"Notifications — Cercle",
+  avis:"Mes avis — Cercle",
+  grade:"Mon grade — Cercle",
+  plus:"Cercle+ — moins de commission",
+  params:"Paramètres — Cercle",
+  revenus:"Revenus & justificatifs — Cercle",
+  legal:"Textes légaux — Cercle",
+  auth:"Connexion — Cercle",
+};
 
-/* ===== BADGES ===== */
-const ALL_BADGES=[
-  {id:"first_rental",name:"Première location",icon:"🎉",desc:"Réservez votre premier objet"},
-  {id:"explorer",name:"Explorateur",icon:"🔍",desc:"Consultez 10 annonces"},
-  {id:"social",name:"Social",icon:"💬",desc:"Envoyez votre premier message"},
-  {id:"verified",name:"Vérifié",icon:"✅",desc:"Vérifiez votre identité"},
-  {id:"super_renter",name:"Super locataire",icon:"⭐",desc:"5 locations confirmées"},
-  {id:"ambassador",name:"Ambassadeur",icon:"🎁",desc:"Parrainez un ami"},
-  {id:"collector",name:"Collectionneur",icon:"❤️",desc:"10 favoris"},
-  {id:"reviewer",name:"Critique",icon:"📝",desc:"Laissez votre premier avis"},
-  {id:"big_spender",name:"Gros client",icon:"💎",desc:"Dépensez 500€"},
-  {id:"loyal",name:"Fidèle",icon:"🏆",desc:"Atteignez le grade Or"},
-];
-function BadgesPage({state,setPage}){
-  return <div style={{maxWidth:540,margin:"0 auto",padding:28}}>
-    <button className="cl" style={{marginBottom:14,display:"flex",alignItems:"center",gap:5}} onClick={()=>setPage("profile")}><I.Back/> Retour</button>
-    <h1 style={{fontFamily:"var(--fd)",fontSize:22,marginBottom:6}}>🏅 Mes Badges</h1>
-    <p style={{fontSize:13,color:"var(--g)",marginBottom:16}}>{state.badges.length}/{ALL_BADGES.length} débloqués</p>
-    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-      {ALL_BADGES.map(b=>{const has=state.badges.includes(b.id);return <div key={b.id} style={{padding:16,border:`1.5px solid ${has?"var(--acc)":"var(--bd)"}`,borderRadius:12,textAlign:"center",opacity:has?1:.45,background:has?"#ECFDF5":"var(--w)",transition:"all .2s",animation:has?"popIn .3s ease":"none"}}>
-        <div style={{fontSize:28,marginBottom:4}}>{b.icon}</div>
-        <div style={{fontSize:13,fontWeight:700}}>{b.name}</div>
-        <div style={{fontSize:10,color:"var(--g)",marginTop:2}}>{b.desc}</div>
-        {has&&<div style={{fontSize:9,color:"var(--acc)",fontWeight:700,marginTop:4}}>✓ DÉBLOQUÉ</div>}
-      </div>})}
-    </div>
-  </div>
-}
-
-
-/* ========== MAIN APP ========== */
 function App(){
-  // Persist login
-  const[loaded,setLoaded]=useState(false);
-  const[splash,setSplash]=useState(true);
-  
-  const[state,dispatch]=useReducer(reducer,init);
+  const P=useMemo(loadLS,[]);
   const[page,setPage]=useState("home");
-  const[profTab,setProfTab]=useState("listings");
-  const[cat,setCat]=useState("all");
   const[sel,setSel]=useState(null);
-  const[showF,setShowF]=useState(false);
-  const[showS,setShowS]=useState(false);
-  const[showA,setShowA]=useState(null);
-  const[menu,setMenu]=useState(false);
-  const[q,setQ]=useState("");const[lq,setLq]=useState("");
-  const[toasts,setToasts]=useState([]);
-  const addToast=(text,type='i')=>{const id=uid();setToasts(t=>[...t,{id,text,type}]);setTimeout(()=>setToasts(t=>t.filter(x=>x.id!==id)),3500)};
-  const[showOnboarding,setShowOnboarding]=useState(()=>{try{return!localStorage.getItem('cercle_ob')}catch{return true}});
-  const[cid,setCid]=useState(null);
-  const[dark,setDark]=useState(false);
-  useEffect(()=>{document.body.classList.toggle('dark',dark);document.documentElement.classList.toggle('dark',dark)},[dark]);
-  const[mode,setMode]=useState('perso'); // 'perso' or 'pro'
-  const[showChat,setShowChat]=useState(false);
-  const[showGallery,setShowGallery]=useState(null);
-  const[showShop,setShowShop]=useState(null);
-  const[infoPage,setInfoPage]=useState(null);
-  const[pushNotif,setPushNotif]=useState(null);
-  const[lang,setLang]=useState('fr');
-  const[filters,setFilters]=useState({priceMin:0,priceMax:500,condition:"Tous",options:[],sort:"pertinence",filterCat:"all",minRating:0});
+  const[cat,setCat]=useState("all");
+  const[q,setQ]=useState("");
+  const[fav,setFav]=useState(()=>new Set(P.fav||[]));
+  const[dark,setDark]=useState(P.dark||false);
+  const[toastMsg,setToastMsg]=useState(null);
+  const[legal,setLegal]=useState("cgu");
+  const[cookie,setCookie]=useState(()=>{try{return localStorage.getItem("cercle_cookie")||""}catch(e){return ""}});
+  const[nudgeHide,setNudgeHide]=useState(false);
+  const[notifs,setNotifs]=useState(P.notifs||[]);
+  const[readNotifs,setReadNotifs]=useState(()=>new Set(P.readNotifs||[])); // ids de notifs réelles déjà lues
+  const[myItems,setMyItems]=useState(P.myItems||[]);
+  const[resas,setResas]=useState(P.resas||[]);
+  const[reviews,setReviews]=useState(P.reviews||[]);
+  const[convs,setConvs]=useState(P.convs||[]);
+  const[plus,setPlus]=useState(P.plus||false);
+  const[user,setUser]=useState(fbAuth()?null:(P.user||null));
+  const[openConv,setOpenConv]=useState(null);
+  const[fbItems,setFbItems]=useState([]);
+  const[fbReviews,setFbReviews]=useState([]);
+  const[fbResas,setFbResas]=useState([]);      // mes réservations (côté locataire)
+  const[fbRequests,setFbRequests]=useState([]); // demandes reçues (côté propriétaire)
+  const[fbConvs,setFbConvs]=useState([]);       // conversations réelles (Firestore)
+  const items=useMemo(()=>fbDb()?[...fbItems,...myItems,...ITEMS]:[...myItems,...ITEMS],[fbItems,myItems]);
+  /* avis : ceux du serveur (cross-utilisateurs) + ceux écrits localement, dédupliqués */
+  const allReviews=useMemo(()=>{const seen=new Set(),out=[];for(const r of [...fbReviews,...reviews]){if(r&&!seen.has(r.id)){seen.add(r.id);out.push(r);}}return out;},[fbReviews,reviews]);
+  /* réservations affichées au locataire : celles du serveur (réelles) + les démos locales */
+  const allResas=useMemo(()=>[...fbResas,...resas],[fbResas,resas]);
+  /* conversations affichées : réelles (Firestore) + démos locales */
+  const allConvs=useMemo(()=>[...fbConvs,...convs],[fbConvs,convs]);
+  /* mes annonces réelles (publiées par moi) */
+  const myListings=useMemo(()=>{const uid=user&&user.uid;return uid?items.filter(i=>i.uid===uid):[];},[items,user&&user.uid]);
+  /* statistiques réelles dérivées des données live */
+  const stats=useMemo(()=>{
+    const confirmed=fbRequests.filter(r=>r.status==="confirmed"||r.status==="completed");
+    const gain=r=>(+r.base||((+r.total||0)-(+r.fee||0))||0); // montant perçu par le propriétaire
+    const revenus=Math.round(confirmed.reduce((s,r)=>s+gain(r),0));
+    const myIds=new Set(myListings.map(i=>i.id));
+    const recv=allReviews.filter(r=>myIds.has(r.itemId));
+    const note=recv.length?recv.reduce((s,r)=>s+(r.note||0),0)/recv.length:0;
+    const now=new Date(),months=[];
+    for(let k=5;k>=0;k--){const dt=new Date(now.getFullYear(),now.getMonth()-k,1);months.push({key:dt.getFullYear()+"-"+dt.getMonth(),m:dt.toLocaleDateString("fr-FR",{month:"short"}).replace(".",""),v:0});}
+    confirmed.forEach(r=>{const t=r.createdAt&&r.createdAt.seconds?new Date(r.createdAt.seconds*1000):null;if(!t)return;const key=t.getFullYear()+"-"+t.getMonth();const b=months.find(x=>x.key===key);if(b)b.v+=gain(r);});
+    months.forEach(m=>m.v=Math.round(m.v));
+    if(months.length)months[months.length-1].cur=true;
+    const perItem={};confirmed.forEach(r=>{perItem[r.it.id]=(perItem[r.it.id]||0)+1;});
+    return {revenus,locations:confirmed.length,annonces:myListings.length,avisCount:recv.length,note,months,rentals:confirmed.length,perItem,confirmed};
+  },[fbRequests,myListings,allReviews]);
+  const itemsRef=useRef(items);useEffect(()=>{itemsRef.current=items},[items]);
 
-  const allPerso=useMemo(()=>[...state.items,...state.userItems].filter(i=>!i.isPro),[state.items,state.userItems]);
-  const allPro=useMemo(()=>[...state.proItems,...state.userItems.filter(i=>i.isPro)],[state.proItems,state.userItems]);
-  const all=mode==='pro'?allPro:allPerso;
-  const unread=state.notifications.filter(n=>!n.read).length;
+  /* persistance */
+  useEffect(()=>{saveLS({fav:[...fav],dark,notifs,readNotifs:[...readNotifs],myItems,resas,reviews,convs,plus,user})},[fav,dark,notifs,readNotifs,myItems,resas,reviews,convs,plus,user]);
+  useEffect(()=>{document.documentElement.classList.toggle("dark",dark)},[dark]);
+  /* Firebase : restauration de session */
+  useEffect(()=>{
+    const a=fbAuth();if(!a)return;
+    return a.onAuthStateChanged(fu=>{ if(fu)setUser(u=>u||fbUserToUser(fu)); else setUser(null); });
+  },[]);
+  /* Firebase : récupère les infos du membre (adresse, téléphone) depuis Firestore */
+  useEffect(()=>{
+    const d=fbDb();if(!d||!user||!user.uid)return;
+    d.collection("users").doc(user.uid).get().then(doc=>{
+      if(!doc.exists)return;const x=doc.data();
+      setUser(u=>{if(!u||u.uid!==user.uid)return u;const n={...u};if(x.quartier)n.quartier=x.quartier;if(x.phone&&!u.phone)n.phone=x.phone;if(isFinite(+x.lat)&&isFinite(+x.lon)){n.lat=+x.lat;n.lon=+x.lon;}if(x.pro!==undefined)n.pro=!!x.pro;if(x.company)n.company=x.company;if(x.siret)n.siret=x.siret;return n;});
+    }).catch(()=>{});
+  },[user&&user.uid]);
+  /* met à jour l'adresse (paramètres) — stocke aussi les coords si fournies (carte instantanée) */
+  const saveQuartier=async(q,ll)=>{
+    const valid=ll&&isFinite(+ll[0])&&isFinite(+ll[1]);
+    setUser(u=>u?{...u,quartier:q,...(valid?{lat:+ll[0],lon:+ll[1]}:{})}:u);
+    const d=fbDb();if(d&&user&&user.uid){try{await d.collection("users").doc(user.uid).set(valid?{quartier:q,lat:+ll[0],lon:+ll[1]}:{quartier:q},{merge:true})}catch(_){}}
+    toast("Adresse mise à jour");
+  };
+  /* met à jour nom + téléphone (paramètres) */
+  const saveProfile=async({name,phone})=>{
+    name=(name||"").trim();phone=(phone||"").trim();
+    setUser(u=>u?{...u,name:name||u.name,phone}:u);
+    const a=fbAuth(),fu=a&&a.currentUser;
+    if(fu&&name){try{await fu.updateProfile({displayName:name})}catch(_){}}
+    const d=fbDb();if(d&&user&&user.uid){try{await d.collection("users").doc(user.uid).set({name:name||user.name,phone},{merge:true})}catch(_){}}
+    toast("Profil mis à jour");
+  };
+  /* recharge l'état de vérification email */
+  const refreshVerif=async()=>{
+    const a=fbAuth();const fu=a&&a.currentUser;if(!fu)return;
+    try{await fu.reload()}catch(_){}
+    if(fu.emailVerified){setUser(u=>u?{...u,verified:true}:u);toast("Adresse confirmée — bienvenue !");}
+    else toast("Pas encore confirmée — cliquez le lien reçu par email");
+  };
+  /* Firebase : annonces partagées (Firestore) */
+  useEffect(()=>{
+    const d=fbDb();if(!d)return;
+    try{
+      return d.collection("v2_listings").orderBy("createdAt","desc").limit(40).onSnapshot(snap=>{
+        const arr=[];snap.forEach(doc=>{const x=doc.data();const sd=x.seed||"voisin1";
+          const img=(x.imgs&&x.imgs.length)?x.imgs:imgsFromSeed(sd);
+          arr.push({id:doc.id,t:x.t,c:x.c,p:x.p,d:x.d,img,own:x.own||"Voisin",city:x.city||"rue du Sablon",note:(x.note==null?0:x.note),rev:x.rev||0,cau:x.cau||0,uid:x.uid||"",booked:x.booked||[],needsLicense:!!x.needsLicense,ownerPro:!!x.ownerPro,ownerCompany:x.ownerCompany||""});});
+        setFbItems(arr);
+      },err=>console.warn("[Cercle] Firestore lecture indisponible:",err&&err.code));
+    }catch(e){console.warn("[Cercle] Firestore off:",e&&e.code)}
+  },[]);
+  /* Firebase : avis partagés (Firestore) — repli silencieux si règles absentes */
+  useEffect(()=>{
+    const d=fbDb();if(!d)return;
+    try{
+      return d.collection("v2_reviews").orderBy("createdAt","desc").limit(60).onSnapshot(snap=>{
+        const arr=[];snap.forEach(doc=>{const x=doc.data();
+          arr.push({id:doc.id,itemId:x.itemId,itemTitle:x.itemTitle,owner:x.owner,note:x.note||5,txt:x.txt||"",by:x.by||"Voisin",when:x.when||"récemment"});});
+        setFbReviews(arr);
+      },err=>console.warn("[Cercle] avis Firestore indisponibles:",err&&err.code));
+    }catch(e){console.warn("[Cercle] avis off:",e&&e.code)}
+  },[]);
+  /* mapping doc réservation → objet d'affichage */
+  const resaView=(id,x)=>{const st=x.status==="completed"?"fini":x.status==="declined"?"refus":"a-venir";
+    const lbl=x.status==="confirmed"?"✓ Confirmée":x.status==="declined"?"Refusée":x.status==="completed"?"Terminée":"⏳ En attente";
+    const total=+x.total||0,fee=+x.fee||0,base=+x.base||(total-fee)||total;
+    return {id,fs:true,status:x.status,it:{id:x.itemId,t:x.itemTitle,img:imgsFromSeed(x.itemSeed||"voisin1"),own:x.ownerName||"Voisin"},
+      range:x.range||"",total,base,fee,pricePerDay:+x.pricePerDay||0,days:x.days||0,startDate:x.startDate||"",endDate:x.endDate||"",license:x.license||"",createdAt:x.createdAt,renterName:x.renterName||"Voisin",renterUid:x.renterUid,st,lbl};};
+  /* Firebase : mes réservations (côté locataire) */
+  useEffect(()=>{
+    const d=fbDb();if(!d||!user||!user.uid)return;
+    try{
+      return d.collection("v2_reservations").where("renterUid","==",user.uid).onSnapshot(snap=>{
+        const arr=[];snap.forEach(doc=>arr.push(resaView(doc.id,doc.data())));
+        arr.sort((a,b)=>(b.id>a.id?1:-1));setFbResas(arr);
+      },err=>console.warn("[Cercle] réservations indisponibles:",err&&err.code));
+    }catch(e){console.warn("[Cercle] réservations off:",e&&e.code)}
+  },[user&&user.uid]);
+  /* Firebase : demandes reçues (côté propriétaire) */
+  useEffect(()=>{
+    const d=fbDb();if(!d||!user||!user.uid)return;
+    try{
+      return d.collection("v2_reservations").where("ownerUid","==",user.uid).onSnapshot(snap=>{
+        const arr=[];snap.forEach(doc=>arr.push(resaView(doc.id,doc.data())));
+        arr.sort((a,b)=>(b.id>a.id?1:-1));setFbRequests(arr);
+      },err=>console.warn("[Cercle] demandes indisponibles:",err&&err.code));
+    }catch(e){console.warn("[Cercle] demandes off:",e&&e.code)}
+  },[user&&user.uid]);
+  /* Firebase : conversations réelles (où je suis membre) */
+  useEffect(()=>{
+    const d=fbDb();if(!d||!user||!user.uid)return;
+    try{
+      return d.collection("v2_conversations").where("members","array-contains",user.uid).onSnapshot(snap=>{
+        const arr=[];snap.forEach(doc=>{const x=doc.data();const other=(x.members||[]).find(u=>u!==user.uid)||"";
+          arr.push({id:doc.id,fs:true,who:(x.names&&x.names[other])||"Voisin",otherUid:other,last:x.last||"Nouvelle conversation",when:"",lastAt:x.lastAt,lastFrom:x.lastFrom||""});});
+        arr.sort((a,b)=>((b.lastAt&&b.lastAt.seconds||0)-(a.lastAt&&a.lastAt.seconds||0)));setFbConvs(arr);
+      },err=>console.warn("[Cercle] conversations indisponibles:",err&&err.code));
+    }catch(e){console.warn("[Cercle] conversations off:",e&&e.code)}
+  },[user&&user.uid]);
 
-  const filtered=useMemo(()=>{
-    let r=all;
-    if(cat!=="all")r=r.filter(i=>i.cat===cat);
-    if(filters.filterCat&&filters.filterCat!=="all")r=r.filter(i=>i.cat===filters.filterCat);
-    if(q){const s=q.toLowerCase();r=r.filter(i=>i.title.toLowerCase().includes(s)||i.cat.includes(s)||i.location.toLowerCase().includes(s))}
-    if(lq){const s=lq.toLowerCase();r=r.filter(i=>i.location.toLowerCase().includes(s))}
-    r=r.filter(i=>i.price>=filters.priceMin&&i.price<=filters.priceMax);
-    if(filters.condition!=="Tous")r=r.filter(i=>i.condition===filters.condition);
-    if(filters.minRating>0)r=r.filter(i=>i.rating>=filters.minRating);
-    if((filters.options||[]).includes("Propriétaire vérifié"))r=r.filter(i=>i.owner?.verified);
-    // Sort
-    if(filters.sort==="price_asc")r=[...r].sort((a,b)=>a.price-b.price);
-    else if(filters.sort==="price_desc")r=[...r].sort((a,b)=>b.price-a.price);
-    else if(filters.sort==="rating")r=[...r].sort((a,b)=>b.rating-a.rating);
-    return r;
-  },[all,cat,q,lq,filters]);
+  /* actions */
+  const toast=m=>{setToastMsg(m);setTimeout(()=>setToastMsg(null),2600)};
+  const togFav=id=>setFav(f=>{const n=new Set(f);n.has(id)?n.delete(id):n.add(id);return n});
+  const open=it=>{setSel(it);setPage("detail")};
+  const goHome=()=>{setPage("home");setSel(null)};
+  const addNotif=n=>setNotifs(ns=>[{id:Date.now(),when:"à l'instant",unread:true,...n},...ns]);
+  /* notifications RÉELLES dérivées des données live (aucune collection/règle en plus) */
+  const realNotifs=useMemo(()=>{
+    const out=[];const uid=user&&user.uid;
+    fbRequests.forEach(r=>{if(r.status==="pending")out.push({id:"req-"+r.id,k:"resa",txt:`${r.renterName} souhaite réserver « ${r.it.t} » (${r.total} €).`,when:"récemment"});});
+    fbResas.forEach(r=>{if(r.status==="confirmed")out.push({id:"resa-"+r.id+"-c",k:"resa",txt:`Votre réservation de « ${r.it.t} » est confirmée ✓`,when:"récemment"});
+      else if(r.status==="declined")out.push({id:"resa-"+r.id+"-d",k:"info",txt:`Votre demande pour « ${r.it.t} » a été déclinée.`,when:"récemment"});});
+    fbConvs.forEach(c=>{if(c.lastFrom&&c.lastFrom!==uid)out.push({id:"msg-"+c.id+"-"+((c.lastAt&&c.lastAt.seconds)||0),k:"msg",txt:`Nouveau message de ${c.who} : « ${c.last} »`,when:"récemment"});});
+    return out.map(n=>({...n,unread:!readNotifs.has(n.id),real:true}));
+  },[fbRequests,fbResas,fbConvs,readNotifs,user&&user.uid]);
+  const allNotifs=useMemo(()=>[...realNotifs,...notifs],[realNotifs,notifs]);
+  const markRead=id=>{setReadNotifs(s=>{const n=new Set(s);n.add(id);return n});setNotifs(ns=>ns.map(n=>n.id===id?{...n,unread:false}:n));};
+  const markAll=()=>{setReadNotifs(s=>{const n=new Set(s);realNotifs.forEach(r=>n.add(r.id));return n});setNotifs(ns=>ns.map(n=>({...n,unread:false})));};
+  const openLegal=id=>{setLegal(id);setPage("legal")};
+  const chooseCookie=v=>{try{localStorage.setItem("cercle_cookie",v)}catch(e){}setCookie(v);};
+  const unread=allNotifs.filter(n=>n.unread).length;
+  const addItem=async({t,c,p,d,imgs,img,cau,needsLicense})=>{
+    const nl=!!needsLicense;const isPro=!!(user&&user.pro);const ownerCo=(user&&user.company)||"";
+    const arr=(imgs&&imgs.length?imgs:[img||("voisin"+(Date.now()%9973))]).slice(0,4);
+    const sd=arr[0];
+    const dd=d||"Proposé par un voisin du Sablon, avec soin.";
+    const cc=Math.min(CAUTION_MAX,Math.max(0,+cau||0));
+    const db=fbDb();
+    if(db&&user){
+      try{
+        await db.collection("v2_listings").add({t,c,p,d:dd,seed:sd,imgs:arr,cau:cc,needsLicense:nl,ownerPro:isPro,ownerCompany:ownerCo,own:user.name||"Voisin",uid:user.uid||"",city:"rue du Sablon",note:0,rev:0,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+        addNotif({k:"info",txt:`Votre annonce « ${t} » est en ligne dans le cercle.`});
+        return;
+      }catch(e){console.warn("[Cercle] écriture Firestore échouée, repli local:",e&&e.code);}
+    }
+    const it={id:"u"+Date.now(),t,c,p,img:arr,own:"Vous",city:"rue du Sablon",note:0,rev:0,d:dd,cau:cc,uid:user&&user.uid||"",needsLicense:nl,ownerPro:isPro,ownerCompany:ownerCo};
+    setMyItems(m=>[it,...m]);
+    addNotif({k:"info",txt:`Votre annonce « ${t} » est en ligne dans le cercle.`});
+  };
+  const reserve=(it,days,tot,base,fee,range,startDate,endDate,license)=>{
+    range=range||`${days} jour${days>1?"s":""}`;
+    base=+base||+it.p*days||0;fee=+fee||0;tot=+tot||base+fee;
+    const db=fbDb();
+    if(db&&user){
+      db.collection("v2_reservations").add({itemId:it.id,itemTitle:it.t,itemSeed:it.img&&it.img[0]||"voisin1",
+        ownerName:it.own||"Voisin",ownerUid:it.uid||"",renterUid:user.uid||"",renterName:user.name||"Voisin",
+        days,pricePerDay:+it.p||0,base,fee,total:tot,range,startDate:startDate||"",endDate:endDate||"",license:license||"",status:"pending",createdAt:firebase.firestore.FieldValue.serverTimestamp()})
+        .catch(e=>{console.warn("[Cercle] réservation Firestore échouée, repli local:",e&&e.code);
+          setResas(rs=>[{id:Date.now(),it,range,st:"a-venir",lbl:"⏳ En attente"},...rs]);});
+    }else{
+      setResas(rs=>[{id:Date.now(),it,range,st:"a-venir",lbl:"⏳ En attente"},...rs]);
+    }
+    addNotif({k:"resa",txt:`Demande envoyée à ${it.own} pour « ${it.t} » (${tot} €) — débit à sa confirmation.`});
+    toast("Demande envoyée à "+it.own+" — suivez-la dans Mon activité");
+  };
+  /* propriétaire : répondre à une demande reçue */
+  const answerRequest=(r,accept)=>{
+    const d=fbDb();if(!d)return;
+    const id=r&&r.id?r.id:r; // tolère un id brut
+    d.collection("v2_reservations").doc(id).update({status:accept?"confirmed":"declined"})
+      .then(()=>{
+        addNotif({k:"resa",txt:accept?"Vous avez accepté une demande de réservation.":"Vous avez décliné une demande."});
+        toast(accept?"Réservation confirmée ✓":"Demande déclinée");
+        /* bloque la période sur l'annonce (lisible par tous) */
+        if(accept&&r&&r.it&&r.it.id&&r.startDate&&r.endDate){
+          d.collection("v2_listings").doc(r.it.id).update({booked:firebase.firestore.FieldValue.arrayUnion({start:r.startDate,end:r.endDate})}).catch(()=>{});
+        }
+      })
+      .catch(e=>{console.warn("[Cercle] réponse demande échouée:",e&&e.code);toast("Action impossible — réessayez");});
+  };
+  /* locataire : marquer la location comme rendue (→ débloque l'avis) */
+  const completeRental=r=>{
+    if(r&&r.fs){
+      const d=fbDb();if(!d)return;
+      d.collection("v2_reservations").doc(r.id).update({status:"completed"})
+        .then(()=>{addNotif({k:"resa",txt:`Location de « ${r.it.t} » terminée — vous pouvez laisser un avis.`});toast("Location terminée ✓");})
+        .catch(e=>{console.warn("[Cercle] clôture location échouée:",e&&e.code);toast("Action impossible — réessayez");});
+    }else if(r){
+      setResas(rs=>rs.map(x=>x.id===r.id?{...x,st:"fini",lbl:"Terminée"}:x));
+      addNotif({k:"resa",txt:`Location de « ${r.it.t} » terminée — vous pouvez laisser un avis.`});toast("Location terminée ✓");
+    }
+  };
+  const addReview=({itemId,itemTitle,owner,note,txt})=>{
+    const rv={id:"r"+Date.now(),itemId,itemTitle,owner,note,txt:txt.trim(),by:(user&&user.name)||"Vous",when:"juin 2026"};
+    setReviews(rs=>[rv,...rs]);
+    addNotif({k:"avis",txt:`Vous avez laissé un avis ${"★".repeat(note)} sur « ${itemTitle} ».`});
+    toast("Merci pour votre avis !");
+    /* écriture Firestore best-effort (active dès que les règles v2_reviews existent) */
+    const db=fbDb();
+    if(db&&user)db.collection("v2_reviews").add({itemId,itemTitle,owner,note,txt:rv.txt,by:rv.by,when:rv.when,uid:user.uid||"",createdAt:firebase.firestore.FieldValue.serverTimestamp()}).catch(()=>{});
+  };
+  /* openChat accepte un nom (démo) ou un objet annonce (avec uid → vraie conversation Firestore) */
+  const openChat=arg=>{
+    const d=fbDb();
+    const ownerUid=arg&&typeof arg==="object"?(arg.uid||""):"";
+    const ownerName=arg&&typeof arg==="object"?(arg.own||"Voisin"):arg;
+    /* vraie conversation entre deux membres réels */
+    if(d&&user&&user.uid&&ownerUid&&ownerUid!==user.uid){
+      const members=[user.uid,ownerUid].sort();const cid=members.join("_");
+      d.collection("v2_conversations").doc(cid).set({members,names:{[user.uid]:user.name||"Voisin",[ownerUid]:ownerName},
+        last:"Nouvelle conversation",lastAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true})
+        .catch(e=>console.warn("[Cercle] ouverture conversation échouée:",e&&e.code));
+      setOpenConv(cid);setPage("messages");return;
+    }
+    /* repli local : propriétaire de démo (sans compte) ou Firestore indisponible */
+    const target=ownerName==="Vous"?"Léa":ownerName;
+    let cv=convs.find(c=>c.who===target);
+    if(!cv){cv={id:"c"+Date.now(),who:target,last:"Nouvelle conversation",when:"maintenant",msgs:[]};setConvs(cs=>[cv,...cs]);}
+    setOpenConv(cv.id);setPage("messages");
+  };
+  const subscribe=()=>{
+    if(plus){toast("Vous êtes déjà membre Cercle+ ✦");return}
+    setPlus(true);
+    addNotif({k:"info",txt:"Bienvenue dans Cercle+ ✦ — vos frais de service passent à 10 %."});
+    toast("Abonnement Cercle+ activé ✦");
+  };
+  const go=p=>{if(p!=="messages")setOpenConv(null);setPage(p)};
+  const onAuth=u=>{setUser(u);addNotif({k:"info",txt:`Bienvenue dans le cercle, ${u.name} — profil vérifié ✓`});toast("Bienvenue, "+u.name+" !");go("home")};
+  const logout=()=>{const a=fbAuth();if(a)try{a.signOut()}catch(e){}setUser(null);toast("À bientôt dans le quartier");go("home")};
+  /* RGPD : export de mes données (téléchargement JSON) */
+  const exportData=()=>{
+    const data={exportéLe:new Date().toISOString(),profil:user||null,
+      mesAnnonces:myListings,mesAvis:allReviews.filter(r=>user&&r.by===user.name),
+      mesReservations:fbResas,mesDemandesRecues:fbRequests};
+    try{
+      const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+      const url=URL.createObjectURL(blob);const a=document.createElement("a");
+      a.href=url;a.download="mes-donnees-cercle.json";a.click();URL.revokeObjectURL(url);
+      toast("Vos données ont été téléchargées");
+    }catch(e){toast("Export impossible — réessayez")}
+  };
+  /* RGPD : suppression réelle du compte (Auth + Firestore) */
+  const deleteAccount=async()=>{
+    if(!window.confirm("Supprimer définitivement votre compte, vos annonces et vos données ? Cette action est irréversible."))return;
+    const a=fbAuth(),d=fbDb(),fu=a&&a.currentUser;
+    if(!fu){setUser(null);toast("Compte supprimé");go("home");return;}
+    try{
+      if(d&&user&&user.uid){
+        for(const it of myListings){if(it.id&&!/^u\d/.test(it.id)){try{await d.collection("v2_listings").doc(it.id).delete()}catch(_){}}}
+        try{await d.collection("users").doc(user.uid).delete()}catch(_){}
+      }
+      await fu.delete();
+      setUser(null);toast("Votre compte a été supprimé — à bientôt, peut-être.");go("home");
+    }catch(e){
+      if(e&&e.code==="auth/requires-recent-login"){toast("Pour des raisons de sécurité, reconnectez-vous puis réessayez.");logout();}
+      else toast(fbMsg(e));
+    }
+  };
+  const need=fn=>(...a)=>{if(!user){toast("Rejoignez le cercle pour continuer");go("auth");return}return fn(...a)};
 
-  const search=(query,loc)=>{setQ(query);setLq(loc||"");setCat("all");setPage("home")};
-  useEffect(()=>{if(state.notifications.length){const l=state.notifications[0];if(!l.read){const type=l.kind==="badge"?"s":l.kind==="wallet"?"s":l.kind==="referral"?"w":l.kind==="dispute"?"e":"b";addToast(l.text,type);setPushNotif(l);setTimeout(()=>setPushNotif(null),4000)}}},[state.notifications.length]);
-  useEffect(()=>{if(!state.user)return;const b=state.bookings.filter(x=>x.userId===state.user.id);if(b.length>=1&&!state.badges.includes("first_rental"))dispatch({type:"EARN_BADGE",badge:"first_rental"});if(b.length>=5&&!state.badges.includes("super_renter"))dispatch({type:"EARN_BADGE",badge:"super_renter"});if(state.user.verified&&!state.badges.includes("verified"))dispatch({type:"EARN_BADGE",badge:"verified"});if(state.favorites.size>=10&&!state.badges.includes("collector"))dispatch({type:"EARN_BADGE",badge:"collector"});if(state.referrals.length>=1&&!state.badges.includes("ambassador"))dispatch({type:"EARN_BADGE",badge:"ambassador"});if(state.reviews.length>=1&&!state.badges.includes("reviewer"))dispatch({type:"EARN_BADGE",badge:"reviewer"});const gr=getGrade((state.user.rentals||0)+b.length);if(["gold","platinum","diamond"].includes(gr.id)&&!state.badges.includes("loyal"))dispatch({type:"EARN_BADGE",badge:"loyal"})},[state.bookings.length,state.favorites.size,state.referrals.length,state.reviews.length,state.user?.verified]);
-  // Load saved user on mount
-  useEffect(()=>{try{const s=window.storage;if(s){s.get('cercle_user').then(r=>{if(r&&r.value){const u=JSON.parse(r.value);dispatch({type:'LOGIN',payload:u})}}).catch(()=>{}).finally(()=>setLoaded(true))}else setLoaded(true)}catch(e){setLoaded(true)}},[]);
-  // Save user to storage on login/logout
-  useEffect(()=>{try{const s=window.storage;if(s){if(state.user)s.set('cercle_user',JSON.stringify(state.user)).catch(()=>{});else s.delete('cercle_user').catch(()=>{})}}catch(e){}},[state.user]);
-  // Auto-switch mode when pro user logs in
-  useEffect(()=>{if(state.user?.isPro)setMode('pro')},[state.user?.isPro]);
-  useEffect(()=>{const t=setTimeout(()=>setSplash(false),1200);return()=>clearTimeout(t)},[]);
-  const home=()=>{setInfoPage(null);setPage("home");setQ("");setLq("");setCat("all");setSel(null)};
+  /* filtre grille */
+  const filtered=useMemo(()=>items.filter(i=>(cat==="all"||i.c===cat)&&(!q||i.t.toLowerCase().includes(q.toLowerCase()))),[items,cat,q]);
+  useReveal([page,cat,q]);
+  useEffect(()=>{if(page!=="detail")window.scrollTo({top:0,behavior:"instant"})},[page]);
 
-  return <Ctx.Provider value={{dark,setDark,lang,setLang}}><div className={(dark?"dark":"")}><style>{css}</style>
-    {/* Splash Screen */}
-    {splash&&<div className="splash" style={{opacity:1,transition:"opacity .5s"}}><div className="splash-logo">C</div><h2>Cercle</h2><p>Location entre particuliers & pros</p></div>}
-    {page!=="messages"&&page!=="notifs"&&page!=="dashboard"&&page!=="referral"&&page!=="verify"&&page!=="dispute"&&page!=="wallet"&&page!=="badges"&&<header className={"hdr"+(mode==="pro"?" pro-hdr":"")}><div className="hi">
-      <a className="logo" onClick={home}><div className="lc">{mode==='pro'?'P':'C'}</div><span className="lt">{mode==='pro'?'Cercle Pro':'Cercle'}</span></a>
-      <div className="mode-sw">
-        <button className={"mode-btn"+(mode==='perso'?' on':'')} onClick={()=>setMode('perso')}>👤 Particulier</button>
-        <button className={"mode-btn"+(mode==='pro'?' pro-on':'')} onClick={()=>setMode('pro')}>🏢 Professionnel</button>
+  /* titre d'onglet suivant la page — la fiche annonce prend le nom de l'objet */
+  useEffect(()=>{
+    document.title=page==="detail"&&sel?`${sel.t} — Cercle`:(PAGE_TITLES[page]||PAGE_TITLES.home);
+  },[page,sel]);
+
+  /* routing navigateur (hash + back/forward) */
+  const popRef=useRef(false);
+  useEffect(()=>{
+    const h=(location.hash.slice(2)||"").split("/");
+    if(h[0]==="detail"&&h[1]){const it=itemsRef.current.find(i=>i.id===h[1]);if(it){setSel(it);setPage("detail");return}}
+    if(ROUTES.includes(h[0]))setPage(h[0]);
+  },[]);
+  useEffect(()=>{
+    if(popRef.current){popRef.current=false;return}
+    const target=page==="detail"&&sel?`#/detail/${sel.id}`:`#/${page}`;
+    if(location.hash!==target)history.pushState(null,"",target);
+  },[page,sel]);
+  useEffect(()=>{
+    const onPop=()=>{
+      popRef.current=true;
+      const h=(location.hash.slice(2)||"home").split("/");
+      if(h[0]==="detail"&&h[1]){const it=itemsRef.current.find(i=>i.id===h[1]);if(it){setSel(it);setPage("detail");return}}
+      setPage(ROUTES.includes(h[0])?h[0]:"home");
+    };
+    window.addEventListener("popstate",onPop);
+    return()=>window.removeEventListener("popstate",onPop);
+  },[]);
+
+  /* transition de page GSAP */
+  useEffect(()=>{
+    if(typeof gsap==="undefined"||reduced())return;
+    gsap.fromTo("#pagewrap",{autoAlpha:0,y:12},{autoAlpha:1,y:0,duration:.32,ease:"power2.out",clearProps:"all"});
+  },[page]);
+
+  const NavBtn=({id,label})=><button className={page===id?"on":""} onClick={()=>go(id)}>{label}</button>;
+  if(user&&fbAuth()&&user.verified===false)
+    return <VerifyGate user={user} onRefresh={refreshVerif} onLogout={logout}
+      onResend={async()=>{const fu=fbAuth().currentUser;if(fu){await sendVerif(fu,user.name||"voisin",user.email);toast("Email de confirmation renvoyé");}}}/>;
+  return <>
+    <header className="hdr">
+      <div className="wrap">
+        <button className="logo" onClick={goHome} aria-label="Accueil Cercle"><Logo/><span className="lt">Cercle{plus&&<span style={{color:"var(--plus)",fontSize:15,verticalAlign:"super"}}>✦</span>}</span></button>
+        <nav className="nav-d" aria-label="Navigation">
+          <NavBtn id="home" label="Autour"/>
+          <NavBtn id="favs" label="Favoris"/>
+          <NavBtn id="messages" label="Courrier"/>
+          <NavBtn id="profile" label="Profil"/>
+        </nav>
+        <div className="hdr-r">
+          {user&&<button className="icon-btn bell" onClick={()=>go("notifs")} aria-label={"Notifications"+(unread?` (${unread} non lues)`:"")}>
+            <I.bell size={16}/>{unread>0&&<span className="bdg">{unread}</span>}
+          </button>}
+          <button className="icon-btn" onClick={()=>setDark(!dark)} aria-label="Mode nuit">{dark?<I.sun size={16}/>:<I.moon size={16}/>}</button>
+          {user
+            ?<button className="btn btn-ter" onClick={()=>go("create")} aria-label="Proposer un objet"><I.plus size={14}/><span className="cta-txt">Proposer un objet</span></button>
+            :<button className="btn btn-ter" onClick={()=>go("auth")} aria-label="Rejoindre le cercle"><I.user size={14}/><span className="cta-txt">Rejoindre le cercle</span></button>}
+          {user&&<button className="icon-btn" onClick={()=>go("profile")} aria-label="Mon profil" style={{background:"var(--p)",color:"#fff",borderColor:"var(--p)",fontWeight:800,fontFamily:"var(--fd)",overflow:"hidden",padding:0}}>{user.photo?<img src={user.photo} alt=""/>:user.name[0].toUpperCase()}</button>}
+        </div>
       </div>
-      <div className="sb" onClick={()=>setShowS(true)}><div className="ss"><span style={{marginRight:4}}>🔍</span>{q||"Rechercher un objet..."}</div><div className="ss m">{lq||"Partout"}</div><div className="ss m">Quand ?</div><button className="sbb"><I.Search/></button></div>
-      <div className="nr">
-        {state.user&&<button className="nb" onClick={()=>setPage("create")}><I.Plus/> Proposer</button>}
-        {state.user&&<button className="nb" onClick={()=>{setPage("messages");dispatch({type:"READ_N"})}}><I.Msg/>{unread>0&&<span className="ndot"/>}</button>}
-        <button className="pb" onClick={()=>setMenu(!menu)} style={{position:"relative"}}>
-          <I.Menu/><div className="pav">{state.user?state.user.avatar:<I.User/>}</div>
-          {menu&&<div className="dd" onClick={e=>e.stopPropagation()}>
-            {state.user?<><div className="di b" onClick={()=>{setProfTab("listings");setPage("profile");setMenu(false)}}>👤 Mon profil</div><div className="di" onClick={()=>{setPage("messages");setMenu(false);dispatch({type:"READ_N"})}}>💬 Messages{unread>0&&<span style={{background:"var(--p)",color:"#fff",borderRadius:8,padding:"1px 6px",fontSize:10,fontWeight:700,marginLeft:4}}>{unread}</span>}</div><div className="di" onClick={()=>{setProfTab("favorites");setPage("profile");setMenu(false)}}>❤️ Favoris</div><div className="di" onClick={()=>{setProfTab("bookings");setPage("profile");setMenu(false)}}>📅 Réservations</div><div className="di" onClick={()=>{setPage("create");setMenu(false)}}>➕ Proposer</div>
-              <div className="di" onClick={()=>{setPage("dashboard");setMenu(false)}}>📊 Dashboard</div>
-              <div className="di" onClick={()=>{setPage("referral");setMenu(false)}}>⭐ Parrainage</div>
-              <div className="di" onClick={()=>{setPage("notifs");setMenu(false);dispatch({type:"READ_N"})}}>🔔 Notifications{unread>0&&<span style={{background:"var(--p)",color:"#fff",borderRadius:8,padding:"1px 6px",fontSize:10,fontWeight:700}}>{unread}</span>}</div>
-              <div className="dsp"/>
-              <div className="di" onClick={()=>{setPage("wallet");setMenu(false)}}>💳 Wallet · {state.wallet}€</div>
-              <div className="di" onClick={()=>{setPage("badges");setMenu(false)}}>🏅 Badges · {state.badges.length}/{ALL_BADGES.length}</div>
-              <div className="di" onClick={()=>{setPage("verify");setMenu(false)}}>🆔 Vérifier identité</div>
-              <div className="di" onClick={()=>{setPage("dispute");setMenu(false)}}>⚖️ Litiges</div>
-              <div className="di" onClick={()=>{setDark(!dark);setMenu(false)}}>{dark?"☀️ Mode clair":"🌙 Mode sombre"}</div>
-              <div className="di" onClick={()=>{const ls=["fr","en","es"];setLang(ls[(ls.indexOf(lang)+1)%3]);setMenu(false)}}>🌐 {LANGS[lang]}</div>
-              <div className="dsp"/><div className="di" onClick={()=>{dispatch({type:"LOGOUT"});setMenu(false);home()}}>🚪 Déconnexion</div></>:
-            <><div className="di b" onClick={()=>{setShowA("login");setMenu(false)}}>Se connecter</div><div className="di" onClick={()=>{setShowA("register");setMenu(false)}}>S'inscrire</div></>}
-          </div>}
-        </button>
+    </header>
+
+    <div id="pagewrap">
+    {page==="home"&&<>
+      {user&&!nudgeHide&&(!user.quartier||!user.phone)&&<div className="wrap"><div className="nudge">
+        <span style={{fontSize:20}}>👋</span>
+        <div style={{flex:1,minWidth:160}}><b style={{color:"var(--dk)"}}>Complétez votre profil</b><div style={{fontSize:12.5,color:"var(--g)"}}>Ajoutez votre adresse et votre téléphone (30 s) pour des locations plus fluides.</div></div>
+        <button className="btn btn-ter" style={{minHeight:38,padding:"8px 16px",fontSize:13}} onClick={()=>go("params")}>Compléter</button>
+        <button className="icon-btn" style={{width:34,height:34}} aria-label="Plus tard" onClick={()=>setNudgeHide(true)}>✕</button>
+      </div></div>}
+      <Hero items={items} user={user} open={open} onSearch={v=>{setQ(v);document.getElementById("grille")?.scrollIntoView({behavior:reduced()?"instant":"smooth"})}}/>
+      <div className="cats" role="tablist" aria-label="Catégories">
+        {CATS.map(c=><button key={c.id} role="tab" aria-selected={cat===c.id} className={"cat"+(cat===c.id?" on":"")} onClick={()=>setCat(c.id)}>{c.label}</button>)}
       </div>
+      <main className="wrap" id="grille">
+        <div className="sec-t">Dans votre cercle de 500 m <small>{filtered.length} objet{filtered.length>1?"s":""}{q?` pour « ${q} »`:""}</small>
+          {q&&<button className="back" style={{marginLeft:"auto",marginBottom:0}} onClick={()=>setQ("")}>✕ Effacer</button>}
+        </div>
+        {filtered.length===0
+          ?<div className="empty"><div className="big">Rien trouvé par ici</div>Essayez un autre mot, ou élargissez le cercle.</div>
+          :<div className="grid">{filtered.map(it=><Card key={it.id} it={it} open={open} fav={fav.has(it.id)} togFav={togFav}/>)}</div>}
+        <div className="cta-banner reveal">
+          <div className="big">12 min<small>PAR AN</small></div>
+          <div style={{flex:1,minWidth:240}}>
+            <h3>Une perceuse s'utilise 12 minutes par an.</h3>
+            <p>Le reste du temps, elle dort dans un garage. La vôtre pourrait dépanner toute la rue — et payer vos cafés.</p>
+          </div>
+          <button className="btn btn-ter" style={{padding:"13px 24px"}} onClick={()=>user?go("create"):go("auth")}>Proposer la mienne</button>
+        </div>
+      </main>
+    </>}
+
+    {page==="detail"&&sel&&<Detail it={sel} backHome={goHome} fav={fav.has(sel.id)} togFav={togFav} toast={toast} reserve={need(reserve)} openChat={need(openChat)} plus={plus} reviews={allReviews} rentals={stats.rentals}/>}
+    {page==="create"&&(user?<Create toast={toast} backHome={goHome} addItem={addItem}/>:<Auth onDone={onAuth} toast={toast}/>)}
+    {page==="messages"&&(user?<Messages convs={allConvs} setConvs={setConvs} openId={openConv} setOpenId={setOpenConv} user={user}/>:<Auth onDone={onAuth} toast={toast}/>)}
+    {page==="favs"&&<Favs items={items} open={open} fav={fav} togFav={togFav}/>}
+    {page==="profile"&&(user?<Profile dark={dark} setDark={setDark} toast={toast} go={go} plus={plus} user={user} logout={logout} stats={stats}/>:<Auth onDone={onAuth} toast={toast}/>)}
+    {page==="activite"&&<Activite toast={toast} resas={allResas} requests={fbRequests} answerRequest={answerRequest} completeRental={completeRental} myListings={myListings} stats={stats} reviews={allReviews} addReview={addReview}/>}
+    {page==="notifs"&&<Notifs notifs={allNotifs} markRead={markRead} markAll={markAll}/>}
+    {page==="avis"&&<Avis reviews={allReviews} user={user} myListings={myListings}/>}
+    {page==="grade"&&<Grade plus={plus} rentals={stats.rentals}/>}
+    {page==="revenus"&&(user?<Revenus user={user} stats={stats}/>:<Auth onDone={onAuth} toast={toast}/>)}
+    {page==="plus"&&<Plus toast={toast} plus={plus} subscribe={need(subscribe)}/>}
+    {page==="params"&&<Params dark={dark} setDark={setDark} toast={toast} user={user} plus={plus} logout={logout} saveQuartier={saveQuartier} saveProfile={saveProfile} exportData={exportData} deleteAccount={deleteAccount} openLegal={openLegal}/>}
+    {page==="legal"&&<Legal id={legal}/>}
+    {page==="auth"&&<Auth onDone={onAuth} toast={toast}/>}
     </div>
-    {page==="home"&&<div className="cw"><div className="cts">{CATS.map(c=><div key={c.id} className={"ct"+(cat===c.id?" on":"")} onClick={()=>setCat(c.id)}><span className="cti">{c.icon}</span><span className="ctl">{c.label}</span></div>)}</div><button className="fb" onClick={()=>setShowF(true)}><I.Flt/> Filtres{Object.values(filters).filter(v=>v&&v!=="all"&&v!=="pertinence"&&v!==0&&v!==500).length>0&&<span style={{background:"var(--p)",color:"#fff",borderRadius:"50%",width:18,height:18,display:"inline-flex",alignItems:"center",justifyContent:"center",fontSize:10,fontWeight:700,marginLeft:4}}>{Object.values(filters).filter(v=>v&&v!=="all"&&v!=="pertinence"&&v!==0&&v!==500).length}</span>}</button></div>}
-    </header>}
 
-    {page==="home"&&<main className="page-tr">
-      {mode!=='pro'&&!q&&cat==='all'&&<div style={{background:dark?"linear-gradient(135deg,#1a1a2e 0%,#16213e 60%,#0f3460 100%)":"linear-gradient(135deg,#FF5A5F 0%,#FF8A5C 50%,#FFB067 100%)",padding:"56px 28px 0",textAlign:"center",marginBottom:4}}>
-        <div style={{display:"inline-flex",alignItems:"center",gap:6,background:"rgba(255,255,255,.15)",backdropFilter:"blur(8px)",border:"1px solid rgba(255,255,255,.25)",color:"#fff",padding:"5px 16px",borderRadius:24,fontSize:11,fontWeight:700,letterSpacing:".06em",marginBottom:14}}>🆕 NOUVEAU · 2 400+ articles disponibles</div>
-        <h1 style={{fontFamily:"var(--fd)",fontSize:"clamp(28px,5vw,48px)",fontWeight:800,color:"#fff",letterSpacing:"-.03em",marginBottom:10,lineHeight:1.1}}>Louez tout,<br/>près de chez vous</h1>
-        <p style={{color:"rgba(255,255,255,.85)",fontSize:15,maxWidth:520,margin:"0 auto 22px",lineHeight:1.6}}>Des milliers d'objets disponibles à la location entre particuliers et professionnels. Économique, écologique, pratique.</p>
-        <div style={{display:"flex",gap:10,justifyContent:"center",flexWrap:"wrap",marginBottom:32}}>
-          {[["🔧","Bricolage"],["🎮","Gaming"],["🚲","Véhicules"],["📷","Photo"],["🏄","Sports"]].map(([ic,t])=><button key={t} onClick={()=>setCat(Object.keys(CE).find(k=>CE[k]===ic)||"all")} style={{background:"rgba(255,255,255,.18)",backdropFilter:"blur(8px)",border:"1px solid rgba(255,255,255,.25)",color:"#fff",padding:"10px 18px",borderRadius:24,fontSize:13,fontWeight:600,cursor:"pointer",display:"flex",alignItems:"center",gap:6,transition:"all .2s"}}>{ic} {t}</button>)}
+    <footer>
+      <div className="wrap">
+        <div className="f-grid">
+          <div>
+            <button className="logo" onClick={goHome} style={{marginBottom:10}}><Logo size={32}/><span className="lt" style={{fontSize:19}}>Cercle</span></button>
+            <p style={{fontSize:13,color:"var(--g)",maxWidth:"24ch"}}>Location entre voisins — simple, assurée, à deux rues.</p>
+          </div>
+          <div><h4>Explorer</h4><a onClick={goHome}>Toutes les annonces</a><a onClick={()=>go("create")}>Proposer un objet</a><a onClick={()=>go("favs")}>Mes favoris</a></div>
+          <div><h4>Aide</h4><a onClick={()=>openLegal("assurance")}>Assurance & caution</a><a onClick={()=>openLegal("cgu")}>Conditions générales</a><a onClick={()=>openLegal("contact")}>Nous écrire</a></div>
+          <div><h4>Cercle</h4><a onClick={()=>go("grade")}>Les grades</a><a style={{color:"var(--plus)"}} onClick={()=>go("plus")}>✦ Cercle+</a></div>
         </div>
-        <div className="hero-stats">
-          {[["2 400+","articles disponibles"],["12","villes couvertes"],["98%","de satisfaction"],["4.9 ★","note moyenne"]].map(([n,l])=><div key={l} className="hero-stat"><span className="hero-stat-n">{n}</span><span className="hero-stat-l">{l}</span></div>)}
-        </div>
-      </div>}
-      {mode==='pro'&&<div className="pro-banner"><h2 style={{fontFamily:"var(--fd)",fontSize:22,marginBottom:4}}>🏢 Espace Professionnel</h2><p style={{fontSize:13,opacity:.8}}>Matériel pro certifié · Grandes quantités · Livraison chantier · Facturation entreprise</p></div>}
-      {q&&<div style={{padding:"6px 28px 0",fontSize:12,color:"var(--g)"}}>{filtered.length} résultat{filtered.length!==1?"s":""} pour <strong>"{q}"</strong>{lq&&<> à <strong>{lq}</strong></>}<button className="cl" style={{marginLeft:6}} onClick={()=>{setQ("");setLq("")}}>✕</button></div>}
-      {filtered.length===0?<div className="empty"><span>🔍</span><h2>Aucun résultat trouvé</h2><p style={{maxWidth:320,margin:"6px auto 16px",lineHeight:1.5}}>Essayez d'élargir votre recherche ou de modifier vos filtres.</p><button className="bs" onClick={()=>{setQ("");setCat("all")}}>Réinitialiser la recherche</button></div>:
-      <div className="grid">{filtered.map(i=><Card key={i.id} item={i} onOpen={setSel} favs={state.favorites} dispatch={dispatch}/>)}</div>}
-      {!q&&cat==="all"&&<div className="reco"><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}><h3 style={{fontFamily:"var(--fd)",fontSize:20,fontWeight:700,letterSpacing:"-.01em"}}>{mode==="pro"?"Sélection Pro":"Recommandé pour vous"}</h3><button className="cl" style={{color:"var(--p)"}}>Voir tout →</button></div>
-        <div className="reco-sc">{all.sort(()=>Math.random()-.5).slice(0,8).map(i=><div key={i.id} className="reco-c" onClick={()=>setSel(i)}><img className="reco-ci" src={i.images[0]} alt=""/><div style={{fontSize:12,fontWeight:600,marginTop:4}}>{i.title}</div><div style={{fontSize:12,fontWeight:700,color:"var(--p)"}}>{i.price}€<span style={{fontWeight:400,color:"var(--g)"}}>/j</span></div></div>)}</div>
-      </div>}
-    </main>}
-
-    {page==="profile"&&state.user&&<Profile state={state} dispatch={dispatch} setPage={setPage} setSelected={setSel} initTab={profTab}/>}
-    {page==="messages"&&state.user&&<Messages state={state} dispatch={dispatch} cid={cid} setCid={setCid} setPage={setPage}/>}
-    {page==="create"&&state.user&&<CreateListing state={state} dispatch={dispatch} setPage={setPage} mode={mode}/>}
-    {(page==="create"||page==="profile"||page==="messages"||page==="dashboard"||page==="referral"||page==="verify"||page==="dispute"||page==="wallet"||page==="badges")&&!state.user&&<div className="empty" style={{paddingTop:100}}><span>🔒</span><h2>Connectez-vous</h2><p>Vous devez être connecté pour accéder à cette page.</p><button className="bp" style={{marginTop:14}} onClick={()=>setShowA("login")}>Se connecter</button></div>}
-
-    {page==="home"&&<footer className="ft">
-      <div style={{maxWidth:1520,margin:"0 auto",marginBottom:28}}>
-        <div className="ft-promo">
-          <div style={{background:"linear-gradient(135deg,#FEF3C7,#FFFBEB)",borderRadius:20,padding:20,textAlign:"center",transition:"transform .2s",cursor:"pointer"}} onMouseEnter={e=>e.currentTarget.style.transform="translateY(-3px)"} onMouseLeave={e=>e.currentTarget.style.transform=""}><span style={{fontSize:32}}>🎁</span><h3 style={{fontFamily:"var(--fd)",fontSize:15,marginTop:6}}>Parrainez un ami</h3><p style={{fontSize:11,color:"var(--g)",marginTop:4}}>Gagnez 5€ par filleul inscrit</p><button className="bp" style={{marginTop:8,fontSize:11,padding:"6px 14px"}} onClick={()=>{if(state.user)setPage("referral");else setShowA("login")}}>Inviter →</button></div>
-          <div style={{background:"linear-gradient(135deg,#ECFDF5,#D1FAE5)",borderRadius:20,padding:20,textAlign:"center",transition:"transform .2s",cursor:"pointer"}} onMouseEnter={e=>e.currentTarget.style.transform="translateY(-3px)"} onMouseLeave={e=>e.currentTarget.style.transform=""}><span style={{fontSize:32}}>🛡️</span><h3 style={{fontFamily:"var(--fd)",fontSize:15,marginTop:6}}>CercleCover</h3><p style={{fontSize:11,color:"var(--g)",marginTop:4}}>Couverture jusqu'à 2 000 €</p><button className="bs" style={{marginTop:8,fontSize:11,padding:"6px 14px"}}>En savoir plus</button></div>
-          <div style={{background:"linear-gradient(135deg,#EEF2FF,#E0E7FF)",borderRadius:20,padding:20,textAlign:"center",transition:"transform .2s",cursor:"pointer"}} onMouseEnter={e=>e.currentTarget.style.transform="translateY(-3px)"} onMouseLeave={e=>e.currentTarget.style.transform=""}><span style={{fontSize:32}}>📊</span><h3 style={{fontFamily:"var(--fd)",fontSize:15,marginTop:6}}>Dashboard Pro</h3><p style={{fontSize:11,color:"var(--g)",marginTop:4}}>Gérez vos locations facilement</p><button className="bs" style={{marginTop:8,fontSize:11,padding:"6px 14px"}} onClick={()=>{if(state.user)setPage("dashboard");else setShowA("login")}}>Accéder →</button></div>
-          <div style={{background:"linear-gradient(135deg,#FDF2F8,#FCE7F3)",borderRadius:20,padding:20,textAlign:"center",transition:"transform .2s",cursor:"pointer"}} onMouseEnter={e=>e.currentTarget.style.transform="translateY(-3px)"} onMouseLeave={e=>e.currentTarget.style.transform=""}><span style={{fontSize:32}}>🏅</span><h3 style={{fontFamily:"var(--fd)",fontSize:15,marginTop:6}}>Programme fidélité</h3><p style={{fontSize:11,color:"var(--g)",marginTop:4}}>Réduisez vos commissions</p><button className="bs" style={{marginTop:8,fontSize:11,padding:"6px 14px"}} onClick={()=>{if(state.user){setProfTab("grade");setPage("profile")}else setShowA("login")}}>Voir mon grade →</button></div>
-        </div>
+        <div className="f-low"><span>© 2026 Cercle · Tout est à deux rues.</span><span style={{display:"flex",flexWrap:"wrap",gap:"4px 0"}}>{[["cgu","CGU"],["cgv","CGV"],["conf","Confidentialité"],["cookies","Cookies"],["mentions","Mentions légales"]].map(([id,lbl],i)=><React.Fragment key={id}>{i>0&&<span>&nbsp;·&nbsp;</span>}<a style={{display:"inline",cursor:"pointer"}} onClick={()=>openLegal(id)}>{lbl}</a></React.Fragment>)}</span></div>
       </div>
-      <div className="ftg">
-        <div className="ftc"><h4>🆘 Assistance</h4><a onClick={()=>setShowChat(true)}>💬 Centre d'aide</a><a onClick={()=>{setInfoPage("guide");window.scrollTo(0,0)}}>📖 Guide de démarrage</a><a onClick={()=>{setInfoPage("cover");window.scrollTo(0,0)}}>🛡️ Assurance CercleCover</a><a onClick={()=>{if(state.user)setPage("dispute");else setShowA("login")}}>⚖️ Résoudre un litige</a><a onClick={()=>{setInfoPage("security");window.scrollTo(0,0)}}>🔒 Sécurité des paiements</a><a onClick={()=>{setInfoPage("contact");window.scrollTo(0,0)}}>📞 Nous contacter</a></div>
-        <div className="ftc"><h4>🌍 Communauté</h4><a onClick={()=>{setInfoPage("blog");window.scrollTo(0,0)}}>📝 Blog Cercle</a><a onClick={()=>{setInfoPage("forum");window.scrollTo(0,0)}}>💬 Forum d'entraide</a><a onClick={()=>{setInfoPage("guides");window.scrollTo(0,0)}}>📚 Guides pratiques</a><a onClick={()=>{if(state.user)setPage("referral");else setShowA("login")}}>🎁 Programme parrainage</a><a onClick={()=>{setInfoPage("impact");window.scrollTo(0,0)}}>🌱 Impact environnemental</a><a onClick={()=>{setInfoPage("temoignages");window.scrollTo(0,0)}}>📣 Témoignages</a></div>
-        <div className="ftc"><h4>🏠 Propriétaire</h4><a onClick={()=>{if(state.user)setPage("create");else setShowA("login")}}>➕ Proposer un objet</a><a onClick={()=>{if(state.user)setPage("dashboard");else setShowA("login")}}>📊 Tableau de bord</a><a onClick={()=>{setInfoPage("conseils");window.scrollTo(0,0)}}>💡 Conseils pour louer</a><a onClick={()=>{setInfoPage("revenus");window.scrollTo(0,0)}}>📈 Maximiser ses revenus</a><a onClick={()=>{setInfoPage("photos");window.scrollTo(0,0)}}>📸 Prendre de bonnes photos</a><a onClick={()=>{setInfoPage("superproprio");window.scrollTo(0,0)}}>⭐ Devenir Super Proprio</a></div>
-        <div className="ftc"><h4>🔵 Cercle</h4><a onClick={()=>{setInfoPage("about");window.scrollTo(0,0)}}>🏢 À propos de nous</a><a onClick={()=>{setInfoPage("mission");window.scrollTo(0,0)}}>🎯 Notre mission</a><a onClick={()=>{setInfoPage("careers");window.scrollTo(0,0)}}>💼 Carrières — On recrute !</a><a onClick={()=>{setInfoPage("press");window.scrollTo(0,0)}}>📰 Espace presse</a><a onClick={()=>{setInfoPage("partners");window.scrollTo(0,0)}}>🤝 Partenariats</a><a onClick={()=>{setInfoPage("newsletter");window.scrollTo(0,0)}}>📧 Newsletter</a></div>
-      </div>
-      <div style={{maxWidth:1520,margin:"0 auto",padding:"18px 0 0",borderTop:"1px solid var(--bd)",fontSize:11,color:"var(--g)",display:"flex",flexDirection:"column",gap:10}}>
-        <div className="ft-legal"><a style={{cursor:"pointer"}} onClick={()=>{setInfoPage("guide");window.scrollTo(0,0)}}>Conditions générales</a><a style={{cursor:"pointer"}} onClick={()=>{setInfoPage("security");window.scrollTo(0,0)}}>Politique de confidentialité</a><a style={{cursor:"pointer"}} onClick={()=>{setInfoPage("about");window.scrollTo(0,0)}}>Mentions légales</a><a style={{cursor:"pointer"}}>Cookies</a><a style={{cursor:"pointer"}}>Accessibilité</a></div>
-        <div className="ft-legal-bottom"><span>🌐 {LANGS[lang]}</span><span>€ EUR</span><span>© 2026 Cercle</span></div>
-      </div>
-    </footer>}
+    </footer>
 
-    {sel&&<Detail item={sel} onClose={()=>setSel(null)} state={state} dispatch={dispatch} setPage={setPage} setConvId={setCid} setShowShop={setShowShop}/>}
-    {showF&&<FilterM onClose={()=>setShowF(false)} filters={filters} setFilters={setFilters} count={filtered.length}/>}
-    {showS&&<SearchM onClose={()=>setShowS(false)} onSearch={search} allItems={all} filters={filters} setFilters={setFilters}/>}
-    {showA&&<AuthModal onClose={()=>setShowA(null)} dispatch={dispatch} mode={showA}/>}
-    {showOnboarding&&<Onboarding onClose={()=>{setShowOnboarding(false);try{localStorage.setItem('cercle_ob','1')}catch{}}}/>}
-    <div className="toast-stack">{toasts.map(t=><div key={t.id} className={"t2 t2-"+t.type}><span>{t.type==='s'?"✅":t.type==='b'?"🎉":t.type==='e'?"❌":t.type==='w'?"⭐":"ℹ️"}</span><span>{t.text}</span></div>)}</div>
-    {infoPage&&<InfoPage id={infoPage} setPage={p=>{setInfoPage(null);setPage(p)}}/>}
-    {page==="map"&&<MapPage items={filtered} onOpen={setSel} favs={state.favorites} dispatch={dispatch} mode={mode}/>}
-    {page==="notifs"&&state.user&&<NotifCenter state={state} dispatch={dispatch} setPage={setPage}/>}
-    {page==="dashboard"&&state.user&&<Dashboard state={state} dispatch={dispatch} setPage={setPage}/>}
-    {page==="referral"&&state.user&&<ReferralPage state={state} dispatch={dispatch} setPage={setPage}/>}
-    {page==="verify"&&state.user&&<VerifyId state={state} dispatch={dispatch} setPage={setPage}/>}
-    {page==="dispute"&&state.user&&<DisputePage state={state} dispatch={dispatch} setPage={setPage}/>}
-    {page==="wallet"&&state.user&&<WalletPage state={state} dispatch={dispatch} setPage={setPage}/>}
-    {page==="badges"&&state.user&&<BadgesPage state={state} setPage={setPage}/>}
-    {showShop&&<Shop owner={showShop} items={all} onClose={()=>setShowShop(null)} onOpen={i=>{setShowShop(null);setSel(i)}} state={state} dispatch={dispatch}/>}
-    {showGallery&&<Gallery images={showGallery.imgs} start={showGallery.idx||0} onClose={()=>setShowGallery(null)}/>}
-    {/* Chatbot */}
-    {showChat?<Chatbot items={all} onOpen={i=>{setShowChat(false);setSel(i)}} onClose={()=>setShowChat(false)}/>:<button className="chatbot-btn" onClick={()=>setShowChat(true)}>🤖</button>}
-    {/* Push notification */}
-    {pushNotif&&<div className="push"><span style={{fontSize:16}}>🔔</span><div style={{flex:1,fontSize:12}}><div style={{fontWeight:700}}>Cercle</div>{pushNotif.text}</div><button className="push-close" onClick={()=>setPushNotif(null)}>✕</button></div>}
-    {menu&&<div style={{position:"fixed",inset:0,zIndex:99}} onClick={()=>setMenu(false)}/>}
-    {/* Bottom Nav Mobile */}
-    <nav className="bnav"><div className="bnav-in">
-      <button className={"bn"+(page==="home"?" on":"")} onClick={home}><I.Home/><span>Accueil</span></button>
-      <button className={"bn"+(page==="map"?" on":"")} onClick={()=>setPage("map")}><I.MapPin/><span>Carte</span></button>
-      {state.user&&<button className={"bn"+(page==="messages"?" on":"")} onClick={()=>setPage("messages")}><I.Msg/><span>Messages</span></button>}
-      {state.user&&<button className={"bn"+(page==="notifs"?" on":"")} onClick={()=>{setPage("notifs");dispatch({type:"READ_N"})}}><I.Bell/>{unread>0&&<span className="bnd"/>}<span>Notifs</span></button>}
-      <button className={"bn"+(page==="profile"?" on":"")} onClick={()=>state.user?setPage("profile"):setShowA("login")}><I.Prof/><span>Profil</span></button>
-    </div></nav>
-  </div></Ctx.Provider>
+    <nav className="mnav" aria-label="Navigation mobile">
+      <button className={page==="home"?"on":""} onClick={goHome}><I.home size={20}/>Autour</button>
+      <button className={page==="favs"?"on":""} onClick={()=>go("favs")}><I.heart size={20}/>Favoris</button>
+      <button className="fab" onClick={()=>go("create")} aria-label="Proposer un objet"><I.plus size={22}/></button>
+      <button className={page==="messages"?"on":""} onClick={()=>go("messages")}><I.msg size={20}/>Courrier</button>
+      <button className={page==="profile"?"on":""} onClick={()=>go("profile")}><I.user size={20}/>Profil</button>
+    </nav>
+
+    {toastMsg&&<div className="toast" role="status">{toastMsg}</div>}
+    {!cookie&&<CookieBanner onChoice={chooseCookie} openLegal={openLegal}/>}
+  </>;
 }
-
-ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App));
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
