@@ -928,6 +928,10 @@ function openDoc(filename,kind,inner){
    règles Firestore. Les deux doivent concorder : cette liste ne fait que
    masquer l'entrée, c'est la règle serveur qui protège réellement les données.
    ⚠ Le second identifiant est le compte de test — à retirer avant la mise en ligne. */
+/* Taux de base, aligné sur la page Cercle+. Sert de repli quand une
+   réservation ancienne ne porte pas son champ `fee`. */
+const COMMISSION = 11;
+
 const ADMIN_UIDS = [
   "owoNOYG8SShhC90Uc7QihbmBAt43",
   "DcBpXP2FmjUkspq3kehissJwk0G3",
@@ -940,6 +944,7 @@ const tsMs = v => v && v.seconds ? v.seconds * 1000 : (v && v.toMillis ? v.toMil
 
 function Admin({ user }) {
   const [tab, setTab] = useState("vue");
+  const [q, setQ] = useState("");
   const [days, setDays] = useState(30);
   const [data, setData] = useState(null);
   const [err, setErr] = useState("");
@@ -952,12 +957,14 @@ function Admin({ user }) {
       d.collection("v2_listings").get(),
       d.collection("v2_reservations").get(),
       d.collection("users").get(),
-    ]).then(([L, R, U]) => {
+      d.collection("v2_reviews").get(),
+    ]).then(([L, R, U, A]) => {
       if (!alive) return;
       setData({
         listings: L.docs.map(x => ({ id: x.id, ...x.data() })),
         resas:    R.docs.map(x => ({ id: x.id, ...x.data() })),
         users:    U.docs.map(x => ({ id: x.id, ...x.data() })),
+        reviews:  A.docs.map(x => ({ id: x.id, ...x.data() })),
       });
     }).catch(e => {
       // Une erreur de permission ici veut dire que les règles et la liste
@@ -977,7 +984,15 @@ function Admin({ user }) {
   if (!data) return <div className="page"><h1>Administration</h1><p className="lead">Chargement…</p></div>;
 
   const since = Date.now() - days * 864e5;
-  const inWindow = arr => arr.filter(x => { const t = tsMs(x.createdAt); return !t || t >= since; });
+  const ALL = days >= 3650;
+  /* Un document sans date n'appartient à aucune période : l'inclure dans
+     « 7 derniers jours » rendrait le sélecteur mensonger. On ne le compte donc
+     que sur « Tout », et on annonce combien il y en a. */
+  const inWindow = arr => arr.filter(x => {
+    const t = tsMs(x.createdAt);
+    return t ? t >= since : ALL;
+  });
+  const undatedUsers = data.users.filter(x => !tsMs(x.createdAt)).length;
 
   const L = inWindow(data.listings), R = inWindow(data.resas);
   const split = arr => {
@@ -986,6 +1001,40 @@ function Admin({ user }) {
   };
   const sl = split(L), sr = split(R);
   const volume = R.reduce((s, r) => s + (+r.total || 0), 0);
+
+  /* Ce que Cercle encaisse réellement. On ne compte QUE les réservations
+     confirmées : une demande en attente n'a rien rapporté, l'afficher dans le
+     chiffre d'affaires serait se mentir. */
+  const confirmed = R.filter(r => r.status === "confirmed" || r.status === "completed");
+  const revenue = confirmed.reduce((s, r) => s + ((+r.fee) || (+r.total || 0) * COMMISSION / 100), 0);
+
+  // Répartition des états : c'est là qu'on voit si les propriétaires répondent.
+  const byStatus = {};
+  R.forEach(r => { const k = r.status || "pending"; byStatus[k] = (byStatus[k] || 0) + 1; });
+  const pending = byStatus.pending || 0;
+
+  /* Entonnoir : combien de comptes vont jusqu'au bout. Les deux marches qui
+     comptent sont « a publié » et « a réservé » — le reste est du trafic. */
+  const uidsWithListing = new Set(data.listings.map(x => x.uid).filter(Boolean));
+  const uidsWithResa = new Set(data.resas.map(x => x.renterUid).filter(Boolean));
+  const funnel = [
+    { label: "Comptes créés", n: data.users.length },
+    { label: "Ont publié un objet", n: uidsWithListing.size },
+    { label: "Ont réservé", n: uidsWithResa.size },
+  ];
+
+  // File d'attente de vérification d'identité : une tâche qui t'attend.
+  const toVerify = data.users.filter(u => u.verification && u.verification.status === "pending");
+  const unverified = data.users.filter(u => !u.verified && !(u.verification && u.verification.status === "approved")).length;
+
+  // Répartition des annonces par catégorie
+  const byCat = {};
+  data.listings.forEach(x => { const k = x.cat || x.c || "?"; byCat[k] = (byCat[k] || 0) + 1; });
+  const cats = Object.entries(byCat).sort((a, b) => b[1] - a[1]).slice(0, 8);
+  const catMax = Math.max(1, ...cats.map(c => c[1]));
+
+  // Inscriptions : même découpage que le reste
+  const su = split(inWindow(data.users));
 
   // Versions de l'application en circulation
   const versions = {};
@@ -1024,7 +1073,10 @@ function Admin({ user }) {
     </div>
   );
 
-  const recent = arr => arr.slice().sort((a, b) => tsMs(b.createdAt) - tsMs(a.createdAt)).slice(0, 12);
+  /* Un tableau de bord sans recherche oblige à faire défiler pour retrouver
+     quelqu'un. Le filtre balaie tous les champs texte du document. */
+  const match = x => !q.trim() || JSON.stringify(x).toLowerCase().includes(q.trim().toLowerCase());
+  const recent = arr => arr.filter(match).slice().sort((a, b) => tsMs(b.createdAt) - tsMs(a.createdAt)).slice(0, 12);
   const fmtDate = v => { const t = tsMs(v); return t ? new Date(t).toLocaleDateString("fr-FR", { day: "numeric", month: "short" }) : "—"; };
 
   return <div className="page" style={{ maxWidth: 1080 }}>
@@ -1045,11 +1097,85 @@ function Admin({ user }) {
         <div className="adm-sub">Sur {sr.total} réservation{sr.total > 1 ? "s" : ""}</div>
       </div>
       <div className="adm-card">
-        <div className="adm-k">COMPTES</div>
-        <div className="adm-v">{data.users.length}</div>
-        <div className="adm-sub">Toutes plateformes confondues</div>
+        <div className="adm-k">INSCRIPTIONS</div>
+        <div className="adm-v">{su.total}</div>
+        <Bar s={su} />
+        <div className="adm-leg">
+          <span><i style={{ background: "var(--p)" }} />Application <b>{su.app}</b></span>
+          <span><i style={{ background: "var(--ter)" }} />Site <b>{su.web}</b></span>
+        </div>
+        <div className="adm-sub" style={{ marginTop: 7 }}>
+          {data.users.length} compte{data.users.length > 1 ? "s" : ""} au total
+          {undatedUsers > 0 && !ALL && <> · {undatedUsers} sans date connue, hors période</>}
+          {unverified > 0 && <> · {unverified} identité{unverified > 1 ? "s" : ""} non vérifiée{unverified > 1 ? "s" : ""}</>}
+        </div>
       </div>
     </div>
+
+    {/* Ce que Cercle encaisse : le chiffre que personne d'autre ne calcule. */}
+    <div className="adm-grid" style={{ marginTop: 12 }}>
+      <div className="adm-card adm-hero">
+        <div className="adm-k">COMMISSION ENCAISSÉE</div>
+        <div className="adm-v" style={{ color: "var(--green)" }}>{Math.round(revenue)} €</div>
+        <div className="adm-sub">
+          Sur {confirmed.length} réservation{confirmed.length > 1 ? "s" : ""} confirmée{confirmed.length > 1 ? "s" : ""}
+          {" · "}{Math.round(volume)} € de volume
+        </div>
+        <div className="adm-sub" style={{ marginTop: 6, color: "var(--gl)" }}>
+          Les demandes en attente ne sont pas comptées : elles n'ont rien rapporté.
+        </div>
+      </div>
+
+      <div className="adm-card">
+        <div className="adm-k">ÉTAT DES RÉSERVATIONS</div>
+        {Object.keys(byStatus).length === 0
+          ? <div className="adm-sub" style={{ marginTop: 8 }}>Aucune réservation sur la période.</div>
+          : Object.entries(byStatus).sort((a, b) => b[1] - a[1]).map(([k, n]) =>
+              <div key={k} className="adm-row">
+                <span className={"adm-st " + k}>{k}</span><b>{n}</b>
+              </div>)}
+      </div>
+
+      <div className="adm-card">
+        <div className="adm-k">DU COMPTE À LA RÉSERVATION</div>
+        {funnel.map((f, i) => {
+          const pct = funnel[0].n ? Math.round(f.n / funnel[0].n * 100) : 0;
+          return <div key={f.label} style={{ marginTop: i ? 10 : 8 }}>
+            <div className="adm-row" style={{ borderBottom: 0, padding: 0 }}>
+              <span>{f.label}</span><b>{f.n} · {pct} %</b>
+            </div>
+            <div className="adm-track"><i style={{ width: pct + "%" }} /></div>
+          </div>;
+        })}
+      </div>
+    </div>
+
+    {/* Une file d'attente, donc une action à mener — pas seulement un chiffre. */}
+    {toVerify.length > 0 && <div className="panel adm-todo" style={{ marginTop: 14 }}>
+      <div className="sec-t" style={{ fontSize: 15 }}>
+        {toVerify.length} identité{toVerify.length > 1 ? "s" : ""} en attente de votre validation
+      </div>
+      {toVerify.slice(0, 8).map(u =>
+        <div key={u.id} className="adm-row">
+          <span>{u.name || u.email || u.id} · {(u.verification && u.verification.document) || "document"}</span>
+          <b style={{ color: "var(--ter)" }}>à vérifier</b>
+        </div>)}
+      <p style={{ fontSize: 11.5, color: "var(--gl)", marginTop: 10 }}>
+        Les pièces sont dans Storage, volontairement illisibles depuis le navigateur.
+        La validation se fait en console, le temps qu'un vrai parcours existe.
+      </p>
+    </div>}
+
+    {cats.length > 0 && <div className="panel" style={{ marginTop: 14 }}>
+      <div className="sec-t" style={{ fontSize: 15 }}>Annonces par catégorie</div>
+      {cats.map(([k, n]) =>
+        <div key={k} style={{ marginTop: 9 }}>
+          <div className="adm-row" style={{ borderBottom: 0, padding: 0 }}>
+            <span style={{ textTransform: "capitalize" }}>{k}</span><b>{n}</b>
+          </div>
+          <div className="adm-track"><i style={{ width: (n / catMax * 100) + "%", background: "var(--p)" }} /></div>
+        </div>)}
+    </div>}
 
     {sl.total > 0 && <div className="panel" style={{ marginTop: 18 }}>
       <div className="sec-t" style={{ fontSize: 15 }}>Publications par jour</div>
@@ -1069,8 +1195,19 @@ function Admin({ user }) {
     </div>}
 
     <div className="radius-chips" style={{ marginTop: 22 }} role="tablist">
-      {[["vue", "Dernières annonces"], ["resa", "Dernières réservations"], ["gens", "Comptes"]].map(([v, l]) =>
+      {[["vue", "Annonces"], ["resa", "Réservations"], ["gens", "Comptes"], ["avis", "Avis"]].map(([v, l]) =>
         <button key={v} className={"cat" + (tab === v ? " on" : "")} onClick={() => setTab(v)}>{l}</button>)}
+    </div>
+
+    <div className="adm-search">
+      <input
+        type="search"
+        value={q}
+        onChange={e => setQ(e.target.value)}
+        placeholder="Rechercher un objet, un nom, un email…"
+        aria-label="Rechercher dans le tableau"
+      />
+      {!!q && <button type="button" onClick={() => setQ("")} aria-label="Effacer">✕</button>}
     </div>
 
     <div className="panel" style={{ marginTop: 10, overflowX: "auto" }}>
@@ -1096,14 +1233,33 @@ function Admin({ user }) {
       </table>}
 
       {tab === "gens" && <table className="adm-t">
-        <thead><tr><th>Nom</th><th>Email</th><th>Ville</th><th>Vérifié</th></tr></thead>
-        <tbody>{data.users.slice(0, 40).map(u =>
+        <thead><tr><th>Nom</th><th>Email</th><th>Ville</th><th>Origine</th><th>Objets</th><th>Identité</th></tr></thead>
+        <tbody>{data.users.filter(match).slice(0, 60).map(u =>
           <tr key={u.id}>
             <td>{u.name || "—"}</td><td>{u.email || "—"}</td><td>{u.quartier || u.city || "—"}</td>
-            <td>{u.verification && u.verification.status === "approved" ? "oui"
-               : u.verification ? u.verification.status : "non"}</td>
+            <td><span className={"adm-tag " + srcOf(u)}>{srcOf(u) === "app" ? "Application" : "Site"}</span></td>
+            <td>{data.listings.filter(x => x.uid === u.id).length}</td>
+            <td>{u.verification
+              ? <span className={"adm-st " + (u.verification.status === "approved" ? "confirmed" : "pending")}>
+                  {u.verification.status}</span>
+              : u.verified
+                ? <span className="adm-st confirmed">vérifié</span>
+                : <span style={{ color: "var(--gl)" }}>non engagée</span>}</td>
           </tr>)}</tbody>
       </table>}
+
+      {tab === "avis" && (data.reviews.length === 0
+        ? <p style={{ fontSize: 13, color: "var(--g)" }}>Aucun avis pour l'instant.</p>
+        : <table className="adm-t">
+            <thead><tr><th>Objet</th><th>Note</th><th>Avis</th><th>Auteur</th><th>Date</th></tr></thead>
+            <tbody>{recent(data.reviews).map(r =>
+              <tr key={r.id}>
+                <td>{r.itemTitle || "—"}</td>
+                <td>{"★".repeat(Math.round(+r.note || 0)) || "—"}</td>
+                <td style={{ maxWidth: 320 }}>{r.txt || "—"}</td>
+                <td>{r.by || "—"}</td><td>{fmtDate(r.createdAt)}</td>
+              </tr>)}</tbody>
+          </table>)}
     </div>
 
     <p style={{ fontSize: 12, color: "var(--gl)", marginTop: 14 }}>
@@ -1272,7 +1428,7 @@ function Auth({onDone,toast}){
       try{
         const res=await fbAuth().createUserWithEmailAndPassword(email,pw);
         try{await res.user.updateProfile({displayName:name})}catch(_){}
-        try{const d=fbDb();if(d)await d.collection("users").doc(res.user.uid).set({name,firstName:fn,lastName:ln,email,quartier,phone,accountType:acct,pro,company,siret},{merge:true})}catch(_){}
+        try{const d=fbDb();if(d)await d.collection("users").doc(res.user.uid).set({name,firstName:fn,lastName:ln,email,quartier,phone,accountType:acct,pro,company,siret,source:"web",createdAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true})}catch(_){}
         await sendVerif(res.user,fn||name,email);
         onDone({...fbUserToUser(res.user),name,quartier,phone,pro,company,siret});
       }catch(err){
