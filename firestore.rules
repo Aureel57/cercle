@@ -2,13 +2,30 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    /* ── Administration ──
+       L'identifiant est inscrit en dur plutôt que lu dans un document :
+       un champ `isAdmin` serait modifiable par celui qu'il désigne.
+       Un identifiant ne se falsifie pas — il vient du jeton signé par Firebase.
+
+       À terme, remplacer par un custom claim (request.auth.token.admin == true),
+       ce qui évite de redéployer les règles pour ajouter quelqu'un.
+
+       ⚠ DcBpXP2Fm… est le compte de test : à retirer avant toute mise en ligne. */
+    function isAdmin() {
+      return request.auth != null && request.auth.uid in [
+        'owoNOYG8SShhC90Uc7QihbmBAt43',   // noah.mouloude@gmail.com
+        'DcBpXP2FmjUkspq3kehissJwk0G3'    // noah@cercle.app — compte de test
+      ];
+    }
+
     // ── Profils : chacun ne lit et n'écrit que le sien ──
     // Le site comme l'application n'accèdent jamais au profil d'un autre membre :
     // les infos publiques d'un propriétaire (nom, société) voyagent dans l'annonce.
     // Avant, TOUT était ouvert : n'importe qui pouvait lire emails, téléphones et
     // adresses de tous les membres — et les réécrire.
     match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read: if isAdmin() || (request.auth != null && request.auth.uid == userId);
+      allow write: if request.auth != null && request.auth.uid == userId;
     }
 
     // ── Ancienne collection v1, plus utilisée par aucun code : lecture seule ──
@@ -37,9 +54,9 @@ service cloud.firestore {
 
     // ── Réservations : visibles et modifiables par les deux parties ──
     match /v2_reservations/{doc} {
-      allow read: if request.auth != null
+      allow read: if isAdmin() || (request.auth != null
         && (request.auth.uid == resource.data.renterUid
-            || request.auth.uid == resource.data.ownerUid);
+            || request.auth.uid == resource.data.ownerUid));
       allow create: if request.auth != null
         && request.auth.uid == request.resource.data.renterUid;
       allow update, delete: if request.auth != null

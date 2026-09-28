@@ -46,7 +46,7 @@ if (!root || root.children.length === 0) {
 }
 
 /* Navigue sur chaque route et vérifie que la page se rend */
-const routes = ['home','favs','messages','profile','create','activite','notifs','avis','grade','plus','params','revenus','legal','auth','carte'];
+const routes = ['home','admin','favs','messages','profile','create','activite','notifs','avis','grade','plus','params','revenus','legal','auth','carte'];
 for (const r of routes) {
   window.location.hash = '#/' + r;
   window.dispatchEvent(new window.Event('popstate'));

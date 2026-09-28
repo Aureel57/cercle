@@ -540,7 +540,8 @@ function Profile({dark,setDark,toast,go,plus,user,logout,stats={}}){
     </div>
     <div className="plus-line">{plus?"✦ Cercle+ actif — vos frais de service sont réduits de 1 %":"✦ Cercle+ — commission réduite à 10 %, −1 % par année d'ancienneté"}<button className="btn" style={{marginLeft:"auto",background:"var(--plus)",color:"#fff",padding:"8px 14px",minHeight:36,fontSize:12.5}} onClick={()=>go("plus")}>{plus?"Gérer":"Découvrir"}</button></div>
     <div className="hub">
-      {[["activite","Mon activité","Revenus, réservations, annonces",I.clock],
+      {[...(isAdminUser(user)?[["admin","Administration","Vue d'ensemble app + site",I.shield]]:[]),
+        ["activite","Mon activité","Revenus, réservations, annonces",I.clock],
         ["notifs","Notifications","Ce qui bouge dans le cercle",I.bell],
         ["avis","Mes avis",stats.avisCount?`${noteStr} — ${stats.avisCount} avis reçu${stats.avisCount>1?"s":""}`:"Pas encore d'avis reçu",I.star],
         ["grade","Mon grade",g.nom+" · "+(stats.rentals||0)+" location"+((stats.rentals||0)>1?"s":"")+" · "+g.fee+" %",I.shield],
@@ -921,6 +922,197 @@ function openDoc(filename,kind,inner){
     setTimeout(()=>{try{document.body.removeChild(a);URL.revokeObjectURL(u)}catch(_){}}, 1000);
   }
 }
+
+/* ═══════════ ADMINISTRATION ═══════════
+   Page de pilotage, réservée aux identifiants listés ci-dessous ET dans les
+   règles Firestore. Les deux doivent concorder : cette liste ne fait que
+   masquer l'entrée, c'est la règle serveur qui protège réellement les données.
+   ⚠ Le second identifiant est le compte de test — à retirer avant la mise en ligne. */
+const ADMIN_UIDS = [
+  "owoNOYG8SShhC90Uc7QihbmBAt43",
+  "DcBpXP2FmjUkspq3kehissJwk0G3",
+];
+const isAdminUser = u => !!u && ADMIN_UIDS.indexOf(u.uid || "") >= 0;
+
+const srcOf = d => d.source === "app" ? "app" : "web";   // sans champ = écrit par le site
+const dayKey = t => { const d = new Date(t); return d.toISOString().slice(0, 10); };
+const tsMs = v => v && v.seconds ? v.seconds * 1000 : (v && v.toMillis ? v.toMillis() : 0);
+
+function Admin({ user }) {
+  const [tab, setTab] = useState("vue");
+  const [days, setDays] = useState(30);
+  const [data, setData] = useState(null);
+  const [err, setErr] = useState("");
+
+  useEffect(() => {
+    const d = fbDb();
+    if (!d) { setErr("Firestore indisponible."); return; }
+    let alive = true;
+    Promise.all([
+      d.collection("v2_listings").get(),
+      d.collection("v2_reservations").get(),
+      d.collection("users").get(),
+    ]).then(([L, R, U]) => {
+      if (!alive) return;
+      setData({
+        listings: L.docs.map(x => ({ id: x.id, ...x.data() })),
+        resas:    R.docs.map(x => ({ id: x.id, ...x.data() })),
+        users:    U.docs.map(x => ({ id: x.id, ...x.data() })),
+      });
+    }).catch(e => {
+      // Une erreur de permission ici veut dire que les règles et la liste
+      // ci-dessus ne concordent plus.
+      setErr(e && e.code === "permission-denied"
+        ? "Accès refusé par les règles Firestore. Vérifiez que votre identifiant y figure."
+        : "Lecture impossible : " + (e && e.code || "erreur inconnue"));
+    });
+    return () => { alive = false; };
+  }, []);
+
+  if (!isAdminUser(user)) {
+    return <div className="page"><h1>Page réservée</h1>
+      <p className="lead">Cet espace est réservé à l'administration de Cercle.</p></div>;
+  }
+  if (err) return <div className="page"><h1>Administration</h1><p className="lead">{err}</p></div>;
+  if (!data) return <div className="page"><h1>Administration</h1><p className="lead">Chargement…</p></div>;
+
+  const since = Date.now() - days * 864e5;
+  const inWindow = arr => arr.filter(x => { const t = tsMs(x.createdAt); return !t || t >= since; });
+
+  const L = inWindow(data.listings), R = inWindow(data.resas);
+  const split = arr => {
+    const app = arr.filter(x => srcOf(x) === "app").length;
+    return { app, web: arr.length - app, total: arr.length };
+  };
+  const sl = split(L), sr = split(R);
+  const volume = R.reduce((s, r) => s + (+r.total || 0), 0);
+
+  // Versions de l'application en circulation
+  const versions = {};
+  data.listings.concat(data.resas).forEach(x => {
+    if (srcOf(x) === "app") { const v = x.appVersion || "?"; versions[v] = (versions[v] || 0) + 1; }
+  });
+
+  // Activité par jour, pour la barre de tendance
+  const buckets = [];
+  for (let k = days - 1; k >= 0; k--) {
+    const key = dayKey(Date.now() - k * 864e5);
+    buckets.push({
+      key,
+      app: L.filter(x => srcOf(x) === "app" && dayKey(tsMs(x.createdAt) || Date.now()) === key).length,
+      web: L.filter(x => srcOf(x) === "web" && dayKey(tsMs(x.createdAt) || Date.now()) === key).length,
+    });
+  }
+  const peak = Math.max(1, ...buckets.map(b => b.app + b.web));
+
+  const Bar = ({ s }) => (
+    <div className="adm-bar" aria-hidden="true">
+      <span style={{ flex: Math.max(s.app, 0.001), background: "var(--p)" }} />
+      <span style={{ flex: Math.max(s.web, 0.001), background: "var(--ter)" }} />
+    </div>
+  );
+
+  const Split = ({ label, s, unit }) => (
+    <div className="adm-card">
+      <div className="adm-k">{label}</div>
+      <div className="adm-v">{s.total}{unit ? " " + unit : ""}</div>
+      <Bar s={s} />
+      <div className="adm-leg">
+        <span><i style={{ background: "var(--p)" }} />Application <b>{s.app}</b></span>
+        <span><i style={{ background: "var(--ter)" }} />Site <b>{s.web}</b></span>
+      </div>
+    </div>
+  );
+
+  const recent = arr => arr.slice().sort((a, b) => tsMs(b.createdAt) - tsMs(a.createdAt)).slice(0, 12);
+  const fmtDate = v => { const t = tsMs(v); return t ? new Date(t).toLocaleDateString("fr-FR", { day: "numeric", month: "short" }) : "—"; };
+
+  return <div className="page" style={{ maxWidth: 1080 }}>
+    <h1>Administration</h1>
+    <p className="lead">Ce qui se passe sur Cercle, application et site réunis.</p>
+
+    <div className="radius-chips" role="tablist" aria-label="Période">
+      {[[7, "7 jours"], [30, "30 jours"], [90, "90 jours"], [3650, "Tout"]].map(([v, l]) =>
+        <button key={v} className={"cat" + (days === v ? " on" : "")} onClick={() => setDays(v)}>{l}</button>)}
+    </div>
+
+    <div className="adm-grid">
+      <Split label="ANNONCES PUBLIÉES" s={sl} />
+      <Split label="RÉSERVATIONS" s={sr} />
+      <div className="adm-card">
+        <div className="adm-k">VOLUME RÉSERVÉ</div>
+        <div className="adm-v">{Math.round(volume)} €</div>
+        <div className="adm-sub">Sur {sr.total} réservation{sr.total > 1 ? "s" : ""}</div>
+      </div>
+      <div className="adm-card">
+        <div className="adm-k">COMPTES</div>
+        <div className="adm-v">{data.users.length}</div>
+        <div className="adm-sub">Toutes plateformes confondues</div>
+      </div>
+    </div>
+
+    {sl.total > 0 && <div className="panel" style={{ marginTop: 18 }}>
+      <div className="sec-t" style={{ fontSize: 15 }}>Publications par jour</div>
+      <div className="adm-spark">
+        {buckets.map((b, i) => <span key={i} className="adm-col" title={b.key + " · " + (b.app + b.web)}>
+          <i style={{ height: (b.app / peak * 100) + "%", background: "var(--p)" }} />
+          <i style={{ height: (b.web / peak * 100) + "%", background: "var(--ter)" }} />
+        </span>)}
+      </div>
+      <div className="adm-axis"><span>il y a {days === 3650 ? "…" : days} j</span><span>aujourd'hui</span></div>
+    </div>}
+
+    {Object.keys(versions).length > 0 && <div className="panel" style={{ marginTop: 14 }}>
+      <div className="sec-t" style={{ fontSize: 15 }}>Versions de l'application en circulation</div>
+      {Object.entries(versions).sort((a, b) => b[1] - a[1]).map(([v, n]) =>
+        <div key={v} className="adm-row"><span>Version {v}</span><b>{n} écriture{n > 1 ? "s" : ""}</b></div>)}
+    </div>}
+
+    <div className="radius-chips" style={{ marginTop: 22 }} role="tablist">
+      {[["vue", "Dernières annonces"], ["resa", "Dernières réservations"], ["gens", "Comptes"]].map(([v, l]) =>
+        <button key={v} className={"cat" + (tab === v ? " on" : "")} onClick={() => setTab(v)}>{l}</button>)}
+    </div>
+
+    <div className="panel" style={{ marginTop: 10, overflowX: "auto" }}>
+      {tab === "vue" && <table className="adm-t">
+        <thead><tr><th>Objet</th><th>Propriétaire</th><th>Prix</th><th>Origine</th><th>Date</th></tr></thead>
+        <tbody>{recent(data.listings).map(x =>
+          <tr key={x.id}>
+            <td>{x.t || "—"}</td><td>{x.own || "—"}</td><td>{x.p || 0} €/j</td>
+            <td><span className={"adm-tag " + srcOf(x)}>{srcOf(x) === "app" ? "Application" : "Site"}</span></td>
+            <td>{fmtDate(x.createdAt)}</td>
+          </tr>)}</tbody>
+      </table>}
+
+      {tab === "resa" && <table className="adm-t">
+        <thead><tr><th>Objet</th><th>Locataire</th><th>Montant</th><th>État</th><th>Origine</th><th>Date</th></tr></thead>
+        <tbody>{recent(data.resas).map(x =>
+          <tr key={x.id}>
+            <td>{x.itemTitle || "—"}</td><td>{x.renterName || "—"}</td><td>{x.total || 0} €</td>
+            <td><span className={"adm-st " + (x.status || "pending")}>{x.status || "pending"}</span></td>
+            <td><span className={"adm-tag " + srcOf(x)}>{srcOf(x) === "app" ? "Application" : "Site"}</span></td>
+            <td>{fmtDate(x.createdAt)}</td>
+          </tr>)}</tbody>
+      </table>}
+
+      {tab === "gens" && <table className="adm-t">
+        <thead><tr><th>Nom</th><th>Email</th><th>Ville</th><th>Vérifié</th></tr></thead>
+        <tbody>{data.users.slice(0, 40).map(u =>
+          <tr key={u.id}>
+            <td>{u.name || "—"}</td><td>{u.email || "—"}</td><td>{u.quartier || u.city || "—"}</td>
+            <td>{u.verification && u.verification.status === "approved" ? "oui"
+               : u.verification ? u.verification.status : "non"}</td>
+          </tr>)}</tbody>
+      </table>}
+    </div>
+
+    <p style={{ fontSize: 12, color: "var(--gl)", marginTop: 14 }}>
+      Les documents créés avant le 28 septembre 2026 n'ont pas de champ d'origine :
+      ils viennent tous du site, l'application n'écrivait rien avant cette date.
+    </p>
+  </div>;
+}
+
 const ownerGain=r=>+r.base||((+r.total||0)-(+r.fee||0))||0;
 function Revenus({user,stats={}}){
   const year=new Date().getFullYear();
@@ -1209,7 +1401,7 @@ function Auth({onDone,toast}){
 
 /* ═══════════ APP ═══════════ */
 /* « carte » n'existe plus : les anciens liens #/carte retombent sur l'accueil. */
-const ROUTES=["home","favs","messages","profile","create","activite","notifs","avis","grade","plus","params","revenus","legal","detail","auth"];
+const ROUTES=["home","admin","favs","messages","profile","create","activite","notifs","avis","grade","plus","params","revenus","legal","detail","auth"];
 /* ═══════════ BLOCAGE TANT QUE L'EMAIL N'EST PAS VÉRIFIÉ ═══════════ */
 function VerifyGate({user,onRefresh,onResend,onLogout}){
   return <>
@@ -1659,6 +1851,7 @@ function App(){
     {page==="avis"&&<Avis reviews={allReviews} user={user} myListings={myListings}/>}
     {page==="grade"&&<Grade plus={plus} rentals={stats.rentals}/>}
     {page==="revenus"&&(user?<Revenus user={user} stats={stats}/>:<Auth onDone={onAuth} toast={toast}/>)}
+    {page==="admin"&&(user?<Admin user={user}/>:<Auth onDone={onAuth} toast={toast}/>)}
     {page==="plus"&&<Plus toast={toast} plus={plus} subscribe={need(subscribe)}/>}
     {page==="params"&&<Params dark={dark} setDark={setDark} toast={toast} user={user} plus={plus} logout={logout} saveQuartier={saveQuartier} saveProfile={saveProfile} exportData={exportData} deleteAccount={deleteAccount} openLegal={openLegal}/>}
     {page==="legal"&&<Legal id={legal}/>}

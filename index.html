@@ -522,6 +522,42 @@ footer .wrap{padding:46px 24px 28px}
   .owner-card button{margin-left:58px}
   .f-low{flex-direction:column;align-items:flex-start}
 }
+
+/* ═══════════ ADMINISTRATION ═══════════ */
+.adm-grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));margin-top:16px}
+.adm-card{background:var(--w);border:1.5px solid var(--bd);border-radius:var(--rl);padding:16px}
+.adm-k{font-size:9.5px;font-weight:800;letter-spacing:1.3px;color:var(--gl);margin-bottom:7px}
+.adm-v{font-family:var(--fd);font-weight:700;font-size:29px;letter-spacing:-1px;color:var(--dk);
+  font-variant-numeric:tabular-nums;line-height:1.05}
+.adm-sub{font-size:11.5px;color:var(--g);margin-top:5px}
+.adm-bar{display:flex;height:7px;border-radius:999px;overflow:hidden;background:var(--bgw);margin:11px 0 9px;gap:2px}
+.adm-bar span{display:block}
+.adm-leg{display:flex;gap:14px;flex-wrap:wrap;font-size:11.5px;color:var(--g)}
+.adm-leg span{display:flex;align-items:center;gap:5px}
+.adm-leg i{width:8px;height:8px;border-radius:50%;display:block}
+.adm-leg b{color:var(--dk);font-variant-numeric:tabular-nums}
+
+/* Histogramme : une colonne par jour, application au-dessus du site. */
+.adm-spark{display:flex;align-items:flex-end;gap:2px;height:86px;margin-top:12px}
+.adm-col{flex:1;display:flex;flex-direction:column;justify-content:flex-end;gap:1px;height:100%;min-width:2px}
+.adm-col i{display:block;border-radius:2px;min-height:0}
+.adm-axis{display:flex;justify-content:space-between;font-size:10.5px;color:var(--gl);margin-top:6px}
+
+.adm-row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--bd);font-size:13px}
+.adm-row:last-child{border-bottom:0}
+
+.adm-t{width:100%;border-collapse:collapse;font-size:13px;min-width:560px}
+.adm-t th{text-align:left;font-size:9.5px;font-weight:800;letter-spacing:1.1px;color:var(--gl);
+  padding:9px 10px;border-bottom:1.5px solid var(--bd)}
+.adm-t td{padding:10px;border-bottom:1px solid var(--bd);color:var(--tx)}
+.adm-t tr:last-child td{border-bottom:0}
+.adm-tag{font-size:10px;font-weight:800;border-radius:999px;padding:3px 9px;white-space:nowrap}
+.adm-tag.app{background:color-mix(in srgb,var(--p) 14%,transparent);color:var(--p)}
+.adm-tag.web{background:color-mix(in srgb,var(--ter) 14%,transparent);color:var(--ter)}
+.adm-st{font-size:10px;font-weight:800;border-radius:999px;padding:3px 9px;text-transform:capitalize}
+.adm-st.pending{background:#FBEBD4;color:#B5711F}
+.adm-st.confirmed{background:#E1F1E7;color:var(--green)}
+.adm-st.cancelled,.adm-st.declined{background:var(--bgw);color:var(--g)}
 </style>
 </head>
 <body>
