@@ -933,8 +933,9 @@ function openDoc(filename,kind,inner){
 const COMMISSION = 11;
 
 const ADMIN_UIDS = [
-  "owoNOYG8SShhC90Uc7QihbmBAt43",
-  "DcBpXP2FmjUkspq3kehissJwk0G3",
+  "owoNOYG8SShhC90Uc7QihbmBAt43",   // noah.mouloude@gmail.com — mot de passe
+  "z8xIoyOoOIYxXPQvdAcSjnBmrd42",   // noahorditz57910@gmail.com — Google
+  "DcBpXP2FmjUkspq3kehissJwk0G3",   // noah@cercle.app — compte de test
 ];
 const isAdminUser = u => !!u && ADMIN_UIDS.indexOf(u.uid || "") >= 0;
 
