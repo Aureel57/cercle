@@ -976,9 +976,25 @@ function Admin({ user }) {
     return () => { alive = false; };
   }, []);
 
+  /* Un refus muet est indiagnosticable : on nomme le compte connecté et
+     l'identifiant attendu, pour qu'on voie tout de suite ce qui cloche. */
   if (!isAdminUser(user)) {
     return <div className="page"><h1>Page réservée</h1>
-      <p className="lead">Cet espace est réservé à l'administration de Cercle.</p></div>;
+      <p className="lead">Cet espace est réservé à l'administration de Cercle.</p>
+      <div className="panel" style={{ marginTop: 16 }}>
+        <div className="adm-k">COMPTE ACTUELLEMENT CONNECTÉ</div>
+        <div style={{ fontSize: 14, marginTop: 8 }}>
+          <b>{(user && user.email) || "aucun"}</b>
+        </div>
+        <div style={{ fontSize: 11.5, color: "var(--gl)", marginTop: 4, wordBreak: "break-all" }}>
+          identifiant : {(user && user.uid) || "—"}
+        </div>
+        <p style={{ fontSize: 13, color: "var(--g)", marginTop: 14, lineHeight: 1.55 }}>
+          Cet identifiant ne figure pas dans la liste des administrateurs.
+          Déconnectez-vous et reconnectez-vous avec le compte propriétaire du projet.
+        </p>
+      </div>
+    </div>;
   }
   if (err) return <div className="page"><h1>Administration</h1><p className="lead">{err}</p></div>;
   if (!data) return <div className="page"><h1>Administration</h1><p className="lead">Chargement…</p></div>;
@@ -2007,7 +2023,7 @@ function App(){
     {page==="avis"&&<Avis reviews={allReviews} user={user} myListings={myListings}/>}
     {page==="grade"&&<Grade plus={plus} rentals={stats.rentals}/>}
     {page==="revenus"&&(user?<Revenus user={user} stats={stats}/>:<Auth onDone={onAuth} toast={toast}/>)}
-    {page==="admin"&&(user?<Admin user={user}/>:<Auth onDone={onAuth} toast={toast}/>)}
+    {page==="admin"&&(user?<Admin user={user}/>:<Admin user={null}/>)}
     {page==="plus"&&<Plus toast={toast} plus={plus} subscribe={need(subscribe)}/>}
     {page==="params"&&<Params dark={dark} setDark={setDark} toast={toast} user={user} plus={plus} logout={logout} saveQuartier={saveQuartier} saveProfile={saveProfile} exportData={exportData} deleteAccount={deleteAccount} openLegal={openLegal}/>}
     {page==="legal"&&<Legal id={legal}/>}
