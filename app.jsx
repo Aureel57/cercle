@@ -1433,7 +1433,7 @@ function App(){
     const db=fbDb();
     if(db&&user){
       try{
-        await db.collection("v2_listings").add({t,c,p,d:dd,seed:sd,imgs:arr,cau:cc,needsLicense:nl,ownerPro:isPro,ownerCompany:ownerCo,own:user.name||"Voisin",uid:user.uid||"",city:"rue du Sablon",note:0,rev:0,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+        await db.collection("v2_listings").add({t,c,p,d:dd,seed:sd,imgs:arr,cau:cc,needsLicense:nl,ownerPro:isPro,ownerCompany:ownerCo,own:user.name||"Voisin",uid:user.uid||"",city:"rue du Sablon",note:0,rev:0,source:"web",createdAt:firebase.firestore.FieldValue.serverTimestamp()});
         addNotif({k:"info",txt:`Votre annonce « ${t} » est en ligne dans le cercle.`});
         return;
       }catch(e){console.warn("[Cercle] écriture Firestore échouée, repli local:",e&&e.code);}
@@ -1449,7 +1449,7 @@ function App(){
     if(db&&user){
       db.collection("v2_reservations").add({itemId:it.id,itemTitle:it.t,itemSeed:it.img&&it.img[0]||"voisin1",
         ownerName:it.own||"Voisin",ownerUid:it.uid||"",renterUid:user.uid||"",renterName:user.name||"Voisin",
-        days,pricePerDay:+it.p||0,base,fee,total:tot,range,startDate:startDate||"",endDate:endDate||"",license:license||"",status:"pending",createdAt:firebase.firestore.FieldValue.serverTimestamp()})
+        days,pricePerDay:+it.p||0,base,fee,total:tot,range,startDate:startDate||"",endDate:endDate||"",license:license||"",status:"pending",source:"web",createdAt:firebase.firestore.FieldValue.serverTimestamp()})
         .catch(e=>{console.warn("[Cercle] réservation Firestore échouée, repli local:",e&&e.code);
           setResas(rs=>[{id:Date.now(),it,range,st:"a-venir",lbl:"⏳ En attente"},...rs]);});
     }else{
