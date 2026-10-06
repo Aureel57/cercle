@@ -71,6 +71,23 @@ function PwMeter({value}){
 }
 const VERIF_SETTINGS={url:"https://aureel57.github.io/cercle/",handleCodeInApp:false};
 /* Envoie l'email de vérif : email DA via Cloud Function si déployée, sinon email Firebase standard */
+/* Annonce ce navigateur au serveur à chaque ouverture de session : s'il ne
+   l'a jamais vu pour ce compte, le titulaire reçoit l'email « nouvelle connexion ».
+   L'identifiant est tiré une fois et gardé dans le navigateur. */
+function browserLabel(){
+  const ua=navigator.userAgent;
+  const b=/Edg\//.test(ua)?"Edge":/Firefox\//.test(ua)?"Firefox":/Chrome\//.test(ua)?"Chrome":/Safari\//.test(ua)?"Safari":"Navigateur";
+  const o=/iPhone/.test(ua)?"iPhone":/iPad/.test(ua)?"iPad":/Android/.test(ua)?"Android":/Mac OS X/.test(ua)?"macOS":/Windows/.test(ua)?"Windows":/Linux/.test(ua)?"Linux":"";
+  return `${b}${o?" sur "+o:""} · site Cercle`;
+}
+function registerDevice(){
+  try{
+    if(!(window.__fbOK&&firebase.functions))return;
+    let id=null;try{id=localStorage.getItem("cercle_device_id")}catch(_){}
+    if(!id){id=Array.from(crypto.getRandomValues(new Uint8Array(16)),x=>x.toString(16).padStart(2,"0")).join("");try{localStorage.setItem("cercle_device_id",id)}catch(_){}}
+    firebase.functions().httpsCallable("registerDevice")({deviceId:id,label:browserLabel()}).catch(e=>console.warn("[Cercle] appareil:",e&&e.code));
+  }catch(_){}
+}
 async function sendVerif(user,name,email){
   try{
     if(window.__fbOK&&firebase.functions){
@@ -90,6 +107,14 @@ const GRADES=[
 ];
 const getGrade=n=>[...GRADES].reverse().find(g=>n>=g.min)||GRADES[0];
 const getNextGrade=n=>GRADES[GRADES.indexOf(getGrade(n))+1]||null;
+/* Cercle+ — fidélité (06/10/2026), identique à l'app (src/constants/data.js) :
+   le prix ET la commission baissent avec l'ancienneté ; résilier remet tout à
+   zéro, sauf retour sous 30 jours. Ancienne offre de lancement (5,99 € × 3 mois) retirée. */
+const PLUS_TIERS=[{from:0,price:11.99,label:"Mois 1 à 6"},{from:6,price:9.99,label:"Mois 7 à 12"},{from:12,price:7.99,label:"2e année"},{from:24,price:5.99,label:"Dès la 3e année"}];
+const PLUS_GRACE_DAYS=30;
+const plusPrice=m=>[...PLUS_TIERS].reverse().find(t=>m>=t.from).price;
+const plusRate=m=>Math.max(2,10-Math.floor(m/12));
+const eur2=n=>n.toFixed(2).replace(".",",")+" €";
 const feeRate=(n,plus)=>Math.max(0.02,getGrade(n).fee/100-(plus?0.01:0));
 const LEGALS={
  cgu:{t:"Conditions générales d'utilisation",lead:"Les règles du cercle, écrites pour être lues.",maj:"16 juin 2026",sections:[
@@ -98,7 +123,8 @@ const LEGALS={
    {h:"3. Le rôle de Cercle",p:["Cercle est un intermédiaire technique : la location est un contrat entre voisins. Cercle facilite la mise en relation, encadre la caution et propose une assurance, mais n'est pas propriétaire des objets."]},
    {h:"4. Vos engagements",p:["Prêter et emprunter avec le soin que vous porteriez à vos propres affaires. Décrire honnêtement vos objets, respecter les dates convenues, et signaler tout incident sans tarder.","Sont interdits : objets illégaux, dangereux, ou contraires à l'ordre public."]},
    {h:"5. Location, caution & commission",p:["Chaque location donne lieu à une caution séquestrée, restituée sous 48 h après le retour de l'objet en bon état.","La commission de service est de 11 %, réduite par votre grade et votre abonnement Cercle+, avec un plancher de 2 %."]},
-   {h:"6. Résiliation",p:["Vous pouvez supprimer votre compte à tout moment depuis vos paramètres. Cercle peut suspendre un compte en cas de manquement grave aux présentes conditions."]},
+   {h:"6. Abonnement Cercle+",p:["L'abonnement Cercle+ est mensuel et sans engagement. Son prix dépend de votre ancienneté d'abonnement continu : 11,99 € par mois du 1er au 6e mois, 9,99 € du 7e au 12e mois, 7,99 € la 2e année, puis 5,99 € à partir de la 3e année.", "La commission de service des abonnés est de 10 % dès l'adhésion, puis diminue d'un point par année complète d'abonnement, sans descendre sous 2 %. Les réductions liées à votre grade s'y ajoutent dans la même limite.", "Vous pouvez résilier à tout moment depuis vos paramètres ; l'abonnement reste actif jusqu'à la fin du mois payé. Si vous vous réabonnez dans les 30 jours qui suivent, votre ancienneté est conservée. Au-delà, elle est remise à zéro : l'abonnement repart à 11,99 € par mois et la commission à 10 %."]},
+   {h:"7. Résiliation",p:["Vous pouvez supprimer votre compte à tout moment depuis vos paramètres. Cercle peut suspendre un compte en cas de manquement grave aux présentes conditions."]},
  ]},
  mentions:{t:"Mentions légales",lead:"Qui édite et héberge Cercle.",maj:"16 juin 2026",sections:[
    {h:"Éditeur du site",p:["Cercle — [raison sociale à compléter], [forme juridique] au capital de [montant] €.","Siège social : [adresse à compléter]. SIREN/SIRET : [à compléter]. RCS : [à compléter].","E-mail : support@cercle.fr."]},
@@ -538,7 +564,7 @@ function Profile({dark,setDark,toast,go,plus,user,logout,stats={}}){
       <div className="pstat"><b>{stats.locations||0}</b><span>locations</span></div>
       <div className="pstat"><b style={{color:"var(--sun)"}}>{noteStr}</b><span>note moyenne</span></div>
     </div>
-    <div className="plus-line">{plus?"✦ Cercle+ actif — vos frais de service sont réduits de 1 %":"✦ Cercle+ — commission réduite à 10 %, −1 % par année d'ancienneté"}<button className="btn" style={{marginLeft:"auto",background:"var(--plus)",color:"#fff",padding:"8px 14px",minHeight:36,fontSize:12.5}} onClick={()=>go("plus")}>{plus?"Gérer":"Découvrir"}</button></div>
+    <div className="plus-line">{plus?"✦ Cercle+ actif — vos frais de service sont réduits de 1 %":"✦ Cercle+ — commission à 10 %, et un abonnement qui baisse avec l'ancienneté"}<button className="btn" style={{marginLeft:"auto",background:"var(--plus)",color:"#fff",padding:"8px 14px",minHeight:36,fontSize:12.5}} onClick={()=>go("plus")}>{plus?"Gérer":"Découvrir"}</button></div>
     <div className="hub">
       {[...(isAdminUser(user)?[["admin","Administration","Vue d'ensemble app + site",I.shield]]:[]),
         ["activite","Mon activité","Revenus, réservations, annonces",I.clock],
@@ -747,30 +773,40 @@ function Grade({plus,rentals=0}){
 
 /* ═══════════ CERCLE+ ═══════════ */
 function Plus({toast,plus,subscribe}){
-  const[yrs,setYrs]=useState(1);
-  const taux=Math.max(2,11-1-yrs);
+  const[mo,setMo]=useState(12);
   return <div className="page">
     <h1>Cercle<span style={{color:"var(--plus)"}}>+</span></h1>
     <p className="lead">L'abonnement de ceux qui font tourner le quartier.</p>
     <div className="plus-hero">
-      <h2>Moins de commission. Chaque année, un peu moins.</h2>
-      <p style={{opacity:.88,fontSize:14,maxWidth:"54ch"}}>−1 % de frais de service dès l'abonnement, puis −1 % par année complète d'ancienneté. Cumulable avec votre grade. Plancher : 2 %.</p>
-      {/* Offre de lancement alignée sur l'application : −50 % les 3 premiers mois. */}
-      <div style={{marginTop:14,display:"inline-block",background:"rgba(255,255,255,.18)",borderRadius:999,padding:"5px 12px",fontSize:12.5,fontWeight:800}}>−50 % les 3 premiers mois</div>
-      <div className="pp" style={{marginTop:8}}><s style={{opacity:.6,fontSize:"60%",fontWeight:600}}>11,99 €</s> 5,99 € <small>/mois les 3 premiers mois, puis 11,99 € · sans engagement</small></div>
+      <h2>Plus vous restez, moins vous payez.</h2>
+      <p style={{opacity:.88,fontSize:14,maxWidth:"54ch"}}>L'abonnement et la commission baissent avec votre ancienneté. Commission à 10 % dès l'adhésion, puis −1 % par année complète, jusqu'à 2 %.</p>
+      <div className="pp" style={{marginTop:12}}>{eur2(PLUS_TIERS[0].price)} <small>/mois, puis {eur2(PLUS_TIERS[1].price)} dès le 7e mois, jusqu'à {eur2(PLUS_TIERS[3].price)} dès la 3e année · sans engagement</small></div>
       <button className="btn" style={{background:"#fff",color:"#5B21B6",marginTop:14}} onClick={subscribe}>{plus?"✓ Vous êtes membre Cercle+":"✦ Rejoindre Cercle+"}</button>
     </div>
     <div className="panel">
-      <div className="sec-t" style={{fontSize:18}}>Votre commission dans le temps</div>
-      <div className="sim">
-        <span style={{fontSize:13,color:"var(--g)"}}>Ancienneté : <b style={{color:"var(--dk)"}}>{yrs} an{yrs>1?"s":""}</b></span>
-        <input type="range" min="0" max="5" value={yrs} onChange={e=>setYrs(+e.target.value)} aria-label="Années d'ancienneté"/>
-        <span className="out">{taux} %</span>
+      <div className="sec-t" style={{fontSize:18}}>Votre tarif selon votre ancienneté</div>
+      <div style={{overflowX:"auto"}}>
+        <table style={{width:"100%",borderCollapse:"collapse",fontSize:14,fontVariantNumeric:"tabular-nums"}}>
+          <thead><tr style={{color:"var(--g)",fontSize:11.5,textTransform:"uppercase",letterSpacing:".05em",textAlign:"left"}}><th style={{padding:"8px 0"}}>Ancienneté</th><th style={{textAlign:"right"}}>Abonnement</th><th style={{textAlign:"right"}}>Commission</th></tr></thead>
+          <tbody>{PLUS_TIERS.map((t,i)=><tr key={t.label} style={{borderTop:"1px solid var(--bd)"}}>
+            <td style={{padding:"10px 0",fontWeight:600,color:"var(--dk)"}}>{t.label}</td>
+            <td style={{textAlign:"right",fontWeight:700,color:i===PLUS_TIERS.length-1?"var(--green)":"var(--dk)"}}>{eur2(t.price)}</td>
+            <td style={{textAlign:"right",fontWeight:700,color:"var(--dk)"}}>{plusRate(t.from)} %</td>
+          </tr>)}</tbody>
+        </table>
       </div>
-      <p style={{fontSize:12,color:"var(--gl)",marginTop:6}}>Base 11 % − 1 % (abonnement) − 1 % par an — sans jamais descendre sous 2 %.</p>
+      <p style={{fontSize:12,color:"var(--gl)",marginTop:8}}>Ensuite, la commission continue de perdre un point par an jusqu'à 2 %. Sans Cercle+, elle est de 11 %.</p>
+      <div style={{marginTop:14,padding:"12px 14px",borderRadius:12,background:"var(--bgw)",borderLeft:"3px solid var(--sun)",color:"var(--tx)",fontSize:13.5,lineHeight:1.55}}>
+        <b>Si vous résiliez</b>, votre tarif est conservé {PLUS_GRACE_DAYS} jours. Au-delà, l'abonnement repart à {eur2(PLUS_TIERS[0].price)} et la commission à 10 %.
+      </div>
+      <div className="sim" style={{marginTop:18}}>
+        <span style={{fontSize:13,color:"var(--g)"}}>Ancienneté : <b style={{color:"var(--dk)"}}>{mo<12?`${mo} mois`:`${Math.floor(mo/12)} an${mo>=24?"s":""}${mo%12?` et ${mo%12} mois`:""}`}</b></span>
+        <input type="range" min="0" max="48" value={mo} onChange={e=>setMo(+e.target.value)} aria-label="Mois d'ancienneté"/>
+        <span className="out">{eur2(plusPrice(mo))} · {plusRate(mo)} %</span>
+      </div>
       <div style={{marginTop:14}}>
-        <div className="plus-feat"><span className="pk">✦</span><span><b style={{color:"var(--dk)"}}>−1 % immédiat</b> sur tous vos frais de service</span></div>
-        <div className="plus-feat"><span className="pk">✦</span><span><b style={{color:"var(--dk)"}}>−1 % par année complète</b> — la fidélité paye</span></div>
+        <div className="plus-feat"><span className="pk">✦</span><span><b style={{color:"var(--dk)"}}>Un abonnement qui baisse</b> — de {eur2(PLUS_TIERS[0].price)} à {eur2(PLUS_TIERS[3].price)} par mois</span></div>
+        <div className="plus-feat"><span className="pk">✦</span><span><b style={{color:"var(--dk)"}}>Une commission qui baisse</b> — 10 % dès l'adhésion, −1 % par année complète</span></div>
         <div className="plus-feat"><span className="pk">✦</span><span><b style={{color:"var(--dk)"}}>Cumulable avec votre grade</b> (Pilier −1 %, Gardien −2 %)</span></div>
         <div className="plus-feat"><span className="pk">✦</span><span><b style={{color:"var(--dk)"}}>Plancher 2 %</b> — l'assurance et la caution séquestrée restent incluses</span></div>
       </div>
@@ -1674,7 +1710,7 @@ function App(){
   /* Firebase : restauration de session */
   useEffect(()=>{
     const a=fbAuth();if(!a)return;
-    return a.onAuthStateChanged(fu=>{ if(fu)setUser(u=>u||fbUserToUser(fu)); else setUser(null); });
+    return a.onAuthStateChanged(fu=>{ if(fu){registerDevice();setUser(u=>u||fbUserToUser(fu));} else setUser(null); });
   },[]);
   /* Firebase : récupère les infos du membre (adresse, téléphone) depuis Firestore */
   useEffect(()=>{
